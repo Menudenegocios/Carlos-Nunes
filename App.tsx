@@ -23,6 +23,7 @@ import { Stores } from './pages/Stores';
 import { StoreView } from './pages/StoreView';
 import { BioBuilder } from './pages/BioBuilder';
 import { BusinessSuite } from './pages/BusinessSuite';
+import { Academy } from './pages/Academy';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       {/* Admin/Business Routes with Persistent Sidebar Layout */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
+      <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
       <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
       <Route path="/marketing-ai" element={<PrivateRoute><MarketingAI /></PrivateRoute>} />

@@ -5,7 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   LayoutDashboard, Smartphone, Package, 
   Sparkles, Trophy, LogOut, Menu, X, Star, Layout, 
-  Store, Home, ShoppingBag, ChevronLeft, Briefcase
+  Store, Home, ShoppingBag, ChevronLeft, Briefcase,
+  GraduationCap
 } from 'lucide-react';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -19,6 +20,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', color: 'text-indigo-600' },
     { label: 'Business Suite', icon: Briefcase, to: '/business-suite', color: 'text-blue-700' },
+    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', color: 'text-amber-600' },
     { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder', color: 'text-purple-600' },
     { label: 'Catálogo & Loja', icon: Package, to: '/catalog', color: 'text-cyan-600' },
     { label: 'MenuIA Criativo', icon: Sparkles, to: '/marketing-ai', color: 'text-indigo-500' },
