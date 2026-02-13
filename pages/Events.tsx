@@ -55,11 +55,11 @@ export const Events: React.FC = () => {
           De workshops técnicos a encontros de networking. Participe dos eventos que estão transformando o mercado local.
         </p>
         <div className="flex justify-center gap-4">
-           <button className="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl">
-              VER CALENDÁRIO
+           <button className="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black text-sm tracking-tight hover:bg-indigo-600 transition-all shadow-xl">
+              Ver Calendário
            </button>
-           <button className="bg-white text-gray-900 border border-gray-100 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
-              CRIAR EVENTO
+           <button className="bg-white text-gray-900 border border-gray-100 px-10 py-4 rounded-2xl font-black text-sm tracking-tight hover:bg-gray-50 transition-all shadow-sm">
+              Criar Evento
            </button>
         </div>
       </section>
@@ -69,9 +69,9 @@ export const Events: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-10">
             <h2 className="text-3xl font-black text-gray-900 tracking-tight">Próximos Encontros</h2>
             <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs uppercase tracking-widest"><Filter className="w-4 h-4" /> Todos</button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-gray-50">Online</button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-gray-50">Presencial</button>
+                <button className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs tracking-tight"><Filter className="w-4 h-4" /> Todos</button>
+                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold text-xs tracking-tight hover:bg-gray-50">Evento Online</button>
+                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold text-xs tracking-tight hover:bg-gray-50">Evento Presencial</button>
             </div>
         </div>
 
