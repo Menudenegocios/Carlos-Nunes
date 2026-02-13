@@ -18,29 +18,6 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -49,7 +26,9 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         .eq('user_id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.warn("Perfil não encontrado ou erro de busca:", error.message);
+      }
 
       if (data) {
         setUser({
@@ -63,10 +42,10 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0
         });
       } else {
-        // Fallback for cases where profile might be delayed by the trigger
+        // Fallback: Se o gatilho falhou, criamos um estado de usuário básico para não travar o app
         setUser({
           id: userId,
-          name: 'Novo Usuário',
+          name: 'Usuário (Perfil em Criação)',
           email: '',
           plan: 'profissionais',
           points: 50,
@@ -82,23 +61,50 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    // Handle auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const login = async (email: string, pass: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    // Importante: passamos o full_name nos metadados para o gatilho capturar
+    const { error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
-        data: { full_name: name }
+        data: {
+          full_name: name
+        }
       }
     });
     
     if (error) {
       if (error.message.includes("Database error saving new user")) {
-        throw new Error("Erro de banco de dados ao criar perfil. Tente novamente ou contate o suporte.");
+        // Se este erro ainda ocorrer, o problema está nas permissões do schema 'auth'
+        throw new Error("Erro de servidor ao salvar perfil. Por favor, tente usar um e-mail diferente ou contate o suporte.");
       }
       throw error;
     }
@@ -118,8 +124,6 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
