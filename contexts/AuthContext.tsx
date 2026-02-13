@@ -63,13 +63,13 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0
         });
       } else {
-        // Fallback for cases where profile might be delayed
+        // Fallback for cases where profile might be delayed by the trigger
         setUser({
           id: userId,
-          name: 'Usuário',
+          name: 'Novo Usuário',
           email: '',
           plan: 'profissionais',
-          points: 0,
+          points: 50,
           level: 'bronze',
           referralCode: '',
           referralsCount: 0
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
@@ -96,8 +96,12 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       }
     });
     
-    if (error) throw error;
-    // Note: The profile is created automatically by the database trigger (setup.sql)
+    if (error) {
+      if (error.message.includes("Database error saving new user")) {
+        throw new Error("Erro de banco de dados ao criar perfil. Tente novamente ou contate o suporte.");
+      }
+      throw error;
+    }
   };
 
   const logout = async () => {

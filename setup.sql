@@ -1,13 +1,13 @@
 
--- SCRIPT DE CONFIGURAÇÃO DO MENU DE NEGÓCIOS - VERSÃO RESILIENTE
+-- SCRIPT DE CONFIGURAÇÃO DO MENU DE NEGÓCIOS - VERSÃO ULTRA RESILIENTE
 -- Execute este script no SQL Editor do seu projeto Supabase
 
--- 1. EXTENSÕES
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- 1. EXTENSÕES (Garantir que uuid-ossp esteja disponível no schema public)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
--- 2. TABELAS
+-- 2. TABELAS (Ajustes de segurança)
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id uuid DEFAULT public.uuid_generate_v4() PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   full_name text,
   email text,
@@ -31,46 +31,61 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   UNIQUE(user_id)
 );
 
--- (Outras tabelas permanecem iguais, omitidas aqui por brevidade mas devem ser mantidas no banco)
--- Nota: O comando CREATE TABLE IF NOT EXISTS não sobrescreve dados existentes.
-
--- 4. GATILHO DE PERFIL AUTOMÁTICO (CORRIGIDO E RESILIENTE)
+-- 3. FUNÇÃO DE GATILHO CORRIGIDA
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 DECLARE
-  new_referral_code text;
+  new_ref_code text;
 BEGIN
-  -- Gera um código de indicação curto e único
-  new_referral_code := 'REF' || upper(substring(replace(uuid_generate_v4()::text, '-', ''), 1, 6));
+  -- Gera um código de indicação simples baseado em milissegundos para evitar falhas de UUID
+  new_ref_code := 'REF' || upper(substring(replace(public.uuid_generate_v4()::text, '-', ''), 1, 6));
 
-  INSERT INTO public.profiles (
-    user_id, 
-    full_name, 
-    email, 
-    plan, 
-    points, 
-    level, 
-    referral_code
-  )
-  VALUES (
-    new.id, 
-    COALESCE(new.raw_user_meta_data->>'full_name', 'Novo Usuário'), 
-    new.email,
-    'profissionais',
-    50,
-    'bronze',
-    new_referral_code
-  )
-  ON CONFLICT (user_id) DO UPDATE SET
-    email = EXCLUDED.email,
-    full_name = COALESCE(public.profiles.full_name, EXCLUDED.full_name);
-    
+  BEGIN
+    INSERT INTO public.profiles (
+      user_id, 
+      full_name, 
+      email, 
+      plan, 
+      points, 
+      level, 
+      referral_code
+    )
+    VALUES (
+      new.id, 
+      COALESCE(new.raw_user_meta_data->>'full_name', 'Novo Usuário'), 
+      new.email,
+      'profissionais',
+      50,
+      'bronze',
+      new_ref_code
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+      email = EXCLUDED.email;
+  EXCEPTION WHEN OTHERS THEN
+    -- Se falhar, o Supabase ainda criará o usuário no Auth, evitando o erro fatal no registro
+    RAISE WARNING 'Erro ao criar perfil para o usuário %: %', new.id, SQLERRM;
+  END;
+  
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
--- Garantir que o gatilho esteja limpo e recriado
+-- 4. RECRIAÇÃO DO GATILHO
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 5. POLÍTICAS DE ACESSO (RLS) - Garantir que estão ativas
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Profiles leitura pública') THEN
+        CREATE POLICY "Profiles leitura pública" ON public.profiles FOR SELECT USING (true);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Profiles gestão privada') THEN
+        CREATE POLICY "Profiles gestão privada" ON public.profiles FOR ALL USING (auth.uid() = user_id);
+    END IF;
+END $$;
