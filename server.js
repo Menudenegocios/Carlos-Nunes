@@ -6,26 +6,31 @@ const app = express();
 // Porta dinâmica para Hostinger ou 3000 local
 const PORT = process.env.PORT || 3000;
 
-// Servir arquivos estáticos do diretório raiz
-// Isso permite que o index.tsx, App.tsx e outros sejam encontrados pelo navegador
+// Log para depuração no painel da Hostinger
+console.log('Iniciando servidor...');
+console.log('Diretório atual:', __dirname);
+
+// Middleware para servir arquivos estáticos
+// Importante: Na Hostinger, o diretório raiz é onde os arquivos estão localizados
 app.use(express.static(__dirname));
 
-// Rota para API Keys (Opcional: se precisar passar variáveis para o front de forma segura)
-app.get('/api/config', (req, res) => {
-  res.json({
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseKey: process.env.SUPABASE_ANON_KEY
-  });
+// Rota para verificar se o servidor está online
+app.get('/health', (req, res) => {
+  res.send('Servidor está rodando perfeitamente!');
 });
 
 // Middleware essencial para Single Page Application (SPA)
-// Qualquer rota que não seja um arquivo físico (como /dashboard ou /login) 
-// será redirecionada para o index.html, onde o React Router assume o controle.
+// Isso resolve o erro 404 ao atualizar páginas como /dashboard
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  const indexPath = path.join(__dirname, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Erro ao carregar index.html:', err);
+      res.status(500).send('Erro interno: Não foi possível carregar a página inicial.');
+    }
+  });
 });
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Diretório base: ${__dirname}`);
 });
