@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Menu de Negócios | Conexão Local Inteligente</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Babel para compilar TSX em tempo real no navegador (Essencial para rodar sem build local) -->
+    <!-- Babel para compilar TSX em tempo real no navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script>
       tailwind.config = {
@@ -86,7 +86,7 @@
 </head>
   <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
-    <!-- Script modificado para carregar via Babel no navegador -->
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+    <!-- Script principal -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>
