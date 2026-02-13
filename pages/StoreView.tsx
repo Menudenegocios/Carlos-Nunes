@@ -23,11 +23,12 @@ export const StoreView: React.FC = () => {
   }, [userId]);
 
   const loadStoreData = async () => {
+    // Fixed: userId is already a string, no need for Number() conversion
+    if (!userId) return;
     try {
-      const id = Number(userId);
-      const prof = await mockBackend.getProfile(id);
-      const prods = await mockBackend.getProducts(id);
-      const cats = await mockBackend.getStoreCategories(id);
+      const prof = await mockBackend.getProfile(userId);
+      const prods = await mockBackend.getProducts(userId);
+      const cats = await mockBackend.getStoreCategories(userId);
       
       setProfile(prof || null);
       setProducts(prods);

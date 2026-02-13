@@ -13,9 +13,9 @@ export const MyOffers: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Edit Mode State
+  // Edit Mode State - Updated to string to match Offer.id
   const [isEditing, setIsEditing] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -76,7 +76,8 @@ export const MyOffers: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  // Fixed parameter type to string to match Offer.id
+  const handleDelete = async (id: string) => {
     if (!user || !window.confirm('Tem certeza que deseja excluir esta oferta?')) return;
     try {
       await mockBackend.deleteOffer(id, user.id);

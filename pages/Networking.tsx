@@ -59,7 +59,8 @@ export const Networking: React.FC = () => {
     }
   };
 
-  const handleDeletePartner = async (id: number) => {
+  // Fixed parameter type to string to match NetworkingProfile.id
+  const handleDeletePartner = async (id: string) => {
     // Optional: Check if user owns the profile or is admin
     if (!user) return;
     

@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
 
@@ -18,11 +17,10 @@ export const Login: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const { user, token } = await mockBackend.login(email, password);
-      login(user, token);
+      await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setLoading(false);
     }
@@ -85,7 +83,7 @@ export const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md font-bold">
                 {error}
               </div>
             )}
@@ -94,7 +92,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#F5821F] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F5821F] disabled:opacity-50 transition-all"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-black text-white bg-[#F5821F] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F5821F] disabled:opacity-50 transition-all uppercase tracking-widest"
               >
                 {loading ? 'Entrando...' : 'Entrar'}
               </button>

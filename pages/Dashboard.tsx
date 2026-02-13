@@ -7,7 +7,6 @@ import { mockBackend } from '../services/mockBackend';
 import { Profile, CommunityPost, Product } from '../types';
 import { 
   Trophy, Star, Eye, Plus, Zap,
-  Smartphone, Briefcase, GraduationCap, Package,
   ArrowRight, MessageSquare, Send, Heart, MoreHorizontal, 
   Image as ImageIcon, Users, RefreshCw,
   Target, Sparkles, CheckCircle, Megaphone
@@ -71,14 +70,6 @@ export const Dashboard: React.FC = () => {
 
   if (!user) return null;
 
-  const hubs = [
-    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder', color: 'bg-orange-50 text-brand-primary dark:bg-brand-primary/10', status: userProfile?.bio ? 'Configurada' : 'Pendente', desc: 'Seu cartão inteligente' },
-    { label: 'Catálogo & Loja', icon: Package, to: '/catalog', color: 'bg-brand-accent/20 text-brand-contrast dark:text-brand-accent', status: `${products.length} itens`, desc: 'Vitrine sem comissões' },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', color: 'bg-zinc-100 text-brand-contrast dark:bg-zinc-800', status: 'Painel CRM', desc: 'Gestão de orçamentos' },
-    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', color: 'bg-brand-primary text-white', status: 'Treinamentos', desc: 'Aprenda a vender mais' },
-    { label: 'Clube Vantagens', icon: Trophy, to: '/rewards', color: 'bg-brand-accent text-brand-contrast', status: `${user.points} pts`, desc: 'Atividades valem prêmios' },
-  ];
-
   return (
     <div className="max-w-6xl mx-auto space-y-12 animate-[fade-in_0.6s_ease-out]">
       
@@ -106,35 +97,7 @@ export const Dashboard: React.FC = () => {
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-primary/5 rounded-full blur-[80px] pointer-events-none opacity-50"></div>
       </div>
 
-      {/* 2. PILLARS HUB GRID */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 px-4">
-            <div className="w-1.5 h-6 bg-brand-primary rounded-full"></div>
-            <h2 className="font-black text-brand-contrast dark:text-brand-surface text-sm tracking-[0.2em] uppercase">Os 5 pilares do seu negócio</h2>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
-            {hubs.map((hub, idx) => (
-                <Link 
-                    key={idx} 
-                    to={hub.to} 
-                    className="group bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-brand-secondary/30 dark:border-zinc-800 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all flex flex-col items-center text-center gap-5"
-                >
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500 ${hub.color}`}>
-                        <hub.icon className="w-8 h-8" />
-                    </div>
-                    <div className="space-y-1 flex-1">
-                        <h3 className="font-black text-brand-contrast dark:text-brand-surface text-sm tracking-tight">{hub.label}</h3>
-                        <p className="text-[10px] font-bold text-brand-secondary leading-snug">{hub.desc}</p>
-                    </div>
-                    <div className="px-4 py-1.5 bg-brand-surface dark:bg-zinc-800 rounded-full border border-brand-secondary/30">
-                        <span className="text-[9px] font-black uppercase text-brand-primary">{hub.status}</span>
-                    </div>
-                </Link>
-            ))}
-        </div>
-      </div>
-
-      {/* 3. ACTIVITY & CLUB */}
+      {/* 2. ACTIVITY & CLUB */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-8">
              <div className="bg-brand-accent/10 dark:bg-zinc-900 border border-brand-accent/30 rounded-[2.5rem] p-8 flex gap-6 items-center">

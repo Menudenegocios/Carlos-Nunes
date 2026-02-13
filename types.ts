@@ -1,6 +1,6 @@
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   plan: 'profissionais' | 'freelancers' | 'negocios';
@@ -12,7 +12,7 @@ export interface User {
 
 export interface PointsTransaction {
   id: string;
-  userId: number;
+  userId: string;
   action: string;
   points: number;
   createdAt: number;
@@ -21,7 +21,7 @@ export interface PointsTransaction {
 
 export interface CommunityComment {
   id: string;
-  userId: number;
+  userId: string;
   userName: string;
   userAvatar: string;
   content: string;
@@ -30,14 +30,14 @@ export interface CommunityComment {
 
 export interface CommunityPost {
   id: string;
-  userId: number;
+  userId: string;
   userName: string;
   businessName?: string;
   userAvatar: string;
   content: string;
   imageUrl?: string;
   likes: number;
-  likedBy: number[];
+  likedBy: string[];
   comments: CommunityComment[];
   createdAt: number;
 }
@@ -87,14 +87,14 @@ export interface StoreConfig {
 
 export interface StoreCategory {
   id: string;
-  userId: number;
+  userId: string;
   name: string;
   order: number;
 }
 
 export interface Profile {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   businessName?: string;
   category?: string;
   phone?: string;
@@ -131,8 +131,8 @@ export interface SchedulingConfig {
 }
 
 export interface Offer {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   title: string;
   description: string;
   category: string;
@@ -152,7 +152,7 @@ export interface Offer {
 }
 
 export interface Prize {
-  id: number;
+  id: string;
   title: string;
   cost: number;
   imageUrl: string;
@@ -168,7 +168,7 @@ export enum OfferCategory {
 
 export interface Product {
   id: string;
-  userId: number;
+  userId: string;
   storeCategoryId?: string;
   name: string;
   description: string;
@@ -183,8 +183,8 @@ export interface Product {
 }
 
 export interface BlogPost {
-  id: number;
-  userId?: number;
+  id: string;
+  userId?: string;
   title: string;
   summary: string;
   content: string;
@@ -198,6 +198,7 @@ export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lo
 
 export interface Lead {
   id: string;
+  userId: string;
   name: string;
   phone: string;
   source: 'maps' | 'instagram' | 'cnpj' | 'manual';
@@ -209,7 +210,7 @@ export interface Lead {
 
 export interface FinancialEntry {
   id: string;
-  userId: number;
+  userId: string;
   description: string;
   value: number;
   type: 'income' | 'expense';
@@ -219,7 +220,7 @@ export interface FinancialEntry {
 
 export interface ScheduleItem {
   id: string;
-  userId: number;
+  userId: string;
   title: string;
   client: string;
   date: string;
@@ -238,8 +239,8 @@ export interface ExtractorResult {
 }
 
 export interface NetworkingProfile {
-  id: number;
-  userId?: number;
+  id: string;
+  userId?: string;
   name: string;
   businessName: string;
   sector: string;
@@ -257,7 +258,7 @@ export interface LoyaltyCard {
 }
 
 export interface Quote {
-  id: number;
+  id: string;
   clientName: string;
   serviceInterest: string;
   date: string;
@@ -266,7 +267,7 @@ export interface Quote {
 }
 
 export interface Review {
-  id: number;
+  id: string;
   author: string;
   rating: number;
   comment: string;

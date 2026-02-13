@@ -1,490 +1,442 @@
 
-import { User, Profile, Offer, OfferCategory, Lead, ExtractorResult, Coupon, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction } from '../types';
-
-const STORAGE_KEYS = {
-  USERS: 'menu_users',
-  PROFILES: 'menu_profiles',
-  OFFERS: 'menu_offers',
-  LEADS: 'menu_leads',
-  BLOG: 'menu_blog',
-  NETWORKING: 'menu_networking',
-  LOYALTY: 'menu_loyalty',
-  QUOTES: 'menu_quotes',
-  SCHEDULE: 'menu_schedule',
-  REVIEWS: 'menu_reviews',
-  PRODUCTS: 'menu_products',
-  STORE_CATEGORIES: 'menu_store_categories',
-  FINANCE: 'menu_finance',
-  COMMUNITY: 'menu_community',
-  POINTS_HISTORY: 'menu_points_history'
-};
-
-const getStorage = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
-};
-
-const setStorage = <T>(key: string, data: T[]) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage } from '../types';
+import { supabase } from './supabaseClient';
 
 export const mockBackend = {
-  // Auth
-  register: async (name: string, email: string, password: string, referredByCode?: string): Promise<User> => {
-    await new Promise(r => setTimeout(r, 500));
-    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
-    if (users.find(u => u.email === email)) throw new Error('E-mail já cadastrado');
-
-    const newUser: User & { password: string } = {
-      id: Date.now(),
-      name,
-      email,
-      password,
-      plan: 'profissionais',
-      points: 50, 
-      level: 'bronze',
-      referralCode: 'REF' + Math.floor(Math.random() * 10000),
-      referralsCount: 0
-    };
-
-    users.push(newUser);
-    setStorage(STORAGE_KEYS.USERS, users);
-    
-    await mockBackend.addPoints(newUser.id, 'Cadastro Inicial', 50, 'engajamento');
-
-    return newUser;
-  },
-
-  login: async (email: string, password: string): Promise<{ user: User, token: string }> => {
-    await new Promise(r => setTimeout(r, 500));
-    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) throw new Error('Credenciais inválidas');
-    const { password: _, ...userWithoutPass } = user;
-    return { user: userWithoutPass, token: `fake-jwt-${user.id}` };
-  },
-
   // Points & Rewards System
-  addPoints: async (userId: number, action: string, points: number, category: PointsTransaction['category']): Promise<User> => {
-    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
-    const userIdx = users.findIndex(u => u.id === userId);
-    if (userIdx === -1) throw new Error('User not found');
+  addPoints: async (userId: string, action: string, points: number, category: PointsTransaction['category']): Promise<void> => {
+    const { data: profile } = await supabase.from('profiles').select('points').eq('user_id', userId).single();
+    const currentPoints = profile?.points || 0;
+    const newPoints = currentPoints + points;
 
-    users[userIdx].points += points;
+    let level: User['level'] = 'bronze';
+    if (newPoints >= 5000) level = 'ouro';
+    else if (newPoints >= 1000) level = 'prata';
 
-    if (users[userIdx].points >= 5000) users[userIdx].level = 'ouro';
-    else if (users[userIdx].points >= 1000) users[userIdx].level = 'prata';
-    else users[userIdx].level = 'bronze';
-
-    setStorage(STORAGE_KEYS.USERS, users);
-
-    const history = getStorage<PointsTransaction>(STORAGE_KEYS.POINTS_HISTORY);
-    history.push({
-      id: Math.random().toString(36).substr(2, 9),
-      userId,
+    await supabase.from('profiles').update({ points: newPoints, level }).eq('user_id', userId);
+    await supabase.from('points_history').insert({
+      user_id: userId,
       action,
       points,
       category,
-      createdAt: Date.now()
+      created_at: new Date().getTime()
     });
-    setStorage(STORAGE_KEYS.POINTS_HISTORY, history);
-
-    const { password: _, ...updatedUser } = users[userIdx];
-    return updatedUser;
   },
 
-  getPointsHistory: async (userId: number): Promise<PointsTransaction[]> => {
-    const history = getStorage<PointsTransaction>(STORAGE_KEYS.POINTS_HISTORY);
-    return history.filter(t => t.userId === userId).sort((a,b) => b.createdAt - a.createdAt);
-  },
-
-  upgradePlan: async (userId: number, plan: any): Promise<User> => {
-    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
-    const index = users.findIndex(u => u.id === userId);
-    if (index === -1) throw new Error('User not found');
+  getPointsHistory: async (userId: string): Promise<PointsTransaction[]> => {
+    const { data } = await supabase
+      .from('points_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
     
-    users[index].plan = plan;
-    setStorage(STORAGE_KEYS.USERS, users);
+    return (data || []).map(t => ({
+      id: t.id,
+      userId: t.user_id,
+      action: t.action,
+      points: t.points,
+      createdAt: t.created_at,
+      category: t.category
+    }));
+  },
 
+  upgradePlan: async (userId: string, plan: User['plan']): Promise<User> => {
     const pointsToAdd = plan === 'negocios' ? 300 : 50;
+    await supabase.from('profiles').update({ plan }).eq('user_id', userId);
     await mockBackend.addPoints(userId, `Assinatura Plano ${plan.toUpperCase()}`, pointsToAdd, 'assinatura');
-
-    const finalUser = (await getStorage<User>(STORAGE_KEYS.USERS).find(u => u.id === userId))!;
-    return finalUser;
+    
+    const { data: p } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    return {
+      id: userId,
+      name: p.full_name,
+      email: p.email,
+      plan: p.plan,
+      points: p.points,
+      level: p.level,
+      referralCode: p.referral_code,
+      referralsCount: p.referrals_count
+    };
   },
 
   // Community Feed
   getCommunityPosts: async (): Promise<CommunityPost[]> => {
-    const posts = getStorage<CommunityPost>(STORAGE_KEYS.COMMUNITY);
-    if (posts.length === 0) {
-      const seed: CommunityPost[] = [
-        {
-          id: 'post1',
-          userId: 999,
-          userName: 'Admin',
-          businessName: 'Menu de Negócios Oficial',
-          userAvatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Menu',
-          content: 'Bem-vindos à nossa nova Comunidade! Aqui você pode trocar experiências, encontrar parceiros e crescer junto com outros empreendedores locais. 🚀',
-          likes: 5,
-          likedBy: [],
-          comments: [],
-          createdAt: Date.now() - 3600000
-        }
-      ];
-      setStorage(STORAGE_KEYS.COMMUNITY, seed);
-      return seed;
-    }
-    return posts.sort((a, b) => b.createdAt - a.createdAt);
+    const { data: posts } = await supabase.from('community_posts').select('*').order('created_at', { ascending: false });
+    if (!posts) return [];
+
+    const postsWithComments = await Promise.all(posts.map(async post => {
+      const { data: comments } = await supabase.from('community_comments').select('*').eq('post_id', post.id);
+      return {
+        id: post.id,
+        userId: post.user_id,
+        userName: post.user_name,
+        businessName: post.business_name,
+        userAvatar: post.user_avatar,
+        content: post.content,
+        imageUrl: post.image_url,
+        likes: post.likes,
+        likedBy: post.liked_by || [],
+        comments: (comments || []).map(c => ({
+          id: c.id,
+          userId: c.user_id,
+          userName: c.user_name,
+          userAvatar: c.user_avatar,
+          content: c.content,
+          createdAt: c.created_at
+        })),
+        createdAt: post.created_at
+      };
+    }));
+
+    return postsWithComments;
   },
 
   createCommunityPost: async (postData: Omit<CommunityPost, 'id' | 'likes' | 'likedBy' | 'comments' | 'createdAt'>): Promise<CommunityPost> => {
-    const posts = getStorage<CommunityPost>(STORAGE_KEYS.COMMUNITY);
-    const newPost: CommunityPost = {
-      ...postData,
-      id: Math.random().toString(36).substr(2, 9),
+    const { data, error } = await supabase.from('community_posts').insert({
+      user_id: postData.userId,
+      user_name: postData.userName,
+      business_name: postData.businessName,
+      user_avatar: postData.userAvatar,
+      content: postData.content,
       likes: 0,
-      likedBy: [],
-      comments: [],
-      createdAt: Date.now()
-    };
-    posts.push(newPost);
-    setStorage(STORAGE_KEYS.COMMUNITY, posts);
-    
+      liked_by: [],
+      created_at: new Date().getTime()
+    }).select().single();
+
+    if (error) throw error;
     await mockBackend.addPoints(postData.userId, 'Interação na Comunidade', 20, 'engajamento');
 
-    return newPost;
+    return { ...data, id: data.id, userId: data.user_id, userName: data.user_name, businessName: data.business_name, userAvatar: data.user_avatar, likedBy: [], comments: [], createdAt: data.created_at };
   },
 
-  likePost: async (postId: string, userId: number): Promise<CommunityPost> => {
-    const posts = getStorage<CommunityPost>(STORAGE_KEYS.COMMUNITY);
-    const idx = posts.findIndex(p => p.id === postId);
-    if (idx !== -1) {
-      const post = posts[idx];
-      const likedIdx = post.likedBy.indexOf(userId);
-      if (likedIdx === -1) {
-        post.likedBy.push(userId);
-        post.likes += 1;
-        await mockBackend.addPoints(userId, 'Curtida na Comunidade', 20, 'engajamento');
-      } else {
-        post.likedBy.splice(likedIdx, 1);
-        post.likes -= 1;
-      }
-      posts[idx] = post;
-      setStorage(STORAGE_KEYS.COMMUNITY, posts);
-      return post;
-    }
-    throw new Error('Post not found');
-  },
+  likePost: async (postId: string, userId: string): Promise<CommunityPost> => {
+    const { data: post } = await supabase.from('community_posts').select('*').eq('id', postId).single();
+    if (!post) throw new Error('Post not found');
 
-  addCommunityComment: async (postId: string, commentData: Omit<CommunityComment, 'id' | 'createdAt'>): Promise<CommunityPost> => {
-    const posts = getStorage<CommunityPost>(STORAGE_KEYS.COMMUNITY);
-    const idx = posts.findIndex(p => p.id === postId);
-    if (idx !== -1) {
-      const newComment: CommunityComment = {
-        ...commentData,
-        id: Math.random().toString(36).substr(2, 9),
-        createdAt: Date.now()
-      };
-      posts[idx].comments.push(newComment);
-      setStorage(STORAGE_KEYS.COMMUNITY, posts);
-      
-      await mockBackend.addPoints(commentData.userId, 'Comentário na Comunidade', 20, 'engajamento');
+    const likedBy = post.liked_by || [];
+    const likedIdx = likedBy.indexOf(userId);
+    let newLikes = post.likes;
 
-      return posts[idx];
+    if (likedIdx === -1) {
+      likedBy.push(userId);
+      newLikes += 1;
+      await mockBackend.addPoints(userId, 'Curtida na Comunidade', 20, 'engajamento');
+    } else {
+      likedBy.splice(likedIdx, 1);
+      newLikes -= 1;
     }
-    throw new Error('Post not found');
+
+    const { data: updated } = await supabase.from('community_posts').update({ liked_by: likedBy, likes: newLikes }).eq('id', postId).select().single();
+    const { data: comments } = await supabase.from('community_comments').select('*').eq('post_id', postId);
+
+    return { 
+      ...updated, 
+      id: updated.id, 
+      userId: updated.user_id, 
+      userName: updated.user_name, 
+      businessName: updated.business_name, 
+      userAvatar: updated.user_avatar, 
+      likedBy: updated.liked_by, 
+      comments: (comments || []).map(c => ({ id: c.id, userId: c.user_id, userName: c.user_name, userAvatar: c.user_avatar, content: c.content, createdAt: c.created_at })),
+      createdAt: updated.created_at 
+    };
   },
 
   // Finance
-  getFinanceEntries: async (userId: number) => getStorage<FinancialEntry>(STORAGE_KEYS.FINANCE).filter(f => f.userId === userId),
+  getFinanceEntries: async (userId: string) => {
+    const { data } = await supabase.from('financial_entries').select('*').eq('user_id', userId);
+    return (data || []).map(e => ({ ...e, userId: e.user_id }));
+  },
   addFinanceEntry: async (entry: Omit<FinancialEntry, 'id'>) => {
-    const entries = getStorage<FinancialEntry>(STORAGE_KEYS.FINANCE);
-    const newEntry = { ...entry, id: Math.random().toString(36).substr(2, 9) };
-    entries.push(newEntry);
-    setStorage(STORAGE_KEYS.FINANCE, entries);
-    return newEntry;
+    const { data } = await supabase.from('financial_entries').insert({
+      user_id: entry.userId,
+      description: entry.description,
+      value: entry.value,
+      type: entry.type,
+      date: entry.date,
+      category: entry.category
+    }).select().single();
+    return { ...data, userId: data.user_id };
   },
   deleteFinanceEntry: async (id: string) => {
-    const entries = getStorage<FinancialEntry>(STORAGE_KEYS.FINANCE).filter(e => e.id !== id);
-    setStorage(STORAGE_KEYS.FINANCE, entries);
+    await supabase.from('financial_entries').delete().eq('id', id);
   },
 
   // CRM & Schedule
-  getLeads: async (userId: number) => getStorage<Lead>(STORAGE_KEYS.LEADS),
-  updateLeadStage: async (leadId: string, stage: any) => {
-    const leads = getStorage<Lead>(STORAGE_KEYS.LEADS);
-    const idx = leads.findIndex(l => l.id === leadId);
-    if (idx !== -1) {
-      leads[idx].stage = stage;
-      setStorage(STORAGE_KEYS.LEADS, leads);
-    }
+  getLeads: async (userId: string) => {
+    const { data } = await supabase.from('leads').select('*').eq('user_id', userId);
+    return (data || []).map(l => ({ ...l, userId: l.user_id }));
   },
-  addLeads: async (newLeads: Lead[]) => {
-    const leads = getStorage<Lead>(STORAGE_KEYS.LEADS);
-    setStorage(STORAGE_KEYS.LEADS, [...leads, ...newLeads]);
+  updateLeadStage: async (leadId: string, stage: PipelineStage) => {
+    await supabase.from('leads').update({ stage }).eq('id', leadId);
+  },
+  addLeads: async (leads: Lead[]) => {
+    const leadsToInsert = leads.map(l => ({
+      user_id: l.userId,
+      name: l.name,
+      phone: l.phone,
+      source: l.source,
+      stage: l.stage,
+      notes: l.notes,
+      value: l.value
+    }));
+    await supabase.from('leads').insert(leadsToInsert);
   },
   deleteLead: async (leadId: string) => {
-    const leads = getStorage<Lead>(STORAGE_KEYS.LEADS).filter(l => l.id !== leadId);
-    setStorage(STORAGE_KEYS.LEADS, leads);
+    await supabase.from('leads').delete().eq('id', leadId);
   },
-  updateLead: async (leadId: string, data: any) => {
-    const leads = getStorage<Lead>(STORAGE_KEYS.LEADS);
-    const idx = leads.findIndex(l => l.id === leadId);
-    if (idx !== -1) {
-      leads[idx] = { ...leads[idx], ...data };
-      setStorage(STORAGE_KEYS.LEADS, leads);
-    }
+  updateLead: async (leadId: string, data: Partial<Lead>) => {
+    await supabase.from('leads').update(data).eq('id', leadId);
   },
-  getSchedule: async (userId: number) => getStorage<ScheduleItem>(STORAGE_KEYS.SCHEDULE).filter(s => s.userId === userId),
+  getSchedule: async (userId: string) => {
+    const { data } = await supabase.from('schedule_items').select('*').eq('user_id', userId);
+    return (data || []).map(s => ({ ...s, userId: s.user_id }));
+  },
   addScheduleItem: async (item: Omit<ScheduleItem, 'id'>) => {
-    const items = getStorage<ScheduleItem>(STORAGE_KEYS.SCHEDULE);
-    const newItem = { ...item, id: Math.random().toString(36).substr(2, 9) };
-    items.push(newItem);
-    setStorage(STORAGE_KEYS.SCHEDULE, items);
-    return newItem;
+    const { data } = await supabase.from('schedule_items').insert({
+      user_id: item.userId,
+      title: item.title,
+      client: item.client,
+      date: item.date,
+      time: item.time,
+      type: item.type,
+      status: item.status
+    }).select().single();
+    return { ...data, userId: data.user_id };
   },
-  updateScheduleItem: async (id: string, data: any) => {
-    const items = getStorage<ScheduleItem>(STORAGE_KEYS.SCHEDULE);
-    const idx = items.findIndex(s => s.id === id);
-    if (idx !== -1) {
-      items[idx] = { ...items[idx], ...data };
-      setStorage(STORAGE_KEYS.SCHEDULE, items);
-    }
+  updateScheduleItem: async (id: string, data: Partial<ScheduleItem>) => {
+    await supabase.from('schedule_items').update(data).eq('id', id);
   },
   deleteScheduleItem: async (id: string) => {
-    const items = getStorage<ScheduleItem>(STORAGE_KEYS.SCHEDULE).filter(s => s.id !== id);
-    setStorage(STORAGE_KEYS.SCHEDULE, items);
+    await supabase.from('schedule_items').delete().eq('id', id);
   },
 
   // Profile
-  getProfile: async (userId: number) => getStorage<Profile>(STORAGE_KEYS.PROFILES).find(p => p.userId === userId),
-  updateProfile: async (userId: number, data: Partial<Profile>) => {
-    const profiles = getStorage<Profile>(STORAGE_KEYS.PROFILES);
-    const index = profiles.findIndex(p => p.userId === userId);
+  getProfile: async (userId: string): Promise<Profile | null> => {
+    const { data } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    if (!data) return null;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      businessName: data.business_name,
+      category: data.category,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      neighborhood: data.neighborhood,
+      bio: data.bio,
+      logoUrl: data.logo_url,
+      socialLinks: data.social_links,
+      storeConfig: data.store_config,
+      bioConfig: data.bio_config
+    };
+  },
+  updateProfile: async (userId: string, data: Partial<Profile>) => {
+    const profileData = {
+      business_name: data.businessName,
+      category: data.category,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      neighborhood: data.neighborhood,
+      bio: data.bio,
+      // Fixed property access to logoUrl instead of logo_url
+      logo_url: data.logoUrl,
+      social_links: data.socialLinks,
+      store_config: data.storeConfig,
+      bio_config: data.bioConfig
+    };
     
-    if (index === -1) {
-       await mockBackend.addPoints(userId, 'Completar Perfil', 20, 'engajamento');
+    // Check if profile exists
+    const { data: existing } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+    if (!existing) {
+      await mockBackend.addPoints(userId, 'Completar Perfil', 20, 'engajamento');
     }
 
-    if (index === -1) {
-      const newProfile: Profile = { id: Date.now(), userId, ...data };
-      profiles.push(newProfile);
-      setStorage(STORAGE_KEYS.PROFILES, profiles);
-      return newProfile;
-    }
-    profiles[index] = { ...profiles[index], ...data };
-    setStorage(STORAGE_KEYS.PROFILES, profiles);
-    return profiles[index];
+    const { data: updated } = await supabase.from('profiles').update(profileData).eq('user_id', userId).select().single();
+    return updated;
   },
-  getAllProfiles: async () => getStorage<Profile>(STORAGE_KEYS.PROFILES),
+  getAllProfiles: async () => {
+    const { data } = await supabase.from('profiles').select('*');
+    return (data || []).map(p => ({
+      id: p.id,
+      userId: p.user_id,
+      businessName: p.business_name,
+      category: p.category,
+      city: p.city,
+      bio: p.bio,
+      logoUrl: p.logo_url,
+      storeConfig: p.store_config
+    }));
+  },
 
   // Offers
   getOffers: async (filters?: any) => {
-    let offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    if (offers.length === 0) {
-      const seeds: Offer[] = [
-        {
-          id: 101, userId: 1, title: 'Consultoria Estratégica Digital', 
-          description: 'Aumente suas vendas locais com estratégias de tráfego pago e posicionamento de marca.',
-          category: OfferCategory.SERVICOS_PROFISSIONAIS, city: 'São Paulo', price: 'A partir de R$ 450',
-          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800'
-        },
-        {
-          id: 102, userId: 2, title: 'Terapia Holística e Bem-estar', 
-          description: 'Sessões de reiki e meditação guiada para equilíbrio emocional e redução de estresse.',
-          category: OfferCategory.SAUDE_BEM_ESTAR, city: 'Rio de Janeiro', price: 'R$ 150/sessão',
-          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1544367563-12123d8966bf?auto=format&fit=crop&q=80&w=800'
-        },
-        {
-          id: 103, userId: 3, title: 'Apartamento Studio Centro', 
-          description: 'Excelente oportunidade para locação em região privilegiada com fácil acesso ao metrô.',
-          category: OfferCategory.IMOVEIS_SERVICOS, city: 'Curitiba', price: 'R$ 1.800/mês',
-          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'
-        },
-        {
-          id: 104, userId: 4, title: 'Mentoria: Gestão para Pequenos', 
-          description: 'Aprenda a organizar seu fluxo de caixa e gerir sua equipe de forma eficiente.',
-          category: OfferCategory.OPORTUNIDADES, city: 'Belo Horizonte', price: 'Grátis p/ Membros Pro',
-          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=800'
-        }
-      ];
-      setStorage(STORAGE_KEYS.OFFERS, seeds);
-      offers = seeds;
-    }
+    let query = supabase.from('offers').select('*');
+    if (filters?.category) query = query.eq('category', filters.category);
+    if (filters?.city) query = query.ilike('city', `%${filters.city}%`);
+    if (filters?.search) query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
 
-    if (filters) {
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
-        offers = offers.filter(o => o.title.toLowerCase().includes(search) || o.description.toLowerCase().includes(search));
-      }
-      if (filters.city) {
-        offers = offers.filter(o => o.city.toLowerCase().includes(filters.city.toLowerCase()));
-      }
-      if (filters.category) {
-        offers = offers.filter(o => o.category === filters.category);
-      }
-    }
-    return offers;
+    const { data } = await query;
+    return (data || []).map(o => ({
+      id: o.id,
+      userId: o.user_id,
+      title: o.title,
+      description: o.description,
+      category: o.category,
+      city: o.city,
+      price: o.price,
+      createdAt: o.created_at,
+      imageUrl: o.image_url,
+      videoUrl: o.video_url,
+      logoUrl: o.logo_url,
+      socialLinks: o.social_links,
+      coupons: o.coupons,
+      scheduling: o.scheduling
+    }));
   },
-  getMyOffers: async (userId: number) => getStorage<Offer>(STORAGE_KEYS.OFFERS).filter(o => o.userId === userId),
-  createOffer: async (userId: number, data: any): Promise<Offer> => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    const newOffer: Offer = { ...data, id: Date.now(), userId, createdAt: Date.now() };
-    offers.push(newOffer);
-    setStorage(STORAGE_KEYS.OFFERS, offers);
+  getMyOffers: async (userId: string) => {
+    const { data } = await supabase.from('offers').select('*').eq('user_id', userId);
+    return (data || []).map(o => ({ ...o, userId: o.user_id, createdAt: o.created_at, imageUrl: o.image_url, videoUrl: o.video_url, logoUrl: o.logo_url, socialLinks: o.social_links }));
+  },
+  createOffer: async (userId: string, data: any): Promise<Offer> => {
+    const { data: newOffer, error } = await supabase.from('offers').insert({
+      user_id: userId,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      city: data.city,
+      price: data.price,
+      image_url: data.imageUrl,
+      video_url: data.videoUrl,
+      logo_url: data.logoUrl,
+      social_links: data.socialLinks,
+      scheduling: data.scheduling,
+      created_at: new Date().getTime()
+    }).select().single();
     
+    if (error) throw error;
     await mockBackend.addPoints(userId, 'Criar Novo Anúncio', 20, 'engajamento');
-
     return newOffer;
   },
-  updateOffer: async (userId: number, id: number, data: any): Promise<Offer> => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    const idx = offers.findIndex(o => o.id === id && o.userId === userId);
-    if (idx === -1) throw new Error('Offer not found');
-    offers[idx] = { ...offers[idx], ...data };
-    setStorage(STORAGE_KEYS.OFFERS, offers);
+  updateOffer: async (userId: string, id: string, data: any): Promise<Offer> => {
+    const { data: updated } = await supabase.from('offers').update({
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      city: data.city,
+      price: data.price,
+      image_url: data.imageUrl,
+      video_url: data.videoUrl,
+      logo_url: data.logoUrl,
+      social_links: data.socialLinks,
+      scheduling: data.scheduling
+    }).eq('id', id).eq('user_id', userId).select().single();
     
     await mockBackend.addPoints(userId, 'Atualizar Anúncio', 20, 'engajamento');
-
-    return offers[idx];
+    return updated;
   },
-  deleteOffer: async (id: number, userId: number) => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS).filter(o => !(o.id === id && o.userId === userId));
-    setStorage(STORAGE_KEYS.OFFERS, offers);
+  deleteOffer: async (id: string, userId: string) => {
+    await supabase.from('offers').delete().eq('id', id).eq('user_id', userId);
   },
 
   // Products
-  getProducts: async (userId: number) => getStorage<Product>(STORAGE_KEYS.PRODUCTS).filter(p => p.userId === userId),
+  getProducts: async (userId: string) => {
+    const { data } = await supabase.from('products').select('*').eq('user_id', userId);
+    return (data || []).map(p => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id }));
+  },
   getAllProducts: async (): Promise<any[]> => {
-    let products = getStorage<Product>(STORAGE_KEYS.PRODUCTS);
-    if (products.length === 0) {
-      const seeds: Product[] = [
-        { id: 'p1', userId: 10, name: 'Hambúrguer Artesanal Smash', description: 'Duas carnes suculentas de 100g, queijo cheddar e molho especial.', price: 34.90, imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800', category: 'Gastronomia', available: true },
-        { id: 'p2', userId: 11, name: 'Combo Café da Manhã', description: 'Café expresso, pão de queijo recheado e fatia de bolo do dia.', price: 25.00, imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800', category: 'Gastronomia', available: true }
-      ];
-      setStorage(STORAGE_KEYS.PRODUCTS, seeds);
-      products = seeds;
-    }
-    const profiles = getStorage<Profile>(STORAGE_KEYS.PROFILES);
-    return products.map(p => {
-      const prof = profiles.find(pr => pr.userId === p.userId);
-      return {
-        ...p,
-        businessName: prof?.businessName || 'Loja Local',
-        businessLogo: prof?.logoUrl,
-        businessPhone: prof?.phone || prof?.socialLinks?.whatsapp
-      };
-    });
+    const { data: products } = await supabase.from('products').select('*, profiles(business_name, logo_url, phone)');
+    return (products || []).map(p => ({
+      ...p,
+      userId: p.user_id,
+      imageUrl: p.image_url,
+      businessName: p.profiles?.business_name || 'Loja Local',
+      businessLogo: p.profiles?.logo_url,
+      businessPhone: p.profiles?.phone
+    }));
   },
   createProduct: async (data: Product): Promise<Product> => {
-    const products = getStorage<Product>(STORAGE_KEYS.PRODUCTS);
-    const newProd = { ...data, id: Math.random().toString(36).substr(2, 9) };
-    products.push(newProd);
-    setStorage(STORAGE_KEYS.PRODUCTS, products);
+    const { data: newProd } = await supabase.from('products').insert({
+      user_id: data.userId,
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      promo_price: data.promoPrice,
+      image_url: data.imageUrl,
+      category: data.category,
+      store_category_id: data.storeCategoryId,
+      available: data.available
+    }).select().single();
 
     await mockBackend.addPoints(data.userId, 'Adicionar Produto ao Catálogo', 20, 'engajamento');
-
     return newProd;
   },
-  deleteProduct: async (id: string, userId: number) => {
-    const products = getStorage<Product>(STORAGE_KEYS.PRODUCTS).filter(p => !(p.id === id && p.userId === userId));
-    setStorage(STORAGE_KEYS.PRODUCTS, products);
+  deleteProduct: async (id: string, userId: string) => {
+    await supabase.from('products').delete().eq('id', id).eq('user_id', userId);
   },
 
   // Store Categories
-  getStoreCategories: async (userId: number) => getStorage<StoreCategory>(STORAGE_KEYS.STORE_CATEGORIES).filter(c => c.userId === userId),
-  createStoreCategory: async (userId: number, name: string): Promise<StoreCategory> => {
-    const cats = getStorage<StoreCategory>(STORAGE_KEYS.STORE_CATEGORIES);
-    const newCat = { id: Math.random().toString(36).substr(2, 9), userId, name, order: cats.length };
-    cats.push(newCat);
-    setStorage(STORAGE_KEYS.STORE_CATEGORIES, cats);
+  getStoreCategories: async (userId: string) => {
+    const { data } = await supabase.from('store_categories').select('*').eq('user_id', userId).order('order', { ascending: true });
+    return (data || []).map(c => ({ ...c, userId: c.user_id }));
+  },
+  createStoreCategory: async (userId: string, name: string): Promise<StoreCategory> => {
+    const { count } = await supabase.from('store_categories').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+    const { data: newCat } = await supabase.from('store_categories').insert({
+      user_id: userId,
+      name,
+      order: count || 0
+    }).select().single();
     
     await mockBackend.addPoints(userId, 'Criar Categoria no Catálogo', 20, 'engajamento');
-
     return newCat;
   },
-  deleteStoreCategory: async (id: string, userId: number) => {
-    const cats = getStorage<StoreCategory>(STORAGE_KEYS.STORE_CATEGORIES).filter(c => !(c.id === id && c.userId === userId));
-    setStorage(STORAGE_KEYS.STORE_CATEGORIES, cats);
-  },
-
-  // Coupons
-  addCoupon: async (userId: number, offerId: number, data: any) => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    const idx = offers.findIndex(o => o.id === offerId && o.userId === userId);
-    if (idx !== -1) {
-      const newCoupon = { ...data, id: Math.random().toString(36).substr(2, 9) };
-      if (!offers[idx].coupons) offers[idx].coupons = [];
-      offers[idx].coupons!.push(newCoupon);
-      setStorage(STORAGE_KEYS.OFFERS, offers);
-      
-      await mockBackend.addPoints(userId, 'Criar Novo Cupom', 20, 'engajamento');
-    }
-  },
-  updateCoupon: async (userId: number, offerId: number, couponId: string, data: any) => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    const oIdx = offers.findIndex(o => o.id === offerId && o.userId === userId);
-    if (oIdx !== -1 && offers[oIdx].coupons) {
-      const cIdx = offers[oIdx].coupons!.findIndex(c => c.id === couponId);
-      if (cIdx !== -1) {
-        offers[oIdx].coupons![cIdx] = { ...offers[oIdx].coupons![cIdx], ...data };
-        setStorage(STORAGE_KEYS.OFFERS, offers);
-      }
-    }
-  },
-  deleteCoupon: async (userId: number, offerId: number, couponId: string) => {
-    const offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
-    const oIdx = offers.findIndex(o => o.id === offerId && o.userId === userId);
-    if (oIdx !== -1 && offers[oIdx].coupons) {
-      offers[oIdx].coupons = offers[oIdx].coupons!.filter(c => c.id !== couponId);
-      setStorage(STORAGE_KEYS.OFFERS, offers);
-    }
-  },
-  redeemCoupon: async (userId: number, couponId: string, points: number) => {
-    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
-    const idx = users.findIndex(u => u.id === userId);
-    if (idx !== -1) {
-      const updatedUser = await mockBackend.addPoints(userId, `Resgate de Cupom`, points, 'especial');
-      return updatedUser;
-    }
-    throw new Error('User not found');
+  deleteStoreCategory: async (id: string, userId: string) => {
+    await supabase.from('store_categories').delete().eq('id', id).eq('user_id', userId);
   },
 
   // Academy Quiz Completion
-  completeAcademyQuiz: async (userId: number, courseTitle: string) => {
-    return await mockBackend.addPoints(userId, `Quiz da Academy: ${courseTitle}`, 20, 'especial');
+  completeAcademyQuiz: async (userId: string, courseTitle: string) => {
+    await mockBackend.addPoints(userId, `Quiz da Academy: ${courseTitle}`, 20, 'especial');
+    const { data: p } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    return {
+      id: userId,
+      name: p.full_name,
+      email: p.email,
+      plan: p.plan,
+      points: p.points,
+      level: p.level,
+      referralCode: p.referral_code,
+      referralsCount: p.referrals_count
+    };
   },
 
   // Networking
-  getNetworkingProfiles: async () => getStorage<NetworkingProfile>(STORAGE_KEYS.NETWORKING),
-  createNetworkingProfile: async (data: any): Promise<NetworkingProfile> => {
-    const profiles = getStorage<NetworkingProfile>(STORAGE_KEYS.NETWORKING);
-    const newProfile = { ...data, id: Date.now() };
-    profiles.push(newProfile);
-    setStorage(STORAGE_KEYS.NETWORKING, profiles);
-    return newProfile;
-  },
-  deleteNetworkingProfile: async (id: number) => {
-    const profiles = getStorage<NetworkingProfile>(STORAGE_KEYS.NETWORKING).filter(p => p.id !== id);
-    setStorage(STORAGE_KEYS.NETWORKING, profiles);
-  },
-
-  // Loyalty
-  getLoyaltyCards: async () => getStorage<LoyaltyCard>(STORAGE_KEYS.LOYALTY),
-  stampLoyaltyCard: async (id: string): Promise<LoyaltyCard> => {
-    const cards = getStorage<LoyaltyCard>(STORAGE_KEYS.LOYALTY);
-    const idx = cards.findIndex(c => c.id === id);
-    if (idx !== -1) {
-      if (cards[idx].currentStamps < cards[idx].totalStamps) {
-        cards[idx].currentStamps += 1;
-      }
-      setStorage(STORAGE_KEYS.LOYALTY, cards);
-      return cards[idx];
-    }
-    throw new Error('Card not found');
+  getNetworkingProfiles: async () => {
+    const { data } = await supabase.from('profiles').select('id, user_id, full_name, business_name, category, logo_url, bio').not('business_name', 'is', null);
+    return (data || []).map(p => ({
+      id: p.id,
+      userId: p.user_id,
+      name: p.full_name,
+      businessName: p.business_name,
+      sector: p.category,
+      avatar: p.logo_url,
+      lookingFor: p.bio
+    }));
   },
 
-  // Extractor
+  // Blog
+  getBlogPosts: async (): Promise<BlogPost[]> => {
+    const { data } = await supabase.from('blog_posts').select('*');
+    return (data || []).map(p => ({
+      ...p,
+      id: p.id,
+      imageUrl: p.image_url,
+      userId: p.user_id
+    }));
+  },
+
+  // Extras
   runExtractor: async (type: string, keyword: string): Promise<ExtractorResult[]> => {
     await new Promise(r => setTimeout(r, 1000));
     return [
@@ -492,46 +444,70 @@ export const mockBackend = {
       { id: 'ext2', name: `${keyword} B`, phone: '5511999990002', address: 'Av. Brasil, 456', source: type as any, category: keyword },
     ];
   },
+  getQuotes: async () => [],
+  getReviews: async () => [],
 
-  // Blog
-  getBlogPosts: async (): Promise<BlogPost[]> => {
-    const posts = getStorage<BlogPost>(STORAGE_KEYS.BLOG);
-    const seed: BlogPost[] = [
-        {
-          id: 1,
-          title: 'Como aumentar suas vendas locais em 2024',
-          summary: 'Descubra 5 estratégias simples para atrair mais clientes do seu bairro.',
-          content: 'O marketing de proximidade nunca foi tão importante...',
-          author: 'Equipe Menu de Negócios',
-          date: '10/05/2024',
-          imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800',
-          category: 'Vendas'
-        }
+  // Added missing methods for Coupons, Networking, and Loyalty
+  redeemCoupon: async (userId: string, couponId: string, points: number): Promise<User> => {
+    await mockBackend.addPoints(userId, `Uso de Cupom: ${couponId}`, points, 'engajamento');
+    const { data: p } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    if (!p) throw new Error('Profile not found');
+    return {
+      id: userId,
+      name: p.full_name,
+      email: p.email,
+      plan: p.plan,
+      points: p.points,
+      level: p.level,
+      referralCode: p.referral_code,
+      referralsCount: p.referrals_count
+    };
+  },
+  addCoupon: async (userId: string, offerId: string, coupon: any) => {
+    const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).single();
+    const coupons = offer?.coupons || [];
+    const newCoupon = { ...coupon, id: Math.random().toString(36).substr(2, 9) };
+    await supabase.from('offers').update({ coupons: [...coupons, newCoupon] }).eq('id', offerId);
+  },
+  updateCoupon: async (userId: string, offerId: string, couponId: string, couponData: any) => {
+    const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).single();
+    const coupons = (offer?.coupons || []).map((c: any) => c.id === couponId ? { ...c, ...couponData } : c);
+    await supabase.from('offers').update({ coupons }).eq('id', offerId);
+  },
+  deleteCoupon: async (userId: string, offerId: string, couponId: string) => {
+    const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).single();
+    const coupons = (offer?.coupons || []).filter((c: any) => c.id !== couponId);
+    await supabase.from('offers').update({ coupons }).eq('id', offerId);
+  },
+  createNetworkingProfile: async (data: any): Promise<NetworkingProfile> => {
+    const { data: updated } = await supabase.from('profiles').update({
+      full_name: data.name,
+      business_name: data.businessName,
+      category: data.sector,
+      bio: data.lookingFor,
+      logo_url: data.avatar
+    }).eq('user_id', data.userId).select().single();
+    if (!updated) throw new Error('Profile update failed');
+    return {
+      id: updated.id,
+      userId: updated.user_id,
+      name: updated.full_name,
+      businessName: updated.business_name,
+      sector: updated.category,
+      avatar: updated.logo_url,
+      lookingFor: updated.bio
+    };
+  },
+  deleteNetworkingProfile: async (id: string) => {
+    await supabase.from('profiles').update({ business_name: null }).eq('id', id);
+  },
+  getLoyaltyCards: async (): Promise<LoyaltyCard[]> => {
+    return [
+      { id: '1', businessName: 'Café Central', reward: 'Café Grátis', totalStamps: 5, currentStamps: 2, color: 'bg-amber-600' },
+      { id: '2', businessName: 'Sushi Bar', reward: 'Combinado 15 peças', totalStamps: 10, currentStamps: 8, color: 'bg-rose-600' }
     ];
-    
-    if (posts.length === 0) {
-      setStorage(STORAGE_KEYS.BLOG, seed);
-      return seed;
-    }
-    return posts;
   },
-  getMyBlogPosts: async (userId: number): Promise<BlogPost[]> => {
-    const posts = getStorage<BlogPost>(STORAGE_KEYS.BLOG);
-    return posts.filter(p => p.userId === userId);
-  },
-  createBlogPost: async (data: Omit<BlogPost, 'id'>): Promise<BlogPost> => {
-    const posts = getStorage<BlogPost>(STORAGE_KEYS.BLOG);
-    const newPost = { ...data, id: Date.now() };
-    posts.push(newPost);
-    setStorage(STORAGE_KEYS.BLOG, posts);
-    return newPost;
-  },
-  deleteBlogPost: async (id: number) => {
-    const posts = getStorage<BlogPost>(STORAGE_KEYS.BLOG).filter(p => p.id !== id);
-    setStorage(STORAGE_KEYS.BLOG, posts);
-  },
-
-  // Others
-  getQuotes: async () => getStorage<Quote>(STORAGE_KEYS.QUOTES),
-  getReviews: async () => getStorage<Review>(STORAGE_KEYS.REVIEWS)
+  stampLoyaltyCard: async (id: string): Promise<LoyaltyCard> => {
+    return { id, businessName: 'Sushi Bar', reward: 'Combinado 15 peças', totalStamps: 10, currentStamps: 9, color: 'bg-rose-600' };
+  }
 };

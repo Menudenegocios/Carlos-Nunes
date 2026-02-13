@@ -13,7 +13,8 @@ export const Blog: React.FC = () => {
   useEffect(() => {
     const loadPosts = async () => {
       const data = await mockBackend.getBlogPosts();
-      setPosts(data.sort((a, b) => (b.id as number) - (a.id as number)));
+      // Fixed: convert id to Number for numeric sort comparison
+      setPosts(data.sort((a, b) => Number(b.id) - Number(a.id)));
       setLoading(false);
     };
     loadPosts();

@@ -9,6 +9,7 @@ export const Loyalty: React.FC = () => {
 
   useEffect(() => {
     const loadCards = async () => {
+      // getLoyaltyCards is now implemented in mockBackend
       const data = await mockBackend.getLoyaltyCards();
       setCards(data);
     };
@@ -16,6 +17,7 @@ export const Loyalty: React.FC = () => {
   }, []);
 
   const handleStamp = async (id: string) => {
+    // stampLoyaltyCard is now implemented in mockBackend
     const updated = await mockBackend.stampLoyaltyCard(id);
     setCards(prev => prev.map(c => c.id === id ? updated : c));
   };

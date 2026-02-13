@@ -57,7 +57,8 @@ export const BusinessSuite: React.FC = () => {
 };
 
 // --- CRM VIEW IMPLEMENTATION WITH DRAG & DROP ---
-const CRMView = ({ userId }: { userId: number }) => {
+// Updated userId type to string
+const CRMView = ({ userId }: { userId: string }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -79,7 +80,7 @@ const CRMView = ({ userId }: { userId: number }) => {
     if (editingLead) {
       await mockBackend.updateLead(editingLead.id, formData);
     } else {
-      await mockBackend.addLeads([{ ...formData, id: Math.random().toString(36).substr(2, 9) } as Lead]);
+      await mockBackend.addLeads([{ ...formData, id: Math.random().toString(36).substr(2, 9), userId } as Lead]);
     }
     setIsModalOpen(false);
     loadLeads();
@@ -215,7 +216,8 @@ const CRMView = ({ userId }: { userId: number }) => {
 };
 
 // --- FINANCE VIEW IMPLEMENTATION ---
-const FinanceView = ({ userId }: { userId: number }) => {
+// Updated userId type to string
+const FinanceView = ({ userId }: { userId: string }) => {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<FinancialEntry>>({ description: '', value: 0, type: 'income', category: 'Vendas' });
@@ -349,7 +351,8 @@ const FinanceView = ({ userId }: { userId: number }) => {
 };
 
 // --- SCHEDULE VIEW IMPLEMENTATION ---
-const ScheduleView = ({ userId }: { userId: number }) => {
+// Updated userId type to string
+const ScheduleView = ({ userId }: { userId: string }) => {
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<ScheduleItem>>({ title: '', client: '', date: '', time: '', type: 'servico', status: 'pending' });

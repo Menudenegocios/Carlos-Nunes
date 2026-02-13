@@ -85,7 +85,7 @@ export const Coupons: React.FC = () => {
         selectedCoupon.id, 
         selectedCoupon.pointsReward
       );
-      login(updatedUser, localStorage.getItem('menu_token') || '');
+      login(updatedUser);
       alert(`Cupom ${selectedCoupon.code} ativado! Você ganhou ${selectedCoupon.pointsReward} pontos.`);
       setSelectedCoupon(null);
     } catch (error) {
@@ -111,7 +111,7 @@ export const Coupons: React.FC = () => {
 
   const handleEditCoupon = (coupon: CouponWithOffer) => {
     setNewCouponData({
-      offerId: coupon.offer.id.toString(),
+      offerId: coupon.offer.id,
       code: coupon.code,
       title: coupon.title,
       discount: coupon.discount,
@@ -151,9 +151,11 @@ export const Coupons: React.FC = () => {
       };
 
       if (isEditing && editingCouponId) {
-        await mockBackend.updateCoupon(user.id, Number(newCouponData.offerId), editingCouponId, commonData);
+        // Fixed: offerId is a string, no need for Number()
+        await mockBackend.updateCoupon(user.id, newCouponData.offerId, editingCouponId, commonData);
       } else {
-        await mockBackend.addCoupon(user.id, Number(newCouponData.offerId), commonData);
+        // Fixed: offerId is a string, no need for Number()
+        await mockBackend.addCoupon(user.id, newCouponData.offerId, commonData);
       }
       
       setIsCreateModalOpen(false);

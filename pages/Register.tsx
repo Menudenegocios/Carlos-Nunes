@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
+import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,11 +18,13 @@ export const Register: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      await mockBackend.register(name, email, password);
-      // Automatically redirect to login page after successful registration
+      await register(name, email, password);
+      // O Supabase por padrão exige confirmação de e-mail. 
+      // Se estiver desabilitado no painel, ele loga direto ou permite o login.
+      alert('Conta criada com sucesso! Verifique seu e-mail (se necessário) e faça login.');
       navigate('/login');
     } catch (err: any) {
-      setError(err.message || 'Erro ao registrar');
+      setError(err.message || 'Erro ao registrar nova conta.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +52,7 @@ export const Register: React.FC = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
-                Nome Completo
+                Nome Completo (ou Nome do Negócio)
               </label>
               <div className="mt-1">
                 <input
@@ -100,7 +103,7 @@ export const Register: React.FC = () => {
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md font-bold">
                 {error}
               </div>
             )}
@@ -109,12 +112,28 @@ export const Register: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#F5821F] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F5821F] disabled:opacity-50 transition-all"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-black text-white bg-[#F5821F] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F5821F] disabled:opacity-50 transition-all uppercase tracking-widest"
               >
-                {loading ? 'Criando conta...' : 'Cadastrar'}
+                {loading ? 'Criando conta...' : 'Começar Agora Grátis'}
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-slate-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 font-bold uppercase tracking-widest text-[10px]">
+                  Segurança Garantida
+                </span>
+              </div>
+            </div>
+            <p className="mt-4 text-center text-[10px] text-gray-500 dark:text-slate-400 leading-relaxed uppercase tracking-tighter">
+              Ao criar sua conta, você concorda com nossos <Link to="/terms" className="underline font-black">Termos de Uso</Link> e <Link to="/privacy" className="underline font-black">Política de Privacidade</Link>.
+            </p>
+          </div>
         </div>
       </div>
     </div>
