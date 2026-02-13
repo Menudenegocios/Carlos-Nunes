@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { mockBackend } from '../services/mockBackend';
 import { BlogPost } from '../types';
-import { Calendar, User, BookOpen, Search, ArrowRight, Store, X, ChevronLeft, Share2 } from 'lucide-react';
+import { Calendar, User, BookOpen, Search, ArrowRight, Store, X, ChevronLeft, Share2, Sparkles, Clock, TrendingUp } from 'lucide-react';
 
 export const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -27,61 +27,52 @@ export const Blog: React.FC = () => {
 
   if (selectedPost) {
     return (
-      <div className="max-w-4xl mx-auto pb-20 animate-fade-in">
+      <div className="max-w-4xl mx-auto pb-32 pt-8 px-6 animate-fade-in">
           <button 
             onClick={() => setSelectedPost(null)}
-            className="flex items-center gap-2 text-indigo-600 font-bold mb-8 hover:bg-indigo-50 px-4 py-2 rounded-xl transition-all"
+            className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest mb-12 hover:bg-indigo-50 w-fit px-6 py-3 rounded-2xl transition-all border border-indigo-100 shadow-sm"
           >
-            <ChevronLeft className="w-5 h-5" /> Voltar para o Blog
+            <ChevronLeft className="w-4 h-4" /> VOLTAR PARA O BLOG
           </button>
 
-          <article className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
-              <div className="relative h-[400px] w-full">
-                  {selectedPost.imageUrl ? (
-                    <img src={selectedPost.imageUrl} className="w-full h-full object-cover" alt={selectedPost.title} />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-900 to-indigo-900 flex items-center justify-center">
-                        <BookOpen className="w-20 h-20 text-white/10" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  <div className="absolute bottom-10 left-10 right-10">
-                      <span className="bg-indigo-600 text-white text-xs font-black uppercase px-3 py-1.5 rounded-lg mb-4 inline-block tracking-widest">
+          <article className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100">
+              <div className="relative h-[450px] w-full">
+                  <img src={selectedPost.imageUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200'} className="w-full h-full object-cover" alt={selectedPost.title} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent"></div>
+                  <div className="absolute bottom-16 left-16 right-16">
+                      <span className="bg-indigo-600 text-white text-[9px] font-black uppercase px-4 py-2 rounded-full mb-6 inline-block tracking-widest border border-white/20 backdrop-blur-md">
                           {selectedPost.category}
                       </span>
-                      <h1 className="text-3xl md:text-5xl font-black text-white leading-tight shadow-sm">
+                      <h1 className="text-4xl md:text-5xl font-black text-white leading-tight">
                           {selectedPost.title}
                       </h1>
                   </div>
               </div>
 
-              <div className="p-10">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 pb-8 border-b border-gray-100">
+              <div className="p-12 md:p-16">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 pb-10 border-b border-gray-100">
                       <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                              {selectedPost.userId ? <Store className="w-7 h-7" /> : <User className="w-7 h-7" />}
+                          <div className="w-16 h-16 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm">
+                              {selectedPost.userId ? <Store className="w-8 h-8" /> : <User className="w-8 h-8" />}
                           </div>
                           <div>
-                              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Autor</p>
-                              <p className="font-bold text-gray-900 text-lg">{selectedPost.author}</p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Autor Responsável</p>
+                              <p className="font-black text-gray-900 text-xl">{selectedPost.author}</p>
                           </div>
                       </div>
                       <div className="flex items-center gap-8">
-                          <div>
-                              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Publicado em</p>
-                              <p className="font-bold text-gray-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-indigo-600" /> {selectedPost.date}</p>
-                          </div>
-                          <button className="p-3 bg-gray-50 rounded-xl text-gray-500 hover:text-indigo-600 transition-all">
-                              <Share2 className="w-5 h-5" />
+                          <p className="font-bold text-gray-900 flex items-center gap-2 text-lg"><Calendar className="w-5 h-5 text-indigo-600" /> {selectedPost.date}</p>
+                          <button className="p-4 bg-gray-50 rounded-2xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all">
+                              <Share2 className="w-6 h-6" />
                           </button>
                       </div>
                   </div>
 
-                  <div className="prose prose-lg max-w-none prose-indigo">
-                      <p className="text-xl text-gray-500 font-medium mb-10 italic leading-relaxed">
+                  <div className="prose prose-xl max-w-none">
+                      <p className="text-2xl text-gray-500 font-medium mb-12 italic leading-relaxed border-l-8 border-indigo-100 pl-8">
                           {selectedPost.summary}
                       </p>
-                      <div className="text-gray-700 leading-relaxed space-y-6 text-lg whitespace-pre-wrap">
+                      <div className="text-gray-700 leading-relaxed space-y-8 text-lg font-medium">
                           {selectedPost.content}
                       </div>
                   </div>
@@ -92,89 +83,108 @@ export const Blog: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
-      <div className="bg-gradient-to-r from-gray-900 to-indigo-900 text-white py-12 px-6 rounded-3xl shadow-xl text-center relative overflow-hidden mt-6">
-         <div className="relative z-10 max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 flex items-center justify-center gap-3">
-               <BookOpen className="w-10 h-10 text-cyan-400" /> Blog & Dicas
-            </h1>
-            <p className="text-xl text-indigo-100">
-               Estratégias de marketing, gestão e novidades dos nossos parceiros locais.
-            </p>
+    <div className="max-w-7xl mx-auto space-y-24 pb-32 pt-8 px-6">
+      
+      {/* 1. HERO SECTION (PARTNERS STYLE) */}
+      <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+           <BookOpen className="w-3 h-3" /> Insights & Estratégias
+        </div>
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-none max-w-4xl mx-auto">
+          Conhecimento que <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">faz seu negócio crescer.</span>
+        </h1>
+        <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
+          Aprenda marketing, gestão e tecnologia com quem entende do mercado local brasileiro.
+        </p>
+
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto relative group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+            <input 
+               type="text" 
+               placeholder="Pesquisar por tema, autor ou palavra-chave..." 
+               className="w-full pl-16 pr-6 py-5 bg-white border border-gray-100 rounded-[2rem] font-bold text-gray-900 focus:ring-4 focus:ring-indigo-50 outline-none shadow-xl transition-all"
+               value={searchTerm}
+               onChange={e => setSearchTerm(e.target.value)}
+            />
+        </div>
+      </section>
+
+      {/* 2. BLOG GRID (BENTO STYLE) */}
+      <section className="space-y-12">
+        <div className="flex items-center gap-4 px-4">
+           <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
+           <h2 className="text-3xl font-black text-gray-900 tracking-tight">Artigos Mais Recentes</h2>
+        </div>
+
+        {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                {[1,2,3].map(i => <div key={i} className="h-96 bg-gray-50 rounded-[3rem] animate-pulse"></div>)}
+            </div>
+        ) : filteredPosts.length === 0 ? (
+            <div className="text-center py-32 bg-white rounded-[4rem] border-2 border-dashed border-gray-100">
+                <Search className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                <h4 className="text-2xl font-black text-gray-900">Nada encontrado</h4>
+                <p className="text-gray-500 font-medium">Tente uma busca diferente.</p>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {filteredPosts.map(post => (
+                <article key={post.id} className="group bg-white rounded-[3rem] border border-gray-100 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer" onClick={() => setSelectedPost(post)}>
+                <div className="h-64 w-full overflow-hidden relative bg-gray-100">
+                    <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} alt={post.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                    <div className="absolute top-6 left-6">
+                        <span className="bg-white/90 backdrop-blur-md text-indigo-900 text-[10px] font-black uppercase px-4 py-2 rounded-full shadow-lg border border-white/40 tracking-widest">
+                        {post.category}
+                        </span>
+                    </div>
+                </div>
+                
+                <div className="p-10 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2 text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-4">
+                    <Clock className="w-3.5 h-3.5" /> {post.date}
+                    </div>
+                    
+                    <h2 className="text-2xl font-black text-gray-900 mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
+                    {post.title}
+                    </h2>
+                    <p className="text-gray-500 text-sm font-medium mb-10 flex-1 line-clamp-3 leading-relaxed">
+                    {post.summary}
+                    </p>
+                    
+                    <div className="mt-auto pt-8 border-t border-gray-50 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm">
+                                {post.userId ? <Store className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Autor</p>
+                                <p className="text-sm font-black text-gray-900">{post.author}</p>
+                            </div>
+                        </div>
+                        <div className="bg-indigo-50 text-indigo-600 p-4 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                            <ArrowRight className="w-5 h-5" />
+                        </div>
+                    </div>
+                </div>
+                </article>
+            ))}
+            </div>
+        )}
+      </section>
+
+      {/* 3. NEWSLETTER (PARTNERS STYLE) */}
+      <section className="bg-gray-900 rounded-[4rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
+         <div className="relative z-10 space-y-8 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight">Insights VIP no seu WhatsApp.</h2>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed">Receba estratégias de marketing digital validadas que não publicamos no blog aberto.</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto pt-4">
+               <input type="text" placeholder="Seu WhatsApp" className="bg-white/10 border border-white/20 rounded-2xl px-6 py-4 placeholder:text-gray-500 text-white font-bold focus:ring-2 focus:ring-white outline-none flex-1" />
+               <button className="bg-white text-gray-900 px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-50 transition-all">RECEBER INSIGHTS</button>
+            </div>
          </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-30"></div>
-         <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500 rounded-full blur-[100px] opacity-30"></div>
-      </div>
-
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-20 z-40">
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="Buscar artigos por tema ou autor..." 
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg" 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute left-4 top-3.5 w-6 h-6 text-gray-400" />
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-xl animate-pulse"></div>)}
-        </div>
-      ) : filteredPosts.length === 0 ? (
-        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">Nenhum artigo encontrado.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map(post => (
-            <article key={post.id} className="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col h-full cursor-pointer" onClick={() => setSelectedPost(post)}>
-              <div className="h-56 w-full overflow-hidden relative bg-gray-100">
-                 {post.imageUrl ? (
-                    <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                 ) : (
-                    <div className="w-full h-full bg-indigo-900 flex items-center justify-center opacity-80">
-                        <BookOpen className="w-12 h-12 text-white/20" />
-                    </div>
-                 )}
-                 <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-md text-indigo-900 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg shadow-sm border border-white/20 tracking-wider">
-                      {post.category}
-                    </span>
-                 </div>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-gray-400 text-xs mb-3 font-medium uppercase tracking-wide">
-                  <span className="flex items-center gap-1 font-bold"><Calendar className="w-3 h-3 text-indigo-600" /> {post.date}</span>
-                </div>
-                
-                <h2 className="text-xl font-black text-gray-900 mb-3 leading-tight group-hover:text-indigo-600 transition-colors">
-                  {post.title}
-                </h2>
-                <p className="text-gray-500 text-sm mb-6 flex-1 line-clamp-3 leading-relaxed font-medium">
-                  {post.summary}
-                </p>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                  <div className="flex items-center gap-2 text-sm text-gray-400 font-bold">
-                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
-                      {post.userId ? <Store className="w-4 h-4" /> : <User className="w-4 h-4" />}
-                    </div>
-                    {post.author}
-                  </div>
-                  <div className="text-indigo-600 font-black text-xs uppercase flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Ler artigo <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+         <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] -mb-48 -mr-48"></div>
+      </section>
     </div>
   );
 };

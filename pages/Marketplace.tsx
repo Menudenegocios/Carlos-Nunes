@@ -2,13 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { mockBackend } from '../services/mockBackend';
 import { Product, Offer, OfferCategory } from '../types';
-import { Search, ShoppingBag, Store, Image as ImageIcon, MessageCircle, Briefcase, ArrowRight } from 'lucide-react';
+import { Search, ShoppingBag, Store, Image as ImageIcon, MessageCircle, Briefcase, ArrowRight, Filter, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { OfferCard } from '../components/OfferCard';
 
 type MarketplaceProduct = Product & { businessName?: string, businessLogo?: string, businessPhone?: string };
-
 type TabType = 'products' | 'services';
 
 export const Marketplace: React.FC = () => {
@@ -16,29 +15,19 @@ export const Marketplace: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  // Data States
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [serviceOffers, setServiceOffers] = useState<Offer[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Load Products (Local Businesses)
       const prods = await mockBackend.getAllProducts();
       setProducts(prods);
-
-      // Load Services (Professionals)
       const services = await mockBackend.getOffers({ category: OfferCategory.SERVICOS_PROFISSIONAIS });
       setServiceOffers(services);
-
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const handleBuyProduct = (product: MarketplaceProduct) => {
@@ -47,10 +36,8 @@ export const Marketplace: React.FC = () => {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  // Filter Logic based on Active Tab
   const getFilteredItems = () => {
     const term = searchTerm.toLowerCase();
-    
     if (activeTab === 'products') {
       return products.filter(p => 
         p.name.toLowerCase().includes(term) ||
@@ -58,166 +45,117 @@ export const Marketplace: React.FC = () => {
         (p.businessName && p.businessName.toLowerCase().includes(term))
       );
     } 
-    
-    if (activeTab === 'services') {
-      return serviceOffers.filter(o => 
-        o.title.toLowerCase().includes(term) ||
-        o.description.toLowerCase().includes(term) ||
-        o.city.toLowerCase().includes(term)
-      );
-    }
-
-    return [];
+    return serviceOffers.filter(o => 
+      o.title.toLowerCase().includes(term) ||
+      o.description.toLowerCase().includes(term) ||
+      o.city.toLowerCase().includes(term)
+    );
   };
 
   const filteredItems = getFilteredItems();
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="max-w-7xl mx-auto space-y-24 pb-32 pt-8 px-6">
       
-      {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-gray-900 to-indigo-900 text-white py-12 px-6 rounded-3xl shadow-xl text-center relative overflow-hidden mt-6">
-         <div className="relative z-10 max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 flex items-center justify-center gap-3">
-               <Store className="w-10 h-10 text-cyan-400" /> Marketplace
-            </h1>
-            <p className="text-xl text-indigo-100">
-               Descubra produtos locais e contrate profissionais qualificados.
-            </p>
-            {user && (
-               <div className="mt-8">
-                  <Link 
-                    to="/catalog" 
-                    className="inline-flex items-center gap-2 bg-white text-indigo-900 px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors shadow-lg"
-                  >
-                    <ShoppingBag className="w-5 h-5" /> Painel do Lojista
-                  </Link>
-               </div>
-            )}
-         </div>
-         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-30"></div>
-         <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500 rounded-full blur-[100px] opacity-30"></div>
-      </div>
-
-      {/* Tabs & Search Container */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-20 z-40 space-y-4">
-        
-        {/* Tabs */}
-        <div className="flex p-1 bg-gray-100 rounded-xl overflow-x-auto">
-           <button 
-             onClick={() => setActiveTab('products')}
-             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
-           >
-             <Store className="w-4 h-4" /> Negócios Locais
-           </button>
-           <button 
-             onClick={() => setActiveTab('services')}
-             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'services' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
-           >
-             <Briefcase className="w-4 h-4" /> Profissionais
-           </button>
+      {/* 1. HERO SECTION (PARTNERS STYLE) */}
+      <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+           <ShoppingBag className="w-3 h-3" /> Catálogo Local Unificado
         </div>
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-none max-w-4xl mx-auto">
+          Tudo o que você precisa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">está bem aqui.</span>
+        </h1>
+        <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
+          Encontre de produtos artesanais a serviços especializados no marketplace mais completo da sua região.
+        </p>
 
-        {/* Search */}
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder={activeTab === 'products' ? "Buscar produtos ou lojas..." : "Buscar profissionais..."}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg" 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute left-4 top-3.5 w-6 h-6 text-gray-400" />
-        </div>
-      </div>
-
-      {/* Grid Content */}
-      {isLoading ? (
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1,2,3,4].map(i => (
-               <div key={i} className="bg-white rounded-xl h-80 animate-pulse border border-gray-200"></div>
-            ))}
-         </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-             <Search className="w-8 h-8" />
-          </div>
-          <p className="text-gray-500 text-lg">Nenhum resultado encontrado nesta categoria.</p>
-        </div>
-      ) : (
-        <div className={`grid gap-6 ${activeTab === 'products' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-          
-          {/* PRODUCT RENDER LOGIC */}
-          {activeTab === 'products' && (filteredItems as MarketplaceProduct[]).map(product => (
-            <div key={product.id} className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
-              <Link to={`/store/${product.userId}`} className="relative h-48 w-full overflow-hidden bg-gray-100 block">
-                 {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                       <ImageIcon className="w-10 h-10" />
-                    </div>
-                 )}
-                 {product.promoPrice && (
-                    <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
-                       OFERTA
-                    </div>
-                 )}
-              </Link>
-
-              <div className="p-4 flex-1 flex flex-col">
-                 <Link to={`/store/${product.userId}`} className="flex items-center gap-2 mb-2 hover:bg-gray-50 rounded-full pr-2 transition-colors w-fit">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                       <img src={product.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${product.businessName}`} className="w-full h-full object-cover" alt="Store" />
-                    </div>
-                    <span className="text-xs text-gray-500 truncate font-medium">{product.businessName}</span>
-                 </Link>
-
-                 <h3 className="font-bold text-gray-900 mb-1 leading-tight line-clamp-2">{product.name}</h3>
-                 <p className="text-sm text-gray-500 line-clamp-2 mb-3 flex-1">{product.description}</p>
-
-                 <div className="flex justify-between items-end mt-auto pt-3 border-t border-gray-100">
-                    <div>
-                       {product.promoPrice ? (
-                          <>
-                             <span className="text-xs text-gray-400 line-through">R$ {product.price.toFixed(2)}</span>
-                             <span className="block text-lg font-bold text-green-600">R$ {product.promoPrice.toFixed(2)}</span>
-                          </>
-                       ) : (
-                          <span className="text-lg font-bold text-gray-900">R$ {product.price.toFixed(2)}</span>
-                       )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                       <Link 
-                          to={`/store/${product.userId}`} 
-                          className="bg-indigo-50 text-indigo-600 p-2 rounded-lg hover:bg-indigo-100 transition-colors"
-                          title="Visitar Loja"
-                       >
-                          <Store className="w-5 h-5" />
-                       </Link>
-                       <button 
-                          onClick={() => handleBuyProduct(product)}
-                          className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors shadow-md"
-                          title="Comprar / Falar no WhatsApp"
-                       >
-                          <MessageCircle className="w-5 h-5" />
-                       </button>
-                    </div>
-                 </div>
-              </div>
+        {/* Search & Tabs Controls */}
+        <div className="max-w-3xl mx-auto space-y-6">
+            <div className="bg-white p-3 rounded-[2.5rem] shadow-2xl border border-gray-100 flex items-center">
+                <Search className="w-5 h-5 text-gray-400 ml-6" />
+                <input 
+                    type="text" 
+                    placeholder="Pesquisar por produto, serviço ou empresa..." 
+                    className="w-full bg-transparent border-none p-4 font-bold text-gray-900 focus:ring-0 placeholder:text-gray-400"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                />
             </div>
-          ))}
-
-          {/* SERVICES RENDER LOGIC */}
-          {activeTab === 'services' && (filteredItems as Offer[]).map(offer => (
-             <OfferCard key={offer.id} offer={offer} />
-          ))}
-
+            
+            <div className="flex justify-center gap-4">
+                <button onClick={() => setActiveTab('products')} className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'products' ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>
+                    PRODUTOS
+                </button>
+                <button onClick={() => setActiveTab('services')} className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'services' ? 'bg-gray-900 text-white shadow-xl' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}>
+                    SERVIÇOS
+                </button>
+            </div>
         </div>
-      )}
+      </section>
 
+      {/* 2. GRID CONTENT (BENTO STYLE) */}
+      <section className="bg-white rounded-[4rem] p-12 md:p-20 border border-gray-100 shadow-2xl relative overflow-hidden">
+        {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+                {[1,2,3,4].map(i => <div key={i} className="bg-gray-50 rounded-[3rem] h-[400px] animate-pulse"></div>)}
+            </div>
+        ) : filteredItems.length === 0 ? (
+            <div className="text-center py-24">
+                <ImageIcon className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                <h3 className="text-2xl font-black text-gray-900">Nenhum resultado encontrado</h3>
+                <p className="text-gray-500 mt-2 font-medium">Tente ajustar seus termos de pesquisa.</p>
+            </div>
+        ) : (
+            <div className={`grid gap-10 ${activeTab === 'products' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+            {activeTab === 'products' && (filteredItems as MarketplaceProduct[]).map(product => (
+                <div key={product.id} className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
+                    <Link to={`/store/${product.userId}`} className="relative h-56 overflow-hidden block">
+                        {product.imageUrl ? (
+                            <img src={product.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={product.name} />
+                        ) : (
+                            <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200"><ImageIcon className="w-10 h-10" /></div>
+                        )}
+                        {product.promoPrice && <div className="absolute top-5 right-5 bg-emerald-500 text-white text-[9px] font-black px-3 py-1 rounded-full shadow-lg">OFERTA</div>}
+                        <div className="absolute bottom-5 left-5 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full border-2 border-white/50 overflow-hidden shadow-lg">
+                                <img src={product.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${product.businessName}`} className="w-full h-full object-cover" />
+                            </div>
+                            <span className="text-[10px] font-black text-white shadow-sm">{product.businessName}</span>
+                        </div>
+                    </Link>
+                    <div className="p-8 flex-1 flex flex-col">
+                        <h3 className="text-xl font-black text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">{product.name}</h3>
+                        <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-8">{product.description}</p>
+                        <div className="mt-auto pt-6 border-t border-gray-50 flex items-center justify-between">
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase mb-0.5">Preço</p>
+                                <p className="text-xl font-black text-gray-900">R$ {product.promoPrice ? product.promoPrice.toFixed(2) : product.price.toFixed(2)}</p>
+                            </div>
+                            <button onClick={() => handleBuyProduct(product)} className="bg-gray-900 text-white p-4 rounded-2xl hover:bg-emerald-600 transition-all shadow-xl">
+                                <MessageCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            {activeTab === 'services' && (filteredItems as Offer[]).map(offer => <OfferCard key={offer.id} offer={offer} />)}
+            </div>
+        )}
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/5 rounded-full blur-[80px] -mb-40 -ml-40"></div>
+      </section>
+
+      {/* 3. BUSINESS CTA (PARTNERS STYLE) */}
+      <section className="bg-gray-900 rounded-[3.5rem] p-16 text-center text-white relative overflow-hidden shadow-2xl">
+         <div className="relative z-10 space-y-8 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight">Quer seus produtos aqui?</h2>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed">Crie seu catálogo digital hoje e apareça para milhares de clientes na sua região sem pagar comissões por venda.</p>
+            <div className="pt-4">
+               <Link to="/register" className="bg-white text-gray-900 px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto shadow-2xl w-fit">
+                 COMEÇAR MEU CATÁLOGO <ArrowRight className="w-4 h-4" />
+               </Link>
+            </div>
+         </div>
+      </section>
     </div>
   );
 };
