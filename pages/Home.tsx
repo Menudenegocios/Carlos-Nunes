@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { mockBackend } from '../services/mockBackend';
 import { Offer, OfferCategory } from '../types';
 import { OfferCard } from '../components/OfferCard';
-import { Search, MapPin, ArrowRight, Zap, Briefcase, ShoppingBag, Heart, Home as HomeIcon, Star, Play, CheckCircle, Sparkles, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Zap, Briefcase, ShoppingBag, Heart, Home as HomeIcon, CheckCircle, Sparkles, HelpCircle, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Home: React.FC = () => {
@@ -23,10 +23,10 @@ export const Home: React.FC = () => {
   };
 
   const categories = [
-    { title: 'Serviços', val: OfferCategory.SERVICOS_PROFISSIONAIS, icon: Briefcase, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { title: 'Negócios', val: OfferCategory.NEGOCIOS_LOCAIS, icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { title: 'Saúde', val: OfferCategory.SAUDE_BEM_ESTAR, icon: Heart, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { title: 'Imóveis', val: OfferCategory.IMOVEIS_SERVICOS, icon: HomeIcon, color: 'text-amber-600', bg: 'bg-amber-50' }
+    { title: 'Serviços', val: OfferCategory.SERVICOS_PROFISSIONAIS, icon: Briefcase, color: 'text-brand-primary', bg: 'bg-white' },
+    { title: 'Negócios', val: OfferCategory.NEGOCIOS_LOCAIS, icon: ShoppingBag, color: 'text-brand-contrast', bg: 'bg-white' },
+    { title: 'Saúde', val: OfferCategory.SAUDE_BEM_ESTAR, icon: Heart, color: 'text-rose-600', bg: 'bg-white' },
+    { title: 'Imóveis', val: OfferCategory.IMOVEIS_SERVICOS, icon: HomeIcon, color: 'text-brand-accent', bg: 'bg-white' }
   ];
 
   const faqs = [
@@ -39,115 +39,90 @@ export const Home: React.FC = () => {
       a: "Exatamente. O lucro das suas vendas é 100% seu. Nós não intermediamos o pagamento com cobrança de comissões. Facilitamos o contato direto via WhatsApp ou seu próprio catálogo digital."
     },
     {
-      q: "Preciso ter CNPJ para anunciar?",
-      a: "Não. Nossa plataforma é aberta tanto para empresas (CNPJ) quanto para profissionais autônomos e freelancers que estão começando ou já consolidaram sua marca pessoal."
-    },
-    {
-      q: "Como funciona o Clube de Vantagens?",
-      a: "Ao utilizar a plataforma, completar seu perfil e indicar outros empreendedores, você ganha pontos. Esses pontos aumentam seu nível de autoridade na rede e podem ser trocados por recompensas e benefícios exclusivos."
+        q: "Como funciona o Clube ADS?",
+        a: "Ao utilizar a plataforma, completar seu perfil e indicar outros empreendedores, você ganha pontos. Esses pontos aumentam seu nível de autoridade na rede e podem ser trocados por recompensas exclusivas."
     }
   ];
 
   return (
-    <div className="flex flex-col bg-[#fcfcfd]">
+    <div className="flex flex-col bg-brand-surface">
       
-      {/* 1. SPLIT HERO SECTION */}
-      <section className="relative max-w-7xl mx-auto px-6 py-12 lg:py-24 grid lg:grid-cols-2 gap-16 items-center overflow-hidden">
-        
-        {/* Left Column: Content */}
+      {/* 1. HERO SECTION */}
+      <section className="relative max-w-7xl mx-auto px-6 py-12 lg:py-24 grid lg:grid-cols-2 gap-16 items-center">
         <div className="space-y-10 animate-in fade-in slide-in-from-left-10 duration-1000">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">
-             <Zap className="w-3 h-3 text-indigo-600 fill-current animate-pulse" /> Onde seu bairro acontece
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-brand-primary/20">
+             <Zap className="w-3 h-3 text-brand-primary fill-current animate-pulse" /> Onde seu bairro acontece
           </div>
           
           <div className="space-y-6">
-            <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-none">
+            <h1 className="text-5xl md:text-7xl font-black text-brand-contrast tracking-tighter leading-none">
               Menu de <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-500">Negócios.</span>
+              <span className="text-brand-primary">Negócios.</span>
             </h1>
-            
-            <p className="text-xl text-gray-500 font-medium leading-relaxed max-w-xl">
-              Conectamos empreendedores locais a consumidores reais. Sem taxas de comissão, sem barreiras digitais. Uma vitrine inteligente para o seu sucesso.
+            <p className="text-xl text-brand-contrast/70 font-bold leading-relaxed max-w-xl">
+              Conectamos empreendedores locais a consumidores reais. Sem taxas de comissão, sem barreiras digitais.
             </p>
           </div>
 
-          {/* Premium Search Bar - Integrated in left content */}
-          <div className="bg-white p-2 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col md:flex-row gap-2 max-w-2xl ring-4 ring-indigo-500/5">
+          <div className="bg-white p-2 rounded-[2.5rem] shadow-xl border border-brand-secondary/30 flex flex-col md:flex-row gap-2 max-w-2xl ring-4 ring-brand-primary/5">
              <div className="flex-1 relative flex items-center px-4">
-                <Search className="w-5 h-5 text-gray-400 absolute left-6" />
+                <Search className="w-5 h-5 text-brand-secondary absolute left-6" />
                 <input 
                   type="text" 
                   placeholder="O que você busca?" 
-                  className="w-full bg-transparent border-none p-4 pl-10 font-bold text-gray-900 focus:ring-0 placeholder:text-gray-400"
+                  className="w-full bg-transparent border-none p-4 pl-10 font-black text-brand-contrast focus:ring-0 placeholder:text-brand-secondary"
                   value={filters.search}
                   onChange={(e) => setFilters({...filters, search: e.target.value})}
                 />
              </div>
-             <div className="w-px h-8 bg-gray-100 hidden md:block self-center"></div>
+             <div className="w-px h-8 bg-brand-secondary/20 hidden md:block self-center"></div>
              <div className="flex-1 relative flex items-center px-4">
-                <MapPin className="w-5 h-5 text-gray-400 absolute left-6" />
+                <MapPin className="w-5 h-5 text-brand-secondary absolute left-6" />
                 <input 
                   type="text" 
                   placeholder="Sua Cidade" 
-                  className="w-full bg-transparent border-none p-4 pl-10 font-bold text-gray-900 focus:ring-0 placeholder:text-gray-400"
+                  className="w-full bg-transparent border-none p-4 pl-10 font-black text-brand-contrast focus:ring-0 placeholder:text-brand-secondary"
                   value={filters.city}
                   onChange={(e) => setFilters({...filters, city: e.target.value})}
                 />
              </div>
-             <button className="bg-indigo-600 text-white px-10 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-xl active:scale-95">
+             <button className="bg-brand-primary text-white px-10 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl active:scale-95">
                 BUSCAR
              </button>
           </div>
 
           <div className="flex items-center gap-8 pt-4">
-             <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
-                <CheckCircle className="w-4 h-4" /> Cadastro Gratuito
+             <div className="flex items-center gap-2 text-[10px] font-black text-brand-contrast uppercase tracking-widest">
+                <CheckCircle className="w-4 h-4 text-brand-primary" /> Cadastro Gratuito
              </div>
-             <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                <Sparkles className="w-4 h-4" /> Marketing com IA
+             <div className="flex items-center gap-2 text-[10px] font-black text-brand-contrast uppercase tracking-widest">
+                <Sparkles className="w-4 h-4 text-brand-accent" /> Marketing com IA
              </div>
           </div>
         </div>
 
-        {/* Right Column: Clear Business Photo */}
         <div className="relative animate-in fade-in slide-in-from-right-10 duration-1000 delay-200">
-           <div className="relative z-10 aspect-square md:aspect-[4/5] lg:aspect-square rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100">
+           <div className="relative z-10 aspect-square rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-brand-secondary/20">
               <img 
                 src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=1600" 
                 className="w-full h-full object-cover"
-                alt="Equipe de negócios colaborando"
+                alt="Equipe"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/20 to-transparent"></div>
+              <div className="absolute inset-0 bg-brand-primary/10"></div>
            </div>
-           
-           {/* Decorative elements */}
-           <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-           
-           {/* Floating Badge */}
-           <div className="absolute top-20 -left-12 bg-white p-6 rounded-[2rem] shadow-2xl border border-gray-100 hidden md:block animate-float">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6" />
-                 </div>
-                 <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resultado Real</p>
-                    <p className="text-lg font-black text-gray-900">+40% Vendas</p>
-                 </div>
-              </div>
-           </div>
+           <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none"></div>
         </div>
-
       </section>
 
       {/* 2. CATEGORIES GRID */}
       <section className="max-w-7xl mx-auto w-full px-6 py-24 space-y-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-none">Categorias do <br/>seu Bairro.</h2>
-              <p className="text-gray-500 font-medium max-w-md">Navegue pelas principais vertentes de negócios locais e encontre o que precisa agora.</p>
+              <h2 className="text-4xl md:text-5xl font-black text-brand-contrast tracking-tight leading-none">Explore por <br/>Categorias.</h2>
+              <p className="text-brand-secondary font-bold max-w-md">Encontre parceiros e serviços verificados no seu bairro.</p>
            </div>
-           <Link to="/categories" className="px-8 py-3 bg-gray-50 text-gray-900 border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center gap-3">VER TODAS <ArrowRight className="w-4 h-4 text-indigo-600" /></Link>
+           <Link to="/categories" className="px-8 py-3 bg-brand-contrast text-brand-surface rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-all flex items-center gap-3">VER TODAS <ArrowRight className="w-4 h-4" /></Link>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -155,14 +130,14 @@ export const Home: React.FC = () => {
             <button
               key={idx}
               onClick={() => setFilters({...filters, category: cat.val})}
-              className={`group bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-6 hover:shadow-2xl hover:-translate-y-2 transition-all ${filters.category === cat.val ? 'ring-4 ring-indigo-50 border-indigo-200' : ''}`}
+              className={`group bg-white p-10 rounded-[3rem] border border-brand-secondary/30 shadow-sm flex flex-col items-center text-center space-y-6 hover:shadow-2xl hover:-translate-y-2 transition-all ${filters.category === cat.val ? 'ring-4 ring-brand-primary/10 border-brand-primary' : ''}`}
             >
-              <div className={`w-16 h-16 rounded-[1.8rem] ${cat.bg} ${cat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-500 group-hover:rotate-6 shadow-sm`}>
+              <div className={`w-16 h-16 rounded-[1.8rem] ${cat.bg} ${cat.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-sm border border-brand-secondary/10`}>
                  <cat.icon className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-xl font-black text-gray-900">{cat.title}</h4>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Verificados</p>
+                <h4 className="text-xl font-black text-brand-contrast">{cat.title}</h4>
+                <p className="text-[10px] font-black text-brand-secondary uppercase tracking-widest mt-1">Verificados</p>
               </div>
             </button>
           ))}
@@ -170,58 +145,52 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 3. FEATURED OFFERS */}
-      <section className="bg-gray-50/50 py-24 border-y border-gray-100">
+      <section className="bg-brand-secondary/5 py-24 border-y border-brand-secondary/20">
         <div className="max-w-7xl mx-auto px-6 space-y-16">
           <div className="text-center space-y-4">
-             <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Destaques da Comunidade</h2>
-             <p className="text-gray-500 font-medium max-w-2xl mx-auto">Confira os serviços e produtos mais acessados pelos usuários do Menu de Negócios hoje.</p>
+             <h2 className="text-4xl md:text-5xl font-black text-brand-contrast tracking-tight">Destaques Locais</h2>
+             <p className="text-brand-secondary font-bold max-w-2xl mx-auto">Confira as melhores ofertas e serviços da nossa rede hoje.</p>
           </div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white h-[450px] rounded-[3rem] border border-gray-100 animate-pulse"></div>
-              ))}
+              {[1, 2, 3].map(i => <div key={i} className="bg-white h-[450px] rounded-[3rem] border border-brand-secondary/20 animate-pulse"></div>)}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {offers.map(offer => (
-                <OfferCard key={offer.id} offer={offer} />
-              ))}
+              {offers.map(offer => <OfferCard key={offer.id} offer={offer} />)}
             </div>
           )}
         </div>
       </section>
 
-      {/* 4. FAQ SECTION */}
+      {/* 4. FAQ */}
       <section className="max-w-4xl mx-auto w-full px-6 py-24">
          <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
-               <HelpCircle className="w-3 h-3" /> Central de Dúvidas
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 text-brand-contrast rounded-full text-[10px] font-black uppercase tracking-widest border border-brand-accent/30">
+               <HelpCircle className="w-3 h-3 text-brand-primary" /> Central de Dúvidas
             </div>
-            <h2 className="text-4xl font-black text-gray-900">Perguntas Frequentes</h2>
+            <h2 className="text-4xl font-black text-brand-contrast">Perguntas Frequentes</h2>
          </div>
 
          <div className="space-y-4">
             {faqs.map((faq, idx) => (
-               <div key={idx} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:border-indigo-100 transition-all">
+               <div key={idx} className="bg-white rounded-3xl border border-brand-secondary/30 overflow-hidden shadow-sm">
                   <button 
                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                     className="w-full p-8 flex items-center justify-between text-left group"
                   >
-                     <span className={`text-lg font-bold transition-colors ${openFaq === idx ? 'text-indigo-600' : 'text-gray-900 group-hover:text-indigo-600'}`}>
+                     <span className={`text-lg font-black transition-colors ${openFaq === idx ? 'text-brand-primary' : 'text-brand-contrast group-hover:text-brand-primary'}`}>
                         {faq.q}
                      </span>
-                     <div className={`p-2 rounded-xl transition-all ${openFaq === idx ? 'bg-indigo-600 text-white rotate-180' : 'bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'}`}>
+                     <div className={`p-2 rounded-xl transition-all ${openFaq === idx ? 'bg-brand-primary text-white rotate-180' : 'bg-brand-surface text-brand-secondary group-hover:bg-brand-primary group-hover:text-white'}`}>
                         <ChevronDown className="w-5 h-5" />
                      </div>
                   </button>
                   {openFaq === idx && (
-                     <div className="px-8 pb-8 animate-in slide-in-from-top-2 duration-300">
-                        <div className="h-px bg-gray-50 mb-6"></div>
-                        <p className="text-gray-500 font-medium leading-relaxed">
-                           {faq.a}
-                        </p>
+                     <div className="px-8 pb-8 animate-fade-in">
+                        <div className="h-px bg-brand-surface mb-6"></div>
+                        <p className="text-brand-secondary font-bold leading-relaxed">{faq.a}</p>
                      </div>
                   )}
                </div>
@@ -229,46 +198,25 @@ export const Home: React.FC = () => {
          </div>
       </section>
 
-      {/* 5. PREMIUM CTA - REDUZIDO */}
+      {/* 5. CTA */}
       <section className="max-w-7xl mx-auto w-full px-6 py-16">
-         <div className="bg-gray-900 rounded-[3rem] p-10 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
+         <div className="bg-brand-contrast rounded-[3rem] p-10 md:p-16 text-center text-brand-surface relative overflow-hidden shadow-2xl">
             <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
                <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-none">Venda no digital sem taxas de venda.</h2>
-               <p className="text-gray-400 text-lg font-medium leading-relaxed">O Menu de Negócios não cobra comissão. O lucro é 100% seu. Oferecemos as ferramentas, você faz o show.</p>
+               <p className="text-brand-secondary text-lg font-bold">O lucro é 100% seu. Oferecemos a vitrine, você faz o show.</p>
                <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-                  <Link to="/register" className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3">
+                  <Link to="/register" className="bg-brand-primary text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-xl flex items-center justify-center gap-3">
                     CADASTRAR GRÁTIS <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link to="/plans" className="bg-white/10 text-white border border-white/20 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all backdrop-blur-md">
+                  <Link to="/plans" className="bg-white/10 text-brand-surface border border-white/20 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all backdrop-blur-md">
                     VER PLANOS PRO
                   </Link>
                </div>
             </div>
-            
-            <div className="absolute top-1/2 left-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-72 h-72 bg-cyan-500/5 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute top-0 left-0 w-72 h-72 bg-brand-primary/10 rounded-full blur-[100px]"></div>
          </div>
       </section>
 
     </div>
   );
 };
-
-// Simple helper icon for the floating badge
-const TrendingUp = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="3" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-    <polyline points="16 7 22 7 22 13" />
-  </svg>
-);
