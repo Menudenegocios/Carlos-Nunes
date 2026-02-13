@@ -209,7 +209,7 @@ export const Dashboard: React.FC = () => {
 
              <div className="space-y-6">
                 <div className="flex items-center justify-between px-4">
-                   <h3 className="font-black text-brand-contrast dark:text-brand-surface flex items-center gap-2 tracking-widest text-[10px] opacity-50 uppercase"><Users className="w-4 h-4" /> Feed da Comunidade</h3>
+                   <h3 className="font-black text-brand-contrast dark:text-white flex items-center gap-2 tracking-widest text-[10px] uppercase"><Users className="w-4 h-4" /> Feed da Comunidade</h3>
                 </div>
                 {posts.map(post => <PostCard key={post.id} post={post} onLike={() => handleLike(post.id)} currentUserId={user.id} />)}
              </div>

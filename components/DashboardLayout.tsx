@@ -141,8 +141,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
           <footer className="bg-white dark:bg-zinc-950 border-t border-brand-secondary/20 py-10 px-10 mt-auto">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-brand-secondary">
-              <div className="flex items-center gap-2 grayscale opacity-40">
-                 <Logo size="xs" variant="icon" />
+              <div className="flex items-center gap-2">
+                 <Logo size="xs" />
               </div>
               <div className="flex gap-10 text-[10px] font-black tracking-widest uppercase">
                 <Link to="/help" className="hover:text-brand-primary">Ajuda</Link>

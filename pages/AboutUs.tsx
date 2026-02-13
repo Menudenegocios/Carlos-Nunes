@@ -12,10 +12,10 @@ export const AboutUs: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <Sparkles className="w-3 h-3" /> Propósito & Tecnologia
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-none max-w-4xl mx-auto">
-          Acreditamos no potencial do <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Comércio Local.</span>
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
+          Acreditamos no potencial do <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-brand-primary dark:to-brand-accent">Comércio Local.</span>
         </h1>
-        <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
+        <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
           O Menu de Negócios nasceu para dar voz e visibilidade aos empreendedores que movem a economia real: os vizinhos, os autônomos e as pequenas empresas regionais.
         </p>
       </section>
@@ -27,12 +27,12 @@ export const AboutUs: React.FC = () => {
           { title: "Visão", icon: Eye, bg: "bg-purple-50", color: "text-purple-600", desc: "Ser o ecossistema número um em conexões locais no Brasil, sendo a ponte definitiva entre o consumidor e a oferta regional." },
           { title: "Valores", icon: Heart, bg: "bg-emerald-50", color: "text-emerald-600", desc: "Transparência total (zero comissões), inovação acessível e o fortalecimento da comunidade regional como centro de tudo." }
         ].map((item, i) => (
-          <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-lg space-y-6 group hover:shadow-2xl hover:-translate-y-2 transition-all">
+          <div key={i} className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-lg space-y-6 group hover:shadow-2xl hover:-translate-y-2 transition-all">
             <div className={`w-16 h-16 rounded-[1.5rem] ${item.bg} ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
               <item.icon className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-black text-gray-900">{item.title}</h3>
-            <p className="text-gray-500 font-medium leading-relaxed">
+            <h3 className="text-2xl font-black text-gray-900 dark:text-white">{item.title}</h3>
+            <p className="text-gray-500 dark:text-zinc-400 font-medium leading-relaxed">
               {item.desc}
             </p>
           </div>
@@ -40,11 +40,11 @@ export const AboutUs: React.FC = () => {
       </div>
 
       {/* 3. STORY SECTION */}
-      <section className="bg-white rounded-[4rem] p-12 md:p-24 border border-gray-100 shadow-2xl relative overflow-hidden">
+      <section className="bg-white dark:bg-zinc-900 rounded-[4rem] p-12 md:p-24 border border-gray-100 dark:border-zinc-800 shadow-2xl relative overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10 relative z-10">
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Por que o <br/><span className="text-indigo-600">Menu de Negócios?</span></h2>
-            <div className="space-y-6 text-gray-500 font-medium leading-relaxed text-lg">
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Por que o <br/><span className="text-indigo-600 dark:text-brand-primary">Menu de Negócios?</span></h2>
+            <div className="space-y-6 text-gray-500 dark:text-zinc-400 font-medium leading-relaxed text-lg">
                 <p>
                 Em um mundo dominado por grandes marketplaces que cobram taxas abusivas, percebemos que o pequeno empreendedor estava perdendo sua margem de lucro apenas para estar online.
                 </p>
@@ -54,23 +54,28 @@ export const AboutUs: React.FC = () => {
             </div>
             <div className="pt-6 flex gap-10">
                 <div>
-                    <p className="text-4xl font-black text-indigo-600">5k+</p>
+                    <p className="text-4xl font-black text-indigo-600 dark:text-brand-primary">5k+</p>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Usuários Ativos</p>
                 </div>
-                <div className="w-px h-12 bg-gray-100"></div>
+                <div className="w-px h-12 bg-gray-100 dark:bg-zinc-800"></div>
                 <div>
-                    <p className="text-4xl font-black text-indigo-600">100k</p>
+                    <p className="text-4xl font-black text-indigo-600 dark:text-brand-primary">100k</p>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Leads Gerados</p>
                 </div>
             </div>
           </div>
           <div className="relative">
-            <div className="aspect-square rounded-[3rem] overflow-hidden rotate-3 shadow-2xl border-8 border-gray-50">
-                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover" alt="Equipe" />
+            <div className="aspect-square rounded-[3.5rem] overflow-hidden rotate-3 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border-4 border-zinc-800 bg-black">
+                <img 
+                  src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=1200" 
+                  className="w-full h-full object-cover opacity-80 transition-transform duration-1000 hover:scale-110" 
+                  alt="Escritório Menu de Negócios Mockup" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
             </div>
-            <div className="absolute -bottom-10 -left-10 bg-indigo-600 p-8 rounded-[2.5rem] shadow-2xl animate-float">
+            <div className="absolute -bottom-6 -left-6 bg-brand-primary p-8 rounded-[2.5rem] shadow-2xl animate-float z-20">
                 <Users className="w-10 h-10 text-white mb-4" />
-                <p className="font-black text-white text-lg leading-tight">Comunidade <br/>Forte</p>
+                <p className="font-black text-white text-lg leading-tight uppercase tracking-tighter">Impacto <br/>Real</p>
             </div>
           </div>
         </div>

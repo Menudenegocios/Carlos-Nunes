@@ -28,7 +28,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-black/80 backdrop-blur-md border-b border-brand-secondary/30 py-4 shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <Link to="/" className="group">
-            <Logo size="md" />
+            <Logo size="sm" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-8">
@@ -37,7 +37,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 key={item.label}
                 to={item.path} 
                 className={`text-sm font-black tracking-tight transition-all hover:text-brand-primary dark:hover:text-brand-primary ${
-                  isActive(item.path) ? 'text-brand-primary' : 'text-brand-contrast/60 dark:text-brand-surface/60'
+                  isActive(item.path) ? 'text-brand-primary' : 'text-brand-contrast/60 dark:text-brand-primary'
                 }`}
               >
                 {item.label}
@@ -90,7 +90,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div className="col-span-1 md:col-span-1 space-y-6">
               <Link to="/">
-                <Logo size="md" className="brightness-200 grayscale" />
+                <Logo size="md" forceWhite />
               </Link>
               <p className="text-brand-secondary text-sm leading-relaxed font-medium">
                 Elevando a conexão entre negócios locais e consumidores através de tecnologia inteligente e design funcional.
@@ -141,7 +141,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="absolute inset-0 bg-brand-contrast/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-brand-surface dark:bg-zinc-900 p-8 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-12">
-               <Logo size="md" />
+               <Logo size="sm" />
                <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-8 h-8 text-brand-secondary" /></button>
             </div>
             <nav className="flex flex-col gap-4">
@@ -150,7 +150,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   key={item.label} 
                   to={item.path} 
                   onClick={() => setIsMobileMenuOpen(false)} 
-                  className="text-xl font-black text-brand-contrast dark:text-brand-surface border-b border-brand-secondary/20 pb-3"
+                  className="text-xl font-black text-brand-contrast dark:text-brand-primary border-b border-brand-secondary/20 pb-3"
                 >
                   {item.label}
                 </Link>

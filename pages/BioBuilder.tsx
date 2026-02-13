@@ -328,7 +328,7 @@ export const BioBuilder: React.FC = () => {
             <div className="flex flex-col items-center gap-8 w-full max-w-md">
                 
                 {/* Visual Feedback Label */}
-                <div className="flex items-center gap-2 px-6 py-2.5 bg-gray-900/5 backdrop-blur-xl border border-gray-200 text-gray-900 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-xl">
+                <div className="flex items-center gap-2 px-6 py-2.5 bg-gray-900/5 backdrop-blur-xl border border-gray-200 text-gray-900 dark:text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-xl">
                     <Sparkles className="w-3 h-3 text-indigo-600 animate-pulse" />
                     Preview Hi-Fi em tempo real
                 </div>

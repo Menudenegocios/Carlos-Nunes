@@ -182,8 +182,8 @@ export const Rewards: React.FC = () => {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-xs font-black uppercase tracking-widest">
                  <Info className="w-4 h-4" /> Como funciona o Clube?
               </div>
-              <h2 className="text-4xl font-black text-gray-900 tracking-tight">Onde sua atividade local vira lucro.</h2>
-              <p className="text-gray-500 text-lg font-medium leading-relaxed">Os pontos são acumulativos e determinam o seu nível de autoridade no Menu ADS. Quanto mais você usa a plataforma e indica membros, mais benefícios desbloqueia.</p>
+              <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Onde sua atividade local vira lucro.</h2>
+              <p className="text-gray-500 dark:text-white text-lg font-medium leading-relaxed">Os pontos são acumulativos e determinam o seu nível de autoridade no Menu de Negócios. Quanto mais você usa a plataforma e indica membros, mais benefícios desbloqueia.</p>
             </div>
 
             {/* Levels Breakdown */}
@@ -211,7 +211,7 @@ export const Rewards: React.FC = () => {
             <div className="space-y-8">
               <div className="flex items-center gap-4 px-4">
                  <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
-                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Regras de Pontuação</h2>
+                 <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Regras de Pontuação</h2>
               </div>
 
               <div className="grid lg:grid-cols-2 gap-8">
@@ -322,7 +322,7 @@ export const Rewards: React.FC = () => {
              <div className="lg:col-span-8 space-y-8">
                 <div className="flex items-center gap-4 px-4">
                    <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
-                   <h2 className="text-3xl font-black text-gray-900 tracking-tight">Missões Ativas</h2>
+                   <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Missões Ativas</h2>
                 </div>
                 
                 <div className="grid sm:grid-cols-2 gap-6">

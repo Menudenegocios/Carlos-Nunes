@@ -115,7 +115,7 @@ const CRMView = ({ userId }: { userId: number }) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center px-4">
-         <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Pipeline de Vendas</h3>
+         <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Pipeline de Vendas</h3>
          <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: 'new', value: 0 }); setIsModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 flex items-center gap-2">
             <Plus className="w-5 h-5" /> Novo Lead
          </button>
@@ -380,7 +380,7 @@ const ScheduleView = ({ userId }: { userId: number }) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-         <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Compromissos</h3>
+         <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Compromissos</h3>
          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 flex items-center gap-2">
             <Plus className="w-5 h-5" /> Novo Agendamento
          </button>
