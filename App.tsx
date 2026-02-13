@@ -29,6 +29,7 @@ import { Partners } from './pages/Partners';
 import { Events } from './pages/Events';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
+import { Support } from './pages/Support';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -70,6 +71,7 @@ const AppRoutes = () => {
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
       <Route path="/reviews" element={<PrivateRoute><Reviews /></PrivateRoute>} />
+      <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
     </Routes>
   );
 };

@@ -82,7 +82,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-3xl md:text-4xl font-black text-brand-contrast dark:text-brand-surface tracking-tighter leading-none mb-1">Seja bem vindo, {user.name.split(' ')[0]}!</h1>
-                    <p className="text-brand-secondary font-bold">Seu negócio está pronto para novas oportunidades hoje.</p>
+                    <p className="text-brand-contrast dark:text-brand-secondary font-bold">Seu negócio está pronto para novas oportunidades hoje.</p>
                 </div>
             </div>
             <div className="flex gap-3">
@@ -106,7 +106,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div>
                    <h3 className="text-lg font-black text-brand-contrast dark:text-brand-surface uppercase tracking-tight mb-1">Impulsione seu Networking</h3>
-                   <p className="text-sm text-brand-contrast/70 dark:text-brand-secondary font-bold leading-relaxed">
+                   <p className="text-sm text-brand-contrast dark:text-brand-secondary font-bold leading-relaxed">
                      O <strong>Feed de Negócios</strong> é seu canal direto de oportunidades. Compartilhe ofertas, encontre parceiros estratégicos e fortaleça sua marca agora mesmo.
                    </p>
                 </div>
@@ -216,7 +216,7 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
           </div>
           <button className="p-2 text-brand-secondary hover:text-brand-contrast"><MoreHorizontal className="w-5 h-5" /></button>
        </div>
-       <div className="px-8 pb-6 text-sm text-brand-contrast/80 dark:text-brand-surface/80 leading-relaxed font-bold">{post.content}</div>
+       <div className="px-8 pb-6 text-sm text-brand-contrast dark:text-brand-surface/80 leading-relaxed font-bold">{post.content}</div>
        <div className="px-6 py-4 bg-brand-surface/50 dark:bg-zinc-950/30 flex items-center gap-6 border-t border-brand-secondary/10">
           <button onClick={onLike} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all ${isLiked ? 'bg-brand-primary/10 text-brand-primary' : 'text-brand-secondary hover:bg-brand-surface'}`}>
              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />

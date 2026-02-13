@@ -145,7 +145,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                  <Logo size="xs" />
               </div>
               <div className="flex gap-10 text-[10px] font-black tracking-widest uppercase">
-                <Link to="/help" className="hover:text-brand-primary">Ajuda</Link>
+                <Link to="/support" className="hover:text-brand-primary">Suporte</Link>
                 <Link to="/plans" className="hover:text-brand-primary">Upgrade</Link>
               </div>
               <p className="text-[10px] font-bold uppercase tracking-widest">
