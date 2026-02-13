@@ -160,7 +160,7 @@ export const Academy: React.FC = () => {
           </div>
         )}
 
-        {/* TAB: TRILHA (JOURNEY MAP) */}
+        {/* TAB: TRILHA */}
         {activeTab === 'trilha' && (
           <div className="bg-white rounded-[3rem] p-8 md:p-16 border border-gray-100 shadow-xl relative overflow-hidden">
              <div className="max-w-2xl mb-16">
@@ -217,7 +217,7 @@ export const Academy: React.FC = () => {
           </div>
         )}
 
-        {/* TAB: TUTORIAIS (CENTRAL DE AJUDA) */}
+        {/* TAB: TUTORIAIS */}
         {activeTab === 'tutoriais' && (
           <div className="space-y-10">
             <div className="max-w-2xl">
@@ -225,7 +225,7 @@ export const Academy: React.FC = () => {
                   <PlayCircle className="w-4 h-4" /> Guia Prático
                </div>
                <h2 className="text-3xl font-black text-gray-900 mb-2">Central de Treinamento Técnico</h2>
-               <p className="text-gray-500 text-lg font-medium leading-relaxed">Vídeos rápidos e diretos ao ponto para você dominar cada função da plataforma Menu ADS.</p>
+               <p className="text-gray-500 text-lg font-medium leading-relaxed">Vídeos rápidos e diretos ao ponto para você dominar cada função da plataforma Menu de Negócios.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -262,7 +262,6 @@ export const Academy: React.FC = () => {
                   Download PDF <ArrowRight className="w-4 h-4" />
                </button>
                
-               {/* Deco for tutorials footer */}
                <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
             </div>
           </div>

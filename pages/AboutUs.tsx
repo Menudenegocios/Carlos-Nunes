@@ -7,7 +7,7 @@ export const AboutUs: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-24 pb-32 pt-8 px-6">
       
-      {/* 1. HERO SECTION (PARTNERS STYLE) */}
+      {/* 1. HERO SECTION */}
       <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <Sparkles className="w-3 h-3" /> Propósito & Tecnologia
@@ -16,11 +16,11 @@ export const AboutUs: React.FC = () => {
           Acreditamos no potencial do <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Comércio Local.</span>
         </h1>
         <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
-          O Menu ADS nasceu para dar voz e visibilidade aos empreendedores que movem a economia real: os vizinhos, os autônomos e as pequenas empresas regionais.
+          O Menu de Negócios nasceu para dar voz e visibilidade aos empreendedores que movem a economia real: os vizinhos, os autônomos e as pequenas empresas regionais.
         </p>
       </section>
 
-      {/* 2. BENTO MISSION/VISION/VALUES (MATCHING PARTNERS CARDS) */}
+      {/* 2. BENTO MISSION/VISION/VALUES */}
       <div className="grid md:grid-cols-3 gap-8">
         {[
           { title: "Missão", icon: Target, bg: "bg-indigo-50", color: "text-indigo-600", desc: "Eliminar barreiras tecnológicas para pequenos negócios, fornecendo ferramentas de elite para o marketing digital regional." },
@@ -39,11 +39,11 @@ export const AboutUs: React.FC = () => {
         ))}
       </div>
 
-      {/* 3. STORY SECTION (MATCHING PARTNERS FEATURE BLOCK) */}
+      {/* 3. STORY SECTION */}
       <section className="bg-white rounded-[4rem] p-12 md:p-24 border border-gray-100 shadow-2xl relative overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10 relative z-10">
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Por que o <br/><span className="text-indigo-600">Menu ADS?</span></h2>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Por que o <br/><span className="text-indigo-600">Menu de Negócios?</span></h2>
             <div className="space-y-6 text-gray-500 font-medium leading-relaxed text-lg">
                 <p>
                 Em um mundo dominado por grandes marketplaces que cobram taxas abusivas, percebemos que o pequeno empreendedor estava perdendo sua margem de lucro apenas para estar online.
@@ -77,11 +77,11 @@ export const AboutUs: React.FC = () => {
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[80px] -mb-40 -mr-40"></div>
       </section>
 
-      {/* 4. TEAM CALL TO ACTION (PARTNERS STYLE) */}
+      {/* 4. TEAM CALL TO ACTION */}
       <section className="bg-gray-900 rounded-[3.5rem] p-16 text-center text-white relative overflow-hidden">
         <div className="relative z-10 space-y-8 max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-black tracking-tight">Faça parte desta revolução local.</h2>
-            <p className="text-gray-400 text-lg font-medium leading-relaxed">Seja você um artesão, um profissional liberal ou dono de comércio, o Menu ADS é o seu lugar para crescer.</p>
+            <p className="text-gray-400 text-lg font-medium leading-relaxed">Seja você um artesão, um profissional liberal ou dono de comércio, o Menu de Negócios é o seu lugar para crescer.</p>
             <div className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
                 <Link to="/register" className="bg-white text-gray-900 px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-2xl active:scale-95">
                     CADASTRAR MEU NEGÓCIO

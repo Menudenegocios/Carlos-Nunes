@@ -338,8 +338,8 @@ export const BioBuilder: React.FC = () => {
                     {/* Shadow & Glow Background */}
                     <div className="absolute inset-0 bg-indigo-500/20 rounded-[4.5rem] blur-[60px] opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
                     
-                    {/* Phone Body (Titanium/Slate Premium Frame) */}
-                    <div className="relative w-[360px] h-[740px] bg-slate-950 rounded-[4.5rem] p-3 border-[12px] border-slate-900 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden">
+                    {/* Phone Body (Titanium/Slate Premium Frame) - DIMENSIONS REDUCED */}
+                    <div className="relative w-[320px] h-[660px] bg-slate-950 rounded-[4.5rem] p-3 border-[12px] border-slate-900 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] ring-1 ring-white/10 overflow-hidden">
                         
                         {/* Realistic Glass Reflect */}
                         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-50"></div>
@@ -349,71 +349,71 @@ export const BioBuilder: React.FC = () => {
                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
                         </div>
 
-                        {/* Phone Inner Screen Content */}
+                        {/* Phone Inner Screen Content - PADDING ADJUSTED */}
                         <div 
-                            className={`w-full h-full rounded-[3.5rem] flex flex-col items-center pt-20 px-8 text-center overflow-y-auto scrollbar-hide transition-all duration-700 ease-in-out`}
+                            className={`w-full h-full rounded-[3.5rem] flex flex-col items-center pt-16 px-6 text-center overflow-y-auto scrollbar-hide transition-all duration-700 ease-in-out`}
                             style={{ 
                                 background: bgColor, 
                                 color: textColor, 
                                 fontFamily: fontFamily === 'font-sans' ? 'Inter' : fontFamily === 'font-serif' ? 'serif' : fontFamily === 'font-mono' ? 'monospace' : 'Poppins' 
                             }}
                         >
-                            {/* Profile Header Image */}
+                            {/* Profile Header Image - SIZE ADJUSTED */}
                             <div className="relative mb-6">
-                                <div className="w-28 h-28 rounded-[2.5rem] border-[6px] border-white/5 shadow-2xl overflow-hidden flex items-center justify-center bg-white/5 backdrop-blur-md transition-transform hover:scale-105 duration-500">
+                                <div className="w-24 h-24 rounded-[2.5rem] border-[6px] border-white/5 shadow-2xl overflow-hidden flex items-center justify-center bg-white/5 backdrop-blur-md transition-transform hover:scale-105 duration-500">
                                     {profile.logoUrl ? (
                                         <img src={profile.logoUrl} className="w-full h-full object-cover" />
                                     ) : (
                                         <UserIcon className="w-12 h-12 opacity-10" />
                                     )}
                                 </div>
-                                <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-xl shadow-lg border-2 border-slate-900">
+                                <div className="absolute -bottom-1 -right-1 bg-indigo-600 text-white p-1.5 rounded-xl shadow-lg border-2 border-slate-900">
                                    <Check className="w-3 h-3" />
                                 </div>
                             </div>
 
                             {/* Info */}
-                            <h4 className="font-black text-2xl mb-2 leading-tight tracking-tight">{profile.businessName || user?.name}</h4>
-                            <p className="text-[12px] opacity-60 font-medium leading-relaxed mb-10 px-4 max-w-[240px] mx-auto">
+                            <h4 className="font-black text-xl mb-2 leading-tight tracking-tight">{profile.businessName || user?.name}</h4>
+                            <p className="text-[11px] opacity-60 font-medium leading-relaxed mb-8 px-4 max-w-[240px] mx-auto">
                                 {profile.bio || 'Adicione uma biografia impactante para converter seus seguidores do Instagram.'}
                             </p>
                             
                             {/* Premium Links Preview */}
-                            <div className="w-full space-y-4 pb-8">
+                            <div className="w-full space-y-3 pb-6">
                                 {links.map(l => (
                                     <div 
                                         key={l.id} 
-                                        className="w-full py-4 px-6 rounded-[1.4rem] border border-white/10 font-bold text-sm tracking-tight transition-all shadow-[0_10px_20px_-10px_rgba(0,0,0,0.3)] flex items-center justify-between group/link cursor-pointer hover:-translate-y-1 active:scale-95"
+                                        className="w-full py-3.5 px-6 rounded-[1.4rem] border border-white/10 font-bold text-sm tracking-tight transition-all shadow-[0_10px_20px_-10px_rgba(0,0,0,0.3)] flex items-center justify-between group/link cursor-pointer hover:-translate-y-1 active:scale-95"
                                         style={{ background: btnColor }}
                                     >
                                         <span className="flex-1 text-center">{l.label}</span>
-                                        <ExternalLink className="w-3.5 h-3.5 opacity-20 group-hover/link:opacity-100 transition-opacity" />
+                                        <ExternalLink className="w-3 h-3 opacity-20 group-hover/link:opacity-100 transition-opacity" />
                                     </div>
                                 ))}
                                 {links.length === 0 && (
-                                    <div className="py-16 text-gray-500/20 flex flex-col items-center gap-3">
-                                        <Plus className="w-10 h-10" />
-                                        <span className="text-xs font-black uppercase tracking-widest">Nenhum Link Ativo</span>
+                                    <div className="py-12 text-gray-500/20 flex flex-col items-center gap-3">
+                                        <Plus className="w-8 h-8" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Nenhum Link Ativo</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* Premium QR Code Section */}
                             {showQRCode && (
-                                <div className="mt-4 mb-10 p-5 bg-white rounded-[2.5rem] shadow-2xl animate-in zoom-in duration-500 ring-4 ring-black/5">
-                                    <QrCode className="w-28 h-28 text-gray-950" />
-                                    <p className="text-[9px] font-black text-gray-400 mt-3 uppercase tracking-[0.2em]">Escaneie via Câmera</p>
+                                <div className="mt-2 mb-8 p-4 bg-white rounded-[2.5rem] shadow-2xl animate-in zoom-in duration-500 ring-4 ring-black/5">
+                                    <QrCode className="w-24 h-24 text-gray-950" />
+                                    <p className="text-[8px] font-black text-gray-400 mt-2 uppercase tracking-[0.2em]">Escaneie via Câmera</p>
                                 </div>
                             )}
 
                             {/* Brand Footer */}
-                            <div className="mt-auto pb-12 flex flex-col items-center gap-3">
-                                <div className="w-10 h-1 rounded-full bg-white/10 mb-4"></div>
+                            <div className="mt-auto pb-10 flex flex-col items-center gap-3">
+                                <div className="w-10 h-1 rounded-full bg-white/10 mb-2"></div>
                                 <div className="flex items-center gap-2 grayscale opacity-40">
-                                   <div className="p-2 rounded-lg bg-white/10">
-                                      <Monitor className="w-4 h-4" />
+                                   <div className="p-1.5 rounded-lg bg-white/10">
+                                      <Monitor className="w-3.5 h-3.5" />
                                    </div>
-                                   <span className="text-[10px] font-black tracking-[0.3em] uppercase">Menu ADS</span>
+                                   <span className="text-[9px] font-black tracking-[0.3em] uppercase">Menu ADS</span>
                                 </div>
                             </div>
                         </div>

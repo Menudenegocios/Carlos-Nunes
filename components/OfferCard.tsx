@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { Offer } from '../types';
-// Added ArrowRight to the import list from lucide-react
 import { MapPin, Instagram, MessageCircle, Globe, ExternalLink, Play, Image as ImageIcon, Star, ArrowRight } from 'lucide-react';
 
 interface OfferCardProps {
   offer: Offer;
+  onClick?: () => void;
 }
 
-export const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
+export const OfferCard: React.FC<OfferCardProps> = ({ offer, onClick }) => {
   const [showVideo, setShowVideo] = useState(false);
 
   const getEmbedUrl = (url: string) => {
@@ -20,7 +20,10 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
   const embedUrl = offer.videoUrl ? getEmbedUrl(offer.videoUrl) : null;
 
   return (
-    <div className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col h-[520px]">
+    <div 
+      onClick={onClick}
+      className={`group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col h-[520px] ${onClick ? 'cursor-pointer' : ''}`}
+    >
       
       {/* 1. IMAGE/VIDEO AREA */}
       <div className="relative h-[280px] w-full overflow-hidden bg-gray-50">
@@ -49,7 +52,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
            </div>
            {offer.videoUrl && (
              <button 
-               onClick={() => setShowVideo(!showVideo)}
+               onClick={(e) => { e.stopPropagation(); setShowVideo(!showVideo); }}
                className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-indigo-600 hover:scale-110 transition-transform"
              >
                 {showVideo ? <ImageIcon className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
@@ -93,23 +96,15 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer }) => {
                <a 
                 href={`https://wa.me/${offer.socialLinks.whatsapp}`} 
                 target="_blank" 
+                onClick={(e) => e.stopPropagation()}
                 className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                >
                  <MessageCircle className="w-5 h-5" />
                </a>
              )}
-             {offer.socialLinks?.instagram && (
-               <a 
-                href={`https://instagram.com/${offer.socialLinks.instagram}`} 
-                target="_blank" 
-                className="w-10 h-10 bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all shadow-sm"
-               >
-                 <Instagram className="w-5 h-5" />
-               </a>
-             )}
-             <button className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+             <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                 <ArrowRight className="w-5 h-5" />
-             </button>
+             </div>
           </div>
         </div>
       </div>

@@ -41,7 +41,7 @@ export const mockBackend = {
       email,
       password,
       plan: 'profissionais',
-      points: 50, // Bônus inicial de cadastro
+      points: 50, 
       level: 'bronze',
       referralCode: 'REF' + Math.floor(Math.random() * 10000),
       referralsCount: 0
@@ -50,7 +50,6 @@ export const mockBackend = {
     users.push(newUser);
     setStorage(STORAGE_KEYS.USERS, users);
     
-    // Registrar transação inicial
     await mockBackend.addPoints(newUser.id, 'Cadastro Inicial', 50, 'engajamento');
 
     return newUser;
@@ -71,18 +70,14 @@ export const mockBackend = {
     const userIdx = users.findIndex(u => u.id === userId);
     if (userIdx === -1) throw new Error('User not found');
 
-    // Update user points
     users[userIdx].points += points;
 
-    // Update Level based on new score
-    // Bronze: 0-999, Prata: 1000-4999, Ouro: 5000+
     if (users[userIdx].points >= 5000) users[userIdx].level = 'ouro';
     else if (users[userIdx].points >= 1000) users[userIdx].level = 'prata';
     else users[userIdx].level = 'bronze';
 
     setStorage(STORAGE_KEYS.USERS, users);
 
-    // Record Transaction
     const history = getStorage<PointsTransaction>(STORAGE_KEYS.POINTS_HISTORY);
     history.push({
       id: Math.random().toString(36).substr(2, 9),
@@ -111,12 +106,9 @@ export const mockBackend = {
     users[index].plan = plan;
     setStorage(STORAGE_KEYS.USERS, users);
 
-    // Award points based on plan
     const pointsToAdd = plan === 'negocios' ? 300 : 50;
     await mockBackend.addPoints(userId, `Assinatura Plano ${plan.toUpperCase()}`, pointsToAdd, 'assinatura');
 
-    const { password: _, ...userWithoutPass } = users[index];
-    // Relogar para pegar os pontos atualizados no context
     const finalUser = (await getStorage<User>(STORAGE_KEYS.USERS).find(u => u.id === userId))!;
     return finalUser;
   },
@@ -130,7 +122,7 @@ export const mockBackend = {
           id: 'post1',
           userId: 999,
           userName: 'Admin',
-          businessName: 'Menu ADS Oficial',
+          businessName: 'Menu de Negócios Oficial',
           userAvatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Menu',
           content: 'Bem-vindos à nossa nova Comunidade! Aqui você pode trocar experiências, encontrar parceiros e crescer junto com outros empreendedores locais. 🚀',
           likes: 5,
@@ -158,7 +150,6 @@ export const mockBackend = {
     posts.push(newPost);
     setStorage(STORAGE_KEYS.COMMUNITY, posts);
     
-    // Award Points
     await mockBackend.addPoints(postData.userId, 'Interação na Comunidade', 20, 'engajamento');
 
     return newPost;
@@ -173,7 +164,6 @@ export const mockBackend = {
       if (likedIdx === -1) {
         post.likedBy.push(userId);
         post.likes += 1;
-        // Award points for engagement
         await mockBackend.addPoints(userId, 'Curtida na Comunidade', 20, 'engajamento');
       } else {
         post.likedBy.splice(likedIdx, 1);
@@ -198,7 +188,6 @@ export const mockBackend = {
       posts[idx].comments.push(newComment);
       setStorage(STORAGE_KEYS.COMMUNITY, posts);
       
-      // Award Points
       await mockBackend.addPoints(commentData.userId, 'Comentário na Comunidade', 20, 'engajamento');
 
       return posts[idx];
@@ -273,7 +262,6 @@ export const mockBackend = {
     const profiles = getStorage<Profile>(STORAGE_KEYS.PROFILES);
     const index = profiles.findIndex(p => p.userId === userId);
     
-    // Award points for completing profile (first time)
     if (index === -1) {
        await mockBackend.addPoints(userId, 'Completar Perfil', 20, 'engajamento');
     }
@@ -293,6 +281,37 @@ export const mockBackend = {
   // Offers
   getOffers: async (filters?: any) => {
     let offers = getStorage<Offer>(STORAGE_KEYS.OFFERS);
+    if (offers.length === 0) {
+      const seeds: Offer[] = [
+        {
+          id: 101, userId: 1, title: 'Consultoria Estratégica Digital', 
+          description: 'Aumente suas vendas locais com estratégias de tráfego pago e posicionamento de marca.',
+          category: OfferCategory.SERVICOS_PROFISSIONAIS, city: 'São Paulo', price: 'A partir de R$ 450',
+          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800'
+        },
+        {
+          id: 102, userId: 2, title: 'Terapia Holística e Bem-estar', 
+          description: 'Sessões de reiki e meditação guiada para equilíbrio emocional e redução de estresse.',
+          category: OfferCategory.SAUDE_BEM_ESTAR, city: 'Rio de Janeiro', price: 'R$ 150/sessão',
+          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1544367563-12123d8966bf?auto=format&fit=crop&q=80&w=800'
+        },
+        {
+          id: 103, userId: 3, title: 'Apartamento Studio Centro', 
+          description: 'Excelente oportunidade para locação em região privilegiada com fácil acesso ao metrô.',
+          category: OfferCategory.IMOVEIS_SERVICOS, city: 'Curitiba', price: 'R$ 1.800/mês',
+          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'
+        },
+        {
+          id: 104, userId: 4, title: 'Mentoria: Gestão para Pequenos', 
+          description: 'Aprenda a organizar seu fluxo de caixa e gerir sua equipe de forma eficiente.',
+          category: OfferCategory.OPORTUNIDADES, city: 'Belo Horizonte', price: 'Grátis p/ Membros Pro',
+          createdAt: Date.now(), imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=800'
+        }
+      ];
+      setStorage(STORAGE_KEYS.OFFERS, seeds);
+      offers = seeds;
+    }
+
     if (filters) {
       if (filters.search) {
         const search = filters.search.toLowerCase();
@@ -314,7 +333,6 @@ export const mockBackend = {
     offers.push(newOffer);
     setStorage(STORAGE_KEYS.OFFERS, offers);
     
-    // Award Points
     await mockBackend.addPoints(userId, 'Criar Novo Anúncio', 20, 'engajamento');
 
     return newOffer;
@@ -326,7 +344,6 @@ export const mockBackend = {
     offers[idx] = { ...offers[idx], ...data };
     setStorage(STORAGE_KEYS.OFFERS, offers);
     
-    // Award Points
     await mockBackend.addPoints(userId, 'Atualizar Anúncio', 20, 'engajamento');
 
     return offers[idx];
@@ -339,13 +356,21 @@ export const mockBackend = {
   // Products
   getProducts: async (userId: number) => getStorage<Product>(STORAGE_KEYS.PRODUCTS).filter(p => p.userId === userId),
   getAllProducts: async (): Promise<any[]> => {
-    const products = getStorage<Product>(STORAGE_KEYS.PRODUCTS);
+    let products = getStorage<Product>(STORAGE_KEYS.PRODUCTS);
+    if (products.length === 0) {
+      const seeds: Product[] = [
+        { id: 'p1', userId: 10, name: 'Hambúrguer Artesanal Smash', description: 'Duas carnes suculentas de 100g, queijo cheddar e molho especial.', price: 34.90, imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800', category: 'Gastronomia', available: true },
+        { id: 'p2', userId: 11, name: 'Combo Café da Manhã', description: 'Café expresso, pão de queijo recheado e fatia de bolo do dia.', price: 25.00, imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800', category: 'Gastronomia', available: true }
+      ];
+      setStorage(STORAGE_KEYS.PRODUCTS, seeds);
+      products = seeds;
+    }
     const profiles = getStorage<Profile>(STORAGE_KEYS.PROFILES);
     return products.map(p => {
       const prof = profiles.find(pr => pr.userId === p.userId);
       return {
         ...p,
-        businessName: prof?.businessName,
+        businessName: prof?.businessName || 'Loja Local',
         businessLogo: prof?.logoUrl,
         businessPhone: prof?.phone || prof?.socialLinks?.whatsapp
       };
@@ -357,7 +382,6 @@ export const mockBackend = {
     products.push(newProd);
     setStorage(STORAGE_KEYS.PRODUCTS, products);
 
-    // Award Points
     await mockBackend.addPoints(data.userId, 'Adicionar Produto ao Catálogo', 20, 'engajamento');
 
     return newProd;
@@ -375,7 +399,6 @@ export const mockBackend = {
     cats.push(newCat);
     setStorage(STORAGE_KEYS.STORE_CATEGORIES, cats);
     
-    // Award Points
     await mockBackend.addPoints(userId, 'Criar Categoria no Catálogo', 20, 'engajamento');
 
     return newCat;
@@ -395,7 +418,6 @@ export const mockBackend = {
       offers[idx].coupons!.push(newCoupon);
       setStorage(STORAGE_KEYS.OFFERS, offers);
       
-      // Award Points
       await mockBackend.addPoints(userId, 'Criar Novo Cupom', 20, 'engajamento');
     }
   },
@@ -422,7 +444,6 @@ export const mockBackend = {
     const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
-      // Award points
       const updatedUser = await mockBackend.addPoints(userId, `Resgate de Cupom`, points, 'especial');
       return updatedUser;
     }
@@ -476,7 +497,7 @@ export const mockBackend = {
           title: 'Como aumentar suas vendas locais em 2024',
           summary: 'Descubra 5 estratégias simples para atrair mais clientes do seu bairro.',
           content: 'O marketing de proximidade nunca foi tão importante...',
-          author: 'Equipe Menu ADS',
+          author: 'Equipe Menu de Negócios',
           date: '10/05/2024',
           imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800',
           category: 'Vendas'
