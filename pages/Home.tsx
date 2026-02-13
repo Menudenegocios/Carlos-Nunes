@@ -3,299 +3,235 @@ import React, { useEffect, useState } from 'react';
 import { mockBackend } from '../services/mockBackend';
 import { Offer, OfferCategory } from '../types';
 import { OfferCard } from '../components/OfferCard';
-import { Search, MapPin, Filter, Utensils, ShoppingBag, Wrench, Calendar, Coffee, ArrowRight, Zap, Shield, TrendingUp, Search as SearchIcon, Navigation, UserCheck, Briefcase, Heart, Home as HomeIcon, Handshake } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Zap, Shield, TrendingUp, Navigation, Briefcase, ShoppingBag, Heart, Home as HomeIcon, Check, Star, Users, LayoutGrid } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Home: React.FC = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: '',
-    city: '',
-    category: ''
-  });
+  const [filters, setFilters] = useState({ search: '', city: '', category: '' });
 
-  useEffect(() => {
-    loadOffers();
-  }, [filters]);
+  useEffect(() => { loadOffers(); }, [filters]);
 
   const loadOffers = async () => {
     setIsLoading(true);
     try {
       const data = await mockBackend.getOffers(filters);
       setOffers(data);
-    } catch (error) {
-      console.error('Failed to load offers', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    } catch (error) { console.error('Failed to load offers', error); } finally { setIsLoading(false); }
   };
 
   const handleNearMe = () => {
-    if (navigator.geolocation) {
-       // Mock geolocation logic - just fills the city input for demo
-       setFilters(prev => ({ ...prev, city: 'São Paulo' }));
-       alert('Localização simulada: São Paulo');
-    } else {
-      alert("Geolocalização não suportada.");
-    }
+     setFilters(prev => ({ ...prev, city: 'Sua Região' }));
+     alert('Localização ativada: Mostrando negócios próximos.');
   };
 
-  // Mapped categories for the specific layout requested
-  const displayCategories = [
-    { 
-      title: 'Serviços Profissionais', 
-      desc: 'Marketing, Jurídico, TI...',
-      filterValue: OfferCategory.SERVICOS_PROFISSIONAIS, 
-      icon: Briefcase, 
-      color: 'bg-blue-100 text-blue-600' 
-    },
-    { 
-      title: 'Negócios Locais', 
-      desc: 'Restaurantes, Lojas, Salões...',
-      filterValue: OfferCategory.NEGOCIOS_LOCAIS, 
-      icon: ShoppingBag, 
-      color: 'bg-green-100 text-green-600' 
-    },
-    { 
-      title: 'Saúde e Bem-estar', 
-      desc: 'Terapias, Yoga, Nutrição...',
-      filterValue: OfferCategory.SAUDE_BEM_ESTAR, 
-      icon: Heart, 
-      color: 'bg-pink-100 text-pink-600' 
-    }
+  const categories = [
+    { title: 'Serviços', val: OfferCategory.SERVICOS_PROFISSIONAIS, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { title: 'Negócios', val: OfferCategory.NEGOCIOS_LOCAIS, icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { title: 'Saúde', val: OfferCategory.SAUDE_BEM_ESTAR, icon: Heart, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { title: 'Imóveis', val: OfferCategory.IMOVEIS_SERVICOS, icon: HomeIcon, color: 'text-amber-600', bg: 'bg-amber-50' }
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col w-full">
       
-      {/* 1. HERO SECTION - Buscar Serviços */}
-      <div className="relative bg-gray-900 pt-16 pb-24 px-4 overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1449824913929-49aa71156609?auto=format&fit=crop&q=80&w=2000" 
-            alt="City Background" 
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/60 via-gray-900/80 to-gray-50"></div>
-        </div>
+      {/* 1. HERO SECTION - ULTRA MODERN */}
+      <section className="relative min-h-[90vh] flex items-center pt-20 pb-32 px-6 overflow-hidden">
+        {/* Background Accents */}
+        <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[150px] -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[120px] translate-x-1/4 translate-y-1/4"></div>
 
-        <div className="relative z-10 w-full max-w-4xl mx-auto text-center space-y-8 mt-10">
-          <div className="space-y-4 animate-[fade-in-up_0.6s_ease-out]">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Encontre o que precisa, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">perto de você.</span>
+        <div className="max-w-7xl mx-auto w-full relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-10 animate-in fade-in slide-in-from-left duration-1000">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full border border-indigo-100/50">
+               <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse"></span>
+               <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Lançamento v2.0 Dashboard</span>
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl font-black text-gray-900 tracking-tighter leading-[0.9]">
+              Conexões <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600">Locais Reais.</span>
             </h1>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              A melhor forma de conectar clientes e negócios locais com inteligência.
+            
+            <p className="text-xl text-gray-500 max-w-lg font-medium leading-relaxed">
+              A maior vitrine digital para freelancers e negócios locais. Encontre talentos, produtos e oportunidades no seu bairro.
             </p>
-          </div>
 
-          {/* Search Bar - Categorias, Bairro/Cidade, Perto de Mim */}
-          <div className="bg-white p-3 rounded-2xl shadow-2xl max-w-4xl mx-auto transform translate-y-4 animate-[fade-in-up_0.8s_ease-out]">
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="flex-1 relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="O que você procura? (Ex: Pintor, Bolo...)"
-                  className="block w-full pl-10 pr-4 py-3 border-none rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
+            {/* Premium Search Box */}
+            <div className="glass-card p-2 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row gap-2 max-w-2xl border border-gray-200/50">
+               <div className="flex-1 relative flex items-center px-6">
+                  <Search className="w-5 h-5 text-gray-400 absolute left-6" />
+                  <input 
+                    type="text" 
+                    placeholder="O que você precisa?" 
+                    className="w-full bg-transparent border-none p-4 pl-8 font-bold text-gray-900 focus:ring-0 placeholder:text-gray-400"
+                    value={filters.search}
+                    onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  />
+               </div>
+               <div className="w-px h-10 bg-gray-200 hidden md:block self-center"></div>
+               <div className="flex-1 relative flex items-center px-6">
+                  <MapPin className="w-5 h-5 text-gray-400 absolute left-6" />
+                  <input 
+                    type="text" 
+                    placeholder="Bairro ou Cidade" 
+                    className="w-full bg-transparent border-none p-4 pl-8 font-bold text-gray-900 focus:ring-0 placeholder:text-gray-400"
+                    value={filters.city}
+                    onChange={(e) => setFilters({...filters, city: e.target.value})}
+                  />
+               </div>
+               <button className="bg-gray-900 text-white px-10 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95">
+                  Buscar
+               </button>
+            </div>
 
-              <div className="flex-1 relative group">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MapPin className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Bairro ou Cidade"
-                  className="block w-full pl-10 pr-4 py-3 border-none rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                  value={filters.city}
-                  onChange={(e) => handleFilterChange('city', e.target.value)}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button 
-                  onClick={handleNearMe}
-                  className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap"
-                  title="Perto de Mim"
-                >
-                  <Navigation className="w-4 h-4" /> 
-                  <span className="hidden sm:inline">Perto</span>
-                </button>
-                <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
-                  <SearchIcon className="w-4 h-4" /> Buscar
-                </button>
-              </div>
+            <div className="flex items-center gap-8 pt-4">
+               <div className="flex -space-x-3">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-4 border-white bg-gray-100 overflow-hidden">
+                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`} className="w-full h-full object-cover" alt="user" />
+                    </div>
+                  ))}
+                  <div className="w-10 h-10 rounded-full border-4 border-white bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white">+500</div>
+               </div>
+               <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Negócios ativos esta semana</p>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-20 pt-12 space-y-20">
-        
-        {/* 2. CATEGORIES SECTION */}
-        <section id="categories" className="space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Navegue por Categorias</h2>
-            <p className="text-gray-500 mt-2">Encontre exatamente o que você precisa.</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {displayCategories.map((cat) => (
-              <button
-                key={cat.title}
-                onClick={() => handleFilterChange('category', cat.filterValue)}
-                className={`flex flex-col items-center p-8 rounded-2xl border transition-all group hover:-translate-y-1 ${
-                  filters.category === cat.filterValue 
-                  ? 'bg-indigo-50 border-indigo-200 shadow-md' 
-                  : 'bg-white border-gray-200 hover:border-indigo-100 hover:shadow-lg'
-                }`}
-              >
-                <div className={`p-4 rounded-full mb-4 ${cat.color} group-hover:scale-110 transition-transform`}>
-                  <cat.icon className="w-8 h-8" />
+          <div className="hidden lg:block relative animate-in zoom-in fade-in duration-1000 delay-300">
+             <div className="relative z-10 w-full aspect-square rounded-[3rem] overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+                <img 
+                  src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=1200" 
+                  className="w-full h-full object-cover" 
+                  alt="Business Meeting" 
+                />
+                <div className="absolute inset-0 bg-indigo-900/20 mix-blend-overlay"></div>
+             </div>
+             {/* Floating Bento Card */}
+             <div className="absolute -bottom-10 -left-10 dark-glass-card p-8 rounded-[2rem] shadow-2xl z-20 animate-float max-w-xs">
+                <div className="flex items-center gap-4 mb-6">
+                   <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400"><TrendingUp className="w-6 h-6" /></div>
+                   <h4 className="text-white font-black text-sm uppercase tracking-widest">Crescimento</h4>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">{cat.title}</h3>
-                <p className="text-sm text-gray-500 mt-2">{cat.desc}</p>
+                <p className="text-indigo-100/70 text-sm font-medium leading-relaxed">
+                   Sua empresa com mais visibilidade local e leads qualificados por inteligência artificial.
+                </p>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. BENTO CATEGORIES */}
+      <section className="py-32 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
+             <div className="space-y-4">
+                <h2 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">O que você busca?</h2>
+                <h3 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Navegue por Categorias</h3>
+             </div>
+             <Link to="/categories" className="flex items-center gap-3 font-black text-xs uppercase tracking-widest text-gray-400 hover:text-indigo-600 transition-colors group">
+                Ver Tudo <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+             </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {categories.map((cat, idx) => (
+              <button
+                key={idx}
+                onClick={() => setFilters({...filters, category: cat.val})}
+                className={`group relative p-10 rounded-[2.5rem] border border-gray-100 transition-all text-left overflow-hidden ${filters.category === cat.val ? 'bg-gray-900 text-white shadow-2xl' : 'bg-gray-50 hover:bg-white hover:shadow-xl hover:border-indigo-100'}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl ${cat.bg} ${cat.color} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500`}>
+                   <cat.icon className="w-7 h-7" />
+                </div>
+                <h4 className="text-xl font-black mb-2">{cat.title}</h4>
+                <p className={`text-sm font-medium ${filters.category === cat.val ? 'text-gray-400' : 'text-gray-500'}`}>Negócios verificados</p>
+                <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                   <cat.icon className="w-32 h-32" />
+                </div>
               </button>
             ))}
           </div>
-          
-          <div className="text-center mt-6">
-             <Link to="/categories" className="inline-flex items-center text-indigo-600 font-bold hover:underline gap-1">
-               Ver todas as categorias <ArrowRight className="w-4 h-4" />
-             </Link>
+        </div>
+      </section>
+
+      {/* 3. PREMIUM FEED SECTION */}
+      <section className="py-32 px-6 bg-gray-50/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-16">
+             <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
+             <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Destaques da Comunidade</h3>
           </div>
-        </section>
 
-        {/* 3. CLASSIFIEDS FEED */}
-        <section>
-           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-indigo-600 rounded-full"></div>
-                Destaques Recentes
-              </h2>
-           </div>
-
-           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white h-[400px] rounded-2xl border border-gray-200 animate-pulse"></div>
+                <div key={i} className="bg-white/50 h-[450px] rounded-[2.5rem] border border-gray-200 animate-pulse"></div>
               ))}
             </div>
           ) : offers.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {offers.map(offer => (
-                <div key={offer.id} className="hover:z-10 transition-all duration-300">
+                <div key={offer.id} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                    <OfferCard offer={offer} />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-300">
-              <p className="text-gray-500">Nenhum anúncio encontrado com os filtros atuais.</p>
-              <button 
-                onClick={() => setFilters({ search: '', city: '', category: '' })}
-                className="mt-4 text-indigo-600 font-bold hover:underline"
-              >
-                Limpar filtros
-              </button>
+            <div className="text-center py-32 bg-white rounded-[3rem] border border-dashed border-gray-200 shadow-sm">
+               <Users className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+               <h4 className="text-xl font-black text-gray-900">Nada encontrado</h4>
+               <p className="text-gray-400 font-medium mb-8">Tente ajustar seus filtros de busca.</p>
+               <button onClick={() => setFilters({search: '', city: '', category: ''})} className="px-8 py-3 bg-gray-900 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all">Limpar Tudo</button>
             </div>
           )}
-        </section>
+        </div>
+      </section>
 
-        {/* 4. HOW IT WORKS */}
-        <section id="how-it-works" className="bg-white rounded-3xl p-8 md:p-16 border border-gray-200 shadow-sm">
-           <div className="text-center mb-12">
-             <h2 className="text-3xl font-bold text-gray-900">Como Funciona o Menu ADS</h2>
-             <p className="text-gray-500 mt-2">Uma plataforma simples impulsionada por IA.</p>
-           </div>
+      {/* 4. PREMIUM CTA - GLASSMORPHISM */}
+      <section className="py-32 px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative bg-gray-900 rounded-[4rem] p-12 md:p-24 text-center overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.4)]">
+             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+             <div className="absolute -top-32 -right-32 w-96 h-96 bg-indigo-600/30 rounded-full blur-[100px]"></div>
+             <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
+             
+             <div className="relative z-10 max-w-3xl mx-auto space-y-12">
+                <div className="inline-flex p-4 rounded-3xl bg-white/5 border border-white/10 text-indigo-400 mb-6">
+                   <Zap className="w-10 h-10 fill-current" />
+                </div>
+                <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
+                  Pronto para escalar sua <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Presença Local?</span>
+                </h2>
+                <p className="text-xl text-gray-400 font-medium leading-relaxed">
+                  Não cobramos comissões sobre suas vendas. Fornecemos as ferramentas e a visibilidade para você fechar negócios direto no WhatsApp.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-6 pt-8">
+                   <Link to="/register" className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                      CADASTRAR GRÁTIS
+                   </Link>
+                   <Link to="/plans" className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/10 px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all">
+                      VER PLANOS PRO
+                   </Link>
+                </div>
+                
+                <div className="flex flex-wrap justify-center gap-10 pt-16">
+                   {[
+                     { label: 'Visibilidade Local', icon: Star },
+                     { label: 'Leads por IA', icon: Zap },
+                     { label: 'Sem Comissões', icon: Shield }
+                   ].map((feat, i) => (
+                     <div key={i} className="flex items-center gap-2 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">
+                        <feat.icon className="w-4 h-4 text-indigo-500" /> {feat.label}
+                     </div>
+                   ))}
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-              {/* Connector Lines (Desktop only) */}
-              <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-gray-200 -z-10"></div>
-
-              <div className="flex flex-col items-center text-center">
-                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 border-4 border-white shadow-sm text-indigo-600 font-bold text-2xl">1</div>
-                 <h3 className="text-xl font-bold mb-3">Busque Localmente</h3>
-                 <p className="text-gray-500 text-sm leading-relaxed">
-                   Encontre serviços profissionais, negócios locais e oportunidades na sua região.
-                 </p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 border-4 border-white shadow-sm text-indigo-600 font-bold text-2xl">2</div>
-                 <h3 className="text-xl font-bold mb-3">IA Qualifica</h3>
-                 <p className="text-gray-500 text-sm leading-relaxed">
-                   Nossa IA atua como um SDR, filtrando leads e conectando você apenas com as melhores oportunidades.
-                 </p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 border-4 border-white shadow-sm text-indigo-600 font-bold text-2xl">3</div>
-                 <h3 className="text-xl font-bold mb-3">Feche Negócios</h3>
-                 <p className="text-gray-500 text-sm leading-relaxed">
-                   Fale diretamente pelo WhatsApp. Eu anuncio, a IA filtra, você fecha.
-                 </p>
-              </div>
-           </div>
-        </section>
-
-        {/* 5. PARTNER CTA */}
-        <section className="bg-gray-900 rounded-3xl p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-           <div className="relative z-10 max-w-xl">
-              <span className="text-indigo-400 font-bold tracking-wide uppercase text-xs mb-2 block">Para Negócios</span>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
-                Seja um Negócio Parceiro
-              </h2>
-              <p className="text-gray-400 mb-8">
-                Comece com o plano Essencial e escale suas vendas com nossa inteligência artificial.
-              </p>
-              <div className="flex gap-4">
-                 <Link to="/register" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all">
-                    Começar Agora
-                 </Link>
-                 <Link to="/plans" className="px-6 py-3 bg-transparent border border-gray-700 text-white font-bold rounded-xl hover:bg-gray-800 transition-all">
-                    Ver Planos
-                 </Link>
-              </div>
-           </div>
-           
-           <div className="relative z-10">
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 max-w-xs">
-                 <div className="flex items-center gap-3 mb-4">
-                   <div className="p-2 bg-green-500 rounded-lg text-white"><TrendingUp className="w-5 h-5" /></div>
-                   <div className="text-white">
-                     <p className="text-xs opacity-70">Resultados</p>
-                     <p className="font-bold">+150% Visibilidade</p>
-                   </div>
-                 </div>
-                 <div className="flex items-center gap-3">
-                   <div className="p-2 bg-blue-500 rounded-lg text-white"><UserCheck className="w-5 h-5" /></div>
-                   <div className="text-white">
-                     <p className="text-xs opacity-70">Novos Leads</p>
-                     <p className="font-bold">Qualificados por IA</p>
-                   </div>
-                 </div>
-              </div>
-           </div>
-           
-           {/* Abstract BG */}
-           <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-indigo-900/50 to-transparent pointer-events-none"></div>
-        </section>
-
-      </div>
     </div>
   );
 };

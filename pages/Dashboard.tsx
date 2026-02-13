@@ -8,7 +8,8 @@ import {
   ShoppingBag, Trophy, Star, Eye, Plus, Zap,
   ChevronRight, Share2, Ticket, Bell, 
   MessageSquare, Send, Heart, MoreHorizontal, 
-  Image as ImageIcon, Users, TrendingUp, LayoutDashboard, RefreshCw
+  Image as ImageIcon, Users, TrendingUp, LayoutDashboard, RefreshCw,
+  Target, Sparkles, ArrowRight
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -65,6 +66,10 @@ export const Dashboard: React.FC = () => {
 
   if (!user) return null;
 
+  // Calculo simplificado para o Nudge
+  const nextLevelPts = user.points >= 5000 ? 10000 : user.points >= 1000 ? 5000 : 1000;
+  const ptsLeft = nextLevelPts - user.points;
+
   const stats = [
     { label: 'Visitas na Loja', value: '3.4k', trend: '+12%', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Pedidos/Leads', value: '14', trend: 'Hoje', icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -73,7 +78,7 @@ export const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4">
+    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
       
       {/* Academy Style Header */}
       <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
@@ -104,7 +109,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="animate-[fade-in_0.4s_ease-out] space-y-12">
         
-        {/* Stats Grid - Premium rounded */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, idx) => (
             <div key={idx} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-col items-center text-center gap-3 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
@@ -159,34 +164,52 @@ export const Dashboard: React.FC = () => {
              </div>
           </div>
 
-          {/* Academy Style Sidebar */}
+          {/* Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-8">
-             <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-2xl">
+             {/* NOVO: Widget Gamificado de Pontos (Nudge) */}
+             <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-2xl border border-white/5">
                 <div className="relative z-10">
-                   <div className="flex items-center gap-3 mb-8">
-                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center"><Trophy className="w-5 h-5 text-yellow-400" /></div>
-                      <h4 className="font-black tracking-tight">Status do Clube</h4>
+                   <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center"><Zap className="w-5 h-5 text-yellow-400 fill-current animate-pulse" /></div>
+                         <h4 className="font-black tracking-tight text-sm uppercase">Clube de Vantagens</h4>
+                      </div>
+                      <span className="text-[10px] font-black text-indigo-300 bg-white/5 px-3 py-1 rounded-full uppercase tracking-widest">Nível {user.level.toUpperCase()}</span>
                    </div>
-                   <div className="text-center mb-8">
-                      <span className="text-6xl font-black leading-none">{user.points}</span>
-                      <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-2">Pontos Acumulados</p>
+                   
+                   <div className="space-y-4 mb-8">
+                      <p className="text-indigo-200 text-sm font-medium leading-relaxed">
+                        Faltam <span className="text-white font-black">{ptsLeft} pontos</span> para você se tornar Membro <span className="text-yellow-400 font-black uppercase">{user.level === 'bronze' ? 'Prata' : 'Ouro'}</span>.
+                      </p>
+                      <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                         <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(user.points / nextLevelPts) * 100}%` }}></div>
+                      </div>
                    </div>
-                   <Link to="/rewards" className="flex items-center justify-between p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-all group/item">
-                      <span className="text-sm font-bold">Resgatar Prêmios</span>
-                      <ChevronRight className="w-4 h-4 text-white/40 group-hover/item:translate-x-1 transition-all" />
+
+                   <Link to="/rewards" className="flex items-center justify-between p-5 bg-white/10 rounded-3xl hover:bg-white/20 transition-all group/item border border-white/5">
+                      <span className="text-xs font-black uppercase tracking-widest">Ver Missões Ativas</span>
+                      {/* Fixed: ArrowRight was not imported from lucide-react */}
+                      <ArrowRight className="w-4 h-4 text-white/40 group-hover/item:translate-x-1 transition-all" />
                    </Link>
                 </div>
-                <div className="absolute -right-6 -bottom-6 text-white/5 group-hover:scale-110 transition-all"><Trophy className="w-32 h-32" /></div>
+                <div className="absolute -right-6 -bottom-6 text-white/5 group-hover:scale-110 transition-all duration-700 pointer-events-none"><Trophy className="w-40 h-40" /></div>
              </div>
 
              <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm space-y-6">
-                <h4 className="font-black text-gray-900 flex items-center gap-2 tracking-tight text-base"><Bell className="w-5 h-5 text-indigo-600" /> Notificações</h4>
+                <h4 className="font-black text-gray-900 flex items-center gap-2 tracking-tight text-base uppercase tracking-widest text-xs"><Bell className="w-5 h-5 text-indigo-600" /> Notificações</h4>
                 <div className="space-y-6">
-                   <div className="flex gap-4 items-start group cursor-pointer">
+                   <div className="flex gap-4 items-start group cursor-pointer p-2 hover:bg-gray-50 rounded-2xl transition-all">
                       <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0"></div>
                       <div>
-                         <p className="text-xs font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">Nova aula na Academy</p>
-                         <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Domine o novo editor de Bio Digital.</p>
+                         <p className="text-xs font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">Destaque sua loja!</p>
+                         <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Troque seus pontos por 7 dias de prioridade nos resultados de busca.</p>
+                      </div>
+                   </div>
+                   <div className="flex gap-4 items-start group cursor-pointer p-2 hover:bg-gray-50 rounded-2xl transition-all">
+                      <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 flex-shrink-0"></div>
+                      <div>
+                         <p className="text-xs font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">Novo Membro Indicado</p>
+                         <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Você ganhou +50 pontos pela indicação do João Silva.</p>
                       </div>
                    </div>
                 </div>

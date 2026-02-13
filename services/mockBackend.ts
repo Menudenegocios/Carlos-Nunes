@@ -1,5 +1,5 @@
 
-import { User, Profile, Offer, OfferCategory, Lead, ExtractorResult, Coupon, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment } from '../types';
+import { User, Profile, Offer, OfferCategory, Lead, ExtractorResult, Coupon, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction } from '../types';
 
 const STORAGE_KEYS = {
   USERS: 'menu_users',
@@ -15,7 +15,8 @@ const STORAGE_KEYS = {
   PRODUCTS: 'menu_products',
   STORE_CATEGORIES: 'menu_store_categories',
   FINANCE: 'menu_finance',
-  COMMUNITY: 'menu_community'
+  COMMUNITY: 'menu_community',
+  POINTS_HISTORY: 'menu_points_history'
 };
 
 const getStorage = <T>(key: string): T[] => {
@@ -40,14 +41,18 @@ export const mockBackend = {
       email,
       password,
       plan: 'profissionais',
-      points: 10,
-      level: 'iniciante',
+      points: 50, // Bônus inicial de cadastro
+      level: 'bronze',
       referralCode: 'REF' + Math.floor(Math.random() * 10000),
       referralsCount: 0
     };
 
     users.push(newUser);
     setStorage(STORAGE_KEYS.USERS, users);
+    
+    // Registrar transação inicial
+    await mockBackend.addPoints(newUser.id, 'Cadastro Inicial', 50, 'engajamento');
+
     return newUser;
   },
 
@@ -60,14 +65,60 @@ export const mockBackend = {
     return { user: userWithoutPass, token: `fake-jwt-${user.id}` };
   },
 
+  // Points & Rewards System
+  addPoints: async (userId: number, action: string, points: number, category: PointsTransaction['category']): Promise<User> => {
+    const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
+    const userIdx = users.findIndex(u => u.id === userId);
+    if (userIdx === -1) throw new Error('User not found');
+
+    // Update user points
+    users[userIdx].points += points;
+
+    // Update Level based on new score
+    // Bronze: 0-999, Prata: 1000-4999, Ouro: 5000+
+    if (users[userIdx].points >= 5000) users[userIdx].level = 'ouro';
+    else if (users[userIdx].points >= 1000) users[userIdx].level = 'prata';
+    else users[userIdx].level = 'bronze';
+
+    setStorage(STORAGE_KEYS.USERS, users);
+
+    // Record Transaction
+    const history = getStorage<PointsTransaction>(STORAGE_KEYS.POINTS_HISTORY);
+    history.push({
+      id: Math.random().toString(36).substr(2, 9),
+      userId,
+      action,
+      points,
+      category,
+      createdAt: Date.now()
+    });
+    setStorage(STORAGE_KEYS.POINTS_HISTORY, history);
+
+    const { password: _, ...updatedUser } = users[userIdx];
+    return updatedUser;
+  },
+
+  getPointsHistory: async (userId: number): Promise<PointsTransaction[]> => {
+    const history = getStorage<PointsTransaction>(STORAGE_KEYS.POINTS_HISTORY);
+    return history.filter(t => t.userId === userId).sort((a,b) => b.createdAt - a.createdAt);
+  },
+
   upgradePlan: async (userId: number, plan: any): Promise<User> => {
     const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
     const index = users.findIndex(u => u.id === userId);
     if (index === -1) throw new Error('User not found');
+    
     users[index].plan = plan;
     setStorage(STORAGE_KEYS.USERS, users);
+
+    // Award points based on plan
+    const pointsToAdd = plan === 'negocios' ? 300 : 50;
+    await mockBackend.addPoints(userId, `Assinatura Plano ${plan.toUpperCase()}`, pointsToAdd, 'assinatura');
+
     const { password: _, ...userWithoutPass } = users[index];
-    return userWithoutPass;
+    // Relogar para pegar os pontos atualizados no context
+    const finalUser = (await getStorage<User>(STORAGE_KEYS.USERS).find(u => u.id === userId))!;
+    return finalUser;
   },
 
   // Community Feed
@@ -106,6 +157,10 @@ export const mockBackend = {
     };
     posts.push(newPost);
     setStorage(STORAGE_KEYS.COMMUNITY, posts);
+    
+    // Award Points
+    await mockBackend.addPoints(postData.userId, 'Interação na Comunidade', 20, 'engajamento');
+
     return newPost;
   },
 
@@ -118,6 +173,8 @@ export const mockBackend = {
       if (likedIdx === -1) {
         post.likedBy.push(userId);
         post.likes += 1;
+        // Award points for engagement
+        await mockBackend.addPoints(userId, 'Curtida na Comunidade', 20, 'engajamento');
       } else {
         post.likedBy.splice(likedIdx, 1);
         post.likes -= 1;
@@ -140,6 +197,10 @@ export const mockBackend = {
       };
       posts[idx].comments.push(newComment);
       setStorage(STORAGE_KEYS.COMMUNITY, posts);
+      
+      // Award Points
+      await mockBackend.addPoints(commentData.userId, 'Comentário na Comunidade', 20, 'engajamento');
+
       return posts[idx];
     }
     throw new Error('Post not found');
@@ -211,6 +272,12 @@ export const mockBackend = {
   updateProfile: async (userId: number, data: Partial<Profile>) => {
     const profiles = getStorage<Profile>(STORAGE_KEYS.PROFILES);
     const index = profiles.findIndex(p => p.userId === userId);
+    
+    // Award points for completing profile (first time)
+    if (index === -1) {
+       await mockBackend.addPoints(userId, 'Completar Perfil', 20, 'engajamento');
+    }
+
     if (index === -1) {
       const newProfile: Profile = { id: Date.now(), userId, ...data };
       profiles.push(newProfile);
@@ -246,6 +313,10 @@ export const mockBackend = {
     const newOffer: Offer = { ...data, id: Date.now(), userId, createdAt: Date.now() };
     offers.push(newOffer);
     setStorage(STORAGE_KEYS.OFFERS, offers);
+    
+    // Award Points
+    await mockBackend.addPoints(userId, 'Criar Novo Anúncio', 20, 'engajamento');
+
     return newOffer;
   },
   updateOffer: async (userId: number, id: number, data: any): Promise<Offer> => {
@@ -254,6 +325,10 @@ export const mockBackend = {
     if (idx === -1) throw new Error('Offer not found');
     offers[idx] = { ...offers[idx], ...data };
     setStorage(STORAGE_KEYS.OFFERS, offers);
+    
+    // Award Points
+    await mockBackend.addPoints(userId, 'Atualizar Anúncio', 20, 'engajamento');
+
     return offers[idx];
   },
   deleteOffer: async (id: number, userId: number) => {
@@ -281,6 +356,10 @@ export const mockBackend = {
     const newProd = { ...data, id: Math.random().toString(36).substr(2, 9) };
     products.push(newProd);
     setStorage(STORAGE_KEYS.PRODUCTS, products);
+
+    // Award Points
+    await mockBackend.addPoints(data.userId, 'Adicionar Produto ao Catálogo', 20, 'engajamento');
+
     return newProd;
   },
   deleteProduct: async (id: string, userId: number) => {
@@ -295,6 +374,10 @@ export const mockBackend = {
     const newCat = { id: Math.random().toString(36).substr(2, 9), userId, name, order: cats.length };
     cats.push(newCat);
     setStorage(STORAGE_KEYS.STORE_CATEGORIES, cats);
+    
+    // Award Points
+    await mockBackend.addPoints(userId, 'Criar Categoria no Catálogo', 20, 'engajamento');
+
     return newCat;
   },
   deleteStoreCategory: async (id: string, userId: number) => {
@@ -311,6 +394,9 @@ export const mockBackend = {
       if (!offers[idx].coupons) offers[idx].coupons = [];
       offers[idx].coupons!.push(newCoupon);
       setStorage(STORAGE_KEYS.OFFERS, offers);
+      
+      // Award Points
+      await mockBackend.addPoints(userId, 'Criar Novo Cupom', 20, 'engajamento');
     }
   },
   updateCoupon: async (userId: number, offerId: number, couponId: string, data: any) => {
@@ -336,10 +422,9 @@ export const mockBackend = {
     const users = getStorage<User & { password: string }>(STORAGE_KEYS.USERS);
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
-      users[idx].points += points;
-      setStorage(STORAGE_KEYS.USERS, users);
-      const { password: _, ...user } = users[idx];
-      return user;
+      // Award points
+      const updatedUser = await mockBackend.addPoints(userId, `Resgate de Cupom`, points, 'especial');
+      return updatedUser;
     }
     throw new Error('User not found');
   },

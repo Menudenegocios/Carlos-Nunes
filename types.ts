@@ -5,9 +5,18 @@ export interface User {
   email: string;
   plan: 'profissionais' | 'freelancers' | 'negocios';
   points: number;
-  level: 'iniciante' | 'bronze' | 'prata' | 'ouro' | 'diamante';
+  level: 'bronze' | 'prata' | 'ouro';
   referralCode: string;
   referralsCount: number;
+}
+
+export interface PointsTransaction {
+  id: string;
+  userId: number;
+  action: string;
+  points: number;
+  createdAt: number;
+  category: 'assinatura' | 'indicacao' | 'engajamento' | 'especial';
 }
 
 export interface CommunityComment {
