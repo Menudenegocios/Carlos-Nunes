@@ -17,8 +17,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { label: 'Início', path: '/' },
     { label: 'Quem Somos', path: '/quem-somos' },
-    { label: 'Parceiros', path: '/partners' },
+    { label: 'Loja', path: '/stores' },
     { label: 'Marketplace', path: '/marketplace' },
+    { label: 'Parceiros', path: '/partners' },
     { label: 'Eventos', path: '/eventos' },
     { label: 'Blog', path: '/blog' }
   ];
@@ -26,18 +27,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div className="min-h-screen flex flex-col bg-brand-surface dark:bg-black transition-colors duration-300">
       <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-black/80 backdrop-blur-md border-b border-brand-secondary/30 py-4 shadow-sm transition-colors">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link to="/" className="group">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center h-24">
+          <Link to="/" className="group flex-shrink-0">
             <Logo size="sm" />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden xl:flex items-center gap-10">
             {navItems.map((item) => (
               <Link 
                 key={item.label}
                 to={item.path} 
-                className={`text-sm font-black tracking-tight transition-all hover:text-brand-primary dark:hover:text-brand-primary ${
-                  isActive(item.path) ? 'text-brand-primary' : 'text-brand-contrast/60 dark:text-brand-primary'
+                className={`text-lg font-black tracking-tight transition-all hover:text-brand-primary dark:hover:text-brand-primary ${
+                  isActive(item.path) ? 'text-brand-primary underline underline-offset-8 decoration-4' : 'text-brand-contrast/70 dark:text-brand-surface/60'
                 }`}
               >
                 {item.label}
@@ -45,43 +46,43 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-4">
             <button 
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 text-brand-primary border border-brand-secondary/30 hover:scale-110 transition-all"
+              className="p-3 rounded-2xl bg-white dark:bg-zinc-900 text-brand-primary border border-brand-secondary/30 hover:scale-110 transition-all"
               title="Alternar Tema"
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
 
             {user ? (
-              <div className="flex items-center gap-4 p-1.5 pr-4 rounded-full border bg-white dark:bg-zinc-900 border-brand-secondary/30 transition-all">
-                <Link to="/profile" className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white text-xs font-black">
+              <div className="flex items-center gap-4 p-2 pr-4 rounded-full border bg-white dark:bg-zinc-900 border-brand-secondary/30 transition-all">
+                <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-white text-sm font-black">
                   {user.name.charAt(0)}
                 </Link>
                 <Link to="/dashboard" className="text-xs font-black uppercase tracking-widest hover:text-brand-primary dark:text-brand-surface transition-colors">Painel</Link>
-                <button onClick={logout} className="text-brand-secondary hover:text-rose-500 transition-colors"><LogOut className="w-4 h-4" /></button>
+                <button onClick={logout} className="text-brand-secondary hover:text-rose-500 transition-colors"><LogOut className="w-5 h-5" /></button>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-4">
                 <Link to="/login" className="text-sm font-bold text-brand-contrast dark:text-brand-surface px-4">Entrar</Link>
-                <Link to="/register" className="text-xs font-black px-6 py-3 rounded-full uppercase tracking-widest shadow-lg bg-brand-contrast dark:bg-brand-primary text-white hover:opacity-90 transition-all">
+                <Link to="/register" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-contrast dark:bg-brand-primary text-white hover:opacity-90 transition-all">
                   Anunciar Grátis
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          <div className="flex items-center gap-3 lg:hidden">
+          <div className="flex items-center gap-3 xl:hidden">
             <button onClick={toggleTheme} className="p-2 text-brand-primary">
                {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
             </button>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-brand-contrast dark:text-brand-surface"><Menu className="w-6 h-6" /></button>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-brand-contrast dark:text-brand-surface"><Menu className="w-8 h-8" /></button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full pt-16">
+      <main className="flex-1 w-full pt-32">
         {children}
       </main>
 
@@ -100,6 +101,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div>
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary mb-8">Navegação</h4>
               <ul className="space-y-4 text-sm font-bold text-brand-surface/80">
+                <li><Link to="/stores" className="hover:text-brand-primary transition-colors">Diretório de Lojas</Link></li>
                 <li><Link to="/marketplace" className="hover:text-brand-primary transition-colors">Catálogo de Produtos</Link></li>
                 <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Eventos & Experiências</Link></li>
                 <li><Link to="/blog" className="hover:text-brand-primary transition-colors">Insights & Dicas</Link></li>
@@ -137,12 +139,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </footer>
 
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[200] lg:hidden">
+        <div className="fixed inset-0 z-[200] xl:hidden">
           <div className="absolute inset-0 bg-brand-contrast/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-brand-surface dark:bg-zinc-900 p-8 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-12">
                <Logo size="sm" />
-               <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-8 h-8 text-brand-secondary" /></button>
+               <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-10 h-10 text-brand-secondary" /></button>
             </div>
             <nav className="flex flex-col gap-4">
                {navItems.map((item) => (
@@ -150,20 +152,22 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   key={item.label} 
                   to={item.path} 
                   onClick={() => setIsMobileMenuOpen(false)} 
-                  className="text-xl font-black text-brand-contrast dark:text-brand-primary border-b border-brand-secondary/20 pb-3"
+                  className={`text-2xl font-black border-b border-brand-secondary/20 pb-3 ${
+                    isActive(item.path) ? 'text-brand-primary' : 'text-brand-contrast dark:text-brand-surface'
+                  }`}
                 >
                   {item.label}
                 </Link>
                ))}
             </nav>
             <div className="mt-auto pt-8 flex flex-col gap-4">
-               <button onClick={toggleTheme} className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-800 rounded-2xl font-black dark:text-brand-surface">
-                  {theme === 'light' ? <><Moon className="w-5 h-5" /> Modo Escuro</> : <><Sun className="w-5 h-5 text-brand-accent" /> Modo Claro</>}
+               <button onClick={toggleTheme} className="flex items-center gap-3 p-5 bg-white dark:bg-zinc-800 rounded-3xl font-black dark:text-brand-surface shadow-sm">
+                  {theme === 'light' ? <><Moon className="w-6 h-6" /> Modo Escuro</> : <><Sun className="w-6 h-6 text-brand-accent" /> Modo Claro</>}
                </button>
                {!user ? (
-                 <Link to="/register" className="w-full bg-brand-contrast dark:bg-brand-primary text-white p-5 rounded-2xl font-black text-center block uppercase tracking-widest">Anunciar Grátis</Link>
+                 <Link to="/register" className="w-full bg-brand-contrast dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Anunciar Grátis</Link>
                ) : (
-                 <Link to="/dashboard" className="w-full bg-brand-primary text-white p-5 rounded-2xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
+                 <Link to="/dashboard" className="w-full bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
                )}
             </div>
           </div>

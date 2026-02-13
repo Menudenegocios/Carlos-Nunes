@@ -21,12 +21,12 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   if (!user) return null;
 
   const menuItems = [
-    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', color: 'text-brand-contrast dark:text-white' },
-    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder', color: 'text-brand-primary' },
-    { label: 'Catálogo & Loja', icon: Package, to: '/catalog', color: 'text-brand-contrast' },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', color: 'text-brand-contrast' },
-    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', color: 'text-brand-contrast' },
-    { label: 'Clube de Vantagens', icon: Trophy, to: '/rewards', color: 'text-brand-primary' },
+    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
+    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
+    { label: 'Catálogo & Loja', icon: Package, to: '/catalog' },
+    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
+    { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
+    { label: 'Clube de Vantagens', icon: Trophy, to: '/rewards' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -73,11 +73,11 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 className={`flex items-center rounded-2xl transition-all group overflow-hidden ${
                   isActive(item.to) 
                     ? 'bg-brand-primary/10 text-brand-primary shadow-sm' 
-                    : 'text-brand-secondary hover:bg-brand-surface hover:text-brand-contrast'
+                    : 'text-brand-contrast/70 dark:text-brand-surface/60 hover:bg-brand-surface dark:hover:bg-zinc-900 hover:text-brand-contrast dark:hover:text-brand-surface'
                 } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
               >
-                <item.icon className={`w-5 h-5 transition-colors flex-shrink-0 ${isActive(item.to) ? 'text-brand-primary' : 'text-brand-secondary group-hover:text-brand-contrast'}`} />
-                {isExpanded && <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-sm font-black tracking-tight">{item.label}</span>}
+                <item.icon className={`w-5 h-5 transition-colors flex-shrink-0 ${isActive(item.to) ? 'text-brand-primary' : 'text-brand-contrast dark:text-brand-surface/40 group-hover:text-brand-contrast dark:group-hover:text-brand-surface'}`} />
+                {isExpanded && <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-base font-black tracking-tight">{item.label}</span>}
               </Link>
             ))}
           </nav>
@@ -86,17 +86,17 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         <div className="mt-auto p-5 space-y-4">
           <button 
             onClick={toggleTheme}
-            className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[10px] tracking-widest text-brand-secondary hover:bg-brand-surface transition-all w-full ${!isExpanded ? 'justify-center p-3.5' : ''}`}
+            className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[11px] tracking-widest text-brand-contrast dark:text-brand-surface/60 hover:bg-brand-surface dark:hover:bg-zinc-900 transition-all w-full ${!isExpanded ? 'justify-center p-3.5' : ''}`}
           >
-            {theme === 'light' ? <><Moon className="w-5 h-5" /> {isExpanded && 'MODO ESCURO'}</> : <><Sun className="w-5 h-5 text-brand-accent" /> {isExpanded && 'MODO CLARO'}</>}
+            {theme === 'light' ? <><Moon className="w-5 h-5 text-brand-primary" /> {isExpanded && 'Modo Escuro'}</> : <><Sun className="w-5 h-5 text-brand-accent" /> {isExpanded && 'Modo Claro'}</>}
           </button>
           
           <button 
             onClick={logout}
-            className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[10px] tracking-widest text-brand-secondary hover:bg-rose-50 hover:text-rose-600 transition-all w-full ${!isExpanded ? 'justify-center p-3.5' : ''}`}
+            className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[11px] tracking-widest text-brand-contrast dark:text-brand-surface/60 hover:bg-rose-50 hover:text-rose-600 transition-all w-full ${!isExpanded ? 'justify-center p-3.5' : ''}`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">ENCERRAR SESSÃO</span>}
+            {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">Encerrar Sessão</span>}
           </button>
         </div>
       </aside>
@@ -112,13 +112,13 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               </button>
               
               <nav className="hidden md:flex items-center gap-8">
-                <Link to="/" className="text-xs font-black uppercase tracking-widest text-brand-secondary hover:text-brand-primary transition-colors">Início</Link>
-                <Link to="/stores" className="text-xs font-black uppercase tracking-widest text-brand-secondary hover:text-brand-primary transition-colors">Lojas</Link>
+                <Link to="/" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-brand-primary transition-colors">Início</Link>
+                <Link to="/stores" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-brand-primary transition-colors">Lojas</Link>
               </nav>
 
               <div className="h-6 w-px bg-brand-secondary/20 hidden md:block"></div>
 
-              <span className="font-black text-brand-contrast dark:text-brand-surface text-sm tracking-tight hidden sm:block">
+              <span className="font-black text-brand-contrast dark:text-brand-surface text-base tracking-tight hidden sm:block">
                 {menuItems.find(i => isActive(i.to))?.label || 'Painel'}
               </span>
            </div>
@@ -171,11 +171,11 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                       to={item.to}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                        isActive(item.to) ? 'bg-brand-primary text-white shadow-lg' : 'text-brand-secondary hover:bg-white'
+                        isActive(item.to) ? 'bg-brand-primary text-white shadow-lg' : 'text-brand-contrast dark:text-brand-surface/80 hover:bg-white dark:hover:bg-zinc-800'
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      <span className="text-sm font-black tracking-tight">{item.label}</span>
+                      <span className="text-base font-black tracking-tight">{item.label}</span>
                     </Link>
                  ))}
               </div>
