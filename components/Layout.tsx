@@ -17,7 +17,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { label: 'Início', path: '/' },
     { label: 'Quem Somos', path: '/quem-somos' },
-    { label: 'Loja', path: '/stores' },
+    { label: 'Lojas', path: '/stores' },
     { label: 'Marketplace', path: '/marketplace' },
     { label: 'Parceiros', path: '/partners' },
     { label: 'Eventos', path: '/eventos' },
@@ -26,19 +26,21 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-surface dark:bg-black transition-colors duration-300">
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-black/80 backdrop-blur-md border-b border-brand-secondary/30 py-4 shadow-sm transition-colors">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center h-24">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-black/80 backdrop-blur-md border-b border-brand-secondary/30 shadow-sm transition-colors">
+        <div className="max-w-[1600px] mx-auto px-8 flex justify-between items-center h-24">
           <Link to="/" className="group flex-shrink-0">
             <Logo size="sm" />
           </Link>
 
-          <nav className="hidden xl:flex items-center gap-10">
+          <nav className="hidden xl:flex items-center gap-12">
             {navItems.map((item) => (
               <Link 
                 key={item.label}
                 to={item.path} 
-                className={`text-lg font-black tracking-tight transition-all hover:text-brand-primary dark:hover:text-brand-primary ${
-                  isActive(item.path) ? 'text-brand-primary underline underline-offset-8 decoration-4' : 'text-brand-contrast/70 dark:text-brand-surface/60'
+                className={`text-base font-bold tracking-tight transition-all px-2 py-1 rounded-lg hover:text-brand-primary ${
+                  isActive(item.path) 
+                    ? 'text-brand-primary' 
+                    : 'text-brand-contrast/70 dark:text-brand-surface/60'
                 }`}
               >
                 {item.label}
@@ -46,10 +48,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </nav>
 
-          <div className="hidden xl:flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-6">
             <button 
               onClick={toggleTheme}
-              className="p-3 rounded-2xl bg-white dark:bg-zinc-900 text-brand-primary border border-brand-secondary/30 hover:scale-110 transition-all"
+              className="p-2.5 rounded-2xl bg-white dark:bg-zinc-900 text-brand-primary border border-brand-secondary/30 hover:scale-110 transition-all"
               title="Alternar Tema"
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
@@ -65,7 +67,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <Link to="/login" className="text-sm font-bold text-brand-contrast dark:text-brand-surface px-4">Entrar</Link>
                 <Link to="/register" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-contrast dark:bg-brand-primary text-white hover:opacity-90 transition-all">
                   Anunciar Grátis
                 </Link>
@@ -82,7 +83,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </header>
 
-      <main className="flex-1 w-full pt-32">
+      <main className="flex-1 w-full pt-28">
         {children}
       </main>
 

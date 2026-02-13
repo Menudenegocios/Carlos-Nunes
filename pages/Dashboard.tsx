@@ -81,7 +81,7 @@ export const Dashboard: React.FC = () => {
                     <Sparkles className="w-10 h-10" />
                 </div>
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black text-brand-contrast dark:text-brand-surface tracking-tighter leading-none mb-1">Bom dia, {user.name.split(' ')[0]}!</h1>
+                    <h1 className="text-3xl md:text-4xl font-black text-brand-contrast dark:text-brand-surface tracking-tighter leading-none mb-1">Seja bem vindo, {user.name.split(' ')[0]}!</h1>
                     <p className="text-brand-secondary font-bold">Seu negócio está pronto para novas oportunidades hoje.</p>
                 </div>
             </div>
@@ -200,7 +200,7 @@ export const Dashboard: React.FC = () => {
   );
 };
 
-const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId?: number }> = ({ post, onLike, currentUserId }) => {
+const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId?: string }> = ({ post, onLike, currentUserId }) => {
   const isLiked = currentUserId && post.likedBy.includes(currentUserId);
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-brand-secondary/30 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300">
