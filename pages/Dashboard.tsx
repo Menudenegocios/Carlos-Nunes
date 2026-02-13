@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { mockBackend } from '../services/mockBackend';
 import { Profile, CommunityPost, Product } from '../types';
 import { 
@@ -14,6 +15,7 @@ import {
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,46 +72,11 @@ export const Dashboard: React.FC = () => {
   if (!user) return null;
 
   const hubs = [
-    { 
-        label: 'Bio Digital', 
-        icon: Smartphone, 
-        to: '/bio-builder', 
-        color: 'bg-orange-50 text-brand-primary dark:bg-brand-primary/10', 
-        status: userProfile?.bio ? 'Configurada' : 'Pendente',
-        desc: 'Seu cartão inteligente no Instagram'
-    },
-    { 
-        label: 'Catálogo & Loja', 
-        icon: Package, 
-        to: '/catalog', 
-        color: 'bg-brand-accent/20 text-brand-contrast dark:text-brand-accent', 
-        status: `${products.length} itens`,
-        desc: 'Vitrine digital sem comissões'
-    },
-    { 
-        label: 'CRM & Vendas', 
-        icon: Briefcase, 
-        to: '/business-suite', 
-        color: 'bg-zinc-100 text-brand-contrast dark:bg-zinc-800', 
-        status: 'Painel CRM',
-        desc: 'Gestão de orçamentos e caixa'
-    },
-    { 
-        label: 'Menu Academy', 
-        icon: GraduationCap, 
-        to: '/academy', 
-        color: 'bg-brand-primary text-white', 
-        status: 'Treinamentos',
-        desc: 'Aprenda a vender mais no bairro'
-    },
-    { 
-        label: 'Clube Vantagens', 
-        icon: Trophy, 
-        to: '/rewards', 
-        color: 'bg-brand-accent text-brand-contrast', 
-        status: `${user.points} pts`,
-        desc: 'Suas atividades valem prêmios'
-    },
+    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder', color: 'bg-orange-50 text-brand-primary dark:bg-brand-primary/10', status: userProfile?.bio ? 'Configurada' : 'Pendente', desc: 'Seu cartão inteligente' },
+    { label: 'Catálogo & Loja', icon: Package, to: '/catalog', color: 'bg-brand-accent/20 text-brand-contrast dark:text-brand-accent', status: `${products.length} itens`, desc: 'Vitrine sem comissões' },
+    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', color: 'bg-zinc-100 text-brand-contrast dark:bg-zinc-800', status: 'Painel CRM', desc: 'Gestão de orçamentos' },
+    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', color: 'bg-brand-primary text-white', status: 'Treinamentos', desc: 'Aprenda a vender mais' },
+    { label: 'Clube Vantagens', icon: Trophy, to: '/rewards', color: 'bg-brand-accent text-brand-contrast', status: `${user.points} pts`, desc: 'Atividades valem prêmios' },
   ];
 
   return (
