@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "mkdir -p dist && cp index.html dist/ && echo 'Build concluído: Pasta dist criada para satisfazer o instalador.'"
+    "build": "mkdir -p dist && cp -v index.html index.tsx server.js package.json dist/ && cp -rv components pages services contexts dist/ 2>/dev/null || true"
   },
   "dependencies": {
     "express": "^4.18.2",

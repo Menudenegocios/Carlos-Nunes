@@ -5,24 +5,23 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Configura o Express para servir arquivos .tsx e .ts com o MIME type correto de JavaScript
-// Isso é crucial para que o navegador não bloqueie o carregamento dos módulos
+// Mapeia extensões .tsx e .ts para serem lidas como JavaScript pelo navegador
 express.static.mime.define({'application/javascript': ['tsx', 'ts']});
 
-// Serve arquivos estáticos da raiz
+// Serve arquivos estáticos do diretório raiz onde o servidor está rodando
 app.use(express.static(__dirname));
 
-// Rota de saúde para teste
+// Rota de teste
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Servidor Menu ADS rodando' });
+  res.json({ status: 'ok', message: 'Servidor Menu ADS operando' });
 });
 
-// Redireciona todas as outras rotas para o index.html (Suporte a SPA)
+// Suporte para Single Page Application (SPA)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor rodando na porta ${PORT}`);
-  console.log(`>>> Diretório: ${__dirname}`);
+  console.log(`>>> Servidor iniciado na porta ${PORT}`);
+  console.log(`>>> Diretorio de trabalho: ${__dirname}`);
 });
