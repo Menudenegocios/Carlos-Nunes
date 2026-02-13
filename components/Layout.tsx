@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Store, LogOut, User as UserIcon, MapPin, Search, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Menu, X, Store, LogOut, User as UserIcon, MapPin, Search, ShoppingBag, ArrowRight, Calendar } from 'lucide-react';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -17,6 +17,16 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Itens de navegação reorganizados: Lojas removido
+  const navItems = [
+    { label: 'Início', path: '/' },
+    { label: 'Quem Somos', path: '/quem-somos' },
+    { label: 'Parceiros', path: '/partners' },
+    { label: 'Marketplace', path: '/marketplace' },
+    { label: 'Eventos', path: '/eventos' },
+    { label: 'Blog', path: '/blog' }
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -40,20 +50,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {['Início', 'Lojas', 'Marketplace', 'Blog'].map((item) => {
-              const path = item === 'Início' ? '/' : `/${item.toLowerCase()}`;
-              return (
-                <Link 
-                  key={item}
-                  to={path} 
-                  className={`text-sm font-bold tracking-tight transition-all hover:text-indigo-600 ${isActive(path) ? 'text-indigo-600' : 'text-gray-500'}`}
-                >
-                  {item}
-                </Link>
-              );
-            })}
+          {/* Desktop Nav - text-base size and mixed case */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+            {navItems.map((item) => (
+              <Link 
+                key={item.label}
+                to={item.path} 
+                className={`text-base font-bold tracking-tight transition-all hover:text-indigo-600 ${isActive(item.path) ? 'text-indigo-600' : 'text-gray-500'}`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Desktop Actions */}
@@ -68,7 +75,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             ) : (
               <>
-                <Link to="/login" className="text-sm font-bold text-gray-900 px-5 py-2 hover:text-indigo-600 transition-colors">Entrar</Link>
+                <Link to="/login" className="text-base font-bold text-gray-900 px-5 py-2 hover:text-indigo-600 transition-colors">Entrar</Link>
                 <Link to="/register" className="bg-gray-900 text-white text-xs font-black px-6 py-3 rounded-full uppercase tracking-widest hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95">
                   Anunciar Grátis
                 </Link>
@@ -105,8 +112,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div>
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500 mb-8">Navegação</h4>
               <ul className="space-y-4 text-sm font-bold text-gray-300">
-                <li><Link to="/stores" className="hover:text-indigo-400 transition-colors">Lojas Oficiais</Link></li>
                 <li><Link to="/marketplace" className="hover:text-indigo-400 transition-colors">Catálogo de Produtos</Link></li>
+                <li><Link to="/eventos" className="hover:text-indigo-400 transition-colors">Eventos & Experiências</Link></li>
                 <li><Link to="/blog" className="hover:text-indigo-400 transition-colors">Insights & Dicas</Link></li>
               </ul>
             </div>
@@ -114,9 +121,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div>
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500 mb-8">Empresa</h4>
               <ul className="space-y-4 text-sm font-bold text-gray-300">
+                <li><Link to="/quem-somos" className="hover:text-indigo-400 transition-colors">Quem Somos</Link></li>
+                <li><Link to="/partners" className="hover:text-indigo-400 transition-colors">Nossos Parceiros</Link></li>
                 <li><Link to="/plans" className="hover:text-indigo-400 transition-colors">Planos Pro</Link></li>
                 <li><Link to="/help" className="hover:text-indigo-400 transition-colors">Central de Ajuda</Link></li>
-                <li><Link to="/register" className="hover:text-indigo-400 transition-colors">Seja um Parceiro</Link></li>
               </ul>
             </div>
 
@@ -153,10 +161,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                <span className="font-black text-xl tracking-tighter">MENUADS</span>
                <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-8 h-8 text-gray-400" /></button>
             </div>
-            <nav className="flex flex-col gap-6">
-               {['Início', 'Lojas', 'Marketplace', 'Blog', 'Planos'].map((item) => (
-                 <Link key={item} to={item === 'Início' ? '/' : `/${item.toLowerCase()}`} onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-black text-gray-900 border-b border-gray-50 pb-4">{item}</Link>
+            <nav className="flex flex-col gap-4">
+               {navItems.map((item) => (
+                 <Link 
+                  key={item.label} 
+                  to={item.path} 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="text-xl font-bold text-gray-900 border-b border-gray-50 pb-3"
+                >
+                  {item.label}
+                </Link>
                ))}
+               <Link to="/plans" onClick={() => setIsMobileMenuOpen(false)} className="text-xl font-bold text-gray-900 border-b border-gray-50 pb-3">Planos</Link>
             </nav>
             <div className="mt-auto pt-8">
                {!user ? (

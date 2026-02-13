@@ -23,6 +23,9 @@ import { StoreView } from './pages/StoreView';
 import { BioBuilder } from './pages/BioBuilder';
 import { BusinessSuite } from './pages/BusinessSuite';
 import { Academy } from './pages/Academy';
+import { AboutUs } from './pages/AboutUs';
+import { Partners } from './pages/Partners';
+import { Events } from './pages/Events';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,6 +51,9 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Blog />} />} path="/blog" />
       <Route element={<Layout children={<Marketplace />} />} path="/marketplace" />
       <Route element={<Layout children={<Plans />} />} path="/plans" />
+      <Route element={<Layout children={<AboutUs />} />} path="/quem-somos" />
+      <Route element={<Layout children={<Partners />} />} path="/partners" />
+      <Route element={<Layout children={<Events />} />} path="/eventos" />
 
       {/* Admin/Business Routes with Persistent Sidebar Layout */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -58,6 +64,7 @@ const AppRoutes = () => {
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
+      <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/reviews" element={<PrivateRoute><Reviews /></PrivateRoute>} />
     </Routes>
   );
