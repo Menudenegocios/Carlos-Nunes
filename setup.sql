@@ -180,11 +180,14 @@ CREATE POLICY "Pontos acesso privado" ON public.points_history FOR ALL USING (au
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, full_name, email, referral_code)
+  INSERT INTO public.profiles (user_id, full_name, email, plan, points, level, referral_code)
   VALUES (
     new.id, 
     new.raw_user_meta_data->>'full_name', 
     new.email,
+    'profissionais',
+    50,
+    'bronze',
     'REF' || upper(substring(replace(uuid_generate_v4()::text, '-', ''), 1, 6))
   );
   RETURN new;

@@ -63,10 +63,10 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0
         });
       } else {
-        // Handle case where profile doesn't exist yet
+        // Fallback for cases where profile might be delayed
         setUser({
           id: userId,
-          name: 'Novo Usuário',
+          name: 'Usuário',
           email: '',
           plan: 'profissionais',
           points: 0,
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
@@ -97,21 +97,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     });
     
     if (error) throw error;
-    
-    if (data.user) {
-      // Create initial profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: data.user.id,
-        full_name: name,
-        email: email,
-        plan: 'profissionais',
-        points: 50,
-        level: 'bronze',
-        referral_code: 'REF' + Math.floor(Math.random() * 10000)
-      });
-      
-      if (profileError) console.error('Error creating profile:', profileError);
-    }
+    // Note: The profile is created automatically by the database trigger (setup.sql)
   };
 
   const logout = async () => {

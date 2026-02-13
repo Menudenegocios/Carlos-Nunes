@@ -6,33 +6,46 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Configuração CRUCIAL de MIME types para o Babel no navegador
+// Configuração CRUCIAL de MIME types para o Babel no navegador reconhecer .tsx como JS
 express.static.mime.define({'application/javascript': ['tsx', 'ts', 'jsx']});
 
-// Log para debug no painel da Hostinger
-console.log(">>> Iniciando servidor...");
+// Log para depuração no painel da Hostinger
+console.log(">>> Iniciando servidor Menu ADS...");
 console.log(">>> Diretório Atual (__dirname):", __dirname);
-console.log(">>> Arquivos na raiz:", fs.readdirSync(__dirname).join(', '));
 
-// Serve todos os arquivos da raiz como estáticos
+// Tenta listar arquivos para confirmar se a cópia do build funcionou
+try {
+  const files = fs.readdirSync(__dirname);
+  console.log(">>> Arquivos disponíveis:", files.join(', '));
+} catch (err) {
+  console.error(">>> Erro ao listar arquivos:", err);
+}
+
+// Serve todos os arquivos da pasta atual (__dirname) como estáticos
+// Como o build copia tudo para /dist, e o server.js roda de lá, isso servirá o index.tsx corretamente
 app.use(express.static(__dirname));
 
-// Rota de teste para verificar se o servidor está vivo
+// Rota de saúde para monitoramento
 app.get('/api/ping', (req, res) => {
-  res.json({ status: 'online', time: new Date().toISOString() });
+  res.json({ 
+    status: 'online', 
+    timestamp: new Date().toISOString(),
+    dir: __dirname
+  });
 });
 
 // Suporte a Single Page Application (SPA)
-// IMPORTANTE: Só envia o index.html se a requisição NÃO for por um arquivo (que tenha ponto no nome)
 app.get('*', (req, res) => {
+  // Se a requisição for por um arquivo (ex: .png, .tsx, .js), e chegou aqui, é pq não existe
   if (req.path.includes('.')) {
-    console.log(">>> 404 Detectado para arquivo:", req.path);
+    console.log(">>> Arquivo não encontrado (404):", req.path);
     res.status(404).send('Arquivo não encontrado');
   } else {
+    // Caso contrário, serve o index.html (essencial para o React Router)
     res.sendFile(path.join(__dirname, 'index.html'));
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor Menu ADS rodando na porta ${PORT}`);
+  console.log(`>>> Servidor rodando com sucesso na porta ${PORT}`);
 });
