@@ -450,6 +450,11 @@ export const mockBackend = {
     throw new Error('User not found');
   },
 
+  // Academy Quiz Completion
+  completeAcademyQuiz: async (userId: number, courseTitle: string) => {
+    return await mockBackend.addPoints(userId, `Quiz da Academy: ${courseTitle}`, 20, 'especial');
+  },
+
   // Networking
   getNetworkingProfiles: async () => getStorage<NetworkingProfile>(STORAGE_KEYS.NETWORKING),
   createNetworkingProfile: async (data: any): Promise<NetworkingProfile> => {

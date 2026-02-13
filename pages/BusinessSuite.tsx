@@ -27,7 +27,7 @@ export const BusinessSuite: React.FC = () => {
                  <Briefcase className="h-10 w-10 text-indigo-300" />
               </div>
               <div>
-                 <h1 className="text-3xl md:text-5xl font-black tracking-tight">Business Suite</h1>
+                 <h1 className="text-3xl md:text-5xl font-black tracking-tight">CRM & Vendas</h1>
                  <p className="text-indigo-200 text-lg font-medium">Gestão profissional para o seu negócio local.</p>
               </div>
             </div>

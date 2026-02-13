@@ -2,6 +2,7 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Home } from './pages/Home';
@@ -26,6 +27,8 @@ import { Academy } from './pages/Academy';
 import { AboutUs } from './pages/AboutUs';
 import { Partners } from './pages/Partners';
 import { Events } from './pages/Events';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfUse } from './pages/TermsOfUse';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -54,6 +57,8 @@ const AppRoutes = () => {
       <Route element={<Layout children={<AboutUs />} />} path="/quem-somos" />
       <Route element={<Layout children={<Partners />} />} path="/partners" />
       <Route element={<Layout children={<Events />} />} path="/eventos" />
+      <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacy" />
+      <Route element={<Layout children={<TermsOfUse />} />} path="/terms" />
 
       {/* Admin/Business Routes with Persistent Sidebar Layout */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -64,7 +69,6 @@ const AppRoutes = () => {
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
-      <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/reviews" element={<PrivateRoute><Reviews /></PrivateRoute>} />
     </Routes>
   );
@@ -72,11 +76,13 @@ const AppRoutes = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
