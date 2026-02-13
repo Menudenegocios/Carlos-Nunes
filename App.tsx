@@ -8,7 +8,6 @@ import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { MarketingAI } from './pages/MarketingAI';
 import { Profile } from './pages/Profile';
 import { Plans } from './pages/Plans';
 import { Rewards } from './pages/Rewards';
@@ -56,7 +55,6 @@ const AppRoutes = () => {
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
       <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
-      <Route path="/marketing-ai" element={<PrivateRoute><MarketingAI /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />

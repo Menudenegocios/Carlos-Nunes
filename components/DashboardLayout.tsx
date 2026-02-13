@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   LayoutDashboard, Smartphone, Package, 
-  Sparkles, Trophy, LogOut, Menu, X, Star, Layout, 
+  Trophy, LogOut, Menu, X, Star, Layout, 
   Store, Home, ShoppingBag, ChevronLeft, Briefcase,
   GraduationCap
 } from 'lucide-react';
@@ -23,7 +23,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy', color: 'text-amber-600' },
     { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder', color: 'text-purple-600' },
     { label: 'Catálogo & Loja', icon: Package, to: '/catalog', color: 'text-cyan-600' },
-    { label: 'MenuIA Criativo', icon: Sparkles, to: '/marketing-ai', color: 'text-indigo-500' },
     { label: 'Clube de Vantagens', icon: Trophy, to: '/rewards', color: 'text-yellow-600' },
   ];
 

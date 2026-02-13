@@ -2,9 +2,8 @@
 import React, { useState } from 'react';
 import { 
   Play, Star, X, Award, CheckCircle, GraduationCap, 
-  Video, Map, Info, Sparkles, TrendingUp, BookOpen, 
-  // Added CreditCard to the lucide-react imports
-  Settings, Smartphone, MessageSquare, Target, ChevronRight,
+  Video, Map, Sparkles, TrendingUp, BookOpen, 
+  Smartphone, MessageSquare, Target, ChevronRight,
   Monitor, Layout, Layers, Zap, Clock, Lock, ArrowRight,
   HelpCircle, PlayCircle, CreditCard
 } from 'lucide-react';
@@ -13,7 +12,7 @@ interface Course {
   id: number;
   title: string;
   instructor: string;
-  category: 'Marketing' | 'Vendas' | 'Gestão' | 'Finanças' | 'IA';
+  category: 'Marketing' | 'Vendas' | 'Gestão' | 'Finanças';
   duration: string;
   rating: number;
   students: number;
@@ -22,7 +21,6 @@ interface Course {
 }
 
 const MOCK_COURSES: Course[] = [
-  { id: 1, title: 'IA Generativa para Criativos', instructor: 'MenuIA Team', category: 'IA', duration: '1h 30m', rating: 5.0, students: 450, image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800', description: 'Domine o uso de inteligência artificial para criar conteúdos que convertem.' },
   { id: 2, title: 'Dominação de Instagram Local', instructor: 'Ana Silva', category: 'Marketing', duration: '2h 30m', rating: 4.8, students: 1240, image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800', description: 'Transforme seu perfil em uma máquina de atração de clientes do seu bairro.' },
   { id: 3, title: 'Fechamento de Vendas High Ticket', instructor: 'Juliana Paes', category: 'Vendas', duration: '1h 45m', rating: 4.7, students: 2100, image: 'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=800', description: 'Scripts e gatilhos mentais para vender serviços e produtos de maior valor.' },
   { id: 4, title: 'Finanças Lucrativas', instructor: 'Carlos Eduardo', category: 'Finanças', duration: '4h 15m', rating: 4.9, students: 850, image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800', description: 'Organize seu caixa, controle gastos e entenda a margem real do seu negócio.' },
@@ -33,7 +31,7 @@ const TRILHA_STEPS = [
   { id: 1, title: 'Mindset e Primeiros Passos', status: 'completed', icon: Zap, desc: 'Prepare sua mentalidade para o crescimento exponencial.' },
   { id: 2, title: 'A Vitrine de Ouro', status: 'current', icon: Monitor, desc: 'Configuração estratégica do seu catálogo e bio para conversão.' },
   { id: 3, title: 'Tráfego Orgânico e Pago', status: 'locked', icon: Target, desc: 'Como atrair as pessoas certas para o seu WhatsApp.' },
-  { id: 4, title: 'Escala com Automação IA', status: 'locked', icon: Sparkles, desc: 'Implementando agentes de IA para atender e vender 24h.' },
+  { id: 4, title: 'Escala e Automatização', status: 'locked', icon: Layers, desc: 'Implementando processos eficientes para atender e vender mais.' },
   { id: 5, title: 'Fidelização e Indicação', status: 'locked', icon: Award, desc: 'Crie uma legião de fãs que vendem por você.' },
 ];
 
@@ -42,7 +40,6 @@ const TUTORIAIS = [
   { title: 'Personalizando sua Bio', duration: '3:40', icon: Smartphone, desc: 'Edite cores, links e seu QR Code.' },
   { title: 'Gestão de Leads no CRM', duration: '5:10', icon: Layout, desc: 'Como mover contatos no funil.' },
   { title: 'Criando Cupons Digitais', duration: '2:50', icon: Award, desc: 'Gere descontos para seus clientes.' },
-  { title: 'Usando a IA Copywriter', duration: '4:15', icon: Sparkles, desc: 'Gerando textos de vendas em segundos.' },
   { title: 'Configurando Pix na Loja', duration: '3:05', icon: CreditCard, desc: 'Receba pagamentos direto na conta.' },
 ];
 
@@ -51,7 +48,7 @@ export const Academy: React.FC = () => {
   const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  const categories = ['Todos', 'Marketing', 'Vendas', 'Gestão', 'Finanças', 'IA'];
+  const categories = ['Todos', 'Marketing', 'Vendas', 'Gestão', 'Finanças'];
   const filteredCourses = trainingCategory === 'Todos' 
     ? MOCK_COURSES 
     : MOCK_COURSES.filter(c => c.category === trainingCategory);

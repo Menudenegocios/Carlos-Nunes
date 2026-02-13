@@ -26,8 +26,8 @@ export const Rewards: React.FC = () => {
   const levels = [
     { id: 'iniciante', label: 'Iniciante', min: 0, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: Zap, desc: 'Acesso básico à plataforma e comunidade.' },
     { id: 'bronze', label: 'Bronze', min: 100, color: 'text-orange-400', bg: 'bg-orange-500/10', icon: Shield, desc: 'Destaque nos anúncios por 7 dias.' },
-    { id: 'prata', label: 'Prata', min: 300, color: 'text-slate-300', bg: 'bg-slate-400/10', icon: Star, desc: 'Badge de verificado e 2x tokens MenuIA.' },
-    { id: 'ouro', label: 'Ouro', min: 1000, color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: Crown, desc: 'Mentoria coletiva mensal e suporte prioritário.' },
+    { id: 'prata', label: 'Prata', min: 300, color: 'text-slate-300', bg: 'bg-slate-400/10', icon: Star, desc: 'Badge de verificado e suporte prioritário via ticket.' },
+    { id: 'ouro', label: 'Ouro', min: 1000, color: 'text-yellow-400', bg: 'bg-yellow-500/10', icon: Crown, desc: 'Mentoria coletiva mensal e consultoria estratégica.' },
   ];
 
   const getLevelProgress = (points: number) => {

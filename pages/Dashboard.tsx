@@ -6,7 +6,7 @@ import { mockBackend } from '../services/mockBackend';
 import { Profile, CommunityPost } from '../types';
 import { 
   ShoppingBag, Trophy, Star, Eye, Plus, Zap,
-  ChevronRight, Share2, Ticket, Bell, Sparkles, 
+  ChevronRight, Share2, Ticket, Bell, 
   MessageSquare, Send, Heart, MoreHorizontal, 
   Image as ImageIcon, Users, TrendingUp, LayoutDashboard, RefreshCw
 } from 'lucide-react';
@@ -142,7 +142,6 @@ export const Dashboard: React.FC = () => {
                       <div className="flex justify-between items-center">
                          <div className="flex gap-1">
                             <button type="button" className="p-3 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><ImageIcon className="w-5 h-5" /></button>
-                            <button type="button" className="p-3 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all"><Sparkles className="w-5 h-5" /></button>
                          </div>
                          <button type="submit" disabled={!newPostContent.trim() || isPosting} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 disabled:bg-gray-200 shadow-lg shadow-indigo-600/20 flex items-center gap-2">
                             {isPosting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Postar
