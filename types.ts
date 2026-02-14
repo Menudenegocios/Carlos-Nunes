@@ -50,6 +50,13 @@ export interface BioLink {
   active: boolean;
 }
 
+export interface SocialProof {
+  id: string;
+  author: string;
+  text: string;
+  stars: number;
+}
+
 export interface BioConfig {
   themeId: string;
   fontFamily: 'font-sans' | 'font-serif' | 'font-mono' | 'font-display';
@@ -59,6 +66,13 @@ export interface BioConfig {
     button?: string;
     text?: string;
   };
+  meshGradient?: boolean;
+  floatingCTA?: {
+    enabled: boolean;
+    label: string;
+    type: 'whatsapp' | 'catalog';
+  };
+  socialProof?: SocialProof[];
 }
 
 export interface StoreConfig {

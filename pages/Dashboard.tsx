@@ -9,7 +9,9 @@ import {
   Trophy, Star, Eye, Plus, Zap,
   ArrowRight, MessageSquare, Send, Heart, MoreHorizontal, 
   Image as ImageIcon, Users, RefreshCw,
-  Target, Sparkles, CheckCircle, Megaphone
+  Target, Sparkles, CheckCircle, Megaphone,
+  // Added missing 'Bot' import
+  AlertCircle, ChevronRight, BarChart3, ShieldAlert, Bot
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -21,10 +23,22 @@ export const Dashboard: React.FC = () => {
   const [newPostContent, setNewPostContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
+  const [healthScore, setHealthScore] = useState(0);
 
   useEffect(() => {
     if (user) loadDashboardData();
   }, [user]);
+
+  const calculateHealth = (prof: Profile | null, prods: Product[]) => {
+    let score = 0;
+    if (prof?.logoUrl) score += 20;
+    if (prof?.bio && prof.bio.length > 20) score += 20;
+    if (prof?.businessName) score += 10;
+    if (prof?.phone) score += 10;
+    if (prof?.city) score += 10;
+    if (prods.length > 0) score += 30;
+    return score;
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -36,6 +50,7 @@ export const Dashboard: React.FC = () => {
       setUserProfile(profile || null);
       setPosts(communityPosts);
       setProducts(myProducts);
+      setHealthScore(calculateHealth(profile || null, myProducts));
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +58,7 @@ export const Dashboard: React.FC = () => {
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPostContent.trim() || !user) return;
+    if (newPostContent.trim() === '' || !user) return;
     setIsPosting(true);
     try {
       const newPost = await mockBackend.createCommunityPost({
@@ -71,47 +86,133 @@ export const Dashboard: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-[fade-in_0.6s_ease-out]">
+    <div className="max-w-6xl mx-auto space-y-10 animate-[fade-in_0.6s_ease-out]">
       
-      {/* 1. WELCOME BANNER */}
-      <div className="relative bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 border border-brand-secondary/30 dark:border-zinc-800 shadow-xl overflow-hidden transition-colors">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-[2rem] bg-brand-primary flex items-center justify-center text-white shadow-xl">
-                    <Sparkles className="w-10 h-10" />
+      {/* 1. TOP SECTION: HEALTH & ACTIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* WELCOME & HEALTH SCORE */}
+        <div className="lg:col-span-2 relative bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 border border-brand-secondary/30 dark:border-zinc-800 shadow-xl overflow-hidden group">
+           <div className="relative z-10 flex flex-col md:flex-row justify-between gap-10">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-brand-primary flex items-center justify-center text-white shadow-lg">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-black text-brand-contrast dark:text-brand-surface tracking-tighter leading-none mb-1">
+                      Olá, {user.name.split(' ')[0]}!
+                    </h1>
+                    <p className="text-brand-secondary text-sm font-bold">Vamos crescer hoje? 🚀</p>
+                  </div>
                 </div>
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-black text-brand-contrast dark:text-brand-surface tracking-tighter leading-none mb-1">Seja bem vindo, {user.name.split(' ')[0]}!</h1>
-                    <p className="text-brand-contrast dark:text-brand-secondary font-bold">Seu negócio está pronto para novas oportunidades hoje.</p>
+
+                <div className="flex gap-4">
+                    <Link to="/catalog" className="flex items-center gap-2 px-6 py-3 bg-brand-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg active:scale-95">
+                        <Plus className="w-4 h-4" /> Novo Item
+                    </Link>
+                    <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-6 py-3 bg-brand-surface dark:bg-zinc-800 text-brand-contrast dark:text-brand-surface border border-brand-secondary/50 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-secondary/20 transition-all active:scale-95">
+                        <Eye className="w-4 h-4" /> Ver Vitrine
+                    </Link>
                 </div>
-            </div>
-            <div className="flex gap-3">
-                <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-brand-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg">
-                    <Plus className="w-4 h-4" /> Novo Item
-                </Link>
-                <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-brand-surface dark:bg-zinc-800 text-brand-contrast dark:text-brand-surface border border-brand-secondary/50 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand-secondary/20 transition-all">
-                    <Eye className="w-4 h-4" /> Ver Vitrine
-                </Link>
-            </div>
+              </div>
+
+              {/* HEALTH GAUGE */}
+              <div className="flex flex-col items-center justify-center text-center space-y-3 bg-brand-surface/30 dark:bg-black/20 p-6 rounded-[2.5rem] border border-brand-secondary/10 min-w-[200px]">
+                  <div className="relative w-28 h-28 flex items-center justify-center">
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-200 dark:text-zinc-800" />
+                        <circle cx="56" cy="56" r="48" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={301.59} strokeDashoffset={301.59 - (healthScore / 100) * 301.59} strokeLinecap="round" className="text-brand-primary transition-all duration-1000" />
+                      </svg>
+                      <span className="absolute text-2xl font-black dark:text-white">{healthScore}%</span>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-brand-secondary">Nível de Perfil</h4>
+                    <p className="text-[9px] font-bold text-brand-primary">
+                      {healthScore < 50 ? 'Otimização Pendente' : healthScore < 90 ? 'Perfil Quase Pronto' : 'Perfil Elite'}
+                    </p>
+                  </div>
+              </div>
+           </div>
+           <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-brand-primary/5 rounded-full blur-[60px] pointer-events-none group-hover:bg-brand-primary/10 transition-all"></div>
         </div>
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-primary/5 rounded-full blur-[80px] pointer-events-none opacity-50"></div>
+
+        {/* SMART ALERTS IA */}
+        <div className="bg-brand-contrast dark:bg-zinc-900 rounded-[3rem] p-8 text-brand-surface shadow-2xl relative overflow-hidden border border-white/5">
+           <div className="relative z-10 space-y-6">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                    <Bot className="w-6 h-6 text-brand-primary" />
+                 </div>
+                 <h4 className="font-black tracking-tight text-sm uppercase">Dicas da MenuIA</h4>
+              </div>
+              
+              <div className="space-y-4">
+                 {healthScore < 80 ? (
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 animate-pulse">
+                        <p className="text-[10px] font-bold text-brand-primary uppercase mb-1">Ação Sugerida</p>
+                        <p className="text-xs font-medium leading-relaxed">"Seu catálogo está sem fotos em 2 itens. Fotos profissionais vendem 3x mais!"</p>
+                    </div>
+                 ) : (
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase mb-1">Insight do Dia</p>
+                        <p className="text-xs font-medium leading-relaxed">"Vimos um pico de acessos no seu bairro às 18h. Que tal criar um cupom relâmpago?"</p>
+                    </div>
+                 )}
+                 <Link to="/academy" className="flex items-center justify-between p-4 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
+                    Estudar Agora <ChevronRight className="w-4 h-4" />
+                 </Link>
+              </div>
+           </div>
+           <div className="absolute -right-6 -top-6 w-32 h-32 bg-brand-primary/10 rounded-full blur-3xl"></div>
+        </div>
       </div>
 
-      {/* 2. ACTIVITY & CLUB */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 space-y-8">
-             <div className="bg-brand-accent/10 dark:bg-zinc-900 border border-brand-accent/30 rounded-[2.5rem] p-8 flex gap-6 items-center">
-                <div className="w-16 h-16 rounded-2xl bg-brand-primary flex items-center justify-center flex-shrink-0 shadow-lg">
-                   <Megaphone className="w-8 h-8 text-white" />
+      {/* 2. ANALYTICS VISUAL */}
+      <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 border border-brand-secondary/30 dark:border-zinc-800 shadow-sm space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+             <div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                    <BarChart3 className="text-brand-primary" /> Performance Semanal
+                </h3>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Visitantes e Leads (Últimos 7 dias)</p>
+             </div>
+             <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
+                    <span className="text-[10px] font-black uppercase text-gray-400">Views</span>
                 </div>
-                <div>
-                   <h3 className="text-lg font-black text-brand-contrast dark:text-brand-surface uppercase tracking-tight mb-1">Impulsione seu Networking</h3>
-                   <p className="text-sm text-brand-contrast dark:text-brand-secondary font-bold leading-relaxed">
-                     O <strong>Feed de Negócios</strong> é seu canal direto de oportunidades. Compartilhe ofertas, encontre parceiros estratégicos e fortaleça sua marca agora mesmo.
-                   </p>
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
+                    <span className="text-[10px] font-black uppercase text-gray-400">Leads</span>
                 </div>
              </div>
+          </div>
 
+          <div className="flex items-end justify-between h-48 gap-4 px-4 pt-10">
+             {[
+               { day: 'Seg', v: 40, l: 15 },
+               { day: 'Ter', v: 60, l: 20 },
+               { day: 'Qua', v: 45, l: 12 },
+               { day: 'Qui', v: 80, l: 35 },
+               { day: 'Sex', v: 100, l: 50 },
+               { day: 'Sab', v: 90, l: 40 },
+               { day: 'Dom', v: 70, l: 25 },
+             ].map((data, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-3 group h-full justify-end">
+                    <div className="flex gap-1 items-end w-full h-full justify-center">
+                        <div className="w-2.5 bg-brand-primary rounded-t-full transition-all duration-1000 group-hover:opacity-80" style={{ height: `${data.v}%` }}></div>
+                        <div className="w-2.5 bg-indigo-600 rounded-t-full transition-all duration-1000 group-hover:opacity-80" style={{ height: `${data.l}%` }}></div>
+                    </div>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{data.day}</span>
+                </div>
+             ))}
+          </div>
+      </div>
+
+      {/* 3. ACTIVITY FEED */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-8 space-y-8">
              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-brand-secondary/30 dark:border-zinc-800 shadow-sm">
                 <div className="flex gap-5">
                    <div className="w-14 h-14 rounded-2xl bg-brand-surface dark:bg-zinc-800 flex-shrink-0 overflow-hidden border-2 border-white dark:border-zinc-700 shadow-md">
@@ -120,7 +221,7 @@ export const Dashboard: React.FC = () => {
                    <form onSubmit={handleCreatePost} className="flex-1 space-y-4">
                       <textarea 
                         rows={2}
-                        placeholder={`Diga algo para a comunidade do seu bairro...`}
+                        placeholder={`Mande um alô para o bairro ou poste uma oferta...`}
                         className="w-full bg-brand-surface/50 dark:bg-zinc-800 border border-brand-secondary/20 rounded-2xl p-5 text-sm focus:ring-2 focus:ring-brand-primary/20 resize-none transition-all placeholder:text-brand-secondary dark:text-brand-surface font-bold"
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
@@ -138,14 +239,12 @@ export const Dashboard: React.FC = () => {
              </div>
 
              <div className="space-y-6">
-                <div className="flex items-center justify-between px-4">
-                   <h3 className="font-black text-brand-contrast dark:text-white flex items-center gap-2 tracking-widest text-[10px] uppercase"><Users className="w-4 h-4" /> Feed da Comunidade</h3>
-                </div>
                 {posts.map(post => <PostCard key={post.id} post={post} onLike={() => handleLike(post.id)} currentUserId={user.id} />)}
              </div>
           </div>
 
-          <div className="lg:col-span-4 space-y-10">
+          {/* RIGHT SIDE: CLUB & STATS */}
+          <div className="lg:col-span-4 space-y-8">
              <div className="bg-brand-contrast dark:bg-zinc-900 rounded-[3rem] p-10 text-brand-surface relative overflow-hidden group shadow-2xl">
                 <div className="relative z-10">
                    <div className="flex items-center justify-between mb-8">
@@ -164,7 +263,6 @@ export const Dashboard: React.FC = () => {
                       <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
                          <div className="h-full bg-brand-primary rounded-full" style={{ width: `${Math.min((user.points / 1000) * 100, 100)}%` }}></div>
                       </div>
-                      <p className="text-[10px] text-brand-secondary font-bold uppercase tracking-widest leading-relaxed">Faltam {1000 - user.points > 0 ? 1000 - user.points : 0} pontos para o próximo nível.</p>
                    </div>
 
                    <Link to="/rewards" className="flex items-center justify-between p-6 bg-white/5 rounded-3xl hover:bg-white/10 transition-all border border-white/5 group/item">
@@ -176,7 +274,7 @@ export const Dashboard: React.FC = () => {
              </div>
 
              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-10 border border-brand-secondary/30 dark:border-zinc-800 shadow-sm space-y-10">
-                <h4 className="font-black text-brand-contrast dark:text-brand-surface flex items-center gap-3 tracking-widest text-[10px] opacity-50 uppercase"><Target className="w-4 h-4" /> Desempenho Local</h4>
+                <h4 className="font-black text-brand-contrast dark:text-brand-surface flex items-center gap-3 tracking-widest text-[10px] opacity-50 uppercase"><Target className="w-4 h-4" /> Resumo Rápido</h4>
                 <div className="space-y-8">
                    <div className="flex items-center gap-5 group cursor-pointer">
                       <div className="w-12 h-12 bg-brand-surface dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-brand-primary transition-transform group-hover:scale-110 shadow-sm border border-brand-secondary/20"><Eye className="w-6 h-6" /></div>
