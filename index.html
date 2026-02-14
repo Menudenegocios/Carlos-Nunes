@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Menu de Negócios | Conexão Local Inteligente</title>
     
-    <!-- Tailwind CSS (Aviso de produção é normal usando CDN) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel Standalone (Para compilar TSX no navegador na Hostinger) -->
+    <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script>
@@ -78,10 +78,7 @@
   <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
     
-    <!-- 
-      Uso de caminho relativo './index.tsx' é fundamental para Hostinger.
-      O data-type="module" indica ao Babel que este é um módulo ES.
-    -->
-    <script type="text/babel" data-type="module" src="./index.tsx"></script>
+    <!-- src="/index.tsx" garante que o servidor pegue o arquivo na raiz -->
+    <script type="text/babel" data-type="module" src="/index.tsx"></script>
   </body>
 </html>

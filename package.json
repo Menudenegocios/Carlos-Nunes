@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'Build concluído com sucesso. Iniciando servidor...'"
+    "build": "mkdir -p dist && echo 'Build virtual concluído' > dist/deploy.txt"
   },
   "dependencies": {
     "express": "^4.18.2",

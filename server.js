@@ -5,39 +5,48 @@ const fs = require('fs');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+const ROOT_DIR = path.resolve(__dirname);
 
-// Middleware CRÍTICO: Força o MIME-type para arquivos TypeScript/React
-// Isso resolve o erro 404 e o erro de "carregamento de recurso" na Hostinger
+// 1. Configuração Global de MIME Types
+// Garante que o Express saiba que .tsx é um script JavaScript
+express.static.mime.define({
+  'application/javascript': ['tsx', 'ts', 'jsx']
+});
+
+// 2. Middleware de Log para depuração na Hostinger
 app.use((req, res, next) => {
-  if (req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.jsx')) {
-    const filePath = path.join(__dirname, req.url.split('?')[0]);
-    if (fs.existsSync(filePath)) {
-      res.setHeader('Content-Type', 'application/javascript');
-      return res.sendFile(filePath);
-    }
-  }
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// Serve arquivos estáticos (Imagens, CSS, JS)
-app.use(express.static(__dirname));
-
-// Rota de diagnóstico para testar se o servidor está ativo
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Servidor Menu ADS operando normalmente.' });
+// 3. Interceptador de arquivos de código (TSX/TS/JSX)
+// Força o cabeçalho application/javascript para que o Babel no navegador aceite o arquivo
+app.get(/\.(tsx|ts|jsx)$/, (req, res, next) => {
+  const filePath = path.join(ROOT_DIR, req.path);
+  
+  if (fs.existsSync(filePath)) {
+    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+    return res.sendFile(filePath);
+  }
+  console.error(`Arquivo não encontrado: ${filePath}`);
+  next();
 });
 
-// Suporte para SPA (Single Page Application)
-// Redireciona qualquer rota não encontrada para o index.html
+// 4. Servir arquivos estáticos (Imagens, CSS, etc)
+app.use(express.static(ROOT_DIR));
+
+// 5. Fallback para SPA (Single Page Application)
+// Redireciona rotas de navegação (ex: /dashboard) para o index.html
 app.get('*', (req, res) => {
-  // Evita entrar em loop se o arquivo não existir
+  // Se a requisição parece ser um arquivo (tem ponto) e não foi pega acima, é 404 real
   if (req.path.includes('.') && !req.path.endsWith('.tsx')) {
-    return res.status(404).send('Arquivo não encontrado');
+    return res.status(404).send('Recurso não encontrado');
   }
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(ROOT_DIR, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor Menu ADS iniciado com sucesso.`);
-  console.log(`>>> Rodando em: http://localhost:${PORT}`);
+  console.log(`>>> Servidor Menu ADS iniciado.`);
+  console.log(`>>> Porta: ${PORT}`);
+  console.log(`>>> Root: ${ROOT_DIR}`);
 });
