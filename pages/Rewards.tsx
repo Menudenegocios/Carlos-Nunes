@@ -8,7 +8,7 @@ import {
   Zap, Crown, Wallet, Shield, Sparkles, ChevronRight,
   Check, ListTodo, History, LayoutGrid, MapPin, Search,
   Briefcase, MessageSquare, PlusCircle, RefreshCw, Rocket,
-  Info, Award, Flame, Target
+  Info, Award, Flame, Target, Medal
 } from 'lucide-react';
 import { Prize, PointsTransaction } from '../types';
 
@@ -34,7 +34,6 @@ export const Rewards: React.FC = () => {
 
   if (!user) return null;
 
-  // Updated IDs to strings to match Prize interface
   const prizes: Prize[] = [
     { id: '1', title: 'Voucher iFood R$ 30', cost: 500, imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=600' },
     { id: '2', title: 'Consultoria de Marketing (30min)', cost: 1000, imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600' },
@@ -73,6 +72,13 @@ export const Rewards: React.FC = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const localRanking = [
+    { name: 'Ana Doces', pts: 6240, level: 'ouro', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Ana' },
+    { name: 'João Tech', pts: 4850, level: 'prata', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Joao' },
+    { name: 'Marta Café', pts: 3900, level: 'prata', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Marta' },
+    { name: 'Lucas Fit', pts: 2100, level: 'bronze', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Lucas' }
+  ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4">
@@ -139,11 +145,10 @@ export const Rewards: React.FC = () => {
           </div>
         </div>
 
-        {/* Decor */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none -mr-64 -mt-64"></div>
       </div>
 
-      {/* 2. GAME NAVIGATION - FIXED/STICKY MENU */}
+      {/* 2. GAME NAVIGATION */}
       <div className="sticky top-[-1px] z-50 py-4 -mx-4 px-4 bg-gray-50/80 backdrop-blur-lg transition-all duration-300">
         <div className="flex p-2 bg-white/90 rounded-[2.5rem] border border-gray-200 shadow-2xl max-w-4xl mx-auto ring-4 ring-black/5">
             <button 
@@ -175,10 +180,8 @@ export const Rewards: React.FC = () => {
 
       <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
         
-        {/* TAB: ACELERAÇÃO (REGRAS E INFORMAÇÕES) */}
         {activeTab === 'acceleration' && (
           <div className="space-y-16">
-            {/* Intro Rules */}
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-xs font-black uppercase tracking-widest">
                  <Info className="w-4 h-4" /> Como funciona o Clube?
@@ -187,7 +190,6 @@ export const Rewards: React.FC = () => {
               <p className="text-gray-500 dark:text-white text-lg font-medium leading-relaxed">Os pontos são acumulativos e determinam o seu nível de autoridade no Menu de Negócios. Quanto mais você usa a plataforma e indica membros, mais benefícios desbloqueia.</p>
             </div>
 
-            {/* Levels Breakdown */}
             <div className="grid md:grid-cols-3 gap-8">
                {officialLevels.map((lvl, i) => (
                  <div key={i} className={`p-10 rounded-[3rem] border transition-all ${user.level === lvl.id ? 'bg-white border-indigo-200 shadow-2xl ring-4 ring-indigo-50 scale-105 z-10' : 'bg-gray-50 border-gray-100 opacity-80'}`}>
@@ -208,7 +210,6 @@ export const Rewards: React.FC = () => {
                ))}
             </div>
 
-            {/* Scoring Matrix */}
             <div className="space-y-8">
               <div className="flex items-center gap-4 px-4">
                  <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
@@ -216,7 +217,6 @@ export const Rewards: React.FC = () => {
               </div>
 
               <div className="grid lg:grid-cols-2 gap-8">
-                 {/* Categoria 1: Assinaturas */}
                  <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl space-y-8">
                     <div className="flex items-center gap-4">
                        <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><Award className="w-7 h-7" /></div>
@@ -237,7 +237,6 @@ export const Rewards: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Categoria 2: Indicações */}
                  <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl space-y-8">
                     <div className="flex items-center gap-4">
                        <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl"><Users className="w-7 h-7" /></div>
@@ -257,7 +256,6 @@ export const Rewards: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Categoria 3: Engajamento */}
                  <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl space-y-8">
                     <div className="flex items-center gap-4">
                        <div className="p-4 bg-orange-50 text-orange-600 rounded-2xl"><Flame className="w-7 h-7" /></div>
@@ -279,7 +277,6 @@ export const Rewards: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Categoria 4: Ações Especiais */}
                  <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl space-y-8">
                     <div className="flex items-center gap-4">
                        <div className="p-4 bg-purple-50 text-purple-600 rounded-2xl"><Target className="w-7 h-7" /></div>
@@ -303,12 +300,11 @@ export const Rewards: React.FC = () => {
               </div>
             </div>
 
-            {/* Motivation Banner */}
             <div className="bg-gray-900 rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl">
                <div className="relative z-10 space-y-6">
                   <h3 className="text-3xl font-black">Pronto para acelerar?</h3>
                   <p className="text-gray-400 max-w-xl mx-auto font-medium">Não perca tempo. Comece completando seu catálogo agora e ganhe seus primeiros 20 pontos de engajamento!</p>
-                  <button onClick={() => setActiveTab('missions')} className="bg-white text-gray-900 px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto shadow-xl">
+                  <button onClick={() => setActiveTab('missions')} className="bg-white text-gray-900 px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto shadow-xl">
                     IR PARA MISSÕES <ArrowRight className="w-4 h-4" />
                   </button>
                </div>
@@ -317,7 +313,6 @@ export const Rewards: React.FC = () => {
           </div>
         )}
         
-        {/* TAB: MISSÕES (GAMIFICAÇÃO) */}
         {activeTab === 'missions' && (
           <div className="grid lg:grid-cols-12 gap-10">
              <div className="lg:col-span-8 space-y-8">
@@ -342,10 +337,7 @@ export const Rewards: React.FC = () => {
                       </div>
                    ))}
                 </div>
-             </div>
 
-             <div className="lg:col-span-4 space-y-10">
-                {/* INDICAR E GANHAR PREMIUM */}
                 <div className="bg-gray-950 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl">
                    <div className="relative z-10">
                       <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
@@ -375,41 +367,117 @@ export const Rewards: React.FC = () => {
                    </div>
                    <div className="absolute -right-6 -bottom-6 text-white/5 animate-float"><Share2 className="w-40 h-40" /></div>
                 </div>
-                
-                {/* RANKING LOCAL */}
-                <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-xl">
-                   <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"><TrendingUp className="text-indigo-600 w-4 h-4" /> Ranking Local</h3>
-                      <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">Sua Cidade</span>
+             </div>
+
+             <div className="lg:col-span-4 space-y-10">
+                {/* RANKING LOCAL REDESIGNED */}
+                <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-2xl overflow-hidden">
+                   <div className="bg-indigo-600 p-8 text-white relative">
+                      <div className="relative z-10">
+                         <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xl font-black uppercase tracking-tighter flex items-center gap-2">
+                               <Medal className="w-6 h-6 text-yellow-400" /> Ranking Local
+                            </h3>
+                            <span className="text-[9px] font-black bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest">ESTADO</span>
+                         </div>
+                         <p className="text-indigo-100 text-xs font-medium">Os empreendedores mais ativos da região.</p>
+                      </div>
+                      <div className="absolute top-0 right-0 p-12 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
                    </div>
-                   <div className="space-y-6">
-                      {[
-                        { name: 'Ana Doces', pts: 6240, level: 'ouro' },
-                        { name: 'João Tech', pts: 4850, level: 'prata' },
-                        { name: 'Marta Café', pts: 3900, level: 'prata' }
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg ${i === 0 ? 'bg-yellow-100 text-yellow-600 border-2 border-yellow-200' : 'bg-gray-50 text-gray-400'}`}>
-                              {i + 1}
+
+                   {/* PÓDIO TOP 3 */}
+                   <div className="p-8 space-y-10">
+                      <div className="flex justify-center items-end gap-2 pt-6">
+                        {/* 2º Lugar */}
+                        <div className="flex flex-col items-center gap-3">
+                           <div className="relative">
+                              <div className="w-16 h-16 rounded-2xl bg-gray-100 border-2 border-slate-300 overflow-hidden shadow-lg">
+                                 <img src={localRanking[1].avatar} className="w-full h-full object-cover" alt="" />
+                              </div>
+                              <div className="absolute -top-3 -left-3 w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center text-slate-700 font-black text-xs border-2 border-white shadow-md">2º</div>
                            </div>
-                           <div className="flex-1">
-                              <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
-                              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{item.level}</p>
+                           <div className="text-center">
+                              <p className="text-[10px] font-black text-gray-900 truncate w-16">{localRanking[1].name.split(' ')[0]}</p>
+                              <p className="text-[9px] font-bold text-slate-400">{localRanking[1].pts} pts</p>
                            </div>
-                           <div className="text-right">
-                              <span className="text-sm font-black text-gray-900">{item.pts}</span>
-                              <span className="text-[9px] font-black text-gray-300 block uppercase">PTS</span>
-                           </div>
+                           <div className="w-12 h-16 bg-slate-100 rounded-t-xl border-x border-t border-slate-200 shadow-inner"></div>
                         </div>
-                      ))}
+
+                        {/* 1º Lugar */}
+                        <div className="flex flex-col items-center gap-3 animate-float">
+                           <div className="relative">
+                              <div className="w-24 h-24 rounded-3xl bg-amber-50 border-4 border-yellow-400 overflow-hidden shadow-2xl p-1">
+                                 <img src={localRanking[0].avatar} className="w-full h-full object-cover rounded-2xl" alt="" />
+                              </div>
+                              <div className="absolute -top-4 -left-4 w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-amber-900 shadow-xl border-2 border-white">
+                                 <Trophy className="w-6 h-6" />
+                              </div>
+                           </div>
+                           <div className="text-center">
+                              <p className="text-xs font-black text-gray-900">{localRanking[0].name}</p>
+                              <p className="text-[10px] font-black text-yellow-600">{localRanking[0].pts} pts</p>
+                           </div>
+                           <div className="w-16 h-24 bg-gradient-to-b from-yellow-100 to-yellow-50 rounded-t-2xl border-x border-t border-yellow-200 shadow-[0_-10px_30px_rgba(251,191,36,0.1)]"></div>
+                        </div>
+
+                        {/* 3º Lugar */}
+                        <div className="flex flex-col items-center gap-3">
+                           <div className="relative">
+                              <div className="w-16 h-16 rounded-2xl bg-orange-50 border-2 border-orange-300 overflow-hidden shadow-lg">
+                                 <img src={localRanking[2].avatar} className="w-full h-full object-cover" alt="" />
+                              </div>
+                              <div className="absolute -top-3 -left-3 w-8 h-8 bg-orange-300 rounded-full flex items-center justify-center text-orange-900 font-black text-xs border-2 border-white shadow-md">3º</div>
+                           </div>
+                           <div className="text-center">
+                              <p className="text-[10px] font-black text-gray-900 truncate w-16">{localRanking[2].name.split(' ')[0]}</p>
+                              <p className="text-[9px] font-bold text-orange-400">{localRanking[2].pts} pts</p>
+                           </div>
+                           <div className="w-12 h-12 bg-orange-50 rounded-t-xl border-x border-t border-orange-100 shadow-inner"></div>
+                        </div>
+                      </div>
+
+                      {/* Lista do restante */}
+                      <div className="space-y-4 pt-6 border-t border-gray-100">
+                         {localRanking.slice(3).map((item, i) => (
+                           <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white transition-all group">
+                              <div className="flex items-center gap-4">
+                                 <span className="text-xs font-black text-gray-300 group-hover:text-indigo-600">{i + 4}º</span>
+                                 <div className="w-10 h-10 rounded-xl overflow-hidden border border-gray-200">
+                                    <img src={item.avatar} className="w-full h-full object-cover" alt="" />
+                                 </div>
+                                 <div>
+                                    <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
+                                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{item.level}</p>
+                                 </div>
+                              </div>
+                              <div className="text-right">
+                                 <span className="text-sm font-black text-gray-900">{item.pts}</span>
+                                 <span className="text-[8px] font-black text-gray-300 block uppercase">PTS</span>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+
+                      <button className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-600 transition-all active:scale-95">
+                         Ver Ranking Geral
+                      </button>
                    </div>
-                   <button className="w-full mt-10 py-4 bg-gray-50 rounded-2xl font-black text-[10px] uppercase tracking-widest text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all">VER RANKING COMPLETO</button>
+                </div>
+
+                <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
+                   <div className="flex items-center gap-3 mb-6">
+                      <Zap className="w-6 h-6 text-brand-primary" />
+                      <h4 className="text-lg font-black text-gray-900 uppercase">Super Dica</h4>
+                   </div>
+                   <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                      Indicar apenas <strong>3 novos membros Pro</strong> por mês garante a você o nível Prata automático e o dobro de pontos em cada missão diária concluída.
+                   </p>
                 </div>
              </div>
           </div>
         )}
 
-        {/* TAB: STORE (RESGATAR) */}
+        {/* TAB: STORE */}
         {activeTab === 'store' && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {prizes.map(prize => (
@@ -441,7 +509,7 @@ export const Rewards: React.FC = () => {
            </div>
         )}
 
-        {/* TAB: HISTÓRICO (EXTRATO) */}
+        {/* TAB: HISTÓRICO */}
         {activeTab === 'history' && (
           <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl overflow-hidden min-h-[500px]">
              <div className="flex justify-between items-center mb-12">

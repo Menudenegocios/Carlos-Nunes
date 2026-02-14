@@ -239,7 +239,6 @@ export const mockBackend = {
       city: data.city,
       neighborhood: data.neighborhood,
       bio: data.bio,
-      // Fixed property access to logoUrl instead of logo_url
       logo_url: data.logoUrl,
       social_links: data.socialLinks,
       store_config: data.storeConfig,
@@ -365,7 +364,8 @@ export const mockBackend = {
       image_url: data.imageUrl,
       category: data.category,
       store_category_id: data.storeCategoryId,
-      available: data.available
+      available: data.available,
+      external_link: data.externalLink
     }).select().single();
 
     await mockBackend.addPoints(data.userId, 'Adicionar Produto ao Catálogo', 20, 'engajamento');

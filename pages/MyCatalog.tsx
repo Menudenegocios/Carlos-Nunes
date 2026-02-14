@@ -1,14 +1,15 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
 import { Product, Profile, StoreCategory } from '../types';
+// Added missing Globe and AlignLeft icons to the imports from lucide-react
 import { 
   Store, Settings, LayoutGrid, Package, CheckCircle, ChevronRight, 
   Upload, Sparkles, Clock, CreditCard, 
   Plus, Trash2, Edit2, 
   DollarSign, Image as ImageIcon, Eye, ArrowLeft,
-  QrCode, X, Calendar, Wallet, Check, MapPin
+  QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
+  Tag, Info, Target, Briefcase, Award, Globe, AlignLeft
 } from 'lucide-react';
 
 export const MyCatalog: React.FC = () => {
@@ -22,7 +23,15 @@ export const MyCatalog: React.FC = () => {
   const [newCatName, setNewCatName] = useState('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState<Partial<Product>>({ name: '', description: '', price: 0, category: '', storeCategoryId: '', available: true });
+  const [productForm, setProductForm] = useState<Partial<Product>>({ 
+    name: '', 
+    description: '', 
+    price: 0, 
+    category: 'Produtos', 
+    storeCategoryId: '', 
+    available: true,
+    externalLink: ''
+  });
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
@@ -80,7 +89,7 @@ export const MyCatalog: React.FC = () => {
     const newProd = await mockBackend.createProduct({ ...productForm, userId: user.id } as Product);
     setProducts([...products, newProd]);
     setIsProductModalOpen(false);
-    setProductForm({ name: '', description: '', price: 0, category: '', storeCategoryId: '', available: true });
+    setProductForm({ name: '', description: '', price: 0, category: 'Produtos', storeCategoryId: '', available: true, externalLink: '' });
   };
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -233,8 +242,11 @@ export const MyCatalog: React.FC = () => {
                                    <button className="p-2 bg-white text-rose-500 rounded-xl shadow-lg"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                              </div>
-                             <h4 className="font-black text-gray-900 truncate">{prod.name}</h4>
-                             <p className="text-indigo-600 font-black text-lg mt-1">R$ {prod.price.toFixed(2)}</p>
+                             <div className="px-2">
+                                <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase mb-2 inline-block">{prod.category}</span>
+                                <h4 className="font-black text-gray-900 truncate">{prod.name}</h4>
+                                <p className="text-indigo-600 font-black text-lg mt-1">R$ {prod.price.toFixed(2)}</p>
+                             </div>
                           </div>
                        ))}
                        {products.length === 0 && (
@@ -283,44 +295,122 @@ export const MyCatalog: React.FC = () => {
        </div>
 
        {isProductModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
-                <div className="flex justify-between items-center mb-8">
-                   <h3 className="text-2xl font-black text-gray-900">Novo Produto/Serviço</h3>
-                   <button onClick={() => setIsProductModalOpen(false)}><X className="w-6 h-6 text-gray-300" /></button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-4xl p-0 shadow-2xl overflow-hidden animate-[scale-in_0.3s_ease-out]">
+                {/* Modal Header */}
+                <div className="bg-indigo-900 px-10 py-8 text-white flex justify-between items-center relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h3 className="text-3xl font-black tracking-tight">Novo Produto ou Serviço</h3>
+                        <p className="text-indigo-200 font-medium">Cadastre os detalhes do que você oferece.</p>
+                    </div>
+                    <button onClick={() => setIsProductModalOpen(false)} className="relative z-10 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
+                        <X className="w-8 h-8 text-white" />
+                    </button>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
                 </div>
-                <form onSubmit={saveProduct} className="space-y-6">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nome do Item</label>
-                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-100" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label>
-                            <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-100" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
-                        </div>
-                   </div>
-                   <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label>
-                        <select required className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold focus:ring-2 focus:ring-indigo-100" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
-                            <option value="">Selecione...</option>
-                            {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                   </div>
-                   <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Descrição</label>
-                        <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-100" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} />
-                   </div>
-                   <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Foto do Item</label>
-                        <div className="flex gap-4 items-center">
-                            <div className="w-20 h-20 bg-gray-100 rounded-2xl border border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                                {productForm.imageUrl ? <img src={productForm.imageUrl} className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-300 w-8 h-8" />}
+
+                <form onSubmit={saveProduct} className="p-10 md:p-12 overflow-y-auto max-h-[75vh]">
+                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        {/* Imagem Area */}
+                        <div className="lg:col-span-4">
+                            <div className="space-y-6">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2">
+                                    <ImageIcon className="w-3.5 h-3.5" /> Foto Principal
+                                </label>
+                                <div className="aspect-square bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 flex flex-col items-center justify-center overflow-hidden group relative hover:border-indigo-200 transition-all">
+                                    {productForm.imageUrl ? (
+                                        <img src={productForm.imageUrl} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-center p-6">
+                                            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300 group-hover:text-indigo-600 transition-colors">
+                                                <Upload className="w-8 h-8" />
+                                            </div>
+                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Selecionar Foto</p>
+                                        </div>
+                                    )}
+                                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleImageUpload(e, 'product')} />
+                                </div>
+                                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
+                                    <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <p className="text-[10px] text-amber-800 font-medium leading-relaxed">Dica: Fotos bem iluminadas aumentam em até 40% a chance de fechamento no WhatsApp.</p>
+                                </div>
                             </div>
-                            <input type="file" onChange={e => handleImageUpload(e, 'product')} />
+                        </div>
+
+                        {/* Form Area */}
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                        <Tag className="w-3.5 h-3.5" /> Nome do Item
+                                    </label>
+                                    <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-indigo-50 transition-all" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} placeholder="Ex: Bolo de Cenoura com Chocolate" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                        <DollarSign className="w-3.5 h-3.5" /> Valor de Venda (R$)
+                                    </label>
+                                    <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-indigo-50 transition-all" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} placeholder="0.00" />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                        <Target className="w-3.5 h-3.5" /> Tipo de Oferta
+                                    </label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['Produtos', 'Serviços', 'Mentorias'].map(type => (
+                                            <button 
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setProductForm({...productForm, category: type})}
+                                                className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all border-2 ${productForm.category === type ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-100'}`}
+                                            >
+                                                {type === 'Produtos' && <Package className="w-4 h-4 mx-auto mb-1" />}
+                                                {type === 'Serviços' && <Briefcase className="w-4 h-4 mx-auto mb-1" />}
+                                                {type === 'Mentorias' && <Award className="w-4 h-4 mx-auto mb-1" />}
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                        <LayoutGrid className="w-3.5 h-3.5" /> Agrupamento (Categoria)
+                                    </label>
+                                    <select required className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-indigo-50 transition-all h-[64px]" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
+                                        <option value="">Selecione um grupo...</option>
+                                        {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                    <LinkIcon className="w-3.5 h-3.5" /> Link Externo (Opcional)
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600">
+                                        <Globe className="w-5 h-5" />
+                                    </div>
+                                    <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-5 pl-14 font-bold focus:ring-4 focus:ring-indigo-50 transition-all" value={productForm.externalLink} onChange={e => setProductForm({...productForm, externalLink: e.target.value})} placeholder="https://kiwify.com.br/meu-curso" />
+                                </div>
+                                <p className="text-[9px] text-gray-400 mt-2 px-1 font-medium">Ideal para checkouts externos ou páginas de vendas específicas.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                    <AlignLeft className="w-3.5 h-3.5" /> Descrição da Oferta
+                                </label>
+                                <textarea rows={4} className="w-full bg-gray-50 border-none rounded-[2rem] p-6 font-medium text-sm focus:ring-4 focus:ring-indigo-50 transition-all resize-none" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} placeholder="Destaque os benefícios e o que está incluso..." />
+                            </div>
+
+                            <button type="submit" className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-indigo-200 uppercase tracking-[0.2em] text-sm hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-95">
+                                <Sparkles className="w-6 h-6 text-yellow-300" /> CADASTRAR NO CATÁLOGO
+                            </button>
                         </div>
                    </div>
-                   <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all">SALVAR ITEM NO CATÁLOGO</button>
                 </form>
              </div>
           </div>
@@ -355,8 +445,11 @@ const StorePreview = ({ onBack, profile, products, storeCategories }: any) => (
                                 {products.filter((p: any) => p.storeCategoryId === cat.id).map((prod: any) => (
                                     <div key={prod.id} className="bg-gray-50 rounded-[2rem] p-4 border border-gray-100">
                                         <div className="aspect-square bg-white rounded-2xl mb-4 overflow-hidden"><img src={prod.imageUrl} className="w-full h-full object-cover" /></div>
-                                        <h4 className="font-black text-gray-900 text-sm truncate">{prod.name}</h4>
-                                        <p className="text-indigo-600 font-black mt-1">R$ {prod.price.toFixed(2)}</p>
+                                        <div className="px-1">
+                                            <span className="text-[8px] font-black text-indigo-400 uppercase mb-1 block">{prod.category}</span>
+                                            <h4 className="font-black text-gray-900 text-sm truncate">{prod.name}</h4>
+                                            <p className="text-indigo-600 font-black mt-1">R$ {prod.price.toFixed(2)}</p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

@@ -180,6 +180,7 @@ export interface Product {
   available: boolean;
   variations?: string[];
   buttonType?: 'buy' | 'quote';
+  externalLink?: string;
 }
 
 export interface BlogPost {
