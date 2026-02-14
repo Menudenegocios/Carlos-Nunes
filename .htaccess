@@ -1,21 +1,11 @@
 
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /
+RewriteEngine On
 
-    # 1. Ignorar regras de segurança para extensões de código
-    <FilesMatch "\.(tsx|ts|jsx)$">
-        Order allow,deny
-        Allow from all
-        Satisfy Any
-    </FilesMatch>
+# Impede que o Apache tente servir os arquivos diretamente
+# e força tudo a passar pelo Node.js na porta configurada
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
 
-    # 2. Se a requisição NÃO for para um arquivo físico existente (como imagens/css)
-    # ou se for especificamente um arquivo .tsx, manda para o Node.js
-    RewriteCond %{REQUEST_FILENAME} !-f [OR]
-    RewriteCond %{REQUEST_URI} \.(tsx|ts|jsx)$
-    RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
-</IfModule>
-
-# Desativar listagem de diretórios para evitar o erro 403 padrão
-Options -Indexes
+# Caso o proxy falhe, garante que pelo menos o arquivo index.html seja acessível
+DirectoryIndex index.html

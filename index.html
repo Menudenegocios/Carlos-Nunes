@@ -78,7 +78,12 @@
   <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
     
-    <!-- Usar './index.tsx' relativo é mais seguro para o middleware interceptar -->
-    <script type="text/babel" data-type="module" src="./index.tsx"></script>
+    <!-- Carregamos um .js virtual que o Node servirá como o conteúdo do .tsx -->
+    <script 
+      type="text/babel" 
+      data-type="module" 
+      data-presets="typescript,react" 
+      src="/app-main.js"
+    ></script>
   </body>
 </html>
