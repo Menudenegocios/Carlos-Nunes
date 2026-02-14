@@ -27,19 +27,27 @@ export const AIChatAgent: React.FC = () => {
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    
+    // Adiciona mensagem do usuário à UI
+    const updatedMessages = [...messages, { role: 'user', content: userMessage }];
+    setMessages(updatedMessages as any);
     setIsLoading(true);
 
     try {
-      const history = messages.map(m => ({
-        role: m.role,
-        parts: [{ text: m.content }]
-      }));
+      // Prepara o histórico para o serviço (excluindo a mensagem atual que vai no sendMessage)
+      // Também exclui a mensagem de boas-vindas do modelo para garantir que o histórico comece com 'user'
+      const apiHistory = messages
+        .filter((m, idx) => idx > 0) // Pula o primeiro 'Olá!' do bot
+        .map(m => ({
+          role: m.role as 'user' | 'model',
+          parts: [{ text: m.content }]
+        }));
       
-      const aiResponse = await getAIAssistantResponse(userMessage, history);
+      const aiResponse = await getAIAssistantResponse(userMessage, apiHistory);
       setMessages(prev => [...prev, { role: 'model', content: aiResponse }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "Puxa, tive um pequeno problema. Pode tentar perguntar de novo?" }]);
+      console.error("Chat Agent Error:", error);
+      setMessages(prev => [...prev, { role: 'model', content: "Puxa, tive um pequeno problema técnico. Pode tentar perguntar de novo?" }]);
     } finally {
       setIsLoading(false);
     }

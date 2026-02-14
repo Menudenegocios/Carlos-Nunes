@@ -22,25 +22,36 @@ export const getAIAssistantResponse = async (
   history: { role: 'user' | 'model', parts: { text: string }[] }[] = []
 ): Promise<string> => {
   try {
+    // Sempre criar uma nova instância antes da chamada conforme as regras
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Use gemini-3-flash-preview for fast and smart Q&A
-    const response = await ai.models.generateContent({
+    // Filtramos o histórico para garantir que ele comece com uma mensagem de 'user'
+    // A API do Gemini prefere que a conversa comece com o usuário.
+    let cleanHistory = [...history];
+    while (cleanHistory.length > 0 && cleanHistory[0].role !== 'user') {
+      cleanHistory.shift();
+    }
+
+    const chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
-      contents: [
-        ...history.map(h => ({ role: h.role, parts: h.parts })),
-        { role: 'user', parts: [{ text: message }] }
-      ],
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.7,
       },
+      history: cleanHistory,
     });
 
-    return response.text || "Desculpe, tive um problema técnico. Pode repetir?";
-  } catch (error) {
+    const response = await chat.sendMessage({ message });
+    return response.text || "Desculpe, tive um problema ao processar sua resposta. Pode repetir?";
+  } catch (error: any) {
     console.error("Error in AI Assistant:", error);
-    return "Estou passando por uma manutenção rápida. Tente novamente em instantes!";
+    
+    // Tratamento específico para o erro de sinal abortado ou erro de entidade não encontrada (chave inválida/expirada)
+    if (error.message?.includes("Requested entity was not found")) {
+      return "Sua sessão de IA expirou ou a chave de acesso é inválida. Por favor, recarregue a página.";
+    }
+    
+    return "Estou com dificuldade de conexão no momento. Por favor, tente novamente em alguns segundos.";
   }
 };
 
