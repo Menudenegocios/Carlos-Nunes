@@ -1,6 +1,49 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+const SYSTEM_INSTRUCTION = `
+Você é o 'MenuIA', o assistente virtual oficial da plataforma Menu de Negócios.
+Sua missão é ajudar empreendedores locais, freelancers e profissionais a entenderem como usar a plataforma para crescer.
+
+REGRAS DE OURO:
+1. Seja sempre amigável, motivador e use emojis estrategicamente.
+2. O Menu de Negócios NÃO cobra comissões sobre vendas. O lucro é 100% do usuário.
+3. PLANOS: 
+   - Profissionais: Grátis (Bio Digital, IA para bio).
+   - Freelancers: R$ 29,90/mês (Anúncios no feed, Vitrine de serviços).
+   - Negócios Locais: R$ 59,90/mês (Catálogo completo, Pagamentos Pix/Cartão, Destaque Regional).
+4. FUNCIONALIDADES: Bio Digital (link no Instagram), Catálogo WhatsApp, CRM Menuflow (Gestão de Leads), Academy (Treinamentos), Clube ADS (Pontos por engajamento).
+5. Se o usuário perguntar sobre suporte humano, direcione-o para a página de "Suporte" ou WhatsApp oficial.
+6. Mantenha as respostas concisas e formatadas com tópicos quando necessário.
+`;
+
+export const getAIAssistantResponse = async (
+  message: string,
+  history: { role: 'user' | 'model', parts: { text: string }[] }[] = []
+): Promise<string> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    // Use gemini-3-flash-preview for fast and smart Q&A
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [
+        ...history.map(h => ({ role: h.role, parts: h.parts })),
+        { role: 'user', parts: [{ text: message }] }
+      ],
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.7,
+      },
+    });
+
+    return response.text || "Desculpe, tive um problema técnico. Pode repetir?";
+  } catch (error) {
+    console.error("Error in AI Assistant:", error);
+    return "Estou passando por uma manutenção rápida. Tente novamente em instantes!";
+  }
+};
+
 export const generateMarketingCopy = async (
   businessType: string,
   description: string
@@ -25,13 +68,11 @@ export const generateMarketingCopy = async (
       Retorne a resposta formatada.
     `;
 
-    // Always use 'gemini-3-flash-preview' for basic text tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
     });
 
-    // Directly access .text property
     return response.text || "Não foi possível gerar a copy no momento.";
   } catch (error) {
     console.error("Error generating copy:", error);
@@ -46,7 +87,6 @@ export const generateMarketingImage = async (
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Use 'gemini-2.5-flash-image' for general image generation tasks
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -59,7 +99,6 @@ export const generateMarketingImage = async (
       }
     });
 
-    // Iterate through parts to find the image part
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
         return `data:image/png;base64,${part.inlineData.data}`;
@@ -80,7 +119,6 @@ export const editMarketingImage = async (
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Extract base64 data and mime type
     const matches = imageBase64.match(/^data:(.+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
       throw new Error("Formato de imagem inválido.");
@@ -88,7 +126,6 @@ export const editMarketingImage = async (
     const mimeType = matches[1];
     const data = matches[2];
 
-    // Use 'gemini-2.5-flash-image' for image editing tasks
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -106,7 +143,6 @@ export const editMarketingImage = async (
       },
     });
 
-    // Iterate through parts to find the image part
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
         return `data:image/png;base64,${part.inlineData.data}`;

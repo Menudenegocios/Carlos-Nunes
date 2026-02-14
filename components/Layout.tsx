@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Menu, X, Store, LogOut, Sun, Moon, ArrowRight } from 'lucide-react';
 import { Logo } from './Logo';
+import { AIChatAgent } from './AIChatAgent';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -174,6 +175,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
         </div>
       )}
+
+      {/* Assistente de IA Global */}
+      <AIChatAgent />
     </div>
   );
 };

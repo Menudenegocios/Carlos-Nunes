@@ -10,6 +10,7 @@ import {
   Sun, Moon
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { AIChatAgent } from './AIChatAgent';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -190,6 +191,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
            </aside>
         </div>
       )}
+
+      {/* Assistente de IA no Dashboard */}
+      <AIChatAgent />
     </div>
   );
 };
