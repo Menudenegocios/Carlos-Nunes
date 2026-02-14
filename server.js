@@ -1,51 +1,40 @@
 
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Configuração CRUCIAL de MIME types para o Babel no navegador reconhecer .tsx como JS
-express.static.mime.define({'application/javascript': ['tsx', 'ts', 'jsx']});
+// Configuração de MIME types ANTES de servir arquivos estáticos
+// Isso é essencial para que o Babel Standalone reconheça os arquivos .tsx como scripts JS
+express.static.mime.define({
+  'application/javascript': ['tsx', 'ts', 'jsx']
+});
 
-// Log para depuração no painel da Hostinger
-console.log(">>> Iniciando servidor Menu ADS...");
-console.log(">>> Diretório Atual (__dirname):", __dirname);
-
-// Tenta listar arquivos para confirmar se a cópia do build funcionou
-try {
-  const files = fs.readdirSync(__dirname);
-  console.log(">>> Arquivos disponíveis:", files.join(', '));
-} catch (err) {
-  console.error(">>> Erro ao listar arquivos:", err);
-}
-
-// Serve todos os arquivos da pasta atual (__dirname) como estáticos
-// Como o build copia tudo para /dist, e o server.js roda de lá, isso servirá o index.tsx corretamente
+// 1. Serve arquivos estáticos primeiro
+// Se o build da Hostinger coloca os arquivos na raiz ou na pasta atual, usamos o ponto
 app.use(express.static(__dirname));
 
-// Rota de saúde para monitoramento
+// 2. Rota de saúde/diagnóstico
 app.get('/api/ping', (req, res) => {
   res.json({ 
     status: 'online', 
     timestamp: new Date().toISOString(),
-    dir: __dirname
+    env: process.env.NODE_ENV || 'production'
   });
 });
 
-// Suporte a Single Page Application (SPA)
+// 3. Rota curinga para SPA (Single Page Application)
+// Esta rota DEVE ser a última. Se a requisição não for um arquivo físico, manda o index.html
 app.get('*', (req, res) => {
-  // Se a requisição for por um arquivo (ex: .png, .tsx, .js), e chegou aqui, é pq não existe
-  if (req.path.includes('.')) {
-    console.log(">>> Arquivo não encontrado (404):", req.path);
-    res.status(404).send('Arquivo não encontrado');
-  } else {
-    // Caso contrário, serve o index.html (essencial para o React Router)
-    res.sendFile(path.join(__dirname, 'index.html'));
+  // Se a URL contém um ponto, provavelmente é um recurso não encontrado (imagem, etc)
+  if (req.path.includes('.') && !req.path.endsWith('.tsx')) {
+    return res.status(404).send('Recurso não encontrado');
   }
+  // Para todas as outras rotas de navegação, serve o index.html
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor rodando com sucesso na porta ${PORT}`);
+  console.log(`>>> Servidor Menu ADS rodando na porta ${PORT}`);
 });
