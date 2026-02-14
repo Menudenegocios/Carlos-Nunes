@@ -1,0 +1,15 @@
+
+RewriteEngine On
+RewriteBase /
+
+# Garante que o Apache não bloqueie arquivos .tsx
+<FilesMatch "\.(tsx|ts|jsx)$">
+    Order allow,deny
+    Allow from all
+    Satisfy Any
+</FilesMatch>
+
+# Se o arquivo não existir fisicamente (ou for uma rota do React), manda para o Node.js
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]

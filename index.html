@@ -78,7 +78,7 @@
   <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
     
-    <!-- src="/index.tsx" garante que o servidor pegue o arquivo na raiz -->
-    <script type="text/babel" data-type="module" src="/index.tsx"></script>
+    <!-- Usar './index.tsx' relativo é mais seguro para o middleware interceptar -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>

@@ -7,46 +7,57 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ROOT_DIR = path.resolve(__dirname);
 
-// 1. Configuração Global de MIME Types
-// Garante que o Express saiba que .tsx é um script JavaScript
+// 1. Configuração agressiva de MIME types
 express.static.mime.define({
   'application/javascript': ['tsx', 'ts', 'jsx']
 });
 
-// 2. Middleware de Log para depuração na Hostinger
+// 2. Middleware para servir arquivos .tsx, .ts, .jsx manualmente
+// Lemos o arquivo e enviamos o conteúdo para evitar bloqueios de segurança (403)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
-// 3. Interceptador de arquivos de código (TSX/TS/JSX)
-// Força o cabeçalho application/javascript para que o Babel no navegador aceite o arquivo
-app.get(/\.(tsx|ts|jsx)$/, (req, res, next) => {
-  const filePath = path.join(ROOT_DIR, req.path);
-  
-  if (fs.existsSync(filePath)) {
-    res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
-    return res.sendFile(filePath);
+  const ext = path.extname(req.path);
+  if (['.tsx', '.ts', '.jsx'].includes(ext)) {
+    const filePath = path.join(ROOT_DIR, req.path);
+    
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+        // Adicionamos um cabeçalho para evitar cache agressivo durante o deploy
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(content);
+      } catch (err) {
+        console.error(`Erro ao ler arquivo ${filePath}:`, err);
+        return res.status(500).send('Erro interno ao processar script');
+      }
+    }
   }
-  console.error(`Arquivo não encontrado: ${filePath}`);
   next();
 });
 
-// 4. Servir arquivos estáticos (Imagens, CSS, etc)
+// 3. Servir arquivos estáticos normais (imagens, css, etc)
 app.use(express.static(ROOT_DIR));
 
+// 4. Rota de diagnóstico
+app.get('/api/status', (req, res) => {
+  res.json({ online: true, root: ROOT_DIR });
+});
+
 // 5. Fallback para SPA (Single Page Application)
-// Redireciona rotas de navegação (ex: /dashboard) para o index.html
 app.get('*', (req, res) => {
-  // Se a requisição parece ser um arquivo (tem ponto) e não foi pega acima, é 404 real
+  // Se for uma requisição de arquivo que não existe, retorna 404
   if (req.path.includes('.') && !req.path.endsWith('.tsx')) {
-    return res.status(404).send('Recurso não encontrado');
+    return res.status(404).send('Arquivo não encontrado');
   }
-  res.sendFile(path.join(ROOT_DIR, 'index.html'));
+  // Para rotas de navegação, serve o index.html
+  const indexPath = path.join(ROOT_DIR, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(500).send('Erro crítico: index.html não encontrado no servidor.');
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor Menu ADS iniciado.`);
-  console.log(`>>> Porta: ${PORT}`);
-  console.log(`>>> Root: ${ROOT_DIR}`);
+  console.log(`>>> Servidor Menu ADS ativo na porta ${PORT}`);
 });
