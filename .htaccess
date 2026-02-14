@@ -1,15 +1,21 @@
 
-RewriteEngine On
-RewriteBase /
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
 
-# Garante que o Apache não bloqueie arquivos .tsx
-<FilesMatch "\.(tsx|ts|jsx)$">
-    Order allow,deny
-    Allow from all
-    Satisfy Any
-</FilesMatch>
+    # 1. Ignorar regras de segurança para extensões de código
+    <FilesMatch "\.(tsx|ts|jsx)$">
+        Order allow,deny
+        Allow from all
+        Satisfy Any
+    </FilesMatch>
 
-# Se o arquivo não existir fisicamente (ou for uma rota do React), manda para o Node.js
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+    # 2. Se a requisição NÃO for para um arquivo físico existente (como imagens/css)
+    # ou se for especificamente um arquivo .tsx, manda para o Node.js
+    RewriteCond %{REQUEST_FILENAME} !-f [OR]
+    RewriteCond %{REQUEST_URI} \.(tsx|ts|jsx)$
+    RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+</IfModule>
+
+# Desativar listagem de diretórios para evitar o erro 403 padrão
+Options -Indexes
