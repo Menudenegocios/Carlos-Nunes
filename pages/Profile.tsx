@@ -4,8 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
 import { Profile as ProfileType } from '../types';
 import { 
-  Download, Upload, Image as ImageIcon, X, Wallet, 
-  Shield, Award, TrendingUp, Copy, Check, UserIcon, Crown
+  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
@@ -13,7 +12,6 @@ export const Profile: React.FC = () => {
   const [profile, setProfile] = useState<Partial<ProfileType>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => { if (user) loadProfile(); }, [user]);
 
@@ -31,97 +29,114 @@ export const Profile: React.FC = () => {
     setSaving(true);
     try {
       await mockBackend.updateProfile(user.id, profile);
-      alert('Perfil salvo com sucesso!');
+      alert('Perfil atualizado com sucesso!');
     } finally { setSaving(false); }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile(prev => ({ ...prev, logoUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (loading) return null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4">
+    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
       {/* Academy Style Header */}
-      <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+      <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-xl border border-white/20 p-1 shadow-2xl overflow-hidden">
+              <div className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-xl border border-white/20 p-1 shadow-2xl overflow-hidden relative group">
                  <img src={profile.logoUrl} className="w-full h-full object-cover rounded-[1.8rem]" alt="Me" />
+                 <label className="absolute inset-0 bg-emerald-600/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <Camera className="w-6 h-6" />
+                    <input type="file" hidden onChange={handleImageUpload} />
+                 </label>
               </div>
               <div>
-                 <h1 className="text-3xl md:text-5xl font-black tracking-tight">{user?.name}</h1>
-                 <p className="text-indigo-200 text-lg font-medium flex items-center gap-2">
-                    <Crown className="w-5 h-5 text-yellow-400 fill-current" /> Status {user?.level.toUpperCase()}
+                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-2">{user?.name}</h1>
+                 <p className="text-emerald-200 text-lg font-medium flex items-center gap-2">
+                    <Crown className="w-5 h-5 text-emerald-400 fill-current" /> Status {user?.level.toUpperCase()}
                  </p>
               </div>
             </div>
             <div className="flex gap-4">
                <div className="text-center bg-black/20 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/5">
-                  <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-1">Cód. Indicação</p>
-                  <p className="text-xl font-black font-mono">{user?.referralCode}</p>
+                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Cód. Indicação</p>
+                  <p className="text-xl font-black font-mono tracking-wider">{user?.referralCode}</p>
                </div>
             </div>
         </div>
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
       </div>
 
       <div className="animate-[fade-in_0.4s_ease-out] grid grid-cols-1 lg:grid-cols-12 gap-10">
-         <div className="lg:col-span-4 bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl space-y-8">
-            <h3 className="text-2xl font-black text-gray-900">Carteira Digital</h3>
-            <div className="aspect-[1.58/1] w-full rounded-[2rem] bg-gradient-to-br from-slate-900 to-indigo-950 p-6 text-white relative overflow-hidden shadow-2xl group transition-transform hover:scale-[1.02]">
+         <div className="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-8">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Carteira de Autoridade</h3>
+            <div className="aspect-[1.58/1] w-full rounded-[2.5rem] bg-gradient-to-br from-emerald-900 to-indigo-950 p-6 text-white relative overflow-hidden shadow-2xl transition-transform hover:scale-[1.02]">
                <div className="relative z-10 h-full flex flex-col justify-between">
                   <div className="flex justify-between items-start">
-                     <Shield className="w-8 h-8 text-indigo-400" />
-                     <span className="text-[9px] font-black tracking-[0.2em] opacity-60 uppercase">Menu ADS Card</span>
+                     <Shield className="w-8 h-8 text-emerald-400" />
+                     <span className="text-[9px] font-black tracking-[0.2em] opacity-60 uppercase">Menu ADS Premium</span>
                   </div>
                   <div>
-                     <p className="text-[8px] font-black opacity-40 uppercase tracking-widest">Titular</p>
+                     <p className="text-[8px] font-black opacity-40 uppercase tracking-widest mb-0.5">Membro Verificado</p>
                      <p className="font-mono text-base uppercase font-bold tracking-wider truncate">{user?.name}</p>
                   </div>
                   <div className="flex justify-between items-end">
                      <div>
-                        <p className="text-[8px] font-black opacity-40 uppercase tracking-widest">Membro ID</p>
-                        <p className="font-mono text-xs">{user?.id.toString().slice(-4).padStart(4, '0')}</p>
+                        <p className="text-[8px] font-black opacity-40 uppercase tracking-widest">ID Global</p>
+                        <p className="font-mono text-xs opacity-80">{user?.id.toString().slice(-6).toUpperCase()}</p>
                      </div>
-                     <div className="bg-yellow-400 text-black text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{user?.level}</div>
+                     <div className="bg-emerald-400 text-emerald-950 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">NÍVEL {user?.level}</div>
                   </div>
                </div>
                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
             </div>
 
             <div className="space-y-4">
-               <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
-                  <div className="flex items-center gap-3 mb-2">
-                     <Award className="w-5 h-5 text-indigo-600" />
-                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Progresso de Nível</span>
+               <div className="p-8 bg-gray-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-3 mb-3">
+                     <Award className="w-5 h-5 text-emerald-600" />
+                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Progresso de Pontos</span>
                   </div>
-                  <div className="flex items-end gap-2 mb-3">
-                     <span className="text-3xl font-black text-gray-900">{user?.points}</span>
-                     <span className="text-xs font-bold text-gray-400 pb-1">/ 1000 PTS</span>
+                  <div className="flex items-end gap-2 mb-4">
+                     <span className="text-4xl font-black text-gray-900 dark:text-white leading-none">{user?.points}</span>
+                     <span className="text-xs font-bold text-gray-400 pb-1 uppercase tracking-widest">Ativos</span>
                   </div>
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-indigo-600 rounded-full" style={{ width: '45%' }}></div></div>
+                  <div className="h-2.5 w-full bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                     <div className="h-full bg-emerald-600 rounded-full shadow-lg" style={{ width: `${Math.min((user?.points || 0) / 1000 * 100, 100)}%` }}></div>
+                  </div>
                </div>
             </div>
          </div>
 
-         <div className="lg:col-span-8 bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl">
-            <h3 className="text-2xl font-black text-gray-900 mb-10">Dados Cadastrais</h3>
+         <div className="lg:col-span-8 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl">
+            <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-10 leading-none tracking-tight">Configurações de Identidade</h3>
             <form onSubmit={handleSave} className="space-y-8">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nome Fantasia</label>
-                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-100" value={profile.businessName || ''} onChange={e => setProfile({...profile, businessName: e.target.value})} />
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição / Empresa</label>
+                    <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={profile.businessName || ''} onChange={e => setProfile({...profile, businessName: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Telefone WhatsApp</label>
-                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-100" value={profile.phone || ''} onChange={e => setProfile({...profile, phone: e.target.value})} />
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Telefone WhatsApp</label>
+                    <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={profile.phone || ''} onChange={e => setProfile({...profile, phone: e.target.value})} />
                   </div>
                </div>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Sobre o Negócio</label>
-                  <textarea rows={4} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm focus:ring-2 focus:ring-indigo-100" value={profile.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Biografia do Negócio</label>
+                  <textarea rows={4} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-emerald-500/10 resize-none transition-all dark:text-white" value={profile.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} placeholder="Conte um pouco sobre sua trajetória..." />
                </div>
-               <div className="flex justify-end pt-6 border-t border-gray-50">
-                  <button type="submit" disabled={saving} className="bg-indigo-600 text-white font-black px-10 py-5 rounded-[1.5rem] hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest text-sm">
-                     {saving ? 'SALVANDO...' : 'SALVAR ALTERAÇÕES'}
+               <div className="flex justify-end pt-8 border-t border-gray-50 dark:border-zinc-800">
+                  <button type="submit" disabled={saving} className="bg-emerald-600 text-white font-black px-12 py-5 rounded-2xl hover:bg-emerald-700 shadow-2xl shadow-emerald-900/20 transition-all uppercase tracking-widest text-sm flex items-center gap-2">
+                     {saving ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} SALVAR ALTERAÇÕES
                   </button>
                </div>
             </form>

@@ -1,8 +1,45 @@
 
-import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage } from '../types';
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer } from '../types';
 import { supabase } from './supabaseClient';
 
 export const mockBackend = {
+  // B2B Marketplace
+  getB2BOffers: async (): Promise<B2BOffer[]> => {
+    // Simulação de dados B2B
+    return [
+      {
+        id: 'b2b-1',
+        userId: 'u1',
+        businessName: 'Gráfica Rápida Express',
+        businessLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=Grafica',
+        title: 'Desconto em Cartões de Visita',
+        description: '20% de desconto para membros do Menu ADS em qualquer tiragem de cartões premium.',
+        discount: '20% OFF',
+        category: 'Serviços',
+        terms: 'Válido apenas para membros ativos.',
+        createdAt: Date.now()
+      },
+      {
+        id: 'b2b-2',
+        userId: 'u2',
+        businessName: 'Escritório Contábil Silva',
+        businessLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=Contabil',
+        title: 'Consultoria de Enquadramento MEI/ME',
+        description: 'Primeira hora de consultoria gratuita para novos cadastrados no plano Freelancer.',
+        discount: '1h Grátis',
+        category: 'Consultoria',
+        terms: 'Agendamento prévio necessário.',
+        createdAt: Date.now()
+      }
+    ];
+  },
+
+  createB2BOffer: async (offer: Omit<B2BOffer, 'id' | 'createdAt'>): Promise<B2BOffer> => {
+    const newOffer = { ...offer, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() };
+    await mockBackend.addPoints(offer.userId, 'Criar Parceria B2B', 30, 'engajamento');
+    return newOffer;
+  },
+
   // Points & Rewards System
   addPoints: async (userId: string, action: string, points: number, category: PointsTransaction['category']): Promise<void> => {
     const { data: profile } = await supabase.from('profiles').select('points').eq('user_id', userId).single();

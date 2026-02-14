@@ -10,6 +10,19 @@ export interface User {
   referralsCount: number;
 }
 
+export interface B2BOffer {
+  id: string;
+  userId: string;
+  businessName: string;
+  businessLogo: string;
+  title: string;
+  description: string;
+  discount: string;
+  category: string;
+  terms: string;
+  createdAt: number;
+}
+
 export interface PointsTransaction {
   id: string;
   userId: string;
@@ -195,6 +208,7 @@ export interface Product {
   variations?: string[];
   buttonType?: 'buy' | 'quote';
   externalLink?: string;
+  stock?: number;
 }
 
 export interface BlogPost {
@@ -211,6 +225,13 @@ export interface BlogPost {
 
 export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lost';
 
+export interface LeadTimelineEvent {
+  id: string;
+  type: 'creation' | 'stage_change' | 'contact' | 'note';
+  content: string;
+  createdAt: number;
+}
+
 export interface Lead {
   id: string;
   userId: string;
@@ -221,6 +242,8 @@ export interface Lead {
   notes?: string;
   lastContact?: number;
   value?: number;
+  createdAt?: number;
+  timeline?: LeadTimelineEvent[];
 }
 
 export interface FinancialEntry {

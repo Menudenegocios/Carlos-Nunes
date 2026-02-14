@@ -23,6 +23,7 @@ import { Stores } from './pages/Stores';
 import { StoreView } from './pages/StoreView';
 import { BioBuilder } from './pages/BioBuilder';
 import { BusinessSuite } from './pages/BusinessSuite';
+import { MarketplaceB2B } from './pages/MarketplaceB2B';
 import { Academy } from './pages/Academy';
 import { AboutUs } from './pages/AboutUs';
 import { Partners } from './pages/Partners';
@@ -64,6 +65,7 @@ const AppRoutes = () => {
       {/* Admin/Business Routes with Persistent Sidebar Layout */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
+      <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
       <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
