@@ -5,9 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Menu de Negócios | Conexão Local Inteligente</title>
+    
+    <!-- Tailwind CSS (Aviso de produção é normal usando CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Babel para compilar TSX em tempo real no navegador -->
+    
+    <!-- Babel Standalone (Para compilar TSX no navegador na Hostinger) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -30,9 +34,11 @@
       }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    
     <style>
       body { 
         font-family: 'Raleway', sans-serif; 
@@ -50,43 +56,32 @@
         background: rgba(0, 0, 0, 0.9);
         border: 1px solid rgba(198, 194, 179, 0.2);
       }
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-      }
-      .animate-float { animation: float 6s ease-in-out infinite; }
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      .leaflet-popup-content-wrapper {
-        border-radius: 1.5rem !important;
-        padding: 0.5rem !important;
-        font-family: 'Raleway', sans-serif !important;
-      }
-      .dark .leaflet-popup-content-wrapper {
-        background: #18181b !important;
-        color: white !important;
-      }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.45.4"
-  }
-}
-</script>
-</head>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+        "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+        "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.45.4"
+      }
+    }
+    </script>
+  </head>
   <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
-    <!-- Script principal com caminho absoluto para o servidor -->
-    <script type="text/babel" data-type="module" src="/index.tsx"></script>
+    
+    <!-- 
+      Uso de caminho relativo './index.tsx' é fundamental para Hostinger.
+      O data-type="module" indica ao Babel que este é um módulo ES.
+    -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
   </body>
 </html>

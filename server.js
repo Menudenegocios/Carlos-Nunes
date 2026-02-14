@@ -1,40 +1,43 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Configuração de MIME types ANTES de servir arquivos estáticos
-// Isso é essencial para que o Babel Standalone reconheça os arquivos .tsx como scripts JS
-express.static.mime.define({
-  'application/javascript': ['tsx', 'ts', 'jsx']
+// Middleware CRÍTICO: Força o MIME-type para arquivos TypeScript/React
+// Isso resolve o erro 404 e o erro de "carregamento de recurso" na Hostinger
+app.use((req, res, next) => {
+  if (req.url.endsWith('.tsx') || req.url.endsWith('.ts') || req.url.endsWith('.jsx')) {
+    const filePath = path.join(__dirname, req.url.split('?')[0]);
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'application/javascript');
+      return res.sendFile(filePath);
+    }
+  }
+  next();
 });
 
-// 1. Serve arquivos estáticos primeiro
-// Se o build da Hostinger coloca os arquivos na raiz ou na pasta atual, usamos o ponto
+// Serve arquivos estáticos (Imagens, CSS, JS)
 app.use(express.static(__dirname));
 
-// 2. Rota de saúde/diagnóstico
-app.get('/api/ping', (req, res) => {
-  res.json({ 
-    status: 'online', 
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'production'
-  });
+// Rota de diagnóstico para testar se o servidor está ativo
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Servidor Menu ADS operando normalmente.' });
 });
 
-// 3. Rota curinga para SPA (Single Page Application)
-// Esta rota DEVE ser a última. Se a requisição não for um arquivo físico, manda o index.html
+// Suporte para SPA (Single Page Application)
+// Redireciona qualquer rota não encontrada para o index.html
 app.get('*', (req, res) => {
-  // Se a URL contém um ponto, provavelmente é um recurso não encontrado (imagem, etc)
+  // Evita entrar em loop se o arquivo não existir
   if (req.path.includes('.') && !req.path.endsWith('.tsx')) {
-    return res.status(404).send('Recurso não encontrado');
+    return res.status(404).send('Arquivo não encontrado');
   }
-  // Para todas as outras rotas de navegação, serve o index.html
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`>>> Servidor Menu ADS rodando na porta ${PORT}`);
+  console.log(`>>> Servidor Menu ADS iniciado com sucesso.`);
+  console.log(`>>> Rodando em: http://localhost:${PORT}`);
 });
