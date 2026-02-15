@@ -6,7 +6,8 @@ import { Check, User, Briefcase, Store, Zap, Shield, Target } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 
 export const Plans: React.FC = () => {
-  const { user, login } = useAuth(); // We use login to update the user context
+  /* Fix: Use refreshProfile to update user context instead of login */
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -15,9 +16,10 @@ export const Plans: React.FC = () => {
     setLoading(plan);
     try {
       // Mock Payment Process
-      const updatedUser = await mockBackend.upgradePlan(user.id, plan);
+      await mockBackend.upgradePlan(user.id, plan);
       // Update local context
-      login(updatedUser, localStorage.getItem('menu_token') || '');
+      /* Fix: Incorrect login usage changed to refreshProfile */
+      await refreshProfile();
       alert(`Plano atualizado com sucesso! Bem-vindo ao plano ${plan.toUpperCase()}.`);
       navigate('/dashboard');
     } catch (error) {

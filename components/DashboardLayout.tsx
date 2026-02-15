@@ -74,11 +74,11 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 to={item.to}
                 className={`flex items-center rounded-2xl transition-all group overflow-hidden ${
                   isActive(item.to) 
-                    ? 'bg-brand-primary/10 text-brand-primary shadow-sm' 
+                    ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 shadow-sm' 
                     : 'text-brand-contrast/70 dark:text-brand-surface/60 hover:bg-brand-surface dark:hover:bg-zinc-900 hover:text-brand-contrast dark:hover:text-brand-surface'
                 } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
               >
-                <item.icon className={`w-5 h-5 transition-colors flex-shrink-0 ${isActive(item.to) ? 'text-brand-primary' : 'text-brand-contrast dark:text-brand-surface/40 group-hover:text-brand-contrast dark:group-hover:text-brand-surface'}`} />
+                <item.icon className={`w-5 h-5 transition-colors flex-shrink-0 ${isActive(item.to) ? 'text-emerald-600' : 'text-brand-contrast dark:text-brand-surface/40 group-hover:text-brand-contrast dark:group-hover:text-brand-surface'}`} />
                 {isExpanded && <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-base font-black tracking-tight">{item.label}</span>}
               </Link>
             ))}
@@ -90,7 +90,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
             onClick={toggleTheme}
             className={`flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[11px] tracking-widest text-brand-contrast dark:text-brand-surface/60 hover:bg-brand-surface dark:hover:bg-zinc-900 transition-all w-full ${!isExpanded ? 'justify-center p-3.5' : ''}`}
           >
-            {theme === 'light' ? <><Moon className="w-5 h-5 text-brand-primary" /> {isExpanded && 'Modo Escuro'}</> : <><Sun className="w-5 h-5 text-brand-accent" /> {isExpanded && 'Modo Claro'}</>}
+            {theme === 'light' ? <><Moon className="w-5 h-5 text-emerald-600" /> {isExpanded && 'Modo Escuro'}</> : <><Sun className="w-5 h-5 text-yellow-400" /> {isExpanded && 'Modo Claro'}</>}
           </button>
           
           <button 
@@ -114,8 +114,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               </button>
               
               <nav className="hidden md:flex items-center gap-8">
-                <Link to="/" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-brand-primary transition-colors">Início</Link>
-                <Link to="/stores" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-brand-primary transition-colors">Lojas</Link>
+                <Link to="/" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-emerald-600 transition-colors">Início</Link>
+                <Link to="/stores" className="text-sm font-black tracking-widest text-brand-contrast dark:text-brand-surface/40 hover:text-emerald-600 transition-colors">Lojas</Link>
               </nav>
 
               <div className="h-6 w-px bg-brand-secondary/20 hidden md:block"></div>
@@ -128,9 +128,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
            <div className="flex items-center gap-4">
               <div className="hidden sm:flex flex-col text-right">
                  <span className="text-[11px] font-black text-brand-contrast dark:text-brand-surface leading-none">{user.name}</span>
-                 <span className="text-[9px] text-brand-primary font-black tracking-widest mt-1 uppercase">{user.plan}</span>
+                 <span className="text-[9px] text-emerald-600 font-black tracking-widest mt-1 uppercase">{user.plan}</span>
               </div>
-              <Link to="/profile" className="w-10 h-10 rounded-2xl bg-brand-surface dark:bg-zinc-800 flex items-center justify-center text-brand-primary text-sm font-black border border-brand-secondary/30 hover:scale-105 transition-transform">
+              <Link to="/profile" className="w-10 h-10 rounded-2xl bg-brand-surface dark:bg-zinc-800 flex items-center justify-center text-emerald-600 text-sm font-black border border-brand-secondary/30 hover:scale-105 transition-transform">
                 {user.name.charAt(0)}
               </Link>
            </div>
@@ -147,8 +147,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                  <Logo size="xs" />
               </div>
               <div className="flex gap-10 text-[10px] font-black tracking-widest uppercase text-brand-contrast dark:text-brand-surface">
-                <Link to="/support" className="hover:text-brand-primary">Suporte</Link>
-                <Link to="/plans" className="hover:text-brand-primary">Upgrade</Link>
+                <Link to="/support" className="hover:text-emerald-600">Suporte</Link>
+                <Link to="/plans" className="hover:text-emerald-600">Upgrade</Link>
               </div>
               <p className="text-[10px] font-bold uppercase tracking-widest">
                 &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS INC.
@@ -173,7 +173,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                       to={item.to}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                        isActive(item.to) ? 'bg-brand-primary text-white shadow-lg' : 'text-brand-contrast dark:text-brand-surface/80 hover:bg-white dark:hover:bg-zinc-800'
+                        isActive(item.to) ? 'bg-emerald-600 text-white shadow-lg' : 'text-brand-contrast dark:text-brand-surface/80 hover:bg-white dark:hover:bg-zinc-800'
                       }`}
                     >
                       <item.icon className="w-5 h-5" />

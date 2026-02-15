@@ -1,86 +1,249 @@
 
 import React, { useState } from 'react';
-import { generateMarketingCopy, generateMarketingImage, editMarketingImage } from '../services/geminiService';
-import { Sparkles, Copy, RefreshCw, Image as ImageIcon, Type, Instagram, Download, Wand2, Upload, X } from 'lucide-react';
+import { generateMarketingCopy, generateMarketingImage } from '../services/geminiService';
+import { 
+  Sparkles, Copy, RefreshCw, Image as ImageIcon, 
+  Type, Download, Wand2, Plus, 
+  Monitor, Layout, Check, ChevronRight, X,
+  Maximize2, Share2, Palette, Sliders, Home as HomeIcon
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { SectionLanding } from '../components/SectionLanding';
+
+type AspectRatio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 
 export const MarketingAI: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'text' | 'image' | 'edit'>('text');
+  const [activeTab, setActiveTab] = useState<'home' | 'text' | 'image'>('home');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState('');
+  const [textResult, setTextResult] = useState('');
+  const [imageResult, setImageResult] = useState<string | null>(null);
   const [businessType, setBusinessType] = useState('');
   const [description, setDescription] = useState('');
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
+  const [copied, setCopied] = useState(false);
 
   const handleGenerateText = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!businessType || !description) return;
     setIsLoading(true);
     try {
       const copy = await generateMarketingCopy(businessType, description);
-      setResult(copy);
+      setTextResult(copy);
     } finally { setIsLoading(false); }
   };
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4">
-      {/* Academy Style Header */}
-      <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
-               <Sparkles className="h-10 w-10 text-yellow-300" />
-            </div>
-            <div>
-               <h1 className="text-3xl md:text-5xl font-black tracking-tight">MenuIA Creative</h1>
-               <p className="text-indigo-200 text-lg font-medium">Sua agência de marketing pessoal turbinada com IA.</p>
-            </div>
-          </div>
+  const handleGenerateImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imagePrompt) return;
+    setIsLoading(true);
+    try {
+      const img = await generateMarketingImage(imagePrompt, aspectRatio);
+      setImageResult(img);
+    } catch (err) {
+      alert("Houve um erro ao gerar a imagem. Tente um prompt mais detalhado ou diferente.");
+    } finally { setIsLoading(false); }
+  };
 
-          <div className="flex p-1.5 bg-black/20 backdrop-blur-md rounded-[1.8rem] w-fit border border-white/10">
-            <button onClick={() => setActiveTab('text')} className={`flex items-center gap-3 px-8 py-3 rounded-[1.4rem] font-black text-sm transition-all ${activeTab === 'text' ? 'bg-white text-indigo-900 shadow-xl' : 'text-indigo-100 hover:bg-white/10'}`}>
-              <Type className="w-4 h-4" /> COPYWRITER
-            </button>
-            <button onClick={() => setActiveTab('image')} className={`flex items-center gap-3 px-8 py-3 rounded-[1.4rem] font-black text-sm transition-all ${activeTab === 'image' ? 'bg-white text-indigo-900 shadow-xl' : 'text-indigo-100 hover:bg-white/10'}`}>
-              <ImageIcon className="w-4 h-4" /> GERADOR
-            </button>
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(textResult);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const downloadImage = () => {
+    if (!imageResult) return;
+    const link = document.createElement('a');
+    link.href = imageResult;
+    link.download = `menu-ia-creative-${Date.now()}.png`;
+    link.click();
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
+      {/* Studio Header Emerald */}
+      <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
+                 <Wand2 className="h-10 w-10 text-emerald-300" />
+              </div>
+              <div>
+                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-1">Studio IA</h1>
+                 <p className="text-emerald-200 text-lg font-medium opacity-80 uppercase tracking-widest text-xs">Criação de alta performance para seu bairro.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-black/20 p-2 rounded-[2rem] border border-white/10 overflow-x-auto scrollbar-hide max-w-full">
+                {[
+                    { id: 'home', label: 'INÍCIO', icon: HomeIcon },
+                    { id: 'text', label: 'COPYWRITER', icon: Type },
+                    { id: 'image', label: 'IMAGENS', icon: ImageIcon },
+                ].map((tab) => (
+                    <button 
+                      key={tab.id} 
+                      onClick={() => setActiveTab(tab.id as any)} 
+                      className={`flex items-center gap-3 px-6 py-3 rounded-[1.4rem] font-black text-[10px] tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-xl' : 'text-indigo-100 hover:bg-white/10'}`}
+                    >
+                        <tab.icon className="w-4 h-4" /> {tab.label}
+                    </button>
+                ))}
+            </div>
           </div>
         </div>
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
       </div>
 
-      <div className="animate-[fade-in_0.4s_ease-out] grid grid-cols-1 lg:grid-cols-12 gap-10">
-         <div className="lg:col-span-5 bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl">
-            <h3 className="text-2xl font-black text-gray-900 mb-8">Configurações</h3>
-            <form onSubmit={handleGenerateText} className="space-y-6">
-               <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Seu Negócio</label>
-                  <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-indigo-100" placeholder="Ex: Pizzaria Artesanal" value={businessType} onChange={e => setBusinessType(e.target.value)} />
-               </div>
-               <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">O que você quer vender?</label>
-                  <textarea rows={4} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm focus:ring-2 focus:ring-indigo-100" placeholder="Descreva sua oferta..." value={description} onChange={e => setDescription(e.target.value)} />
-               </div>
-               <button type="submit" disabled={isLoading} className="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-700 shadow-xl uppercase tracking-widest text-sm flex items-center justify-center gap-2">
-                  {isLoading ? <RefreshCw className="animate-spin w-5 h-5" /> : <Sparkles className="w-5 h-5" />} GERAR COPY AGORA
-               </button>
-            </form>
-         </div>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+         {activeTab === 'home' && (
+            <SectionLanding 
+                title="Sua Própria Agência de Marketing com IA."
+                subtitle="Studio Creative Pro"
+                description="Produza conteúdos que param o feed. Use a potência do Gemini para criar textos persuasivos e fotos de produtos cinematográficas em segundos."
+                benefits={[
+                "Geração de Copys focadas em vendas locais.",
+                "Criação de Imagens realistas para Instagram e Catálogo.",
+                "Escolha de enquadramentos (Stories, Post ou Capa).",
+                "Brainstorm de ideias para promoções do bairro.",
+                "IA treinada nas melhores práticas de varejo local."
+                ]}
+                youtubeId="dQw4w9WgXcQ"
+                ctaLabel="ABRIR FERRAMENTAS"
+                onStart={() => setActiveTab('text')}
+                icon={Wand2}
+                accentColor="emerald"
+            />
+         )}
 
-         <div className="lg:col-span-7 bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl flex flex-col">
-            <div className="flex justify-between items-center mb-8">
-               <h3 className="text-2xl font-black text-gray-900">Resultado da IA</h3>
-               {result && <button className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"><Copy className="w-5 h-5" /></button>}
+         {activeTab === 'text' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+               <div className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-8 animate-fade-in">
+                  <div className="flex items-center gap-3 mb-4">
+                     <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl flex items-center justify-center text-emerald-600"><Type className="w-6 h-6" /></div>
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Copywriter Pro</h3>
+                  </div>
+
+                  <form onSubmit={handleGenerateText} className="space-y-6">
+                     <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Seu Nicho de Atuação</label>
+                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" placeholder="Ex: Hamburgueria Artesanal" value={businessType} onChange={e => setBusinessType(e.target.value)} />
+                     </div>
+                     <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">O que você quer promover?</label>
+                        <textarea required rows={4} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white resize-none" placeholder="Ex: Combo de inauguração com 30% de desconto..." value={description} onChange={e => setDescription(e.target.value)} />
+                     </div>
+                     <button type="submit" disabled={isLoading} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2rem] hover:bg-emerald-700 shadow-2xl shadow-emerald-900/20 uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all active:scale-95">
+                        {isLoading ? <RefreshCw className="animate-spin w-6 h-6" /> : <Sparkles className="w-6 h-6" />} GERAR TEXTO VENDEDOR
+                     </button>
+                  </form>
+               </div>
+
+               <div className="lg:col-span-7 space-y-6">
+                  {textResult ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl min-h-[500px] flex flex-col animate-fade-in relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-10 relative z-10">
+                           <h3 className="text-2xl font-black text-gray-900 dark:text-white">Resultado</h3>
+                           <div className="flex gap-2">
+                                <button onClick={copyToClipboard} className={`p-4 rounded-2xl transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest ${copied ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
+                                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {copied ? 'Copiado' : 'Copiar'}
+                                </button>
+                                <button onClick={() => setTextResult('')} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"><X className="w-4 h-4" /></button>
+                           </div>
+                        </div>
+                        <div className="flex-1 prose prose-emerald dark:prose-invert max-w-none relative z-10 font-medium text-lg leading-relaxed bg-gray-50/50 dark:bg-black/20 p-8 rounded-[2rem]">
+                           <ReactMarkdown>{textResult}</ReactMarkdown>
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center p-20 text-center min-h-[500px]">
+                        <div className="w-24 h-24 bg-gray-50 dark:bg-zinc-800 rounded-full flex items-center justify-center text-gray-200 dark:text-zinc-700 mb-8"><Type className="w-12 h-12" /></div>
+                        <h4 className="text-xl font-black text-gray-300 dark:text-zinc-600 uppercase tracking-widest">Aguardando seu comando...</h4>
+                    </div>
+                  )}
+               </div>
             </div>
-            <div className="flex-1 bg-gray-50/50 rounded-[2rem] p-8 border border-gray-100 overflow-y-auto min-h-[300px]">
-               {result ? (
-                 <div className="prose prose-indigo max-w-none"><ReactMarkdown>{result}</ReactMarkdown></div>
-               ) : (
-                 <div className="h-full flex flex-col items-center justify-center text-gray-300 gap-4 opacity-40">
-                    <Sparkles className="w-16 h-16" />
-                    <p className="font-black uppercase tracking-widest text-xs">Aguardando seu comando...</p>
-                 </div>
-               )}
+         )}
+
+         {activeTab === 'image' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                <div className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-8 animate-fade-in">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl flex items-center justify-center text-emerald-600"><ImageIcon className="w-6 h-6" /></div>
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Image Generator</h3>
+                    </div>
+
+                    <form onSubmit={handleGenerateImage} className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">O que você quer ver? (Seja específico)</label>
+                            <textarea required rows={4} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white resize-none" placeholder="Ex: Um hambúrguer suculento em um prato de madeira, luz natural, fundo desfocado de restaurante rústico, ultra detalhado..." value={imagePrompt} onChange={e => setImagePrompt(e.target.value)} />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1">Formato</label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { id: '1:1', label: 'Post (1:1)' },
+                                    { id: '9:16', label: 'Story (9:16)' },
+                                    { id: '16:9', label: 'Banner (16:9)' }
+                                ].map(ratio => (
+                                    <button key={ratio.id} type="button" onClick={() => setAspectRatio(ratio.id as AspectRatio)} className={`p-4 rounded-2xl border text-[9px] font-black uppercase tracking-tighter transition-all flex flex-col items-center gap-2 ${aspectRatio === ratio.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-800 border-gray-100 dark:border-zinc-700 text-gray-400'}`}>
+                                        <div className={`border-2 rounded-sm ${aspectRatio === ratio.id ? 'border-white' : 'border-gray-200'} ${ratio.id === '1:1' ? 'w-4 h-4' : ratio.id === '9:16' ? 'w-3 h-5' : 'w-5 h-3'}`}></div>
+                                        {ratio.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button type="submit" disabled={isLoading} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2rem] hover:bg-emerald-700 shadow-2xl shadow-emerald-900/20 uppercase tracking-widest text-sm flex items-center justify-center gap-3 transition-all active:scale-95">
+                            {isLoading ? <RefreshCw className="animate-spin w-6 h-6" /> : <ImageIcon className="w-6 h-6" />} CRIAR FOTO PREMIUM
+                        </button>
+                    </form>
+                </div>
+
+                <div className="lg:col-span-7">
+                    {imageResult ? (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl animate-fade-in space-y-8">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Resultado StudioIA</h3>
+                                <div className="flex gap-2">
+                                    <button onClick={downloadImage} className="p-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 shadow-lg transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
+                                        <Download className="w-4 h-4" /> Baixar
+                                    </button>
+                                    <button onClick={() => setImageResult(null)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"><X className="w-4 h-4" /></button>
+                                </div>
+                            </div>
+                            <div className="mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl bg-black/5 flex items-center justify-center group relative">
+                                <img src={imageResult} className="w-full h-auto object-contain" alt="Geração IA" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                     <button onClick={downloadImage} className="p-6 bg-white rounded-full text-emerald-600 shadow-2xl transform scale-50 group-hover:scale-100 transition-transform"><Download className="w-10 h-10" /></button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : isLoading ? (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center p-20 text-center min-h-[600px] space-y-8">
+                            <div className="relative">
+                                <div className="w-32 h-32 bg-emerald-600/10 rounded-full animate-ping absolute inset-0"></div>
+                                <div className="w-32 h-32 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center text-emerald-600 shadow-xl relative z-10 border border-emerald-100">
+                                    <RefreshCw className="w-12 h-12 animate-spin" />
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">IA está processando sua arte...</h4>
+                                <p className="text-gray-500 dark:text-zinc-400 mt-2 font-medium">Isso pode levar alguns segundos dependendo da complexidade.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center p-20 text-center min-h-[600px]">
+                            <div className="w-24 h-24 bg-gray-50 dark:bg-zinc-800 rounded-full flex items-center justify-center text-gray-200 dark:text-zinc-700 mb-8"><ImageIcon className="w-12 h-12" /></div>
+                            <h4 className="text-xl font-black text-gray-300 dark:text-zinc-600 uppercase tracking-widest">Sua Próxima Campanha</h4>
+                            <p className="text-gray-400 dark:text-zinc-700 max-w-xs mt-4 font-medium">Gere fotos de produtos, conceitos visuais ou posts para Instagram em segundos.</p>
+                        </div>
+                    )}
+                </div>
             </div>
-         </div>
+         )}
       </div>
     </div>
   );

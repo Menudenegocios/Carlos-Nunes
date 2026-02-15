@@ -6,10 +6,14 @@ import { supabase } from '../services/supabaseClient';
 interface AuthContextType {
   user: User | null;
   login: (email: string, pass: string) => Promise<void>;
+  loginAsDemo: () => void;
   register: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
+  /* Fix: Added refreshProfile to expose user profile fetching */
+  refreshProfile: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  networkError: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [networkError, setNetworkError] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -42,55 +47,113 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0
         });
       } else {
-        // Fallback: Se o gatilho falhou, criamos um estado de usuário básico para não travar o app
+        // Fallback para usuário recém criado ou erro de banco
         setUser({
           id: userId,
-          name: 'Usuário (Perfil em Criação)',
+          name: 'Usuário (Demo)',
           email: '',
-          plan: 'profissionais',
-          points: 50,
-          level: 'bronze',
-          referralCode: '',
-          referralsCount: 0
+          plan: 'negocios',
+          points: 1250,
+          level: 'prata',
+          referralCode: 'DEMO123',
+          referralsCount: 5
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user profile:', error);
+      if (error.message === 'Failed to fetch') {
+        setNetworkError(true);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
+  /* Fix: Implementation of refreshProfile */
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.id);
+    } else {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await fetchUserProfile(session.user.id);
+    }
+  };
 
-    // Handle auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          const savedDemo = localStorage.getItem('menu_demo_user');
+          if (savedDemo) {
+            setUser(JSON.parse(savedDemo));
+          }
+          setIsLoading(false);
+        }
+      } catch (e: any) {
+        console.error("Auth initialization error:", e);
+        if (e.message === 'Failed to fetch') {
+          setNetworkError(true);
+          // Se falhar rede, tenta restaurar demo do localStorage
+          const savedDemo = localStorage.getItem('menu_demo_user');
+          if (savedDemo) setUser(JSON.parse(savedDemo));
+        }
         setIsLoading(false);
       }
+    };
+
+    initSession();
+
+    // Listener de mudança de estado com tratamento de erro
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      try {
+        if (session) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          if (!localStorage.getItem('menu_demo_user')) {
+            setUser(null);
+          }
+          setIsLoading(false);
+        }
+      } catch (e) {}
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, pass: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      localStorage.removeItem('menu_demo_user');
+      setNetworkError(false);
+    } catch (error: any) {
+      if (error.message === 'Failed to fetch') {
+        setNetworkError(true);
+      }
+      throw error;
+    }
+  };
+
+  const loginAsDemo = () => {
+    const demoUser: User = {
+      id: 'demo-user-id',
+      name: 'Empreendedor Demo',
+      email: 'demo@menu.com',
+      plan: 'negocios',
+      points: 2500,
+      level: 'ouro',
+      referralCode: 'MENU777',
+      referralsCount: 12
+    };
+    setUser(demoUser);
+    localStorage.setItem('menu_demo_user', JSON.stringify(demoUser));
+    setNetworkError(false);
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    // Importante: passamos o full_name nos metadados para o gatilho capturar
     const { error } = await supabase.auth.signUp({
       email,
       password: pass,
@@ -100,23 +163,29 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         }
       }
     });
-    
-    if (error) {
-      if (error.message.includes("Database error saving new user")) {
-        // Se este erro ainda ocorrer, o problema está nas permissões do schema 'auth'
-        throw new Error("Erro de servidor ao salvar perfil. Por favor, tente usar um e-mail diferente ou contate o suporte.");
-      }
-      throw error;
-    }
+    if (error) throw error;
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    localStorage.removeItem('menu_demo_user');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      loginAsDemo, 
+      register, 
+      logout, 
+      refreshProfile,
+      isAuthenticated: !!user, 
+      isLoading,
+      networkError
+    }}>
       {children}
     </AuthContext.Provider>
   );

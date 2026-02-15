@@ -45,7 +45,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Routes with Top Nav Layout */}
+      {/* Public Routes */}
       <Route element={<Layout children={<Home />} />} path="/" />
       <Route element={<Layout children={<Categories />} />} path="/categories" />
       <Route element={<Layout children={<Stores />} />} path="/stores" />
@@ -62,7 +62,7 @@ const AppRoutes = () => {
       <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacy" />
       <Route element={<Layout children={<TermsOfUse />} />} path="/terms" />
 
-      {/* Admin/Business Routes with Persistent Sidebar Layout */}
+      {/* Dashboard Routes */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />

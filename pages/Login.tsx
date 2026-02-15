@@ -1,13 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
-import { AlertCircle, Lock, Mail } from 'lucide-react';
+import { AlertCircle, Lock, Mail, Sparkles, WifiOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginAsDemo, networkError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,17 +22,23 @@ export const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       console.error("Erro detalhado de login:", err);
-      
-      if (err.message.includes("Invalid login credentials")) {
-        setError("E-mail ou senha incorretos. Verifique seus dados ou crie uma nova conta.");
+      if (err.message === 'Failed to fetch') {
+        setError("Não foi possível conectar ao servidor. Verifique sua internet ou utilize o Acesso Rápido (Demo).");
+      } else if (err.message.includes("Invalid login credentials")) {
+        setError("E-mail ou senha incorretos. Tente novamente.");
       } else if (err.message.includes("Email not confirmed")) {
-        setError("Seu e-mail ainda não foi verificado. Por favor, confirme sua conta no seu e-mail.");
+        setError("Seu e-mail ainda não foi verificado.");
       } else {
-        setError(err.message || 'Erro ao fazer login. Tente novamente mais tarde.');
+        setError(err.message || 'Erro ao fazer login.');
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    loginAsDemo();
+    navigate('/dashboard');
   };
 
   return (
@@ -41,38 +47,45 @@ export const Login: React.FC = () => {
         <div className="inline-flex mb-10 transform hover:scale-105 transition-transform">
            <Logo size="lg" />
         </div>
-        <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter">
-          Acesse seu Painel
+        <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">
+          Bem-vindo ao <br/><span className="text-emerald-600">Menu ADS.</span>
         </h2>
         <p className="mt-3 text-center text-gray-500 dark:text-slate-400 font-medium">
-          Ainda não tem vitrine?{' '}
-          <Link to="/register" className="font-black text-brand-primary hover:opacity-80 underline underline-offset-4">
-            Crie grátis agora
-          </Link>
+          Sua vitrine inteligente no bairro.
         </p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white dark:bg-zinc-900 py-10 px-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-none sm:rounded-[3rem] sm:px-12 border border-gray-100 dark:border-zinc-800 transition-all">
+          
+          {networkError && (
+             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                <WifiOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                   <p className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-1">Servidor Indisponível</p>
+                   <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">O banco de dados parece estar offline. Use o botão <strong>Demo</strong> para explorar a plataforma sem internet.</p>
+                </div>
+             </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 ml-1">
                 E-mail de Acesso
               </label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
                   <Mail className="w-5 h-5" />
                 </div>
                 <input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   required
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-600 sm:text-sm font-bold transition-all"
                 />
               </div>
             </div>
@@ -82,19 +95,18 @@ export const Login: React.FC = () => {
                 Sua Senha
               </label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-600 sm:text-sm font-bold transition-all"
                 />
               </div>
             </div>
@@ -106,29 +118,34 @@ export const Login: React.FC = () => {
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="space-y-4 pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-5 px-4 border border-transparent rounded-2xl shadow-xl text-xs font-black text-white bg-brand-primary hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary disabled:opacity-50 transition-all uppercase tracking-widest active:scale-95"
+                className="w-full flex justify-center py-5 px-4 border border-transparent rounded-2xl shadow-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-all uppercase tracking-widest active:scale-95 disabled:opacity-50"
               >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Acessando...
-                  </span>
-                ) : 'Entrar no Sistema'}
+                {loading ? 'Acessando...' : 'Entrar no Sistema'}
+              </button>
+              
+              <div className="relative py-2">
+                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100 dark:border-zinc-800"></div></div>
+                 <div className="relative flex justify-center text-[10px]"><span className="px-4 bg-white dark:bg-zinc-900 text-gray-400 font-black uppercase tracking-widest">OU</span></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="w-full flex items-center justify-center gap-2 py-5 px-4 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 transition-all uppercase tracking-widest"
+              >
+                <Sparkles className="w-4 h-4" /> Acesso Rápido (Demo)
               </button>
             </div>
           </form>
 
           <div className="mt-10 pt-8 border-t border-gray-50 dark:border-zinc-800 text-center">
              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Esqueceu o acesso? 
-                <Link to="/help" className="ml-2 text-brand-primary hover:underline">Contatar Suporte</Link>
+                Ainda não tem conta? 
+                <Link to="/register" className="ml-2 text-emerald-600 hover:underline">Cadastrar Grátis</Link>
              </p>
           </div>
         </div>

@@ -1,13 +1,19 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// No ambiente Hostinger, você deve configurar estas variáveis no painel de controle
-// Usamos .trim() para garantir que espaços acidentais não quebrem a conexão
-const supabaseUrl = (process.env.SUPABASE_URL || 'https://hfvfetwhurrhexvawody.supabase.co').trim();
-const supabaseAnonKey = (process.env.SUPABASE_ANON_KEY || 'sb_publishable_8e-0o7GXlI9xftMW2s2Wdg_7e7os09G').trim();
+// No ambiente Hostinger ou em browsers, process.env pode não estar definido
+// Usamos uma abordagem segura para evitar erros de referência
+const getEnv = (key: string, defaultValue: string): string => {
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key]!.trim();
+    }
+  } catch (e) {}
+  return defaultValue;
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Erro: Credenciais do Supabase não configuradas no ambiente.");
-}
+const supabaseUrl = getEnv('SUPABASE_URL', 'https://hfvfetwhurrhexvawody.supabase.co');
+const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY', 'sb_publishable_8e-0o7GXlI9xftMW2s2Wdg_7e7os09G');
 
+// Se a URL não for válida, o createClient pode falhar silenciosamente ou lançar erro
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

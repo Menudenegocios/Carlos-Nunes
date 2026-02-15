@@ -8,10 +8,12 @@ import {
   Smartphone, MessageSquare, ChevronRight,
   Monitor, Layers, Zap, HelpCircle,
   Package, LayoutDashboard, Trophy, Briefcase, Bot, Home as HomeIcon,
-  /* Added PlayCircle to fix the "Cannot find name" error */
-  PlayCircle
+  PlayCircle, BrainCircuit, Mic, MessageCircle, Send, RefreshCw,
+  ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
+import { getAIAssistantResponse } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
 
 interface Course {
   id: number;
@@ -23,6 +25,16 @@ interface Course {
   students: number;
   image: string;
   description: string;
+}
+
+interface AIAgent {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  icon: any;
+  url: string;
+  color: string;
 }
 
 const MOCK_COURSES: Course[] = [
@@ -39,9 +51,57 @@ const TRILHA_STEPS = [
   { id: 4, title: 'Automatização de Atendimento', status: 'locked', icon: Layers, desc: 'Escalando seu negócio com ferramentas de CRM e IA.' },
 ];
 
+const AI_AGENTS: AIAgent[] = [
+  {
+    id: 'sales-script',
+    name: 'Script de Vendas',
+    role: 'Copywriting Comercial',
+    description: 'Criação de roteiros persuasivos e quebra de objeções para fechamentos rápidos.',
+    icon: ListChecks,
+    color: 'emerald',
+    url: 'https://chatgpt.com/g/g-68459990b2088191b098ebd25fd61558-agente-script-de-ventas/c/6941761e-c880-8332-b27c-3914bfc4e20f'
+  },
+  {
+    id: 'follow-up',
+    name: 'Follow-up Expert',
+    role: 'Recuperação de Leads',
+    description: 'Estratégias de acompanhamento para não deixar nenhuma venda esfriar no funil.',
+    icon: Repeat,
+    color: 'indigo',
+    url: 'https://chatgpt.com/g/g-67674b9476688191b428941096db4464-agente-follow-up'
+  },
+  {
+    id: 'pitch-master',
+    name: 'Pitch Master',
+    role: 'Apresentação de Impacto',
+    description: 'Refine sua fala e apresentação para convencer clientes e parceiros em segundos.',
+    icon: Rocket,
+    color: 'purple',
+    url: 'https://chatgpt.com/g/g-676761e39bc08191868b0d801dae75e9-pitchmaster'
+  },
+  {
+    id: 'dream-board',
+    name: 'Quadro dos Sonhos',
+    role: 'Metas e Mentalidade',
+    description: 'IA focada em transformar seus objetivos em planos de ação visualizáveis.',
+    icon: CloudSun,
+    color: 'amber',
+    url: 'https://chatgpt.com/g/g-6845a445a7b48191b679129b7a9772d5-agente-quadro-dos-sonhos'
+  },
+  {
+    id: 'sales-pro',
+    name: 'Vendas Mais Pro',
+    role: 'Alta Performance',
+    description: 'Consultoria estratégica completa para escalar o faturamento da sua empresa.',
+    icon: TrendingUp,
+    color: 'rose',
+    url: 'https://chatgpt.com/g/g-67676238cdc88191a20b8bc0a15240f1-venda-mais-pro'
+  }
+];
+
 export const Academy: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'tutoriais' | 'agentes'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'agentes'>('home');
   const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
@@ -49,6 +109,10 @@ export const Academy: React.FC = () => {
   const filteredCourses = trainingCategory === 'Todos' 
     ? MOCK_COURSES 
     : MOCK_COURSES.filter(c => c.category === trainingCategory);
+
+  const openAgent = (url: string) => {
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
@@ -71,7 +135,6 @@ export const Academy: React.FC = () => {
                 { id: 'treinamentos', label: 'CURSOS', icon: Video },
                 { id: 'trilha', label: 'TRILHA', icon: Map },
                 { id: 'agentes', label: 'AGENTES IA', icon: Bot },
-                { id: 'tutoriais', label: 'TUTORIAIS', icon: HelpCircle }
             ].map(tab => (
                 <button 
                   key={tab.id}
@@ -164,6 +227,51 @@ export const Academy: React.FC = () => {
                   </div>
                 ))}
              </div>
+          </div>
+        )}
+
+        {activeTab === 'agentes' && (
+          <div className="space-y-12 animate-fade-in">
+            <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+               <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">Agentes Especialistas em IA</h2>
+               <p className="text-lg text-gray-500 dark:text-zinc-400 font-medium">Acesse agentes treinados especificamente para acelerar cada etapa da sua jornada comercial.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+               {AI_AGENTS.map(agent => (
+                 <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl flex flex-col items-center text-center space-y-6 group hover:-translate-y-2 transition-all">
+                    <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${
+                      agent.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+                      agent.color === 'indigo' ? 'bg-indigo-50 text-indigo-600' :
+                      agent.color === 'purple' ? 'bg-purple-50 text-purple-600' :
+                      agent.color === 'amber' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                      <agent.icon className="w-10 h-10" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{agent.name}</h3>
+                      <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${
+                        agent.color === 'emerald' ? 'text-emerald-600' :
+                        agent.color === 'indigo' ? 'text-indigo-600' :
+                        agent.color === 'purple' ? 'text-purple-600' :
+                        agent.color === 'amber' ? 'text-amber-600' : 'text-rose-600'
+                      }`}>{agent.role}</p>
+                    </div>
+                    <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">{agent.description}</p>
+                    <button 
+                      onClick={() => openAgent(agent.url)}
+                      className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                        agent.color === 'emerald' ? 'bg-emerald-600 text-white hover:bg-emerald-700' :
+                        agent.color === 'indigo' ? 'bg-indigo-600 text-white hover:bg-indigo-700' :
+                        agent.color === 'purple' ? 'bg-purple-600 text-white hover:bg-purple-700' :
+                        agent.color === 'amber' ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-rose-600 text-white hover:bg-rose-700'
+                      }`}
+                    >
+                      <ExternalLink className="w-4 h-4" /> CONSULTAR AGENTE
+                    </button>
+                 </div>
+               ))}
+            </div>
           </div>
         )}
       </div>

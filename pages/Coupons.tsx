@@ -11,7 +11,8 @@ interface CouponWithOffer extends Coupon {
 }
 
 export const Coupons: React.FC = () => {
-  const { user, login } = useAuth();
+  /* Fix: Use refreshProfile instead of login to update user state after redemption */
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [coupons, setCoupons] = useState<CouponWithOffer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,12 +81,14 @@ export const Coupons: React.FC = () => {
 
     setRedeeming(true);
     try {
-      const updatedUser = await mockBackend.redeemCoupon(
+      /* Fix: mockBackend.redeemCoupon now correctly defined */
+      await mockBackend.redeemCoupon(
         user.id, 
         selectedCoupon.id, 
         selectedCoupon.pointsReward
       );
-      login(updatedUser);
+      /* Fix: Incorrect login call replaced with refreshProfile */
+      await refreshProfile();
       alert(`Cupom ${selectedCoupon.code} ativado! Você ganhou ${selectedCoupon.pointsReward} pontos.`);
       setSelectedCoupon(null);
     } catch (error) {
@@ -126,6 +129,7 @@ export const Coupons: React.FC = () => {
   const handleDeleteCoupon = async (coupon: CouponWithOffer) => {
      if (!user || !window.confirm('Tem certeza que deseja excluir este cupom?')) return;
      try {
+       /* Fix: mockBackend.deleteCoupon now defined */
        await mockBackend.deleteCoupon(user.id, coupon.offer.id, coupon.id);
        setCoupons(prev => prev.filter(c => c.id !== coupon.id));
      } catch (error) {
@@ -151,10 +155,10 @@ export const Coupons: React.FC = () => {
       };
 
       if (isEditing && editingCouponId) {
-        // Fixed: offerId is a string, no need for Number()
+        /* Fix: updateCoupon now defined */
         await mockBackend.updateCoupon(user.id, newCouponData.offerId, editingCouponId, commonData);
       } else {
-        // Fixed: offerId is a string, no need for Number()
+        /* Fix: addCoupon now defined */
         await mockBackend.addCoupon(user.id, newCouponData.offerId, commonData);
       }
       
