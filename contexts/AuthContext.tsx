@@ -72,6 +72,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   /* Fix: Implementation of refreshProfile */
   const refreshProfile = async () => {
     if (user) {
+      // Se for usuário demo, não tenta buscar no supabase
+      if (user.id.includes('demo') || user.id.includes('carlos')) return;
       await fetchUserProfile(user.id);
     } else {
       const { data: { session } } = await supabase.auth.getSession();
@@ -124,6 +126,24 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   }, []);
 
   const login = async (email: string, pass: string) => {
+    // Hardcoded credentials for Carlos Batida as requested
+    if (email.toLowerCase() === 'carlosbatida@gmail.com' && pass === '12345678') {
+      const carlos: User = {
+        id: 'carlos-batida-id',
+        name: 'Carlos Batida',
+        email: 'carlosbatida@gmail.com',
+        plan: 'negocios',
+        points: 4500,
+        level: 'prata',
+        referralCode: 'CARLOS888',
+        referralsCount: 25
+      };
+      setUser(carlos);
+      localStorage.setItem('menu_demo_user', JSON.stringify(carlos));
+      setNetworkError(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
