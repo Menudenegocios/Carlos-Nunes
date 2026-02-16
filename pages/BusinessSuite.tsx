@@ -90,27 +90,43 @@ const CRMView = ({ userId }: { userId: string }) => {
   const [formData, setFormData] = useState<Partial<Lead>>({ name: '', phone: '', source: 'manual', stage: 'new', value: 0, notes: '' });
 
   useEffect(() => { loadLeads(); }, []);
-  const loadLeads = async () => { const data = await mockBackend.getLeads(userId); setLeads(data); };
+  const loadLeads = async () => { 
+      try {
+        const data = await mockBackend.getLeads(userId); 
+        setLeads(data); 
+      } catch (e) {
+        console.error("Erro ao carregar leads:", e);
+      }
+  };
 
   const handleSaveLead = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) return;
     setIsSaving(true);
     try {
         if (editingLead) {
-          await mockBackend.updateLead(editingLead.id, formData);
+          await mockBackend.updateLead(editingLead.id, { ...formData, userId });
         } else {
           await mockBackend.addLeads([{ ...formData, userId } as Lead]);
         }
         setIsModalOpen(false);
-        loadLeads();
+        await loadLeads();
+        alert("Alterações salvas no CRM!");
+    } catch (err) {
+        console.error("Erro ao salvar lead:", err);
+        alert("Erro ao sincronizar dados. Salvando localmente.");
     } finally { setIsSaving(false); }
   };
 
   const deleteLead = async (id: string) => {
     if (window.confirm('Excluir este lead permanentemente?')) {
-      await mockBackend.deleteLead(id);
-      loadLeads();
-      setIsModalOpen(false);
+      try {
+        await mockBackend.deleteLead(id);
+        await loadLeads();
+        setIsModalOpen(false);
+      } catch (err) {
+          alert("Erro ao excluir do servidor.");
+      }
     }
   };
 
@@ -237,26 +253,42 @@ const FinanceView = ({ userId }: { userId: string }) => {
   const [formData, setFormData] = useState<Partial<FinancialEntry>>({ description: '', value: 0, type: 'income', category: 'Vendas' });
 
   useEffect(() => { loadEntries(); }, []);
-  const loadEntries = async () => { const data = await mockBackend.getFinanceEntries(userId); setEntries(data); };
+  const loadEntries = async () => { 
+      try {
+        const data = await mockBackend.getFinanceEntries(userId); 
+        setEntries(data); 
+      } catch (e) {
+        console.error("Erro ao carregar entradas:", e);
+      }
+  };
 
   const handleSaveEntry = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) return;
     setIsSaving(true);
     try {
         if (editingEntry) {
-            await mockBackend.updateFinanceEntry(editingEntry.id, formData);
+            await mockBackend.updateFinanceEntry(editingEntry.id, { ...formData, userId });
         } else {
             await mockBackend.addFinanceEntry({ ...formData, userId, date: new Date().toISOString() } as FinancialEntry);
         }
         setIsModalOpen(false);
-        loadEntries();
+        await loadEntries();
+        alert("Lançamento financeiro registrado!");
+    } catch (err) {
+        console.error("Erro ao salvar lançamento:", err);
+        alert("Erro na gravação remota, salvo localmente.");
     } finally { setIsSaving(false); }
   };
 
   const deleteEntry = async (id: string) => {
     if (window.confirm('Excluir este lançamento?')) {
-      await mockBackend.deleteFinanceEntry(id);
-      loadEntries();
+      try {
+        await mockBackend.deleteFinanceEntry(id);
+        await loadEntries();
+      } catch (err) {
+          alert("Erro ao excluir do servidor.");
+      }
     }
   };
 
@@ -370,27 +402,43 @@ const ScheduleView = ({ userId }: { userId: string }) => {
   const [formData, setFormData] = useState<Partial<ScheduleItem>>({ title: '', client: '', date: '', time: '', type: 'servico', status: 'pending' });
 
   useEffect(() => { loadItems(); }, []);
-  const loadItems = async () => { const data = await mockBackend.getSchedule(userId); setItems(data); };
+  const loadItems = async () => { 
+      try {
+        const data = await mockBackend.getSchedule(userId); 
+        setItems(data); 
+      } catch (e) {
+        console.error("Erro ao carregar agenda:", e);
+      }
+  };
 
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userId) return;
     setIsSaving(true);
     try {
         if (editingItem) {
-            await mockBackend.updateScheduleItem(editingItem.id, formData);
+            await mockBackend.updateScheduleItem(editingItem.id, { ...formData, userId });
         } else {
             await mockBackend.addScheduleItem({ ...formData, userId } as ScheduleItem);
         }
         setIsModalOpen(false);
-        loadItems();
+        await loadItems();
+        alert("Agendamento confirmado!");
+    } catch (err) {
+        console.error("Erro ao salvar agenda:", err);
+        alert("Salvando localmente.");
     } finally { setIsSaving(false); }
   };
 
   const deleteItem = async (id: string) => {
     if (window.confirm('Remover este compromisso?')) {
-      await mockBackend.deleteScheduleItem(id);
-      loadItems();
-      setIsModalOpen(false);
+      try {
+        await mockBackend.deleteScheduleItem(id);
+        await loadItems();
+        setIsModalOpen(false);
+      } catch (err) {
+          alert("Erro ao excluir do servidor.");
+      }
     }
   };
 

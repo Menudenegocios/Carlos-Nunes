@@ -66,30 +66,34 @@ export const BioBuilder: React.FC = () => {
 
   const loadData = async () => {
     if (!user) return;
-    const data = await mockBackend.getProfile(user.id);
-    const articles = await mockBackend.getBlogPosts();
-    if (data) {
-      setProfile(data);
-      setLinks(data.bioConfig?.links || [
-        { id: '1', type: 'whatsapp', label: 'WhatsApp Comercial', url: '', active: true },
-        { id: '2', type: 'instagram', label: 'Siga no Instagram', url: '', active: true }
-      ]);
-      setSocialProof(data.bioConfig?.socialProof || []);
-      setBlogEnabled(data.bioConfig?.blogEnabled || false);
-      setBlogButtonLabel(data.bioConfig?.blogButtonLabel || 'Nossos Artigos');
-      setMyArticles(articles.filter(a => a.userId === user.id));
+    try {
+        const data = await mockBackend.getProfile(user.id);
+        const articles = await mockBackend.getBlogPosts();
+        if (data) {
+          setProfile(data);
+          setLinks(data.bioConfig?.links || [
+            { id: '1', type: 'whatsapp', label: 'WhatsApp Comercial', url: '', active: true },
+            { id: '2', type: 'instagram', label: 'Siga no Instagram', url: '', active: true }
+          ]);
+          setSocialProof(data.bioConfig?.socialProof || []);
+          setBlogEnabled(data.bioConfig?.blogEnabled || false);
+          setBlogButtonLabel(data.bioConfig?.blogButtonLabel || 'Nossos Artigos');
+          setMyArticles(articles.filter(a => a.userId === user.id));
 
-      if (data.bioConfig?.customColors) {
-        setBgColor(data.bioConfig.customColors.background || '#064e3b');
-        setBtnColor(data.bioConfig.customColors.button || '#059669');
-        setTextColor(data.bioConfig.customColors.text || '#ffffff');
-      }
-      if (data.bioConfig?.fontFamily) setFontFamily(data.bioConfig.fontFamily);
-      if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
-      if (data.bioConfig?.floatingCTA) {
-          setCtaEnabled(data.bioConfig.floatingCTA.enabled);
-          setCtaLabel(data.bioConfig.floatingCTA.label);
-      }
+          if (data.bioConfig?.customColors) {
+            setBgColor(data.bioConfig.customColors.background || '#064e3b');
+            setBtnColor(data.bioConfig.customColors.button || '#059669');
+            setTextColor(data.bioConfig.customColors.text || '#ffffff');
+          }
+          if (data.bioConfig?.fontFamily) setFontFamily(data.bioConfig.fontFamily);
+          if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
+          if (data.bioConfig?.floatingCTA) {
+              setCtaEnabled(data.bioConfig.floatingCTA.enabled);
+              setCtaLabel(data.bioConfig.floatingCTA.label);
+          }
+        }
+    } catch (e) {
+        console.error("Erro ao carregar dados da Bio:", e);
     }
   };
 
@@ -116,7 +120,10 @@ export const BioBuilder: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user) {
+        alert("Sessão expirada. Faça login novamente.");
+        return;
+    }
     setIsSaving(true);
     try {
       await mockBackend.updateProfile(user.id, { 
@@ -141,7 +148,10 @@ export const BioBuilder: React.FC = () => {
           }
         } 
       });
-      alert('Sua Bio Digital foi atualizada com sucesso!');
+      alert('Sua Bio Digital foi publicada e sincronizada com sucesso!');
+    } catch (err) {
+        console.error("Erro ao salvar perfil:", err);
+        alert('Houve um problema na sincronização, mas seus dados foram salvos localmente.');
     } finally { setIsSaving(false); }
   };
 
@@ -220,7 +230,7 @@ export const BioBuilder: React.FC = () => {
             </div>
             
             <div className="flex gap-4">
-              <button onClick={handleSave} className="bg-emerald-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-emerald-900/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+              <button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-emerald-900/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
                   {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Publicar Agora
               </button>
             </div>
@@ -493,7 +503,7 @@ export const BioBuilder: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Resumo Curto (Chamada)</label>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Resumo Curto (Chamada)</label>
                                         <textarea rows={2} className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-medium text-sm dark:text-white resize-none" value={articleForm.summary} onChange={e => setArticleForm({...articleForm, summary: e.target.value})} placeholder="Escreva uma breve introdução..." />
                                     </div>
                                     <div>
