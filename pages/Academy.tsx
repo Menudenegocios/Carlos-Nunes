@@ -5,15 +5,12 @@ import { mockBackend } from '../services/mockBackend';
 import { 
   Play, Star, X, Award, CheckCircle, GraduationCap, 
   Video, Map, Sparkles, Target,
-  Smartphone, MessageSquare, ChevronRight,
-  Monitor, Layers, Zap, HelpCircle,
-  Package, LayoutDashboard, Trophy, Briefcase, Bot, Home as HomeIcon,
-  PlayCircle, BrainCircuit, Mic, MessageCircle, Send, RefreshCw,
-  ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp
+  Monitor, Layers, Zap, Bot, Home as HomeIcon,
+  PlayCircle, RefreshCw, ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp,
+  // Added Smartphone to fixes "Cannot find name 'Smartphone'" error on line 183
+  ChevronRight, Clock, Users, BookOpen, MessageSquare, Smartphone
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
-import { getAIAssistantResponse } from '../services/geminiService';
-import ReactMarkdown from 'react-markdown';
 
 interface Course {
   id: number;
@@ -38,65 +35,16 @@ interface AIAgent {
 }
 
 const MOCK_COURSES: Course[] = [
-  { id: 1, title: 'Tráfego Pago para Negócios Locais', instructor: 'Lucas Mendes', category: 'Marketing', duration: '3h 15m', rating: 4.9, students: 2500, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800', description: 'Aprenda a investir em anúncios no Instagram e Google focados no seu bairro.' },
-  { id: 2, title: 'Dominação de Instagram Local', instructor: 'Ana Silva', category: 'Marketing', duration: '2h 30m', rating: 4.8, students: 1240, image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800', description: 'Transforme seu perfil em uma máquina de atração de clientes do seu bairro.' },
-  { id: 3, title: 'Fechamento de Vendas High Ticket', instructor: 'Juliana Paes', category: 'Vendas', duration: '1h 45m', rating: 4.7, students: 2100, image: 'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=800', description: 'Scripts e gatilhos mentais para vender serviços e produtos de maior valor.' },
-  { id: 4, title: 'Finanças Lucrativas', instructor: 'Carlos Eduardo', category: 'Finanças', duration: '4h 15m', rating: 4.9, students: 850, image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800', description: 'Organize seu caixa, controle gastos e entenda a margem real do seu negócio.' },
-];
-
-const TRILHA_STEPS = [
-  { id: 1, title: 'Primeiros Passos e Configuração', status: 'completed', icon: Zap, desc: 'Complete seu perfil e entenda as bases do Menu ADS.' },
-  { id: 2, title: 'Construção da Vitrine de Ouro', status: 'current', icon: Monitor, desc: 'Crie seu catálogo e bio digital focados em alta conversão.' },
-  { id: 3, title: 'Estratégia de Atração Local', status: 'locked', icon: Target, desc: 'Como atrair os primeiros leads qualificados do seu bairro.' },
-  { id: 4, title: 'Automatização de Atendimento', status: 'locked', icon: Layers, desc: 'Escalando seu negócio com ferramentas de CRM e IA.' },
+  { id: 1, title: 'Tráfego Pago para Negócios Locais', instructor: 'Lucas Mendes', category: 'Marketing', duration: '3h 15m', rating: 4.9, students: 2500, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800', description: 'Aprenda a investir em anúncios no Instagram e Google focados no seu bairro para atrair clientes reais.' },
+  { id: 2, title: 'Dominação de Instagram Local', instructor: 'Ana Silva', category: 'Marketing', duration: '2h 30m', rating: 4.8, students: 1240, image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800', description: 'Transforme seu perfil social em uma vitrine magnética que atrai moradores da sua região todos os dias.' },
+  { id: 3, title: 'Fechamento de Vendas High Ticket', instructor: 'Juliana Paes', category: 'Vendas', duration: '1h 45m', rating: 4.7, students: 2100, image: 'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=800', description: 'Domine scripts e gatilhos mentais avançados para vender serviços de alto valor com facilidade.' },
+  { id: 4, title: 'Finanças Lucrativas', instructor: 'Carlos Eduardo', category: 'Finanças', duration: '4h 15m', rating: 4.9, students: 850, image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800', description: 'Organize seu fluxo de caixa e entenda a margem real de lucro do seu negócio regional.' },
 ];
 
 const AI_AGENTS: AIAgent[] = [
-  {
-    id: 'sales-script',
-    name: 'Script de Vendas',
-    role: 'Copywriting Comercial',
-    description: 'Criação de roteiros persuasivos e quebra de objeções para fechamentos rápidos.',
-    icon: ListChecks,
-    color: 'emerald',
-    url: 'https://chatgpt.com/g/g-68459990b2088191b098ebd25fd61558-agente-script-de-ventas/c/6941761e-c880-8332-b27c-3914bfc4e20f'
-  },
-  {
-    id: 'follow-up',
-    name: 'Follow-up Expert',
-    role: 'Recuperação de Leads',
-    description: 'Estratégias de acompanhamento para não deixar nenhuma venda esfriar no funil.',
-    icon: Repeat,
-    color: 'indigo',
-    url: 'https://chatgpt.com/g/g-67674b9476688191b428941096db4464-agente-follow-up'
-  },
-  {
-    id: 'pitch-master',
-    name: 'Pitch Master',
-    role: 'Apresentação de Impacto',
-    description: 'Refine sua fala e apresentação para convencer clientes e parceiros em segundos.',
-    icon: Rocket,
-    color: 'purple',
-    url: 'https://chatgpt.com/g/g-676761e39bc08191868b0d801dae75e9-pitchmaster'
-  },
-  {
-    id: 'dream-board',
-    name: 'Quadro dos Sonhos',
-    role: 'Metas e Mentalidade',
-    description: 'IA focada em transformar seus objetivos em planos de ação visualizáveis.',
-    icon: CloudSun,
-    color: 'amber',
-    url: 'https://chatgpt.com/g/g-6845a445a7b48191b679129b7a9772d5-agente-quadro-dos-sonhos'
-  },
-  {
-    id: 'sales-pro',
-    name: 'Vendas Mais Pro',
-    role: 'Alta Performance',
-    description: 'Consultoria estratégica completa para escalar o faturamento da sua empresa.',
-    icon: TrendingUp,
-    color: 'rose',
-    url: 'https://chatgpt.com/g/g-67676238cdc88191a20b8bc0a15240f1-venda-mais-pro'
-  }
+  { id: 'sales-script', name: 'Script de Vendas', role: 'Copywriting Comercial', description: 'IA especializada em criar roteiros persuasivos e quebrar objeções de clientes difíceis.', icon: ListChecks, color: 'text-emerald-600 bg-emerald-50', url: '#' },
+  { id: 'follow-up', name: 'Follow-up Expert', role: 'Recuperação de Leads', description: 'Estratégias automatizadas para não deixar nenhuma venda esfriar no seu funil de atendimento.', icon: Repeat, color: 'text-indigo-600 bg-indigo-50', url: '#' },
+  { id: 'pitch-master', name: 'Pitch Master', role: 'Apresentação de Impacto', description: 'Refine sua fala comercial para convencer parceiros e clientes em poucos segundos.', icon: Rocket, color: 'text-purple-600 bg-purple-50', url: '#' }
 ];
 
 export const Academy: React.FC = () => {
@@ -106,195 +54,197 @@ export const Academy: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
   const categories = ['Todos', 'Marketing', 'Vendas', 'Gestão', 'Finanças'];
-  const filteredCourses = trainingCategory === 'Todos' 
-    ? MOCK_COURSES 
-    : MOCK_COURSES.filter(c => c.category === trainingCategory);
-
-  const openAgent = (url: string) => {
-    window.open(url, '_blank');
-  };
+  const filteredCourses = trainingCategory === 'Todos' ? MOCK_COURSES : MOCK_COURSES.filter(c => c.category === trainingCategory);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      {/* Academy Header */}
-      <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+    <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
+      {/* Header Estilo Unificado Catálogo */}
+      <div className="bg-[#0F172A] dark:bg-black rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
-               <GraduationCap className="h-10 w-10 text-emerald-400" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className="p-5 bg-indigo-500/10 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">
+                 <GraduationCap className="h-10 w-10 text-brand-primary" />
+              </div>
+              <div>
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2 italic uppercase">
+                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">Menu Academy</span>
+                 </h1>
+                 <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">CONHECIMENTO ESTRATÉGICO PARA SEU NEGÓCIO LOCAL.</p>
+              </div>
             </div>
-            <div>
-               <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-1">Menu Academy</h1>
-               <p className="text-emerald-200 text-lg font-medium opacity-80 uppercase tracking-widest text-xs">Capacitação de elite para o mercado local.</p>
+
+            <div className="flex gap-4">
+              <button onClick={() => setActiveTab('treinamentos')} className="bg-[#F67C01] text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                  <PlayCircle className="w-4 h-4" /> CONTINUAR AULA
+              </button>
             </div>
           </div>
 
-          <div className="flex p-1.5 bg-black/20 backdrop-blur-md rounded-[1.8rem] w-fit border border-white/10 mt-8 overflow-x-auto scrollbar-hide max-w-full">
-            {[
-                { id: 'home', label: 'INÍCIO', icon: HomeIcon },
-                { id: 'treinamentos', label: 'CURSOS', icon: Video },
-                { id: 'trilha', label: 'TRILHA', icon: Map },
-                { id: 'agentes', label: 'AGENTES IA', icon: Bot },
-            ].map(tab => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)} 
-                  className={`flex items-center gap-3 px-8 py-3 rounded-[1.4rem] font-black text-xs transition-all duration-300 whitespace-nowrap ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-emerald-100 hover:bg-white/10'}`}
-                >
-                    <tab.icon className="w-4 h-4" /> {tab.label}
-                </button>
-            ))}
+          {/* Abas Padronizadas - Alinhadas à Esquerda na Linha Inferior */}
+          <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
+              {[
+                  { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
+                  { id: 'treinamentos', label: 'CURSOS', desc: 'Vídeo aulas', icon: Video },
+                  { id: 'trilha', label: 'TRILHA', desc: 'Passo a passo', icon: Map },
+                  { id: 'agentes', label: 'AGENTES IA', desc: 'Consultoria 24h', icon: Bot },
+              ].map(tab => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)} 
+                    className={`flex flex-col items-center justify-center min-w-[120px] px-8 py-3 rounded-[1.6rem] transition-all duration-300 whitespace-nowrap ${activeTab === tab.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-white/10'}`}
+                  >
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
+                        <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
+                      </div>
+                      <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</span>
+                  </button>
+              ))}
           </div>
         </div>
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
-      <div className="animate-[fade-in_0.4s_ease-out]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'home' && (
             <SectionLanding 
-                title="Aprenda a Escalar seu Negócio no Bairro."
+                title="Conhecimento que faz seu negócio crescer."
                 subtitle="Menu Academy"
-                description="Biblioteca exclusiva de treinamentos e estratégias focadas no empreendedor real. Domine o digital e multiplique seu faturamento regional."
+                description="Explore nossa biblioteca exclusiva de treinamentos focados no empreendedor local. Aprenda estratégias práticas para dominar o mercado regional."
                 benefits={[
                 "Treinamentos rápidos focados em implementação imediata.",
-                "Estratégias de tráfego pago para atrair clientes locais.",
-                "Mentoria com Agentes de IA treinados em vendas.",
-                "Caminho validado do zero ao sucesso no Menu ADS.",
-                "Conteúdo atualizado semanalmente com novas tendências."
+                "Estratégias de tráfego pago para atrair clientes do bairro.",
+                "Consultoria com agentes de IA treinados em vendas.",
+                "Caminho validado do zero ao sucesso comercial.",
+                "Conteúdo atualizado semanalmente com tendências de mercado."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
                 ctaLabel="VER CURSOS DISPONÍVEIS"
                 onStart={() => setActiveTab('treinamentos')}
                 icon={GraduationCap}
-                accentColor="emerald"
+                accentColor="indigo"
             />
         )}
 
         {activeTab === 'treinamentos' && (
-          <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4">
-               <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Cursos Disponíveis</h2>
-               <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+           <div className="space-y-10">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4">
                  {categories.map(cat => (
-                   <button key={cat} onClick={() => setTrainingCategory(cat)} className={`px-6 py-2.5 rounded-full text-xs font-black transition-all border whitespace-nowrap ${trainingCategory === cat ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border-gray-200 dark:border-zinc-800'}`}>
-                     {cat}
-                   </button>
+                    <button 
+                      key={cat} 
+                      onClick={() => setTrainingCategory(cat)}
+                      className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${trainingCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-900 text-slate-400 border border-gray-100 dark:border-zinc-800'}`}
+                    >
+                       {cat}
+                    </button>
                  ))}
-               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
-              {filteredCourses.map(course => (
-                <div key={course.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-2xl transition-all flex flex-col h-full">
-                  <div className="relative h-56 overflow-hidden">
-                    <img src={course.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                    <div className="absolute bottom-5 left-5 right-5 flex justify-between items-center text-white">
-                       <span className="bg-emerald-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">{course.category}</span>
-                       <div className="flex items-center gap-1.5 text-xs font-bold bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg"><Star className="w-3.5 h-3.5 text-yellow-400 fill-current" /> {course.rating.toFixed(1)}</div>
-                    </div>
-                  </div>
-                  <div className="p-8 flex-1 flex flex-col">
-                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-emerald-600 transition-colors">{course.title}</h3>
-                    <p className="text-gray-500 dark:text-zinc-400 text-sm mb-8 line-clamp-2 leading-relaxed">{course.description}</p>
-                    <div className="mt-auto pt-6 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
-                       <div className="flex items-center gap-2 font-black text-gray-400 uppercase text-[10px] tracking-widest">
-                          <Play className="w-4 h-4 text-emerald-600" /> {course.duration}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+                 {filteredCourses.map(course => (
+                    <div key={course.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
+                       <div className="h-48 overflow-hidden relative">
+                          <img src={course.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={course.title} />
+                          <div className="absolute top-4 left-4">
+                             <span className="bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase text-indigo-600 dark:text-brand-primary tracking-widest">{course.category}</span>
+                          </div>
                        </div>
-                       <button onClick={() => setSelectedCourse(course)} className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-700">Assistir</button>
+                       <div className="p-8 space-y-4">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                             <Clock className="w-3.5 h-3.5" /> {course.duration} • <Users className="w-3.5 h-3.5" /> {course.students} alunos
+                          </div>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-2">{course.title}</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">{course.description}</p>
+                          <div className="pt-4 flex items-center justify-between">
+                             <div className="flex items-center gap-1 text-yellow-400">
+                                <Star className="w-4 h-4 fill-current" />
+                                <span className="text-xs font-black text-gray-900 dark:text-white">{course.rating}</span>
+                             </div>
+                             <button className="p-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-brand-primary rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                <Play className="w-4 h-4 fill-current" />
+                             </button>
+                          </div>
+                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                 ))}
+              </div>
+           </div>
         )}
-        
+
         {activeTab === 'trilha' && (
-          <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl relative overflow-hidden animate-fade-in">
-             <div className="max-w-2xl mb-16">
-               <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4 leading-none tracking-tight">Caminho do Sucesso Local</h2>
-               <p className="text-gray-500 dark:text-zinc-400 text-lg font-medium leading-relaxed">Siga os passos validados para dominar sua região.</p>
-             </div>
-             <div className="space-y-0 relative">
-                {TRILHA_STEPS.map((step) => (
-                  <div key={step.id} className={`flex gap-10 items-start pb-16 last:pb-0 group ${step.status === 'locked' ? 'opacity-40' : ''}`}>
-                     <div className={`w-16 h-16 rounded-[1.6rem] flex items-center justify-center flex-shrink-0 transition-all border-4 border-white dark:border-zinc-800 shadow-2xl z-10 ${step.status === 'completed' ? 'bg-emerald-600 text-white' : step.status === 'current' ? 'bg-indigo-600 text-white scale-110' : 'bg-gray-100 dark:bg-zinc-800 text-gray-400'}`}>
-                        {step.status === 'completed' ? <CheckCircle className="w-8 h-8" /> : <step.icon className="w-7 h-7" />}
-                     </div>
-                     <div className="pt-2">
-                        <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight mb-2">{step.title}</h3>
-                        <p className="text-gray-500 dark:text-zinc-400 text-base font-medium max-w-xl">{step.desc}</p>
-                     </div>
-                  </div>
-                ))}
-             </div>
-          </div>
+           <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-12 px-4 mx-4">
+              <div className="max-w-2xl">
+                 <h2 className="text-3xl font-black text-gray-900 dark:text-white italic uppercase tracking-tighter mb-4">Seu Caminho para o Topo</h2>
+                 <p className="text-slate-500 dark:text-zinc-400 font-medium">Siga este passo a passo validado para transformar seu pequeno negócio em uma referência regional.</p>
+              </div>
+
+              <div className="space-y-8 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-1 before:bg-indigo-50 dark:before:bg-zinc-800">
+                 {[
+                    { step: '01', title: 'Fundação Digital', desc: 'Configure sua Bio Digital Pro e seu Catálogo para começar a ser visto.', icon: Smartphone },
+                    { step: '02', title: 'Atração de Leads', desc: 'Aprenda a rodar seus primeiros anúncios focados no seu bairro.', icon: Target },
+                    { step: '03', title: 'Maestria em Vendas', desc: 'Use nossos scripts de IA para fechar negócios pelo WhatsApp.', icon: MessageSquare },
+                    { step: '04', title: 'Escala & Fidelidade', desc: 'Ative o Clube de Vantagens e multiplique suas recomendações.', icon: Zap }
+                 ].map((item, idx) => (
+                    <div key={idx} className="relative flex gap-8 pl-14 items-start group">
+                       <div className="absolute left-0 w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 border-2 border-indigo-600 dark:border-brand-primary flex items-center justify-center text-indigo-600 dark:text-brand-primary z-10 shadow-lg group-hover:scale-110 transition-transform">
+                          <item.icon className="w-6 h-6" />
+                       </div>
+                       <div className="pt-2">
+                          <h4 className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-1">Passo {item.step}</h4>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-2">{item.title}</h3>
+                          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed max-w-lg">{item.desc}</p>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
         )}
 
         {activeTab === 'agentes' && (
-          <div className="space-y-12 animate-fade-in">
-            <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
-               <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">Agentes Especialistas em IA</h2>
-               <p className="text-lg text-gray-500 dark:text-zinc-400 font-medium">Acesse agentes treinados especificamente para acelerar cada etapa da sua jornada comercial.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
-               {AI_AGENTS.map(agent => (
-                 <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl flex flex-col items-center text-center space-y-6 group hover:-translate-y-2 transition-all">
-                    <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${
-                      agent.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
-                      agent.color === 'indigo' ? 'bg-indigo-50 text-indigo-600' :
-                      agent.color === 'purple' ? 'bg-purple-50 text-purple-600' :
-                      agent.color === 'amber' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                    }`}>
-                      <agent.icon className="w-10 h-10" />
+           <div className="space-y-12 px-4">
+              <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl">
+                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                    <div className="space-y-6 max-w-xl">
+                       <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
+                          <Bot className="w-10 h-10 text-brand-primary" />
+                       </div>
+                       <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">Consultoria 24h com Especialistas</h2>
+                       <p className="text-indigo-100 text-lg font-medium leading-relaxed">Nossos agentes de IA foram treinados com as melhores estratégias de vendas, marketing e gestão local do mundo.</p>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{agent.name}</h3>
-                      <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${
-                        agent.color === 'emerald' ? 'text-emerald-600' :
-                        agent.color === 'indigo' ? 'text-indigo-600' :
-                        agent.color === 'purple' ? 'text-purple-600' :
-                        agent.color === 'amber' ? 'text-amber-600' : 'text-rose-600'
-                      }`}>{agent.role}</p>
+                    <div className="hidden lg:block relative">
+                       <div className="w-64 h-64 bg-white/5 rounded-full blur-[80px] absolute inset-0"></div>
+                       <Bot className="w-48 h-48 text-white/10 -rotate-12" />
                     </div>
-                    <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">{agent.description}</p>
-                    <button 
-                      onClick={() => openAgent(agent.url)}
-                      className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                        agent.color === 'emerald' ? 'bg-emerald-600 text-white hover:bg-emerald-700' :
-                        agent.color === 'indigo' ? 'bg-indigo-600 text-white hover:bg-indigo-700' :
-                        agent.color === 'purple' ? 'bg-purple-600 text-white hover:bg-purple-700' :
-                        agent.color === 'amber' ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-rose-600 text-white hover:bg-rose-700'
-                      }`}
-                    >
-                      <ExternalLink className="w-4 h-4" /> CONSULTAR AGENTE
-                    </button>
                  </div>
-               ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {selectedCourse && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-           <div className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden relative animate-scale-in">
-              <button onClick={() => setSelectedCourse(null)} className="absolute top-8 right-8 z-50 p-4 bg-white/20 backdrop-blur-md text-white rounded-full hover:bg-white/40 transition-all">
-                 <X className="w-6 h-6" />
-              </button>
-              <div className="aspect-video bg-black flex items-center justify-center">
-                 <div className="text-center text-white space-y-4">
-                    <PlayCircle className="w-16 h-16 mx-auto text-emerald-400 animate-pulse" />
-                    <p className="font-black uppercase tracking-widest text-xs">Área de Membros Pro</p>
-                 </div>
+                 <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
               </div>
-              <div className="p-10">
-                 <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4 leading-none tracking-tight">{selectedCourse.title}</h2>
-                 <p className="text-gray-500 dark:text-zinc-400 font-medium leading-relaxed">{selectedCourse.description}</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                 {AI_AGENTS.map(agent => (
+                    <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
+                       <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                          <agent.icon className="w-10 h-10" />
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{agent.role}</p>
+                          <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{agent.name}</h3>
+                       </div>
+                       <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
+                          {agent.description}
+                       </p>
+                       <a 
+                        href={agent.url} 
+                        className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
+                       >
+                          SAIBA MAIS <ExternalLink className="w-3.5 h-3.5" />
+                       </a>
+                    </div>
+                 ))}
               </div>
            </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

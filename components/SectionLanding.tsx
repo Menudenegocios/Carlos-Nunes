@@ -49,9 +49,11 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
               </div>
               <div>
                 <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight tracking-tighter mb-4">
-                  {title}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">
+                    {title}
+                  </span>
                 </h1>
-                <p className="text-xl font-bold text-brand-primary uppercase tracking-widest text-sm mb-4">
+                <p className={`text-xl font-bold uppercase tracking-widest text-sm mb-4 ${textClass}`}>
                   {subtitle}
                 </p>
                 <p className="text-gray-500 dark:text-zinc-400 text-lg leading-relaxed">

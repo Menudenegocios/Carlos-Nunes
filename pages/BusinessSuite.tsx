@@ -6,7 +6,7 @@ import { Lead, PipelineStage, FinancialEntry, ScheduleItem } from '../types';
 import { 
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
   X, Trash2, CheckCircle, Clock, Briefcase, 
-  Home as HomeIcon, RefreshCw, Zap, ArrowRight, User
+  Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -18,59 +18,74 @@ export const BusinessSuite: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      {/* Header Emerald Premium */}
-      <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-indigo-950 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl">
+      {/* Header Premium SaaS - Estilo Unificado Catálogo */}
+      <div className="bg-[#0F172A] dark:bg-black rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl">
-                 <Briefcase className="h-10 w-10 text-emerald-300" />
+            <div className="flex items-center gap-6">
+              <div className="p-5 bg-indigo-500/10 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">
+                 <Briefcase className="h-10 w-10 text-brand-primary" />
               </div>
               <div>
-                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-1">Vendas & Gestão</h1>
-                 <p className="text-emerald-200 text-lg font-medium opacity-80 uppercase tracking-widest text-xs">Controle total da sua operação comercial.</p>
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">CRM & Vendas</span>
+                 </h1>
+                 <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">O PAINEL DE CONTROLE DO SEU SUCESSO COMERCIAL.</p>
               </div>
             </div>
+            
+            {/* Botões de Ação Topo Direita */}
+            <div className="flex gap-3">
+               <button onClick={() => setActiveTab('crm')} className="bg-[#F67C01] text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                  <Layout className="w-4 h-4" /> MEU PIPELINE
+               </button>
+            </div>
+          </div>
 
-            <div className="flex p-1.5 bg-black/20 backdrop-blur-md rounded-[1.8rem] border border-white/10 overflow-x-auto scrollbar-hide">
+          {/* Abas Padronizadas - Alinhadas à Esquerda na Linha Inferior */}
+          <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                { id: 'home', label: 'INÍCIO', icon: HomeIcon },
-                { id: 'crm', label: 'CRM', icon: Briefcase },
-                { id: 'finance', label: 'CAIXA', icon: DollarSign },
-                { id: 'schedule', label: 'AGENDA', icon: Calendar }
+                { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
+                { id: 'crm', label: 'CRM', desc: 'Funil de leads', icon: Briefcase },
+                { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
+                { id: 'schedule', label: 'AGENDA', desc: 'Compromissos', icon: Calendar }
               ].map((tab) => (
                 <button 
                   key={tab.id} 
                   onClick={() => setActiveTab(tab.id as any)} 
-                  className={`flex items-center gap-3 px-6 py-3 rounded-[1.4rem] font-black text-sm transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-emerald-600 text-white shadow-xl' : 'text-emerald-100 hover:bg-white/10'}`}
+                  className={`flex flex-col items-center justify-center min-w-[110px] px-6 py-3 rounded-[1.4rem] transition-all duration-300 whitespace-nowrap ${activeTab === tab.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-white/10'}`}
                 >
-                  <tab.icon className="w-4 h-4" /> {tab.label}
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
+                    <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
+                  </div>
+                  <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</span>
                 </button>
               ))}
-            </div>
           </div>
         </div>
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        {/* Decorativo */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
       <div className="animate-[fade-in_0.4s_ease-out]">
         {activeTab === 'home' && (
             <SectionLanding 
-                title="Sua Central de Operações do Dia a Dia."
-                subtitle="Business Suite Emerald"
+                title="Sua central de operações do dia a dia."
+                subtitle="CRM & Vendas"
                 description="Organize leads, controle as finanças e gerencie sua agenda em um só lugar. A produtividade que seu negócio precisa para crescer sem perder o controle."
                 benefits={[
-                "Funil de Vendas Kanban: visualize sua receita futura.",
-                "Fluxo de Caixa: saiba exatamente o lucro do seu mês.",
-                "Agenda Inteligente: organize seus horários de serviço.",
-                "Sincronização com Supabase para acesso em qualquer lugar.",
+                "Funil de vendas Kanban: visualize sua receita futura.",
+                "Fluxo de caixa: saiba exatamente o lucro do seu mês.",
+                "Agenda inteligente: organize seus horários de serviço.",
+                "Sincronização com nuvem para acesso em qualquer lugar.",
                 "Relatórios simplificados de performance comercial."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
-                ctaLabel="ABRIR CRM"
+                ctaLabel="ABRIR MEU CRM"
                 onStart={() => setActiveTab('crm')}
                 icon={Briefcase}
-                accentColor="emerald"
+                accentColor="brand"
             />
         )}
         {activeTab === 'crm' && <CRMView userId={user.id} />}
@@ -81,12 +96,12 @@ export const BusinessSuite: React.FC = () => {
   );
 };
 
-// --- CRM VIEW ---
 const CRMView = ({ userId }: { userId: string }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Lead>>({ name: '', phone: '', source: 'manual', stage: 'new', value: 0, notes: '' });
 
   useEffect(() => { loadLeads(); }, []);
@@ -111,23 +126,32 @@ const CRMView = ({ userId }: { userId: string }) => {
         }
         setIsModalOpen(false);
         await loadLeads();
-        alert("Alterações salvas no CRM!");
-    } catch (err) {
-        console.error("Erro ao salvar lead:", err);
-        alert("Erro ao sincronizar dados. Salvando localmente.");
     } finally { setIsSaving(false); }
   };
 
-  const deleteLead = async (id: string) => {
-    if (window.confirm('Excluir este lead permanentemente?')) {
-      try {
-        await mockBackend.deleteLead(id);
-        await loadLeads();
-        setIsModalOpen(false);
-      } catch (err) {
-          alert("Erro ao excluir do servidor.");
-      }
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedLeadId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetStage: PipelineStage) => {
+    e.preventDefault();
+    if (!draggedLeadId) return;
+
+    const leadId = draggedLeadId;
+    const currentLead = leads.find(l => l.id === leadId);
+    
+    if (currentLead && currentLead.stage !== targetStage) {
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: targetStage } : l));
+      await mockBackend.updateLeadStage(leadId, targetStage);
     }
+    
+    setDraggedLeadId(null);
   };
 
   const stages: { id: PipelineStage; label: string; bg: string }[] = [
@@ -143,55 +167,72 @@ const CRMView = ({ userId }: { userId: string }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
-         <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center justify-between">
+         <div className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center justify-between">
             <div>
-               <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Pipeline Total</p>
-               <h4 className="text-3xl font-black text-gray-900 dark:text-white">R$ {totalValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h4>
+               <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Potencial de vendas</p>
+               <h4 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">R$ {totalValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h4>
             </div>
-            <TrendingUp className="w-10 h-10 text-emerald-500 opacity-20" />
+            <TrendingUp className="w-12 h-12 text-indigo-500 opacity-20" />
          </div>
-         <div className="bg-emerald-600 p-8 rounded-[2.5rem] shadow-xl flex items-center justify-between text-white">
+         <div className="bg-[#F67C01] p-10 rounded-[3rem] shadow-2xl flex items-center justify-between text-white">
             <div>
-               <p className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-1">Faturamento Fechado</p>
-               <h4 className="text-3xl font-black">R$ {closedValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h4>
+               <p className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em] mb-2">Faturamento convertido</p>
+               <h4 className="text-4xl font-black tracking-tighter">R$ {closedValue.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h4>
             </div>
-            <Zap className="w-10 h-10 text-white opacity-20 fill-current" />
+            <Zap className="w-12 h-12 text-white opacity-20 fill-current" />
          </div>
       </div>
 
       <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide px-4">
         {stages.map(stage => (
-          <div key={stage.id} className="min-w-[300px] flex-shrink-0 flex flex-col gap-4">
-             <div className="flex items-center justify-between px-4">
-                <h3 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-                   <span className={`w-2.5 h-2.5 rounded-full ${stage.bg}`}></span> {stage.label}
+          <div 
+            key={stage.id} 
+            className={`min-w-[300px] flex-shrink-0 flex flex-col gap-4 transition-colors rounded-[3.5rem] ${draggedLeadId ? 'bg-indigo-500/5' : ''}`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, stage.id)}
+          >
+             <div className="flex items-center justify-between px-6">
+                <h3 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-3 italic">
+                   <span className={`w-3 h-3 rounded-full ${stage.bg} shadow-sm`}></span> {stage.label}
                 </h3>
-                <span className="bg-gray-100 dark:bg-zinc-800 px-3 py-1 rounded-lg text-[10px] font-black text-gray-400">
-                   {leads.filter(l => l.stage === stage.id).length}
+                <span className="bg-white dark:bg-zinc-900 px-4 py-1.5 rounded-full text-[10px] font-black text-slate-400 shadow-sm border border-gray-100 dark:border-zinc-800">
+                   {leads.filter(l => l.stage === stage.id).length} itens
                 </span>
              </div>
              
-             <div className="bg-gray-50/50 dark:bg-zinc-900/30 rounded-[2.5rem] p-3 space-y-3 min-h-[500px] border border-gray-100 dark:border-zinc-800">
+             <div className={`bg-gray-50/50 dark:bg-zinc-900/30 rounded-[3.5rem] p-4 space-y-4 min-h-[550px] border border-gray-100 dark:border-zinc-800 shadow-inner transition-all ${draggedLeadId ? 'border-indigo-400/20' : ''}`}>
                 {leads.filter(l => l.stage === stage.id).map(lead => (
                    <div 
                       key={lead.id} 
-                      className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 group hover:border-emerald-200 transition-all cursor-pointer"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, lead.id)}
+                      className={`bg-white dark:bg-zinc-900 p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-zinc-800 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing hover:shadow-xl ${draggedLeadId === lead.id ? 'opacity-40 grayscale scale-95' : ''}`}
                       onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}
                    >
-                      <div className="flex justify-between items-start mb-3">
-                         <span className="text-[8px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest">{lead.source}</span>
-                         <ArrowRight className="w-4 h-4 text-gray-200 group-hover:text-emerald-400 transition-colors" />
+                      <div className="flex justify-between items-start mb-4">
+                         <div className="flex items-center gap-2">
+                            <GripVertical className="w-3.5 h-3.5 text-slate-300" />
+                            <span className="text-[9px] font-black bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-lg uppercase tracking-widest">{lead.source}</span>
+                         </div>
+                         <ArrowRight className="w-5 h-5 text-slate-200 group-hover:text-[#F67C01] transition-colors" />
                       </div>
-                      <h4 className="font-black text-gray-900 dark:text-white text-sm mb-1">{lead.name}</h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{lead.phone}</p>
-                      {lead.value > 0 && <p className="mt-3 text-xs font-black text-emerald-600">R$ {Number(lead.value).toFixed(2)}</p>}
+                      <h4 className="font-black text-gray-900 dark:text-white text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">{lead.phone}</p>
+                      {Number(lead.value) > 0 && (
+                        <div className="mt-5 flex justify-between items-end">
+                            <p className="text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p>
+                            <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 group-hover:bg-[#F67C01]/10 group-hover:text-[#F67C01] transition-all">
+                                <Plus className="w-4 h-4" />
+                            </div>
+                        </div>
+                      )}
                    </div>
                 ))}
                 <button 
                   onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }}
-                  className="w-full py-4 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-400 hover:text-emerald-500 transition-all"
+                  className="w-full py-5 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2"
                 >
-                   + Novo Lead
+                   <Plus className="w-4 h-4" /> Novo lead
                 </button>
              </div>
           </div>
@@ -199,42 +240,34 @@ const CRMView = ({ userId }: { userId: string }) => {
       </div>
 
       {isModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
-                <div className="bg-emerald-900 p-8 text-white flex justify-between items-center">
-                    <h3 className="text-2xl font-black">{editingLead ? 'Editar Oportunidade' : 'Novo Lead'}</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
+         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in border border-white/5">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingLead ? 'Detalhes da venda' : 'Capturar lead'}</h3>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Sincronizado com a nuvem</p>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
-                <form onSubmit={handleSaveLead} className="p-10 space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSaveLead} className="p-10 space-y-8">
+                    <div className="grid grid-cols-2 gap-6">
                        <div className="col-span-2">
-                          <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Nome Completo</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo do cliente</label>
+                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-brand-primary/10" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                        </div>
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">WhatsApp</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
+                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-brand-primary/10" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                        </div>
                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Valor do Negócio</label>
-                          <input type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor estimado</label>
+                          <input type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-brand-primary/10" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Etapa do Funil</label>
-                        <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.stage} onChange={e => setFormData({...formData, stage: e.target.value as any})}>
-                           {stages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Observações</label>
-                        <textarea rows={2} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-medium text-sm dark:text-white focus:ring-2 focus:ring-emerald-100 resize-none" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} />
                     </div>
                     <div className="flex gap-4">
-                        <button type="submit" disabled={isSaving} className="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
-                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR'}
+                        <button type="submit" disabled={isSaving} className="flex-1 bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Concluir registro'}
                         </button>
-                        {editingLead && <button type="button" onClick={() => deleteLead(editingLead.id)} className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"><Trash2 className="w-6 h-6" /></button>}
                     </div>
                 </form>
             </div>
@@ -244,7 +277,6 @@ const CRMView = ({ userId }: { userId: string }) => {
   );
 };
 
-// --- FINANCE VIEW ---
 const FinanceView = ({ userId }: { userId: string }) => {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -274,22 +306,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
         }
         setIsModalOpen(false);
         await loadEntries();
-        alert("Lançamento financeiro registrado!");
-    } catch (err) {
-        console.error("Erro ao salvar lançamento:", err);
-        alert("Erro na gravação remota, salvo localmente.");
     } finally { setIsSaving(false); }
-  };
-
-  const deleteEntry = async (id: string) => {
-    if (window.confirm('Excluir este lançamento?')) {
-      try {
-        await mockBackend.deleteFinanceEntry(id);
-        await loadEntries();
-      } catch (err) {
-          alert("Erro ao excluir do servidor.");
-      }
-    }
   };
 
   const totals = entries.reduce((acc, curr) => {
@@ -302,98 +319,56 @@ const FinanceView = ({ userId }: { userId: string }) => {
     <div className="space-y-12 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
          <div className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
-            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Entradas</h4>
-            <h3 className="text-3xl font-black text-emerald-600">R$ {totals.income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Ganhos brutos</h4>
+            <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">R$ {totals.income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
          </div>
          <div className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
-            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Saídas</h4>
-            <h3 className="text-3xl font-black text-rose-600">R$ {totals.expense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Custos & despesas</h4>
+            <h3 className="text-4xl font-black text-rose-600 tracking-tighter">R$ {totals.expense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
          </div>
-         <div className="bg-emerald-600 p-10 rounded-[3rem] text-white shadow-xl">
-            <h4 className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-2">Saldo Atual</h4>
-            <h3 className="text-3xl font-black">R$ {(totals.income - totals.expense).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
+         <div className="bg-[#0F172A] p-10 rounded-[3rem] text-white shadow-2xl border border-white/5 relative overflow-hidden group">
+            <h4 className="text-[10px] font-black text-[#F67C01] uppercase tracking-[0.2em] mb-3 relative z-10 italic">Lucro líquido</h4>
+            <h3 className="text-4xl font-black tracking-tighter relative z-10">R$ {(totals.income - totals.expense).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
+            <Zap className="absolute -bottom-4 -right-4 w-32 h-32 text-white/5 fill-current group-hover:scale-125 transition-transform" />
          </div>
       </div>
 
       <div className="bg-white dark:bg-zinc-900 rounded-[4rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl mx-4">
          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Fluxo de Caixa</h3>
-            <button onClick={() => { setEditingEntry(null); setFormData({ description: '', value: 0, type: 'income', category: 'Vendas' }); setIsModalOpen(true); }} className="bg-emerald-600 text-white px-10 py-5 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-emerald-700 transition-all">
-               <Plus className="w-5 h-5" /> Novo Registro
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Relatório de fluxo</h3>
+            <button onClick={() => { setEditingEntry(null); setFormData({ description: '', value: 0, type: 'income', category: 'Vendas' }); setIsModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 hover:bg-orange-600 transition-all active:scale-95">
+               <Plus className="w-5 h-5" /> Novo lançamento
             </button>
          </div>
 
          <div className="space-y-4">
             {entries.length === 0 ? (
-               <div className="py-20 text-center border-2 border-dashed border-gray-100 dark:border-zinc-800 rounded-[2.5rem]">
-                  <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Nenhum lançamento no histórico.</p>
+               <div className="py-24 text-center border-4 border-dashed border-gray-50 dark:border-zinc-800 rounded-[3rem]">
+                  <DollarSign className="w-16 h-16 mx-auto text-slate-200 mb-6" />
+                  <p className="text-slate-400 font-black uppercase text-[11px] tracking-[0.3em]">Histórico financeiro vazio</p>
                </div>
             ) : entries.map(entry => (
-               <div key={entry.id} className="flex items-center justify-between p-6 bg-gray-50/50 dark:bg-zinc-800/30 rounded-3xl border border-gray-100 dark:border-zinc-700 group hover:shadow-md transition-all">
-                  <div className="flex items-center gap-6" onClick={() => { setEditingEntry(entry); setFormData(entry); setIsModalOpen(true); }}>
-                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${entry.type === 'income' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                        {entry.type === 'income' ? <TrendingUp className="w-7 h-7" /> : <TrendingDown className="w-7 h-7" />}
+               <div key={entry.id} className="flex items-center justify-between p-8 bg-gray-50/50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 group hover:shadow-2xl transition-all">
+                  <div className="flex items-center gap-8 cursor-pointer" onClick={() => { setEditingEntry(entry); setFormData(entry); setIsModalOpen(true); }}>
+                     <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center shadow-inner ${entry.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {entry.type === 'income' ? <TrendingUp className="w-8 h-8" /> : <TrendingDown className="w-8 h-8" />}
                      </div>
                      <div>
-                        <h4 className="font-black text-gray-900 dark:text-white text-lg leading-tight">{entry.description}</h4>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">{entry.category} • {new Date(entry.date).toLocaleDateString('pt-BR')}</p>
+                        <h4 className="font-black text-gray-900 dark:text-white text-xl tracking-tight leading-tight">{entry.description}</h4>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">{entry.category.toUpperCase()} • {new Date(entry.date).toLocaleDateString('pt-BR')}</p>
                      </div>
                   </div>
-                  <div className="flex items-center gap-8">
-                    <span className={`text-xl font-black ${entry.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                       {entry.type === 'income' ? '+' : '-'} R$ {Number(entry.value).toFixed(2)}
-                    </span>
-                    <button onClick={() => deleteEntry(entry.id)} className="p-3 text-gray-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all bg-white dark:bg-zinc-900 rounded-xl shadow-sm"><Trash2 className="w-5 h-5" /></button>
-                  </div>
+                  <span className={`text-2xl font-black ${entry.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                     {entry.type === 'income' ? '+' : '-'} R$ {Number(entry.value).toFixed(2)}
+                  </span>
                </div>
             ))}
          </div>
       </div>
-
-      {isModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
-                <div className="bg-emerald-900 p-8 text-white flex justify-between items-center">
-                    <h3 className="text-2xl font-black">{editingEntry ? 'Editar Lançamento' : 'Novo Lançamento'}</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
-                </div>
-                <form onSubmit={handleSaveEntry} className="p-10 space-y-6">
-                    <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-2xl">
-                        <button type="button" onClick={() => setFormData({...formData, type: 'income'})} className={`flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${formData.type === 'income' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400'}`}>Entrada</button>
-                        <button type="button" onClick={() => setFormData({...formData, type: 'expense'})} className={`flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${formData.type === 'expense' ? 'bg-rose-600 text-white shadow-lg' : 'text-gray-400'}`}>Saída</button>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Descrição do Item</label>
-                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Pagamento Fornecedor" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Valor (R$)</label>
-                          <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Categoria</label>
-                          <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                              <option>Vendas</option>
-                              <option>Marketing</option>
-                              <option>Infra</option>
-                              <option>Equipe</option>
-                              <option>Outros</option>
-                          </select>
-                       </div>
-                    </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'REGISTRAR LANÇAMENTO'}
-                    </button>
-                </form>
-            </div>
-         </div>
-      )}
     </div>
   );
 };
 
-// --- SCHEDULE VIEW ---
 const ScheduleView = ({ userId }: { userId: string }) => {
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -423,113 +398,50 @@ const ScheduleView = ({ userId }: { userId: string }) => {
         }
         setIsModalOpen(false);
         await loadItems();
-        alert("Agendamento confirmado!");
-    } catch (err) {
-        console.error("Erro ao salvar agenda:", err);
-        alert("Salvando localmente.");
     } finally { setIsSaving(false); }
-  };
-
-  const deleteItem = async (id: string) => {
-    if (window.confirm('Remover este compromisso?')) {
-      try {
-        await mockBackend.deleteScheduleItem(id);
-        await loadItems();
-        setIsModalOpen(false);
-      } catch (err) {
-          alert("Erro ao excluir do servidor.");
-      }
-    }
   };
 
   return (
     <div className="space-y-8 animate-fade-in px-4">
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
          <div>
-            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Agenda Mensal</h3>
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Organize seus serviços e reuniões.</p>
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight italic">Linha do tempo</h3>
+            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] mt-2">Suas reservas e compromissos locais</p>
          </div>
-         <button onClick={() => { setEditingItem(null); setFormData({ title: '', client: '', date: '', time: '', type: 'servico', status: 'pending' }); setIsModalOpen(true); }} className="bg-emerald-600 text-white px-10 py-5 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all">
-            <Calendar className="w-5 h-5" /> Agendar Horário
+         <button onClick={() => { setEditingItem(null); setFormData({ title: '', client: '', date: '', time: '', type: 'servico', status: 'pending' }); setIsModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 hover:bg-orange-600 transition-all active:scale-95">
+            <Calendar className="w-5 h-5" /> Agendar novo horário
          </button>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-[4rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl min-h-[500px]">
-         <div className="space-y-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-[4rem] p-10 md:p-20 border border-gray-100 dark:border-zinc-800 shadow-xl min-h-[600px] relative overflow-hidden">
+         <div className="space-y-8 relative z-10">
             {items.length === 0 ? (
-               <div className="py-32 text-center border-2 border-dashed border-gray-100 dark:border-zinc-800 rounded-[3rem]">
-                  <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Nenhum compromisso agendado.</p>
+               <div className="py-32 text-center border-4 border-dashed border-gray-50 dark:border-zinc-800 rounded-[3rem]">
+                  <Calendar className="w-20 h-20 mx-auto text-slate-100 mb-8" />
+                  <p className="text-slate-300 font-black uppercase text-xs tracking-[0.4em]">Sua agenda está livre hoje</p>
                </div>
             ) : items.map(item => (
-               <div key={item.id} className="flex flex-col md:flex-row md:items-center justify-between p-8 bg-gray-50/50 dark:bg-zinc-800/30 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 group transition-all hover:bg-white dark:hover:bg-zinc-800 cursor-pointer" onClick={() => { setEditingItem(item); setFormData(item); setIsModalOpen(true); }}>
-                  <div className="flex items-center gap-8">
-                     <div className="text-center bg-white dark:bg-zinc-950 p-5 rounded-3xl shadow-md min-w-[90px] border border-gray-50 dark:border-zinc-800">
-                        <p className="text-xs font-black text-emerald-600 uppercase mb-1 tracking-widest">{new Date(item.date).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</p>
-                        <p className="text-4xl font-black text-gray-900 dark:text-white leading-none">{new Date(item.date).getDate() + 1}</p>
+               <div key={item.id} className="flex flex-col md:flex-row md:items-center justify-between p-10 bg-gray-50/50 dark:bg-zinc-800/40 rounded-[3rem] border border-gray-100 dark:border-zinc-800 group transition-all hover:bg-white dark:hover:bg-zinc-800 cursor-pointer hover:shadow-2xl" onClick={() => { setEditingItem(item); setFormData(item); setIsModalOpen(true); }}>
+                  <div className="flex items-center gap-10">
+                     <div className="text-center bg-[#0F172A] p-6 rounded-[2rem] shadow-2xl min-w-[100px] border border-white/5">
+                        <p className="text-xs font-black text-[#F67C01] uppercase mb-2 tracking-[0.2em] italic">{new Date(item.date).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</p>
+                        <p className="text-5xl font-black text-white leading-none tracking-tighter">{new Date(item.date).getDate() + 1}</p>
                      </div>
-                     <div className="space-y-2">
-                        <h4 className="font-black text-gray-900 dark:text-white text-xl leading-tight">{item.title}</h4>
-                        <div className="flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                           <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {item.client}</span>
-                           <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {item.time}</span>
+                     <div className="space-y-3">
+                        <h4 className="font-black text-gray-900 dark:text-white text-2xl leading-tight tracking-tight uppercase italic">{item.title}</h4>
+                        <div className="flex items-center gap-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                           <span className="flex items-center gap-2 bg-white dark:bg-zinc-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-zinc-700 shadow-sm"><User className="w-4 h-4 text-brand-primary" /> {item.client}</span>
+                           <span className="flex items-center gap-2 bg-white dark:bg-zinc-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-zinc-700 shadow-sm"><Clock className="w-4 h-4 text-brand-primary" /> {item.time}</span>
                         </div>
                      </div>
                   </div>
-                  <div className="flex items-center gap-6 mt-6 md:mt-0">
-                    <span className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm ${item.type === 'visita' ? 'bg-purple-100 text-purple-700' : item.type === 'reuniao' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                       {item.type}
-                    </span>
-                    <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="p-4 text-gray-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all bg-white dark:bg-zinc-900 rounded-2xl shadow-sm"><Trash2 className="w-6 h-6" /></button>
-                  </div>
+                  <span className={`px-8 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.3em] shadow-lg ${item.type === 'visita' ? 'bg-purple-100 text-purple-700' : item.type === 'reuniao' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                     {item.type}
+                  </span>
                </div>
             ))}
          </div>
       </div>
-
-      {isModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
-                <div className="bg-emerald-900 p-8 text-white flex justify-between items-center">
-                    <h3 className="text-2xl font-black">{editingItem ? 'Editar Compromisso' : 'Agendar Novo Horário'}</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
-                </div>
-                <form onSubmit={handleSaveItem} className="p-10 space-y-6">
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Título do Compromisso</label>
-                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Consultoria com a Ana" />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Nome do Cliente</label>
-                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Data</label>
-                            <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Horário</label>
-                            <input required type="time" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Tipo de Compromisso</label>
-                        <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-2 focus:ring-emerald-100" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})}>
-                            <option value="servico">Execução de Serviço</option>
-                            <option value="visita">Visita Técnica</option>
-                            <option value="reuniao">Reunião Estratégica</option>
-                        </select>
-                    </div>
-                    <div className="flex gap-4">
-                        <button type="submit" disabled={isSaving} className="flex-1 bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
-                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CONFIRMAR AGENDAMENTO'}
-                        </button>
-                        {editingItem && <button type="button" onClick={() => deleteItem(editingItem.id)} className="p-5 bg-rose-50 text-rose-500 rounded-[1.5rem] hover:bg-rose-500 hover:text-white transition-all"><Trash2 className="w-6 h-6" /></button>}
-                    </div>
-                </form>
-            </div>
-         </div>
-      )}
     </div>
   );
 };

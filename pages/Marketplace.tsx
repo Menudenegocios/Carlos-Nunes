@@ -99,7 +99,7 @@ export const Marketplace: React.FC = () => {
            <ShoppingBag className="w-3 h-3" /> Ecossistema Local
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          O Shopping de <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-brand-primary dark:to-brand-accent">Oportunidades.</span>
+          O Shopping de <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">Oportunidades.</span>
         </h1>
         
         <div className="max-w-2xl mx-auto relative group">

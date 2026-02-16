@@ -94,7 +94,7 @@ export const Blog: React.FC = () => {
            <BookOpen className="w-3 h-3" /> Insights & Estratégias
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          Conhecimento que <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-brand-primary dark:to-brand-accent">faz seu negócio crescer.</span>
+          Conhecimento que <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">faz seu negócio crescer.</span>
         </h1>
         <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
           Aprenda marketing, gestão e tecnologia com quem entende do mercado local brasileiro.
