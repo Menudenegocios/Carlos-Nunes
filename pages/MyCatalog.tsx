@@ -11,7 +11,7 @@ import {
   DollarSign, Image as ImageIcon, Eye, ArrowLeft,
   QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
   Tag, Info, Target, Briefcase, Award, Globe, AlignLeft, HelpCircle, Home as HomeIcon,
-  Table as TableIcon, FileText, Download, Wand2, RefreshCw
+  Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -26,6 +26,7 @@ export const MyCatalog: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [newCatName, setNewCatName] = useState('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
     name: '', 
@@ -35,7 +36,9 @@ export const MyCatalog: React.FC = () => {
     storeCategoryId: '', 
     available: true,
     externalLink: '',
-    stock: 0
+    stock: 0,
+    pointsReward: 0,
+    isLocal: false
   });
 
   useEffect(() => { if (user) loadData(); }, [user]);
@@ -53,8 +56,7 @@ export const MyCatalog: React.FC = () => {
         setStoreCategories(cats);
         setProducts(prods || []);
         
-        if ((prods && prods.length > 0) || (cats && cats.length > 0)) {
-        } else {
+        if (!((prods && prods.length > 0) || (cats && cats.length > 0))) {
             setCurrentStep('home');
         }
     } finally { setIsLoading(false); }
@@ -100,7 +102,7 @@ export const MyCatalog: React.FC = () => {
     const newProd = await mockBackend.createProduct(productToSave);
     setProducts([...products, newProd]);
     setIsProductModalOpen(false);
-    setProductForm({ name: '', description: '', price: 0, category: 'Produtos', storeCategoryId: '', available: true, externalLink: '', stock: 0 });
+    setProductForm({ name: '', description: '', price: 0, category: 'Produtos', storeCategoryId: '', available: true, externalLink: '', stock: 0, pointsReward: 0, isLocal: false });
   };
 
   const enhanceWithAI = async () => {
@@ -190,6 +192,9 @@ export const MyCatalog: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <button onClick={() => setViewMode(viewMode === 'bulk' ? 'setup' : 'bulk')} className="flex items-center gap-2 bg-emerald-600 px-6 py-3 rounded-2xl font-bold text-white hover:bg-emerald-500 transition-all shadow-lg">
                     <TableIcon className="w-5 h-5" /> {viewMode === 'bulk' ? 'Sair Edição Rápida' : 'Edição Rápida'}
+                </button>
+                <button onClick={() => setIsQrModalOpen(true)} className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl font-bold text-white hover:bg-white/20 transition-all">
+                    <QrCode className="w-5 h-5" /> QR Code Loja
                 </button>
                 <button onClick={generatePDFCatalog} className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl font-bold text-white hover:bg-white/20 transition-all">
                     <FileText className="w-5 h-5" /> Catálogo PDF
@@ -289,9 +294,9 @@ export const MyCatalog: React.FC = () => {
                 description="Organize seus produtos e serviços em uma vitrine profissional. Receba pedidos organizados diretamente no seu WhatsApp e multiplique seus resultados."
                 benefits={[
                   "Cadastro ilimitado de produtos com fotos e descrições.",
-                  "Organização por categorias para facilitar a navegação.",
-                  "Edição rápida de preços e estoque em tempo real.",
-                  "Gerador de Catálogo em PDF para envio via WhatsApp.",
+                  "Gamificação: Dê pontos aos seus clientes a cada compra.",
+                  "Selo Hyper-local: Destaque sua produção regional.",
+                  "Gerador de QR Code personalizado para sua vitrine física.",
                   "Assistente de IA para criar descrições persuasivas."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
@@ -310,6 +315,10 @@ export const MyCatalog: React.FC = () => {
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nome do Negócio</label>
                                     <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-emerald-500/20 dark:text-white" value={profile.businessName || ''} onChange={e => handleProfileUpdate({ businessName: e.target.value })} placeholder="Ex: Doceria da Ana" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Seu Bairro (Para Selo Local)</label>
+                                    <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-emerald-500/20 dark:text-white" value={profile.neighborhood || ''} onChange={e => handleProfileUpdate({ neighborhood: e.target.value })} placeholder="Ex: Centro" />
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria Principal</label>
@@ -377,9 +386,17 @@ export const MyCatalog: React.FC = () => {
                                     <div className="aspect-square rounded-2xl bg-gray-100 dark:bg-zinc-800 mb-4 overflow-hidden relative">
                                        {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-zinc-700"><ImageIcon className="w-10 h-10" /></div>}
                                        <button className="absolute top-2 right-2 p-2 bg-white text-rose-500 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                                       {prod.pointsReward && prod.pointsReward > 0 && (
+                                         <div className="absolute bottom-2 left-2 bg-emerald-600 text-white text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
+                                            <Zap className="w-3 h-3 fill-current" /> +{prod.pointsReward} PTS
+                                         </div>
+                                       )}
                                     </div>
                                     <div className="px-2">
-                                       <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full uppercase mb-2 inline-block">{prod.category}</span>
+                                       <div className="flex items-center gap-2 mb-2">
+                                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full uppercase">{prod.category}</span>
+                                          {prod.isLocal && <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full uppercase">Selo Local</span>}
+                                       </div>
                                        <h4 className="font-black text-gray-900 dark:text-white truncate">{prod.name}</h4>
                                        <div className="flex justify-between items-end mt-1">
                                           <p className="text-emerald-600 font-black text-lg">R$ {prod.price.toFixed(2)}</p>
@@ -444,6 +461,31 @@ export const MyCatalog: React.FC = () => {
                                 )}
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleImageUpload(e, 'product')} />
                             </div>
+                            
+                            <div className="mt-8 p-6 bg-indigo-50 dark:bg-indigo-950/20 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/40 space-y-4">
+                                <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Gatilhos de Conversão</h4>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400">Selo Produção Local</label>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setProductForm({...productForm, isLocal: !productForm.isLocal})}
+                                        className={`w-12 h-6 rounded-full transition-all relative ${productForm.isLocal ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${productForm.isLocal ? 'left-7' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-amber-500" /> Pontos Clube ADS</label>
+                                    <input 
+                                        type="number" 
+                                        className="w-full bg-white dark:bg-zinc-800 border-none rounded-xl p-3 font-bold text-sm"
+                                        value={productForm.pointsReward}
+                                        onChange={e => setProductForm({...productForm, pointsReward: Number(e.target.value)})}
+                                        placeholder="Ex: 50"
+                                    />
+                                    <p className="text-[8px] font-bold text-gray-400 uppercase">O cliente ganha pontos ao comprar este item.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="lg:col-span-8 space-y-6">
@@ -471,6 +513,23 @@ export const MyCatalog: React.FC = () => {
              </div>
           </div>
        )}
+
+       {/* QR Code Modal */}
+       {isQrModalOpen && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-sm p-10 text-center shadow-2xl relative animate-[scale-in_0.3s_ease-out]">
+                <button onClick={() => setIsQrModalOpen(false)} className="absolute top-6 right-6 text-gray-400"><X className="w-6 h-6" /></button>
+                <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-3xl mb-6">
+                    <QrCode className="w-full h-auto text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 uppercase">QR Code da Loja</h3>
+                <p className="text-sm text-gray-500 mb-8">Imprima e coloque no seu balcão para os clientes acessarem seu catálogo digital.</p>
+                <button className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest text-[10px]">
+                    <Download className="w-4 h-4" /> Baixar Imagem
+                </button>
+            </div>
+         </div>
+       )}
     </div>
   );
 };
@@ -495,8 +554,14 @@ const StorePreview = ({ onBack, profile, products, storeCategories }: any) => (
                             <h3 className="text-xl font-black text-gray-900 dark:text-white mb-6 uppercase tracking-tight flex items-center gap-3"><span className="w-1.5 h-6 bg-emerald-600 rounded-full"></span> {cat.name}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 {products.filter((p: any) => p.storeCategoryId === cat.id).map((prod: any) => (
-                                    <div key={prod.id} className="bg-gray-50 dark:bg-zinc-900 rounded-[2rem] p-4 border border-gray-100 dark:border-zinc-800">
-                                        <div className="aspect-square bg-white dark:bg-zinc-800 rounded-2xl mb-4 overflow-hidden"><img src={prod.imageUrl} className="w-full h-full object-cover" /></div>
+                                    <div key={prod.id} className="bg-gray-50 dark:bg-zinc-900 rounded-[2rem] p-4 border border-gray-100 dark:border-zinc-800 group transition-all">
+                                        <div className="aspect-square bg-white dark:bg-zinc-800 rounded-2xl mb-4 overflow-hidden relative">
+                                            <img src={prod.imageUrl} className="w-full h-full object-cover" />
+                                            {prod.isLocal && <span className="absolute top-2 left-2 bg-indigo-600 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase">Local</span>}
+                                            {prod.pointsReward && (
+                                                <div className="absolute bottom-2 left-2 bg-emerald-600 text-white text-[8px] font-black px-2 py-1 rounded-full flex items-center gap-1"><Zap className="w-2.5 h-2.5 fill-current" /> +{prod.pointsReward}</div>
+                                            )}
+                                        </div>
                                         <div className="px-1">
                                             <h4 className="font-black text-gray-900 dark:text-white text-sm truncate">{prod.name}</h4>
                                             <p className="text-emerald-600 font-black mt-1">R$ {prod.price.toFixed(2)}</p>
