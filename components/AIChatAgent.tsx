@@ -9,7 +9,7 @@ export const AIChatAgent: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', content: string }[]>([
-    { role: 'model', content: 'Olá! Sou o **MenuIA**, seu guia no Menu de Negócios. Como posso ajudar seu negócio hoje? 🚀' }
+    { role: 'model', content: 'Olá! Sou o **Menu Flow**, seu guia no Menu de Negócios. Como posso ajudar seu negócio hoje? 🚀' }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +79,7 @@ export const AIChatAgent: React.FC = () => {
                 <Bot className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-black text-sm uppercase tracking-widest leading-none mb-1">Assistente MenuIA</h4>
+                <h4 className="font-black text-sm uppercase tracking-widest leading-none mb-1">Assistente Menu Flow</h4>
                 <div className="flex items-center gap-1.5">
                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
                    <span className="text-[10px] font-bold opacity-80 uppercase">Online Agora</span>

@@ -211,11 +211,10 @@ export const Community: React.FC = () => {
   );
 };
 
-// Properly type PostCard as a functional component to avoid issues with reserved 'key' prop in parent
-const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId?: number }> = ({ post, onLike, currentUserId }) => {
+const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId?: string }> = ({ post, onLike, currentUserId }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
-  const isLiked = currentUserId && post.likedBy.includes(currentUserId);
+  const isLiked = currentUserId && post.likedBy?.includes(currentUserId);
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-fade-in">
@@ -257,7 +256,6 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
              </div>
              <div className="flex gap-3">
                 {post.comments.length > 0 && <span>{post.comments.length} comentários</span>}
-                {/* <span>12 compartilhamentos</span> */}
              </div>
           </div>
        )}

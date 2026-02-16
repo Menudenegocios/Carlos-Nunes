@@ -1,4 +1,3 @@
-
 import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -142,6 +141,7 @@ export const mockBackend = {
   },
 
   updateProfile: async (userId: string, data: Partial<Profile>) => {
+    // Fix: Access data.storeConfig and data.bioConfig which match the Profile interface in types.ts
     const profileData = { 
       business_name: data.businessName, category: data.category, 
       phone: data.phone, address: data.address, city: data.city, 
@@ -158,22 +158,26 @@ export const mockBackend = {
 
   getProducts: async (userId: string) => {
     const data = await safeQuery(supabase.from('products').select('*').eq('user_id', userId), []);
-    return data.map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock }));
+    // Fix: Map button_type from DB to buttonType on Product interface
+    return data.map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock, buttonType: p.button_type }));
   },
 
   createProduct: async (product: Product) => {
+    // Fix: Use product.buttonType instead of product.button_type (Property 'button_type' does not exist on type 'Product')
     const insertData = {
       user_id: product.userId, store_category_id: product.storeCategoryId, name: product.name, description: product.description, price: product.price,
       promo_price: product.promoPrice, image_url: product.imageUrl, video_url: product.videoUrl, category: product.category, available: product.available,
-      variations: product.variations, button_type: product.buttonType, external_link: product.externalLink, stock: product.stock, points_reward: product.pointsReward, is_local: product.isLocal
+      variations: product.variations, button_type: product.buttonType || 'buy', external_link: product.externalLink, stock: product.stock, points_reward: product.pointsReward, is_local: product.isLocal
     };
     const { data } = await supabase.from('products').insert(insertData).select().single();
-    return { ...data, userId: data.user_id, imageUrl: data.image_url, videoUrl: data.video_url, stock: data.stock };
+    // Fix: Map returning fields to match the Product interface
+    return { ...data, userId: data.user_id, imageUrl: data.image_url, videoUrl: data.video_url, stock: data.stock, buttonType: data.button_type };
   },
 
   getAllProducts: async (): Promise<any[]> => {
     const { data } = await supabase.from('products').select('*, profiles(business_name, logo_url, phone, neighborhood, store_config)');
-    return (data || []).map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, businessName: p.profiles?.business_name || 'Loja Local', businessLogo: p.profiles?.logo_url, businessPhone: p.profiles?.phone, neighborhood: p.profiles?.neighborhood, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock }));
+    // Fix: Map button_type from DB to buttonType on Product interface
+    return (data || []).map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, businessName: p.profiles?.business_name || 'Loja Local', businessLogo: p.profiles?.logo_url, businessPhone: p.profiles?.phone, neighborhood: p.profiles?.neighborhood, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock, buttonType: p.button_type }));
   },
 
   getStoreCategories: async (userId: string) => {
@@ -248,7 +252,7 @@ export const mockBackend = {
     const postsWithComments = await Promise.all(posts.map(async post => {
       const { data: comments } = await supabase.from('community_comments').select('*').eq('post_id', post.id);
       return {
-        id: post.id, userId: post.user_id, userName: post.user_name, businessName: post.business_name, userAvatar: post.user_avatar, content: post.content, imageUrl: post.image_url, likes: post.likes, likedBy: post.liked_by || [],
+        id: post.id, userId: post.user_id, userName: post.user_name, businessName: post.business_name, userAvatar: post.user_avatar, content: post.content, imageUrl: post.image_url, likes: post.likes, liked_by: post.liked_by || [],
         comments: (comments || []).map((c: any) => ({ id: c.id, userId: c.user_id, userName: c.user_name, userAvatar: c.user_avatar, content: c.content, createdAt: c.created_at })),
         createdAt: post.created_at
       };
@@ -288,6 +292,25 @@ export const mockBackend = {
   getBlogPosts: async (): Promise<BlogPost[]> => {
     const data = await safeQuery(supabase.from('blog_posts').select('*'), []);
     return data.map((p: any) => ({ ...p, imageUrl: p.image_url, userId: p.user_id }));
+  },
+
+  createBlogPost: async (post: Partial<BlogPost>): Promise<BlogPost> => {
+    const { data, error } = await supabase.from('blog_posts').insert({
+      user_id: post.userId,
+      title: post.title,
+      summary: post.summary,
+      content: post.content,
+      author: post.author,
+      category: post.category,
+      image_url: post.imageUrl,
+      date: new Date().toLocaleDateString('pt-BR')
+    }).select().single();
+    if (error) throw error;
+    return { ...data, imageUrl: data.image_url, userId: data.user_id };
+  },
+
+  deleteBlogPost: async (id: string) => {
+    await supabase.from('blog_posts').delete().eq('id', id);
   },
 
   runExtractor: async (type: string, keyword: string): Promise<ExtractorResult[]> => {

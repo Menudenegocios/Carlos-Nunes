@@ -11,9 +11,10 @@ import {
   CheckCircle, ArrowRight, Camera, RefreshCw,
   User as UserIcon, AlignLeft, Type as FontIcon,
   Palette as ColorIcon, Sliders, Sparkles, HelpCircle, Home as HomeIcon,
-  MousePointer2, UserPlus, Quote
+  MousePointer2, UserPlus, Quote, Info, BookOpen, FileText, ChevronLeft,
+  Calendar, User, Upload
 } from 'lucide-react';
-import { BioLink, BioConfig, Profile, SocialProof } from '../types';
+import { BioLink, BioConfig, Profile, SocialProof, BlogPost } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 
 const FONTS = [
@@ -32,13 +33,27 @@ const PRESET_THEMES = [
 
 export const BioBuilder: React.FC = () => {
   const { user } = useAuth();
-  const [activeEditorTab, setActiveEditorTab] = useState<'home' | 'content' | 'social_proof' | 'design' | 'share'>('home');
+  const [activeEditorTab, setActiveEditorTab] = useState<'home' | 'content' | 'social_proof' | 'blog' | 'design' | 'share' | 'articles'>('home');
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [links, setLinks] = useState<BioLink[]>([]);
   const [socialProof, setSocialProof] = useState<SocialProof[]>([]);
+  const [blogEnabled, setBlogEnabled] = useState(false);
+  const [blogButtonLabel, setBlogButtonLabel] = useState('Nossos Artigos');
+  const [myArticles, setMyArticles] = useState<BlogPost[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingArticle, setIsSavingArticle] = useState(false);
   const [copied, setCopied] = useState(false);
   
+  // States para o Editor de Artigo
+  const [editingArticle, setEditingArticle] = useState<BlogPost | null>(null);
+  const [articleForm, setArticleForm] = useState<Partial<BlogPost>>({
+    title: '',
+    summary: '',
+    content: '',
+    category: 'Geral',
+    imageUrl: ''
+  });
+
   const [bgColor, setBgColor] = useState('#064e3b');
   const [btnColor, setBtnColor] = useState('#059669');
   const [textColor, setTextColor] = useState('#ffffff');
@@ -52,6 +67,7 @@ export const BioBuilder: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
     const data = await mockBackend.getProfile(user.id);
+    const articles = await mockBackend.getBlogPosts();
     if (data) {
       setProfile(data);
       setLinks(data.bioConfig?.links || [
@@ -59,6 +75,10 @@ export const BioBuilder: React.FC = () => {
         { id: '2', type: 'instagram', label: 'Siga no Instagram', url: '', active: true }
       ]);
       setSocialProof(data.bioConfig?.socialProof || []);
+      setBlogEnabled(data.bioConfig?.blogEnabled || false);
+      setBlogButtonLabel(data.bioConfig?.blogButtonLabel || 'Nossos Artigos');
+      setMyArticles(articles.filter(a => a.userId === user.id));
+
       if (data.bioConfig?.customColors) {
         setBgColor(data.bioConfig.customColors.background || '#064e3b');
         setBtnColor(data.bioConfig.customColors.button || '#059669');
@@ -84,6 +104,17 @@ export const BioBuilder: React.FC = () => {
     }
   };
 
+  const handleArticleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setArticleForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setIsSaving(true);
@@ -95,6 +126,8 @@ export const BioBuilder: React.FC = () => {
           fontFamily: fontFamily as any, 
           links,
           socialProof,
+          blogEnabled,
+          blogButtonLabel,
           meshGradient: useMeshGradient,
           floatingCTA: {
               enabled: ctaEnabled,
@@ -110,6 +143,48 @@ export const BioBuilder: React.FC = () => {
       });
       alert('Sua Bio Digital foi atualizada com sucesso!');
     } finally { setIsSaving(false); }
+  };
+
+  const handleSaveArticle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSavingArticle(true);
+    
+    try {
+        const articleData: Partial<BlogPost> = {
+            id: editingArticle?.id,
+            userId: user.id,
+            title: articleForm.title || '',
+            summary: articleForm.summary || '',
+            content: articleForm.content || '',
+            author: profile.businessName || user.name,
+            imageUrl: articleForm.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800',
+            category: articleForm.category || 'Geral'
+        };
+
+        const saved = await mockBackend.createBlogPost(articleData);
+        
+        if (editingArticle) {
+            setMyArticles(myArticles.map(a => a.id === editingArticle.id ? saved : a));
+        } else {
+            setMyArticles([saved, ...myArticles]);
+        }
+        
+        setEditingArticle(null);
+        setArticleForm({ title: '', summary: '', content: '', category: 'Geral', imageUrl: '' });
+        alert("Artigo publicado e conectado ao Blog principal!");
+    } catch (err) {
+        alert("Erro ao salvar artigo.");
+    } finally {
+        setIsSavingArticle(false);
+    }
+  };
+
+  const deleteArticle = async (id: string) => {
+      if (window.confirm("Deseja realmente remover este artigo do Blog?")) {
+          await mockBackend.deleteBlogPost(id);
+          setMyArticles(myArticles.filter(a => a.id !== id));
+      }
   };
 
   const addSocialProof = () => {
@@ -153,25 +228,28 @@ export const BioBuilder: React.FC = () => {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-400/10 rounded-full blur-[120px] pointer-events-none"></div>
       </div>
 
-      <div className="flex justify-center">
-        <div className="flex p-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-2xl max-w-fit mx-auto overflow-x-auto scrollbar-hide gap-1 md:gap-3">
-            {[
-                { id: 'home', label: 'INÍCIO', icon: HomeIcon },
-                { id: 'content', label: 'CONTEÚDO', icon: AlignLeft },
-                { id: 'social_proof', label: 'PROVA SOCIAL', icon: Quote },
-                { id: 'design', label: 'DESIGN', icon: Palette },
-                { id: 'share', label: 'ATIVAR', icon: Share2 }
-            ].map(tab => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveEditorTab(tab.id as any)} 
-                  className={`flex items-center justify-center gap-3 px-6 py-4 rounded-[1.8rem] font-black text-[10px] tracking-widest transition-all whitespace-nowrap ${activeEditorTab === tab.id ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
-                >
-                    <tab.icon className="w-4 h-4" /> <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-            ))}
+      {activeEditorTab !== 'articles' && (
+        <div className="flex justify-center">
+            <div className="flex p-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-2xl max-w-fit mx-auto overflow-x-auto scrollbar-hide gap-1 md:gap-3">
+                {[
+                    { id: 'home', label: 'INÍCIO', icon: HomeIcon },
+                    { id: 'content', label: 'CONTEÚDO', icon: AlignLeft },
+                    { id: 'social_proof', label: 'PROVA SOCIAL', icon: Quote },
+                    { id: 'blog', label: 'BLOG', icon: BookOpen },
+                    { id: 'design', label: 'DESIGN', icon: Palette },
+                    { id: 'share', label: 'ATIVAR', icon: Share2 }
+                ].map(tab => (
+                    <button 
+                    key={tab.id}
+                    onClick={() => setActiveEditorTab(tab.id as any)} 
+                    className={`flex items-center justify-center gap-3 px-6 py-4 rounded-[1.8rem] font-black text-[10px] tracking-widest transition-all whitespace-nowrap ${activeEditorTab === tab.id ? 'bg-emerald-600 text-white shadow-xl scale-105' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                    >
+                        <tab.icon className="w-4 h-4" /> <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                ))}
+            </div>
         </div>
-      </div>
+      )}
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
          {activeEditorTab === 'home' && (
@@ -182,8 +260,8 @@ export const BioBuilder: React.FC = () => {
                 benefits={[
                 "Design Mobile-First focado em alta performance.",
                 "Integração direta com seu catálogo de produtos.",
-                "Bloco de Prova Social para gerar autoridade.",
-                "Botão flutuante de agendamento ou contato direto.",
+                "Bloco de Prova Social para depoimentos.",
+                "Aba de Blog com artigos para gerar autoridade.",
                 "Personalização total de cores e fontes premium."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
@@ -257,47 +335,199 @@ export const BioBuilder: React.FC = () => {
                     )}
 
                     {activeEditorTab === 'social_proof' && (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-12 animate-fade-in">
+                            <section>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3"><Quote className="text-emerald-600" /> Prova Social (Texto)</h3>
+                                <p className="text-xs text-gray-400 font-bold mt-2 mb-6">Destaque depoimentos tradicionais dos seus clientes.</p>
+                                <div className="space-y-4">
+                                    {socialProof.map((sp, idx) => (
+                                        <div key={sp.id} className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] border border-gray-100 dark:border-zinc-700 space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex text-yellow-500">
+                                                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-current" />)}
+                                                </div>
+                                                <button onClick={() => setSocialProof(socialProof.filter(i => i.id !== sp.id))} className="text-gray-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                            <input 
+                                                className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-3 text-sm font-bold dark:text-white"
+                                                value={sp.author}
+                                                placeholder="Nome do Cliente"
+                                                onChange={e => {
+                                                    const newSp = [...socialProof];
+                                                    newSp[idx].author = e.target.value;
+                                                    setSocialProof(newSp);
+                                                }}
+                                            />
+                                            <textarea 
+                                                className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-3 text-xs font-medium dark:text-gray-400 resize-none"
+                                                rows={2}
+                                                value={sp.text}
+                                                placeholder="Depoimento do cliente..."
+                                                onChange={e => {
+                                                    const newSp = [...socialProof];
+                                                    newSp[idx].text = e.target.value;
+                                                    setSocialProof(newSp);
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                    <button onClick={addSocialProof} className="w-full py-6 border-2 border-dashed border-gray-200 dark:border-zinc-700 rounded-[2rem] text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all flex items-center justify-center gap-2">
+                                        <Plus className="w-5 h-5" /> Adicionar Avaliação
+                                    </button>
+                                </div>
+                            </section>
+                        </div>
+                    )}
+
+                    {activeEditorTab === 'blog' && (
                         <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-10 animate-fade-in">
-                            <div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3"><Quote className="text-emerald-600" /> Prova Social</h3>
-                                <p className="text-xs text-gray-400 font-bold mt-2 leading-relaxed">Destaque o que seus clientes dizem sobre você.</p>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                                        <BookOpen className="text-emerald-600" /> Aba Blog
+                                        <span className="bg-emerald-100 text-emerald-600 text-[8px] px-2 py-0.5 rounded-full">PRO</span>
+                                    </h3>
+                                    <p className="text-xs text-gray-400 font-bold mt-1">Gere autoridade com artigos na sua Bio.</p>
+                                </div>
+                                <button 
+                                    onClick={() => setBlogEnabled(!blogEnabled)}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${blogEnabled ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-zinc-700'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${blogEnabled ? 'left-7' : 'left-1'}`}></div>
+                                </button>
                             </div>
 
-                            <div className="space-y-4">
-                                {socialProof.map((sp, idx) => (
-                                    <div key={sp.id} className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] border border-gray-100 dark:border-zinc-700 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex text-yellow-500">
-                                                {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-current" />)}
-                                            </div>
-                                            <button onClick={() => setSocialProof(socialProof.filter(i => i.id !== sp.id))} className="text-gray-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                            {blogEnabled ? (
+                                <div className="space-y-8 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Texto do Botão de Acesso</label>
+                                            <input 
+                                                type="text" 
+                                                className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
+                                                value={blogButtonLabel} 
+                                                onChange={e => setBlogButtonLabel(e.target.value)} 
+                                                placeholder="Ex: Nossos Artigos" 
+                                            />
                                         </div>
-                                        <input 
-                                            className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-3 text-sm font-bold dark:text-white"
-                                            value={sp.author}
-                                            placeholder="Nome do Cliente"
-                                            onChange={e => {
-                                                const newSp = [...socialProof];
-                                                newSp[idx].author = e.target.value;
-                                                setSocialProof(newSp);
-                                            }}
-                                        />
-                                        <textarea 
-                                            className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-3 text-xs font-medium dark:text-gray-400 resize-none"
-                                            rows={2}
-                                            value={sp.text}
-                                            placeholder="Depoimento do cliente..."
-                                            onChange={e => {
-                                                const newSp = [...socialProof];
-                                                newSp[idx].text = e.target.value;
-                                                setSocialProof(newSp);
-                                            }}
-                                        />
+                                        <div className="flex items-center gap-6">
+                                            <button 
+                                                onClick={() => setActiveEditorTab('articles')}
+                                                className="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                                            >
+                                                <FileText className="w-4 h-4" /> Configurar Artigos
+                                            </button>
+                                            <p className="text-[10px] text-gray-400 font-bold max-w-[150px] leading-relaxed">Clique em Configurar Artigos para escrever seus textos.</p>
+                                        </div>
                                     </div>
-                                ))}
-                                <button onClick={addSocialProof} className="w-full py-6 border-2 border-dashed border-gray-200 dark:border-zinc-700 rounded-[2rem] text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all flex items-center justify-center gap-2">
-                                    <Plus className="w-5 h-5" /> Adicionar Avaliação
+                                    <div className="p-6 bg-emerald-50 dark:bg-emerald-950/20 rounded-[2rem] border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-4">
+                                        <Sparkles className="w-6 h-6 text-emerald-600" />
+                                        <p className="text-xs text-emerald-800 dark:text-emerald-200 font-medium">Artigos ajudam no seu SEO e passam confiança para quem visita sua Bio pela primeira vez.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 grayscale opacity-40">
+                                    <BookOpen className="w-16 h-16 text-gray-300" />
+                                    <h4 className="text-lg font-black text-gray-400 uppercase tracking-widest">Blog Desativado</h4>
+                                    <p className="text-xs text-gray-400 max-w-xs font-bold uppercase tracking-widest">Ative a chave acima para exibir seus artigos na Bio.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeEditorTab === 'articles' && (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-10 animate-fade-in">
+                            <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-6">
+                                <button onClick={() => setActiveEditorTab('blog')} className="flex items-center gap-2 text-gray-400 hover:text-emerald-600 font-black text-[10px] uppercase tracking-widest transition-all">
+                                    <ChevronLeft className="w-4 h-4" /> Voltar
                                 </button>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                                    <FileText className="text-emerald-600" /> Gerenciar Artigos
+                                </h3>
+                                <button 
+                                    onClick={() => { setEditingArticle(null); setArticleForm({ title: '', summary: '', content: '', category: 'Geral', imageUrl: '' }); }} 
+                                    className="bg-emerald-600 text-white p-2 rounded-xl hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-8">
+                                <form onSubmit={handleSaveArticle} className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título do Artigo</label>
+                                            <input required type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold dark:text-white" value={articleForm.title} onChange={e => setArticleForm({...articleForm, title: e.target.value})} placeholder="Ex: 5 Dicas para seu negócio" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label>
+                                            <select className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold dark:text-white" value={articleForm.category} onChange={e => setArticleForm({...articleForm, category: e.target.value})}>
+                                                <option>Estratégia</option>
+                                                <option>Dicas</option>
+                                                <option>Novidades</option>
+                                                <option>Promoções</option>
+                                                <option>Geral</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Imagem de Capa</label>
+                                        <div className="flex flex-col md:flex-row gap-6 items-center">
+                                            <div className="w-full md:w-48 aspect-video rounded-2xl bg-white dark:bg-zinc-900 border-2 border-dashed border-gray-200 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative group">
+                                                {articleForm.imageUrl ? (
+                                                    <img src={articleForm.imageUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Upload className="w-8 h-8 text-gray-300" />
+                                                )}
+                                                <label className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                                                    <span className="text-[9px] font-black uppercase">Fazer Upload</span>
+                                                    <input type="file" hidden onChange={handleArticleImageUpload} />
+                                                </label>
+                                            </div>
+                                            <p className="flex-1 text-[10px] text-gray-400 font-bold uppercase leading-relaxed">
+                                                Imagens horizontais (16:9) funcionam melhor para o layout do Blog principal. <br/>
+                                                Tamanho máximo sugerido: 2MB.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Resumo Curto (Chamada)</label>
+                                        <textarea rows={2} className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-medium text-sm dark:text-white resize-none" value={articleForm.summary} onChange={e => setArticleForm({...articleForm, summary: e.target.value})} placeholder="Escreva uma breve introdução..." />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1">Conteúdo Completo</label>
+                                        <textarea rows={6} className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-medium text-sm dark:text-white resize-none" value={articleForm.content} onChange={e => setArticleForm({...articleForm, content: e.target.value})} placeholder="Conte sua história ou dê sua dica técnica aqui..." />
+                                    </div>
+                                    <button type="submit" disabled={isSavingArticle} className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-emerald-700 transition-all uppercase tracking-widest text-[10px] flex items-center justify-center gap-2">
+                                        {isSavingArticle ? <RefreshCw className="animate-spin w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                                        {editingArticle ? 'ATUALIZAR NO SITE' : 'PUBLICAR NO SITE PRINCIPAL'}
+                                    </button>
+                                </form>
+
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Artigos Publicados</h4>
+                                    {myArticles.length === 0 ? (
+                                        <p className="text-center py-10 text-gray-300 text-sm font-bold uppercase tracking-widest">Nenhum artigo ainda.</p>
+                                    ) : myArticles.map(article => (
+                                        <div key={article.id} className="p-4 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl flex items-center justify-between hover:border-emerald-500/20 transition-all group">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
+                                                    <img src={article.imageUrl} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <h5 className="font-bold text-gray-900 dark:text-white text-sm">{article.title}</h5>
+                                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{article.date} • {article.category}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button onClick={() => { setEditingArticle(article); setArticleForm(article); }} className="p-2 text-gray-400 hover:text-emerald-600"><Edit2 className="w-4 h-4" /></button>
+                                                <button onClick={() => deleteArticle(article.id)} className="p-2 text-gray-400 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -413,6 +643,12 @@ export const BioBuilder: React.FC = () => {
                                 <p className="text-[11px] opacity-60 font-medium leading-relaxed mb-8">{profile.bio || 'Bem-vindo ao meu perfil!'}</p>
                                 
                                 <div className="w-full space-y-3 pb-6">
+                                    {blogEnabled && (
+                                        <div className="w-full py-4 px-6 rounded-[1.4rem] border border-emerald-500/30 font-black text-[10px] tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 bg-emerald-600/20 backdrop-blur-md mb-4 uppercase">
+                                            <BookOpen className="w-3.5 h-3.5" /> {blogButtonLabel}
+                                        </div>
+                                    )}
+
                                     {links.map(l => (
                                         <div key={l.id} className="w-full py-3.5 px-6 rounded-[1.4rem] border border-white/10 font-bold text-sm tracking-tight shadow-lg active:scale-95 transition-all" style={{ background: btnColor }}>
                                             {l.label}
@@ -449,3 +685,7 @@ export const BioBuilder: React.FC = () => {
     </div>
   );
 };
+
+const Edit2 = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+);

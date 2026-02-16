@@ -13,18 +13,20 @@ export const Blog: React.FC = () => {
   useEffect(() => {
     const loadPosts = async () => {
       const data = await mockBackend.getBlogPosts();
-      // Fixed: convert id to Number for numeric sort comparison
       setPosts(data.sort((a, b) => Number(b.id) - Number(a.id)));
       setLoading(false);
     };
     loadPosts();
   }, []);
 
-  const filteredPosts = posts.filter(post => 
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPosts = posts.filter(post => {
+    const term = searchTerm.toLowerCase();
+    return (
+      post.title?.toLowerCase().includes(term) ||
+      post.summary?.toLowerCase().includes(term) ||
+      post.category?.toLowerCase().includes(term)
+    );
+  });
 
   if (selectedPost) {
     return (
@@ -86,7 +88,7 @@ export const Blog: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-24 pb-32 pt-8 px-6">
       
-      {/* 1. HERO SECTION (PARTNERS STYLE) */}
+      {/* 1. HERO SECTION */}
       <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <BookOpen className="w-3 h-3" /> Insights & Estratégias
@@ -111,7 +113,7 @@ export const Blog: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. BLOG GRID (BENTO STYLE) */}
+      {/* 2. BLOG GRID */}
       <section className="space-y-12">
         <div className="flex items-center gap-4 px-4">
            <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
@@ -174,7 +176,7 @@ export const Blog: React.FC = () => {
         )}
       </section>
 
-      {/* 3. NEWSLETTER (PARTNERS STYLE) */}
+      {/* 3. NEWSLETTER */}
       <section className="bg-gray-900 rounded-[4rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
          <div className="relative z-10 space-y-8 max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-black tracking-tight">Insights VIP no seu WhatsApp.</h2>

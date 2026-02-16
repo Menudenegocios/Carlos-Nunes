@@ -133,17 +133,17 @@ export const Dashboard: React.FC = () => {
                   </div>
               </div>
            </div>
-           <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-600/5 rounded-full blur-[60px] pointer-events-none group-hover:bg-emerald-600/10 transition-all"></div>
+           <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none group-hover:bg-emerald-600/10 transition-all"></div>
         </div>
 
         {/* SMART ALERTS IA */}
         <div className="bg-gradient-to-br from-emerald-900 to-indigo-950 rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/5">
            <div className="relative z-10 space-y-6">
               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                 <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
                     <Bot className="w-6 h-6 text-emerald-400" />
                  </div>
-                 <h4 className="font-black tracking-tight text-sm uppercase">Dicas da MenuIA</h4>
+                 <h4 className="font-black tracking-tight text-sm uppercase">Dicas do Menu Flow</h4>
               </div>
               
               <div className="space-y-4">
@@ -245,7 +245,7 @@ export const Dashboard: React.FC = () => {
                 <div className="relative z-10">
                    <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-3">
-                         <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Zap className="w-6 h-6 text-emerald-400 fill-current" /></div>
+                         <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20"><Zap className="w-6 h-6 text-emerald-400 fill-current" /></div>
                          <h4 className="font-black tracking-tight text-base uppercase">Clube ADS</h4>
                       </div>
                       <span className="text-[9px] font-black text-emerald-400 bg-white/5 px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/5">{user.level}</span>
@@ -295,7 +295,7 @@ export const Dashboard: React.FC = () => {
 };
 
 const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId?: string }> = ({ post, onLike, currentUserId }) => {
-  const isLiked = currentUserId && post.likedBy.includes(currentUserId);
+  const isLiked = currentUserId && post.likedBy?.includes(currentUserId);
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300">
        <div className="p-6 flex justify-between items-start">

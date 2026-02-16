@@ -86,6 +86,8 @@ export interface BioConfig {
     type: 'whatsapp' | 'catalog';
   };
   socialProof?: SocialProof[];
+  blogEnabled?: boolean;
+  blogButtonLabel?: string;
 }
 
 export interface StoreConfig {

@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const SYSTEM_INSTRUCTION = `
-Você é o 'MenuIA', o assistente virtual oficial da plataforma Menu de Negócios.
+Você é o 'Menu Flow', o assistente virtual oficial da plataforma Menu de Negócios.
 Sua missão é ajudar empreendedores locais, freelancers e profissionais a entenderem como usar a plataforma para crescer.
 
 REGRAS DE OURO:

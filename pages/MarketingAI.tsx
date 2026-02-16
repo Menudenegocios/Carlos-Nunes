@@ -55,7 +55,7 @@ export const MarketingAI: React.FC = () => {
     if (!imageResult) return;
     const link = document.createElement('a');
     link.href = imageResult;
-    link.download = `menu-ia-creative-${Date.now()}.png`;
+    link.download = `menu-flow-studio-${Date.now()}.png`;
     link.click();
   };
 
@@ -70,7 +70,7 @@ export const MarketingAI: React.FC = () => {
                  <Wand2 className="h-10 w-10 text-emerald-300" />
               </div>
               <div>
-                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-1">Studio IA</h1>
+                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-1">Studio Menu Flow</h1>
                  <p className="text-emerald-200 text-lg font-medium opacity-80 uppercase tracking-widest text-xs">Criação de alta performance para seu bairro.</p>
               </div>
             </div>
@@ -98,8 +98,8 @@ export const MarketingAI: React.FC = () => {
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
          {activeTab === 'home' && (
             <SectionLanding 
-                title="Sua Própria Agência de Marketing com IA."
-                subtitle="Studio Creative Pro"
+                title="Sua Própria Agência de Marketing com o Menu Flow."
+                subtitle="Menu Flow Creative Studio"
                 description="Produza conteúdos que param o feed. Use a potência do Gemini para criar textos persuasivos e fotos de produtos cinematográficas em segundos."
                 benefits={[
                 "Geração de Copys focadas em vendas locais.",
@@ -171,7 +171,7 @@ export const MarketingAI: React.FC = () => {
                 <div className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-8 animate-fade-in">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl flex items-center justify-center text-emerald-600"><ImageIcon className="w-6 h-6" /></div>
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Image Generator</h3>
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Menu Flow Image</h3>
                     </div>
 
                     <form onSubmit={handleGenerateImage} className="space-y-6">
@@ -206,7 +206,7 @@ export const MarketingAI: React.FC = () => {
                     {imageResult ? (
                         <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl animate-fade-in space-y-8">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Resultado StudioIA</h3>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Resultado Menu Flow</h3>
                                 <div className="flex gap-2">
                                     <button onClick={downloadImage} className="p-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 shadow-lg transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
                                         <Download className="w-4 h-4" /> Baixar
@@ -230,7 +230,7 @@ export const MarketingAI: React.FC = () => {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">IA está processando sua arte...</h4>
+                                <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">O Menu Flow está processando sua arte...</h4>
                                 <p className="text-gray-500 dark:text-zinc-400 mt-2 font-medium">Isso pode levar alguns segundos dependendo da complexidade.</p>
                             </div>
                         </div>
