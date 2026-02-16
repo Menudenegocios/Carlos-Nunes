@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // CRÍTICO: Garante que o app funcione em qualquer subdiretório ou domínio temp
+  base: './', // Garante que assets carreguem mesmo em subdiretórios ou domínios temporários
   build: {
     outDir: 'dist',
     emptyOutDir: true,

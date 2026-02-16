@@ -3,10 +3,10 @@
   RewriteEngine On
   RewriteBase /
   
-  # Se o arquivo existir, sirva-o
+  # Se o arquivo solicitado existir (ex: imagem, js, css), serve ele
   RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
   
-  # Caso contrário, redirecione tudo para index.html
+  # Para qualquer outra coisa, serve o index.html (SPA)
   RewriteRule ^ index.html [L]
 </IfModule>
