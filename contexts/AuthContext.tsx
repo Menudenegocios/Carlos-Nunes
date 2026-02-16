@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, PropsWithChildren } from 'react';
 import { User } from '../types';
 import { supabase } from '../services/supabaseClient';
@@ -9,7 +8,6 @@ interface AuthContextType {
   loginAsDemo: () => void;
   register: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
-  /* Fix: Added refreshProfile to expose user profile fetching */
   refreshProfile: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -18,12 +16,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// IDs em formato UUID real para evitar erro de sintaxe 22P02 no Supabase
+const DEMO_USER_ID = 'de30de30-0000-4000-a000-000000000000';
+const CARLOS_BATIDA_ID = 'c0a80101-0000-4000-a000-000000000000';
+
 export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
+    // Se for um dos nossos IDs de teste, não tenta buscar no banco real para evitar erros
+    if (userId === DEMO_USER_ID || userId === CARLOS_BATIDA_ID) {
+        setIsLoading(false);
+        return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -47,16 +55,15 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0
         });
       } else {
-        // Fallback para usuário recém criado ou erro de banco
         setUser({
           id: userId,
-          name: 'Usuário (Demo)',
+          name: 'Novo Usuário',
           email: '',
-          plan: 'negocios',
-          points: 1250,
-          level: 'prata',
-          referralCode: 'DEMO123',
-          referralsCount: 5
+          plan: 'profissionais',
+          points: 0,
+          level: 'bronze',
+          referralCode: 'MEMBER' + userId.slice(0, 4),
+          referralsCount: 0
         });
       }
     } catch (error: any) {
@@ -69,11 +76,9 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     }
   };
 
-  /* Fix: Implementation of refreshProfile */
   const refreshProfile = async () => {
     if (user) {
-      // Se for usuário demo, não tenta buscar no supabase
-      if (user.id.includes('demo') || user.id.includes('carlos')) return;
+      if (user.id === DEMO_USER_ID || user.id === CARLOS_BATIDA_ID) return;
       await fetchUserProfile(user.id);
     } else {
       const { data: { session } } = await supabase.auth.getSession();
@@ -98,7 +103,6 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         console.error("Auth initialization error:", e);
         if (e.message === 'Failed to fetch') {
           setNetworkError(true);
-          // Se falhar rede, tenta restaurar demo do localStorage
           const savedDemo = localStorage.getItem('menu_demo_user');
           if (savedDemo) setUser(JSON.parse(savedDemo));
         }
@@ -108,7 +112,6 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
     initSession();
 
-    // Listener de mudança de estado com tratamento de erro
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
         if (session) {
@@ -126,10 +129,9 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   }, []);
 
   const login = async (email: string, pass: string) => {
-    // Hardcoded credentials for Carlos Batida as requested
     if (email.toLowerCase() === 'carlosbatida@gmail.com' && pass === '12345678') {
       const carlos: User = {
-        id: 'carlos-batida-id',
+        id: CARLOS_BATIDA_ID,
         name: 'Carlos Batida',
         email: 'carlosbatida@gmail.com',
         plan: 'negocios',
@@ -159,7 +161,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const loginAsDemo = () => {
     const demoUser: User = {
-      id: 'demo-user-id',
+      id: DEMO_USER_ID,
       name: 'Empreendedor Demo',
       email: 'demo@menu.com',
       plan: 'negocios',

@@ -23,10 +23,11 @@
             colors: {
               brand: {
                 primary: '#F67C01',
-                secondary: '#C6C2B3',
+                secondary: '#94A3B8',
                 accent: '#F9D230',
-                surface: '#F5F5DB',
-                contrast: '#000000'
+                surface: '#F8FAFC',
+                dark: '#0F172A',
+                contrast: '#1E293B'
               }
             },
             fontFamily: {
@@ -45,19 +46,19 @@
     <style>
       body { 
         font-family: 'Raleway', sans-serif; 
-        background-color: #F5F5DB;
-        color: #000000;
+        background-color: #F8FAFC;
+        color: #1E293B;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
       .glass-card {
-        background: rgba(245, 245, 219, 0.8);
+        background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid #C6C2B3;
+        border: 1px solid rgba(148, 163, 184, 0.2);
       }
       .dark .glass-card {
-        background: rgba(0, 0, 0, 0.9);
-        border: 1px solid rgba(198, 194, 179, 0.2);
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -83,7 +84,7 @@
 }
 </script>
   </head>
-  <body class="bg-brand-surface dark:bg-black text-brand-contrast dark:text-brand-surface antialiased">
+  <body class="bg-brand-surface dark:bg-brand-dark text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
     
     <!-- Carregamos um .js virtual que o Node servirá como o conteúdo do .tsx -->

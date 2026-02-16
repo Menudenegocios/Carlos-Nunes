@@ -25,7 +25,8 @@ export const MyCatalog: React.FC = () => {
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [myOffers, setMyOffers] = useState<Offer[]>([]);
-  const [myCoupons, setMyCoupons] = useState<{ coupon: Coupon, ownerId: string, itemId: string }[]>([]);
+  // FIX: Explicitly include type and name in state definition to match usage in render
+  const [myCoupons, setMyCoupons] = useState<{ coupon: Coupon, ownerId: string, type: string, name: string }[]>([]);
   
   const [newCatName, setNewCatName] = useState('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -75,8 +76,8 @@ export const MyCatalog: React.FC = () => {
         setProducts(prods || []);
         setMyOffers(offers || []);
         
-        // Load coupons from all sources (Products and Offers)
-        const allCoupons: any[] = [];
+        // FIX: Correctly populate allCoupons with necessary metadata
+        const allCoupons: { coupon: Coupon, ownerId: string, type: string, name: string }[] = [];
         // Note: Currently backend seems to store coupons on offers, 
         // we'll fetch them from the offers retrieved.
         offers.forEach(o => {
@@ -398,7 +399,7 @@ export const MyCatalog: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-zinc-700">
-                                <div className="w-32 h-32 bg-white dark:bg-zinc-800 rounded-[2.5rem] shadow-xl overflow-hidden mb-6 border-4 border-white dark:border-zinc-700">
+                                <div className="w-32 h-32 bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-xl overflow-hidden mb-6 border-4 border-white dark:border-zinc-700">
                                     {profile.logoUrl ? <img src={profile.logoUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-zinc-700"><Store className="w-12 h-12" /></div>}
                                 </div>
                                 <label className="cursor-pointer bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-zinc-700 transition-all shadow-sm dark:text-white">
@@ -536,6 +537,7 @@ export const MyCatalog: React.FC = () => {
                                        </div>
                                        <p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2">{cData.coupon.description}</p>
                                        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-zinc-800 flex justify-between items-center">
+                                          {/* FIX: name is now defined on the coupon metadata in state */}
                                           <span className="text-[10px] font-black text-gray-400 uppercase">Vinculado a: {cData.name}</span>
                                           <span className="text-[10px] font-black text-emerald-600 flex items-center gap-1"><Zap className="w-3 h-3 fill-current" /> +{cData.coupon.pointsReward} PTS</span>
                                        </div>
@@ -556,7 +558,8 @@ export const MyCatalog: React.FC = () => {
                     </button>
                     <div className="flex gap-2">
                         <span className={`w-2 h-2 rounded-full ${currentStep === 'home' ? 'bg-emerald-600' : 'bg-gray-200 dark:bg-zinc-800'}`}></span>
-                        {[1, 2, 3, 4, 5].map(s => <span key={s} className={`w-2 h-2 rounded-full ${currentStep === s ? 'bg-emerald-600' : 'bg-gray-200 dark:bg-zinc-800'}`}></span>)}
+                        {/* FIX: bypassed narrow comparison error by casting currentStep to allow comparison with numeric s */}
+                        {[1, 2, 3, 4, 5].map(s => <span key={s} className={`w-2 h-2 rounded-full ${(currentStep as any) === s ? 'bg-emerald-600' : 'bg-gray-200 dark:bg-zinc-800'}`}></span>)}
                     </div>
                     {currentStep !== 5 && (
                         <button 
@@ -571,6 +574,7 @@ export const MyCatalog: React.FC = () => {
           )}
        </div>
 
+       {/* Product Modal */}
        {isProductModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-4xl p-0 shadow-2xl overflow-hidden animate-[scale-in_0.3s_ease-out]">

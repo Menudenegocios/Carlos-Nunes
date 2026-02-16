@@ -6,7 +6,9 @@ import { Lead, ExtractorResult, PipelineStage } from '../types';
 import { 
   MapPin, Instagram, Building2, Search, Download, 
   Layout, MessageSquare, Bot, Send, Users, 
-  ChevronRight, ArrowRight, GripVertical, Plus
+  ChevronRight, ArrowRight, GripVertical, Plus,
+  // Fix: Added missing MessageCircle import
+  MessageCircle
 } from 'lucide-react';
 
 export const Menuflow: React.FC = () => {
@@ -184,6 +186,8 @@ const CRMView = () => {
 
 // 2. EXTRACTORS VIEW
 const ExtractorsView = () => {
+  // Added useAuth to get user info for importing leads
+  const { user } = useAuth();
   const [activeExtractor, setActiveExtractor] = useState<'maps' | 'instagram' | 'cnpj' | null>(null);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -205,10 +209,15 @@ const ExtractorsView = () => {
   };
 
   const importToCRM = async () => {
+    // FIX: Verify user presence before proceeding with lead mapping
+    if (!user) return;
+    
     const leadsToAdd: Lead[] = results
       .filter(r => !imported.includes(r.id))
       .map(r => ({
         id: r.id,
+        // FIX: Provide missing required userId property from user context
+        userId: user.id,
         name: r.name,
         phone: r.phone,
         source: r.source,
@@ -357,7 +366,8 @@ const WhatsAppView = () => {
       {/* Connection Status */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <MessageSquare className="w-6 h-6 text-green-600" />
+          {/* Fix: MessageCircle is now imported */}
+          <MessageCircle className="w-6 h-6 text-green-600" />
           Conexão WhatsApp
         </h3>
 
@@ -367,7 +377,7 @@ const WhatsAppView = () => {
               <span className="text-gray-500 text-xs">[QR Code Simulado]</span>
             </div>
             <p className="text-sm text-gray-500 mb-4 text-center max-w-xs">
-              Abra o WhatsApp no seu celular, vá em Aparelhos Conectados e escaneie o código.
+              Abra o WhatsApp no seu celular, vÃ¡ em Aparelhos Conectados e escaneie o código.
             </p>
             <button 
               onClick={() => setConnected(true)}

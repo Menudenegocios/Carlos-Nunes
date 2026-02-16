@@ -2,7 +2,11 @@
 import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer } from '../types';
 import { supabase } from './supabaseClient';
 
-const isDemoUser = (userId: string) => userId.includes('demo') || userId.includes('carlos');
+const isDemoUser = (userId: string) => 
+  userId === 'de30de30-0000-4000-a000-000000000000' || 
+  userId === 'c0a80101-0000-4000-a000-000000000000' ||
+  userId.includes('demo') || 
+  userId.includes('carlos');
 
 // Helper para salvar localmente em caso de falha ou modo demo
 const localStore = {
@@ -19,6 +23,10 @@ const safeQuery = async <T>(query: Promise<{data: T | null, error: any}>, fallba
   try {
     const { data, error } = await query;
     if (error) {
+      // Ignora erro de tabela não encontrada e retorna o fallback silenciosamente
+      if (error.code === 'PGRST204' || error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+        return fallback;
+      }
       console.error("Supabase Error:", error);
       return fallback;
     }
@@ -73,7 +81,7 @@ export const mockBackend = {
 
   updateLead: async (id: string, data: Partial<Lead>): Promise<void> => {
     const userId = data.userId || '';
-    if (isDemoUser(userId)) {
+    if (userId && isDemoUser(userId)) {
       const current = localStore.get('leads', userId) || [];
       localStore.save('leads', userId, current.map((l: any) => l.id === id ? { ...l, ...data } : l));
       return;
@@ -192,14 +200,15 @@ export const mockBackend = {
 
   // --- PERFIL ---
   getProfile: async (userId: string): Promise<Profile | null> => {
-    // Tenta primeiro no Supabase
-    const { data } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    if (isDemoUser(userId)) {
+      return localStore.get('profile', userId);
+    }
+
+    // Tenta no Supabase apenas para usuários reais (UUID válidos)
+    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
     
-    if (!data) {
-      // Se não encontrar no banco, tenta no local storage
-      const local = localStore.get('profile', userId);
-      if (local) return local;
-      return null;
+    if (error || !data) {
+      return localStore.get('profile', userId);
     }
 
     return { 
@@ -219,7 +228,6 @@ export const mockBackend = {
       social_links: data.socialLinks, store_config: data.storeConfig, bio_config: data.bioConfig 
     };
 
-    // Salva localmente sempre como backup imediato
     localStore.save('profile', userId, { ...data, userId });
 
     if (!isDemoUser(userId)) {
@@ -234,11 +242,20 @@ export const mockBackend = {
   },
 
   getProducts: async (userId: string) => {
+    if (isDemoUser(userId)) return localStore.get('products', userId) || [];
+
     const data = await safeQuery(supabase.from('products').select('*').eq('user_id', userId), []);
     return data.map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock, buttonType: p.button_type }));
   },
 
   createProduct: async (product: Product) => {
+    if (isDemoUser(product.userId)) {
+        const current = localStore.get('products', product.userId) || [];
+        const next = [...current, { ...product, id: Math.random().toString() }];
+        localStore.save('products', product.userId, next);
+        return { ...product, id: Math.random().toString() };
+    }
+
     const insertData = {
       user_id: product.userId, store_category_id: product.storeCategoryId, name: product.name, description: product.description, price: product.price,
       promo_price: product.promoPrice, image_url: product.imageUrl, video_url: product.videoUrl, category: product.category, available: product.available,
@@ -257,23 +274,38 @@ export const mockBackend = {
   },
 
   getStoreCategories: async (userId: string) => {
+    if (isDemoUser(userId)) return localStore.get('categories', userId) || [];
     const data = await safeQuery(supabase.from('store_categories').select('*').eq('user_id', userId).order('order', { ascending: true }), []);
     return data.map((c: any) => ({ ...c, userId: c.user_id }));
   },
 
   createStoreCategory: async (userId: string, name: string) => {
+    if (isDemoUser(userId)) {
+        const current = localStore.get('categories', userId) || [];
+        const next = [...current, { id: Math.random().toString(), user_id: userId, name, order: 0 }];
+        localStore.save('categories', userId, next);
+        return { id: Math.random().toString(), userId, name, order: 0 };
+    }
     const { data } = await supabase.from('store_categories').insert({ user_id: userId, name, order: 0 }).select().single();
     return { ...data, userId: data?.user_id || userId };
   },
 
   deleteStoreCategory: async (id: string, userId: string) => {
+    if (isDemoUser(userId)) {
+        const current = localStore.get('categories', userId) || [];
+        localStore.save('categories', userId, current.filter((c: any) => c.id !== id));
+        return;
+    }
     await supabase.from('store_categories').delete().eq('id', id).eq('user_id', userId);
   },
 
   getOffers: async (filters?: any) => {
     let query = supabase.from('offers').select('*');
     if (filters?.category) query = query.eq('category', filters.category);
-    if (filters?.userId) query = query.eq('user_id', filters.userId);
+    if (filters?.userId) {
+        if (isDemoUser(filters.userId)) return localStore.get('offers', filters.userId) || [];
+        query = query.eq('user_id', filters.userId);
+    }
     const { data } = await query;
     return (data || []).map((o: any) => ({ id: o.id, userId: o.user_id, title: o.title, description: o.description, category: o.category, city: o.city, price: o.price, createdAt: o.created_at, imageUrl: o.image_url, videoUrl: o.video_url, logoUrl: o.logo_url, socialLinks: o.social_links, coupons: o.coupons, scheduling: o.scheduling }));
   },
@@ -283,6 +315,13 @@ export const mockBackend = {
   },
 
   createOffer: async (userId: string, offer: any): Promise<Offer> => {
+    if (isDemoUser(userId)) {
+        const current = localStore.get('offers', userId) || [];
+        const next = [...current, { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() }];
+        localStore.save('offers', userId, next);
+        return { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() };
+    }
+
     const insertData = {
       user_id: userId, title: offer.title, description: offer.description, category: offer.category,
       city: offer.city, price: offer.price, image_url: offer.imageUrl, video_url: offer.videoUrl,
@@ -297,6 +336,13 @@ export const mockBackend = {
   },
 
   updateOffer: async (userId: string, offerId: string, offer: any): Promise<Offer> => {
+    if (isDemoUser(userId)) {
+        const current = localStore.get('offers', userId) || [];
+        const next = current.map((o: any) => o.id === offerId ? { ...o, ...offer } : o);
+        localStore.save('offers', userId, next);
+        return { ...offer, id: offerId, userId };
+    }
+
     const updateData = {
       title: offer.title, description: offer.description, category: offer.category,
       city: offer.city, price: offer.price, image_url: offer.imageUrl, video_url: offer.videoUrl,
@@ -310,10 +356,17 @@ export const mockBackend = {
   },
 
   deleteOffer: async (id: string, userId: string): Promise<void> => {
+    if (isDemoUser(userId)) {
+        const current = localStore.get('offers', userId) || [];
+        localStore.save('offers', userId, current.filter((o: any) => o.id !== id));
+        return;
+    }
     await supabase.from('offers').delete().eq('id', id).eq('user_id', userId);
   },
 
   addPoints: async (userId: string, action: string, points: number, category: PointsTransaction['category']): Promise<void> => {
+    if (isDemoUser(userId)) return;
+
     const { data: profile } = await supabase.from('profiles').select('points').eq('user_id', userId).single();
     const currentPoints = profile?.points || 0;
     const newPoints = currentPoints + points;
@@ -322,6 +375,7 @@ export const mockBackend = {
   },
 
   getPointsHistory: async (userId: string): Promise<PointsTransaction[]> => {
+    if (isDemoUser(userId)) return [];
     const data = await safeQuery(supabase.from('points_history').select('*').eq('user_id', userId).order('created_at', { ascending: false }), []);
     return data.map((t: any) => ({ id: t.id, userId: t.user_id, action: t.action, points: t.points, createdAt: t.created_at, category: t.category }));
   },
@@ -330,7 +384,7 @@ export const mockBackend = {
     const { data: posts } = await supabase.from('community_posts').select('*').order('created_at', { ascending: false });
     if (!posts) return [];
     const postsWithComments = await Promise.all(posts.map(async post => {
-      const { data: comments } = await supabase.from('community_comments').select('*').eq('post_id', post.id);
+      const { data: comments } = await safeQuery(supabase.from('community_comments').select('*').eq('post_id', post.id), { data: [] });
       return {
         id: post.id, userId: post.user_id, userName: post.user_name, businessName: post.business_name, userAvatar: post.user_avatar, content: post.content, imageUrl: post.image_url, likes: post.likes, likedBy: post.liked_by || [],
         comments: (comments || []).map((c: any) => ({ id: c.id, userId: c.user_id, userName: c.user_name, userAvatar: c.user_avatar, content: c.content, createdAt: c.created_at })),
@@ -375,18 +429,24 @@ export const mockBackend = {
   },
 
   createBlogPost: async (post: Partial<BlogPost>): Promise<BlogPost> => {
-    const { data, error } = await supabase.from('blog_posts').insert({
-      user_id: post.userId,
-      title: post.title,
-      summary: post.summary,
-      content: post.content,
-      author: post.author,
-      category: post.category,
-      image_url: post.imageUrl,
-      date: new Date().toLocaleDateString('pt-BR')
-    }).select().single();
+    const insertData = {
+        user_id: post.userId,
+        title: post.title,
+        summary: post.summary,
+        content: post.content,
+        author: post.author,
+        category: post.category,
+        image_url: post.imageUrl,
+        date: new Date().toLocaleDateString('pt-BR')
+    };
+
+    const { data, error } = await supabase.from('blog_posts').insert(insertData).select().single();
     if (error || !data) {
-        return { ...post, id: Math.random().toString(), date: new Date().toLocaleDateString('pt-BR') } as BlogPost;
+        // Fallback local se a tabela não existir ou erro
+        const local = localStore.get('blog', post.userId || 'global') || [];
+        const newPost = { ...post, id: Math.random().toString(), date: new Date().toLocaleDateString('pt-BR') } as BlogPost;
+        localStore.save('blog', post.userId || 'global', [...local, newPost]);
+        return newPost;
     }
     return { ...data, imageUrl: data.image_url, userId: data.user_id };
   },
@@ -404,6 +464,7 @@ export const mockBackend = {
   },
 
   upgradePlan: async (userId: string, plan: string) => {
+    if (isDemoUser(userId)) return plan;
     await supabase.from('profiles').update({ plan }).eq('user_id', userId);
     return plan;
   },
@@ -422,6 +483,7 @@ export const mockBackend = {
     await mockBackend.addPoints(userId, `Resgate de Cupom: ${couponId}`, points, 'engajamento');
   },
   deleteCoupon: async (userId: string, offerId: string, couponId: string) => {
+    if (isDemoUser(userId)) return;
     const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).eq('user_id', userId).single();
     if (offer) {
       const coupons = (offer.coupons || []).filter((c: any) => c.id !== couponId);
@@ -429,6 +491,7 @@ export const mockBackend = {
     }
   },
   updateCoupon: async (userId: string, offerId: string, couponId: string, data: any) => {
+    if (isDemoUser(userId)) return;
     const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).eq('user_id', userId).single();
     if (offer) {
       const coupons = (offer.coupons || []).map((c: any) => c.id === couponId ? { ...c, ...data } : c);
@@ -436,6 +499,7 @@ export const mockBackend = {
     }
   },
   addCoupon: async (userId: string, offerId: string, data: any) => {
+    if (isDemoUser(userId)) return;
     const { data: offer } = await supabase.from('offers').select('coupons').eq('id', offerId).eq('user_id', userId).single();
     const currentCoupons = offer?.coupons || [];
     const newCoupons = [...currentCoupons, { ...data, id: Date.now().toString() }];

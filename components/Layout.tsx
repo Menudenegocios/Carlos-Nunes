@@ -26,8 +26,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-surface dark:bg-black transition-colors duration-300">
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-black/80 backdrop-blur-md border-b border-brand-secondary/30 shadow-sm transition-colors">
+    <div className="min-h-screen flex flex-col bg-brand-surface dark:bg-brand-dark transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-brand-dark/80 backdrop-blur-md border-b border-brand-secondary/20 shadow-sm transition-colors">
         <div className="max-w-[1600px] mx-auto px-8 flex justify-between items-center h-24">
           <Link to="/" className="group flex-shrink-0">
             <Logo size="sm" />
@@ -52,14 +52,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="hidden xl:flex items-center gap-6">
             <button 
               onClick={toggleTheme}
-              className="p-2.5 rounded-2xl bg-white dark:bg-zinc-900 text-brand-primary border border-brand-secondary/30 hover:scale-110 transition-all"
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 text-brand-primary border border-brand-secondary/20 hover:scale-110 transition-all"
               title="Alternar Tema"
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
 
             {user ? (
-              <div className="flex items-center gap-4 p-2 pr-4 rounded-full border bg-white dark:bg-zinc-900 border-brand-secondary/30 transition-all">
+              <div className="flex items-center gap-4 p-2 pr-4 rounded-full border bg-white dark:bg-slate-800 border-brand-secondary/20 transition-all">
                 <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-white text-sm font-black">
                   {user.name.charAt(0)}
                 </Link>
@@ -68,7 +68,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <Link to="/register" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-contrast dark:bg-brand-primary text-white hover:opacity-90 transition-all">
+                <Link to="/register" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-dark dark:bg-brand-primary text-white hover:opacity-90 transition-all">
                   Anunciar Grátis
                 </Link>
               </div>
@@ -88,7 +88,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {children}
       </main>
 
-      <footer className="bg-brand-contrast text-brand-surface pt-24 pb-12 overflow-hidden relative">
+      <footer className="bg-brand-dark text-brand-surface pt-24 pb-12 overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div className="col-span-1 md:col-span-1 space-y-6">
@@ -121,7 +121,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <div className="space-y-8">
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary">Comece Hoje</h4>
-              <Link to="/register" className="group flex items-center justify-between bg-brand-surface text-brand-contrast p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-primary hover:text-white">
+              <Link to="/register" className="group flex items-center justify-between bg-brand-surface text-brand-dark p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-primary hover:text-white">
                 CADASTRAR NEGÓCIO
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -142,8 +142,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[200] xl:hidden">
-          <div className="absolute inset-0 bg-brand-contrast/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-brand-surface dark:bg-zinc-900 p-8 flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-brand-surface dark:bg-slate-900 p-8 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-12">
                <Logo size="sm" />
                <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-10 h-10 text-brand-secondary" /></button>
@@ -155,7 +155,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   to={item.path} 
                   onClick={() => setIsMobileMenuOpen(false)} 
                   className={`text-2xl font-black border-b border-brand-secondary/20 pb-3 ${
-                    isActive(item.path) ? 'text-brand-primary' : 'text-brand-contrast dark:text-brand-surface'
+                    isActive(item.path) ? 'text-brand-primary' : 'text-brand-dark dark:text-brand-surface'
                   }`}
                 >
                   {item.label}
@@ -163,11 +163,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                ))}
             </nav>
             <div className="mt-auto pt-8 flex flex-col gap-4">
-               <button onClick={toggleTheme} className="flex items-center gap-3 p-5 bg-white dark:bg-zinc-800 rounded-3xl font-black dark:text-brand-surface shadow-sm">
+               <button onClick={toggleTheme} className="flex items-center gap-3 p-5 bg-white dark:bg-slate-800 rounded-3xl font-black dark:text-brand-surface shadow-sm">
                   {theme === 'light' ? <><Moon className="w-6 h-6" /> Modo Escuro</> : <><Sun className="w-6 h-6 text-brand-accent" /> Modo Claro</>}
                </button>
                {!user ? (
-                 <Link to="/register" className="w-full bg-brand-contrast dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Anunciar Grátis</Link>
+                 <Link to="/register" className="w-full bg-brand-dark dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Anunciar Grátis</Link>
                ) : (
                  <Link to="/dashboard" className="w-full bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
                )}
