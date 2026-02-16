@@ -158,7 +158,7 @@ export const mockBackend = {
 
   getProducts: async (userId: string) => {
     const data = await safeQuery(supabase.from('products').select('*').eq('user_id', userId), []);
-    return data.map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id, pointsReward: p.points_reward, isLocal: p.is_local }));
+    return data.map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, promoPrice: p.promo_price, storeCategoryId: p.store_category_id, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock }));
   },
 
   createProduct: async (product: Product) => {
@@ -168,12 +168,12 @@ export const mockBackend = {
       variations: product.variations, button_type: product.buttonType, external_link: product.externalLink, stock: product.stock, points_reward: product.pointsReward, is_local: product.isLocal
     };
     const { data } = await supabase.from('products').insert(insertData).select().single();
-    return { ...data, userId: data.user_id, imageUrl: data.image_url };
+    return { ...data, userId: data.user_id, imageUrl: data.image_url, videoUrl: data.video_url, stock: data.stock };
   },
 
   getAllProducts: async (): Promise<any[]> => {
-    const { data } = await supabase.from('products').select('*, profiles(business_name, logo_url, phone, neighborhood)');
-    return (data || []).map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, businessName: p.profiles?.business_name || 'Loja Local', businessLogo: p.profiles?.logo_url, businessPhone: p.profiles?.phone, neighborhood: p.profiles?.neighborhood, pointsReward: p.points_reward, isLocal: p.is_local }));
+    const { data } = await supabase.from('products').select('*, profiles(business_name, logo_url, phone, neighborhood, store_config)');
+    return (data || []).map((p: any) => ({ ...p, userId: p.user_id, imageUrl: p.image_url, videoUrl: p.video_url, businessName: p.profiles?.business_name || 'Loja Local', businessLogo: p.profiles?.logo_url, businessPhone: p.profiles?.phone, neighborhood: p.profiles?.neighborhood, pointsReward: p.points_reward, isLocal: p.is_local, stock: p.stock }));
   },
 
   getStoreCategories: async (userId: string) => {
@@ -280,7 +280,7 @@ export const mockBackend = {
 
   createB2BOffer: async (offer: any): Promise<B2BOffer> => {
     const { data } = await supabase.from('b2b_offers').insert({
-      user_id: offer.userId, business_name: offer.businessName, business_logo: offer.businessLogo, title: offer.title, description: offer.description, discount: offer.discount, category: offer.category, terms: offer.terms, created_at: Date.now()
+      user_id: offer.userId, business_name: offer.businessName, business_logo: offer.business_logo, title: offer.title, description: offer.description, discount: offer.discount, category: offer.category, terms: offer.terms, created_at: Date.now()
     }).select().single();
     return { ...data, id: data.id, userId: data.user_id };
   },

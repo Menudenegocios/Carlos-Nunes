@@ -11,7 +11,7 @@ import {
   DollarSign, Image as ImageIcon, Eye, ArrowLeft,
   QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
   Tag, Info, Target, Briefcase, Award, Globe, AlignLeft, HelpCircle, Home as HomeIcon,
-  Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap
+  Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap, Video, BarChart
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -36,6 +36,7 @@ export const MyCatalog: React.FC = () => {
     storeCategoryId: '', 
     available: true,
     externalLink: '',
+    videoUrl: '',
     stock: 0,
     pointsReward: 0,
     isLocal: false
@@ -102,7 +103,7 @@ export const MyCatalog: React.FC = () => {
     const newProd = await mockBackend.createProduct(productToSave);
     setProducts([...products, newProd]);
     setIsProductModalOpen(false);
-    setProductForm({ name: '', description: '', price: 0, category: 'Produtos', storeCategoryId: '', available: true, externalLink: '', stock: 0, pointsReward: 0, isLocal: false });
+    setProductForm({ name: '', description: '', price: 0, category: 'Produtos', storeCategoryId: '', available: true, videoUrl: '', externalLink: '', stock: 0, pointsReward: 0, isLocal: false });
   };
 
   const enhanceWithAI = async () => {
@@ -294,10 +295,10 @@ export const MyCatalog: React.FC = () => {
                 description="Organize seus produtos e serviços em uma vitrine profissional. Receba pedidos organizados diretamente no seu WhatsApp e multiplique seus resultados."
                 benefits={[
                   "Cadastro ilimitado de produtos com fotos e descrições.",
-                  "Gamificação: Dê pontos aos seus clientes a cada compra.",
-                  "Selo Hyper-local: Destaque sua produção regional.",
+                  "Vídeos viciantes: Cole links de Reels ou YouTube nos produtos.",
+                  "Controle de Estoque: Evite vender o que não tem em mãos.",
                   "Gerador de QR Code personalizado para sua vitrine física.",
-                  "Assistente de IA para criar descrições persuasivas."
+                  "Pixels de Marketing: Integre Google e Facebook para trackear vendas."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
                 ctaLabel="CADASTRAR MEUS PRODUTOS"
@@ -345,12 +346,33 @@ export const MyCatalog: React.FC = () => {
                          <div className="space-y-12 animate-fade-in">
                             <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2"><Settings className="text-emerald-600" /> Configurações de Operação</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                               <div className="p-8 bg-emerald-50 dark:bg-emerald-950/20 rounded-[2.5rem] border border-emerald-100 dark:border-emerald-900/40 flex flex-col items-center text-center">
+                               <div className="p-8 bg-white dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center">
                                   <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/60 rounded-2xl flex items-center justify-center text-emerald-600 mb-4"><Clock className="w-7 h-7" /></div>
                                   <h4 className="font-black text-emerald-950 dark:text-emerald-100 mb-2 uppercase tracking-widest text-xs">Agendamento Online</h4>
-                                  <button onClick={() => handleProfileUpdate({ storeConfig: { ...profile.storeConfig, schedulingEnabled: !profile.storeConfig?.schedulingEnabled } })} className={`px-8 py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all ${profile.storeConfig?.schedulingEnabled ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-800 text-emerald-600 border border-emerald-100'}`}>
+                                  <button onClick={() => handleProfileUpdate({ storeConfig: { ...profile.storeConfig, schedulingEnabled: !profile.storeConfig?.schedulingEnabled } })} className={`px-8 py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all ${profile.storeConfig?.schedulingEnabled ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-900 text-emerald-600 border border-emerald-100'}`}>
                                      {profile.storeConfig?.schedulingEnabled ? 'ATIVADO' : 'DESATIVADO'}
                                   </button>
+                               </div>
+
+                               <div className="p-8 bg-white dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center space-y-4">
+                                  <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/60 rounded-2xl flex items-center justify-center text-indigo-600 mb-4"><BarChart className="w-7 h-7" /></div>
+                                  <h4 className="font-black text-gray-900 dark:text-white mb-2 uppercase tracking-widest text-xs">Pixels de Rastreamento</h4>
+                                  <div className="w-full space-y-3">
+                                    <input 
+                                      type="text" 
+                                      placeholder="ID Google Analytics (GA4)" 
+                                      className="w-full bg-gray-50 dark:bg-zinc-900 border-none rounded-xl p-3 text-xs font-bold"
+                                      value={profile.storeConfig?.gaId || ''}
+                                      onChange={(e) => handleProfileUpdate({ storeConfig: { ...profile.storeConfig, gaId: e.target.value } })}
+                                    />
+                                    <input 
+                                      type="text" 
+                                      placeholder="ID Meta Pixel (Facebook)" 
+                                      className="w-full bg-gray-50 dark:bg-zinc-900 border-none rounded-xl p-3 text-xs font-bold"
+                                      value={profile.storeConfig?.pixelId || ''}
+                                      onChange={(e) => handleProfileUpdate({ storeConfig: { ...profile.storeConfig, pixelId: e.target.value } })}
+                                    />
+                                  </div>
                                </div>
                             </div>
                          </div>
@@ -386,6 +408,11 @@ export const MyCatalog: React.FC = () => {
                                     <div className="aspect-square rounded-2xl bg-gray-100 dark:bg-zinc-800 mb-4 overflow-hidden relative">
                                        {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-zinc-700"><ImageIcon className="w-10 h-10" /></div>}
                                        <button className="absolute top-2 right-2 p-2 bg-white text-rose-500 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                                       {prod.videoUrl && (
+                                         <div className="absolute top-2 left-2 bg-white/90 p-1.5 rounded-lg shadow text-indigo-600">
+                                           <Video className="w-4 h-4" />
+                                         </div>
+                                       )}
                                        {prod.pointsReward && prod.pointsReward > 0 && (
                                          <div className="absolute bottom-2 left-2 bg-emerald-600 text-white text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
                                             <Zap className="w-3 h-3 fill-current" /> +{prod.pointsReward} PTS
@@ -499,6 +526,16 @@ export const MyCatalog: React.FC = () => {
                                 <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} placeholder="Preço R$" />
                                 <input type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} placeholder="Estoque" />
                             </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 px-1 flex items-center gap-2"><Video className="w-3.5 h-3.5" /> Link de Vídeo (Reels, YouTube ou Vimeo)</label>
+                                <input 
+                                  type="url" 
+                                  className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" 
+                                  value={productForm.videoUrl} 
+                                  onChange={e => setProductForm({...productForm, videoUrl: e.target.value})} 
+                                  placeholder="https://www.youtube.com/watch?v=... ou https://www.instagram.com/reels/..." 
+                                />
+                            </div>
                             <select required className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
                                 <option value="">Selecione uma categoria...</option>
                                 {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -517,7 +554,7 @@ export const MyCatalog: React.FC = () => {
        {/* QR Code Modal */}
        {isQrModalOpen && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-sm p-10 text-center shadow-2xl relative animate-[scale-in_0.3s_ease-out]">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-sm p-10 text-center shadow-2xl relative animate-[scale-in_0.3s_ease-out]">
                 <button onClick={() => setIsQrModalOpen(false)} className="absolute top-6 right-6 text-gray-400"><X className="w-6 h-6" /></button>
                 <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-3xl mb-6">
                     <QrCode className="w-full h-auto text-emerald-600" />

@@ -96,6 +96,8 @@ export interface StoreConfig {
   salesType?: 'product' | 'service' | 'both';
   aiChatEnabled?: boolean;
   schedulingEnabled?: boolean;
+  gaId?: string;
+  pixelId?: string;
   paymentMethods?: {
     pix: {
       enabled: boolean;

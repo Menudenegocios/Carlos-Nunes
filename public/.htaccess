@@ -1,12 +1,11 @@
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
   
-  # Se o arquivo solicitado existir (ex: imagem, js, css), serve ele
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteRule ^ - [L]
+  # Se o arquivo ou diretório solicitado não existir fisicamente
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   
-  # Para qualquer outra coisa, serve o index.html (SPA)
-  RewriteRule ^ index.html [L]
+  # Redireciona tudo para o index.html
+  RewriteRule ^ index.html [QSA,L]
 </IfModule>
