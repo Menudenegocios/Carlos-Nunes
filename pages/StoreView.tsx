@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory, Coupon } from '../types';
+import { Product, Profile, StoreCategory } from '../types';
 import { 
   MapPin, Clock, CreditCard, MessageCircle, Instagram, Globe, 
   Search, ShoppingCart, Star, Share2, ArrowLeft, Image as ImageIcon,
-  CheckCircle, Store, X, Phone, Plus, Zap, Ticket
+  CheckCircle, Store, X, Phone, Plus
 } from 'lucide-react';
 
 export const StoreView: React.FC = () => {
@@ -14,7 +14,6 @@ export const StoreView: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [activeCat, setActiveCat] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -24,20 +23,16 @@ export const StoreView: React.FC = () => {
   }, [userId]);
 
   const loadStoreData = async () => {
+    // Fixed: userId is already a string, no need for Number() conversion
     if (!userId) return;
     try {
       const prof = await mockBackend.getProfile(userId);
       const prods = await mockBackend.getProducts(userId);
       const cats = await mockBackend.getStoreCategories(userId);
-      const myOffers = await mockBackend.getMyOffers(userId);
-      
-      const allCoupons: Coupon[] = [];
-      myOffers.forEach(o => { if(o.coupons) allCoupons.push(...o.coupons); });
       
       setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
-      setCoupons(allCoupons);
     } finally {
       setLoading(false);
     }
@@ -101,7 +96,7 @@ export const StoreView: React.FC = () => {
                 <div className="text-white flex-1">
                     <h1 className="text-3xl md:text-5xl font-black mb-2 shadow-sm">{profile.businessName}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-200">
-                        <span className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full"><MapPin className="w-4 h-4" /> {profile.neighborhood || profile.city || 'Brasil'}</span>
+                        <span className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full"><MapPin className="w-4 h-4" /> {profile.city || 'Brasil'}</span>
                         <span className="flex items-center gap-1 bg-white/20 backdrop-blur px-3 py-1 rounded-full"><Star className="w-4 h-4 text-yellow-400 fill-current" /> 5.0 (Novo)</span>
                         {profile.storeConfig?.openingHours && (
                             <span className="flex items-center gap-1 bg-green-500/20 backdrop-blur px-3 py-1 rounded-full text-green-300 border border-green-500/30">Aberto Agora</span>
@@ -116,24 +111,6 @@ export const StoreView: React.FC = () => {
                 
                 {/* SIDEBAR INFO */}
                 <div className="lg:col-span-4 xl:col-span-3 space-y-6">
-                    {/* Cupons da Loja */}
-                    {coupons.length > 0 && (
-                        <div className="bg-gradient-to-br from-pink-600 to-rose-600 rounded-3xl p-6 text-white shadow-xl">
-                            <h3 className="font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2"><Ticket className="w-4 h-4" /> Cupons de Hoje</h3>
-                            <div className="space-y-3">
-                                {coupons.map(c => (
-                                    <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-center">
-                                        <p className="text-2xl font-black">{c.discount}</p>
-                                        <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-2">{c.title}</p>
-                                        <div className="bg-white text-rose-600 font-mono font-bold text-sm py-1 rounded-lg select-all">
-                                            {c.code}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     <div className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 border border-gray-100">
                         <h3 className="font-bold text-gray-900 text-lg mb-4">Sobre</h3>
                         <p className="text-gray-600 text-sm leading-relaxed mb-6">
@@ -224,22 +201,7 @@ export const StoreView: React.FC = () => {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon className="w-10 h-10" /></div>
                                     )}
-                                    {prod.promoPrice && <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">OFERTA</span>}
-                                    
-                                    {/* Selo Local */}
-                                    {prod.isLocal && (
-                                        <div className="absolute top-3 left-3 bg-indigo-600 text-white text-[9px] font-black px-2.5 py-1 rounded-lg border border-white/20 shadow-lg backdrop-blur-md">
-                                            PRODUZIDO EM {profile.neighborhood?.toUpperCase() || 'BAIRRO'}
-                                        </div>
-                                    )}
-
-                                    {/* Cashback Badge */}
-                                    {prod.pointsReward && prod.pointsReward > 0 && (
-                                        <div className="absolute bottom-3 left-3 bg-emerald-600 text-white text-[9px] font-black px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-lg border border-white/20">
-                                            <Zap className="w-3 h-3 fill-current" /> GANHE +{prod.pointsReward} PTS
-                                        </div>
-                                    )}
-
+                                    {prod.promoPrice && <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">OFERTA</span>}
                                     <button className="absolute bottom-3 right-3 bg-white text-gray-900 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
                                         <Plus className="w-5 h-5" />
                                     </button>
@@ -288,11 +250,6 @@ export const StoreView: React.FC = () => {
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon className="w-16 h-16" /></div>
                         )}
-                        {selectedProduct.isLocal && (
-                            <div className="absolute top-6 left-6 bg-indigo-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-2xl border border-white/20">
-                                SELO HYPER-LOCAL: PRODUZIDO EM {profile.neighborhood?.toUpperCase() || 'ESTE BAIRRO'}
-                            </div>
-                        )}
                     </div>
 
                     <div className="w-full md:w-1/2 p-8 flex flex-col overflow-y-auto">
@@ -318,16 +275,6 @@ export const StoreView: React.FC = () => {
                         </p>
 
                         <div className="mt-auto space-y-4">
-                            {selectedProduct.pointsReward && selectedProduct.pointsReward > 0 && (
-                                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] font-black text-emerald-600 uppercase">Cashback de Pontos</p>
-                                        <p className="text-sm font-bold text-emerald-800">Ganhe {selectedProduct.pointsReward} pontos no Clube</p>
-                                    </div>
-                                    <Zap className="w-6 h-6 text-emerald-500 fill-current" />
-                                </div>
-                            )}
-
                             <button 
                                 onClick={() => handleBuyWhatsApp(selectedProduct)}
                                 className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-600/20"

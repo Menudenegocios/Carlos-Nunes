@@ -209,8 +209,6 @@ export interface Product {
   buttonType?: 'buy' | 'quote';
   externalLink?: string;
   stock?: number;
-  pointsReward?: number;
-  isLocal?: boolean;
 }
 
 export interface BlogPost {

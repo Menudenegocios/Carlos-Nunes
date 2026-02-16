@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
-import { Check, User, Briefcase, Store, Zap, Shield, Crown, CheckCircle, Mic, Video, Award } from 'lucide-react';
+// Add CheckCircle to lucide-react imports
+import { Check, User, Briefcase, Store, Zap, Shield, Target, Crown, Sparkles, TrendingUp, Mic, Video, Award, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Plans: React.FC = () => {
@@ -29,8 +30,7 @@ export const Plans: React.FC = () => {
     type, 
     title,
     subtitle,
-    pixPrice, 
-    installments,
+    price, 
     oldPrice,
     features, 
     recommended = false, 
@@ -43,9 +43,8 @@ export const Plans: React.FC = () => {
     type: string, 
     title: string,
     subtitle: string,
-    pixPrice: string, 
-    installments: string,
-    oldPrice: string,
+    price: string, 
+    oldPrice?: string,
     features: (string | React.ReactNode)[], 
     recommended?: boolean, 
     icon: any,
@@ -70,14 +69,13 @@ export const Plans: React.FC = () => {
       </div>
       
       <div className="mb-10 flex flex-col">
-         <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>
+         {oldPrice && (
+            <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>
+         )}
          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black tracking-tighter">{installments}</span>
+            <span className="text-4xl font-black tracking-tighter">R$ {price}</span>
             <span className={`text-xs font-black uppercase tracking-widest ${recommended ? 'text-gray-500' : 'text-gray-400'}`}>/{period}</span>
          </div>
-         <p className={`mt-2 text-sm font-bold ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
-            ou R$ {pixPrice} no Pix
-         </p>
       </div>
 
       <ul className="flex-1 space-y-5 mb-10">
@@ -115,7 +113,7 @@ export const Plans: React.FC = () => {
           Escale sua presença <br/><span className="text-brand-primary">no bairro.</span>
         </h1>
         <p className="text-xl text-gray-500 dark:text-zinc-400 leading-relaxed font-medium max-w-2xl mx-auto">
-          Escolha o nível de visibilidade e as ferramentas que seu negócio precisa para dominar a região com o melhor custo-benefício.
+          Escolha o nível de visibilidade e as ferramentas que seu negócio precisa para dominar a região.
         </p>
       </div>
 
@@ -127,9 +125,8 @@ export const Plans: React.FC = () => {
           type="ESSENCIAL PARA COMEÇAR"
           title="Plano Básico"
           subtitle="Ideal para profissionais liberais que precisam de uma bio profissional e acesso à rede."
-          oldPrice="697"
-          pixPrice="297"
-          installments="12x R$ 29,90"
+          oldPrice="497"
+          price="297"
           period="semestral"
           planKey="profissionais"
           icon={User}
@@ -149,9 +146,8 @@ export const Plans: React.FC = () => {
           type="ALTA PERFORMANCE"
           title="Plano PRO"
           subtitle="Acelere suas vendas com catálogo completo, CRM e destaque prioritário."
-          oldPrice="897"
-          pixPrice="497"
-          installments="12x R$ 49,90"
+          oldPrice="697"
+          price="497"
           period="semestral"
           planKey="freelancers"
           recommended={true}
@@ -174,10 +170,9 @@ export const Plans: React.FC = () => {
           type="DOMINAÇÃO TOTAL"
           title="Plano Business"
           subtitle="Consultoria estratégica e produção de conteúdo de elite para sua marca."
-          oldPrice="2.997"
-          pixPrice="1.497"
-          installments="12x R$ 149,90"
-          period="semestral"
+          oldPrice="2.500"
+          price="1.500"
+          period="anual"
           planKey="negocios"
           icon={Store}
           color="text-emerald-500"
@@ -199,6 +194,7 @@ export const Plans: React.FC = () => {
                <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Por que investir no <br/><span className="text-brand-primary">Menu ADS?</span></h2>
                <div className="space-y-6">
                   <div className="flex gap-6 items-start">
+                     {/* Fix: Added CheckCircle component which was previously not imported */}
                      <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 flex-shrink-0 shadow-sm"><CheckCircle className="w-7 h-7" /></div>
                      <div>
                         <h4 className="font-black text-gray-900 dark:text-white text-lg">Retorno sobre Visibilidade</h4>
