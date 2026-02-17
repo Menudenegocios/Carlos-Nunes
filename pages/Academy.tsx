@@ -7,7 +7,6 @@ import {
   Video, Map, Sparkles, Target,
   Monitor, Layers, Zap, Bot, Home as HomeIcon,
   PlayCircle, RefreshCw, ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp,
-  // Added Smartphone to fixes "Cannot find name 'Smartphone'" error on line 183
   ChevronRight, Clock, Users, BookOpen, MessageSquare, Smartphone
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
@@ -42,9 +41,42 @@ const MOCK_COURSES: Course[] = [
 ];
 
 const AI_AGENTS: AIAgent[] = [
-  { id: 'sales-script', name: 'Script de Vendas', role: 'Copywriting Comercial', description: 'IA especializada em criar roteiros persuasivos e quebrar objeções de clientes difíceis.', icon: ListChecks, color: 'text-emerald-600 bg-emerald-50', url: '#' },
-  { id: 'follow-up', name: 'Follow-up Expert', role: 'Recuperação de Leads', description: 'Estratégias automatizadas para não deixar nenhuma venda esfriar no seu funil de atendimento.', icon: Repeat, color: 'text-indigo-600 bg-indigo-50', url: '#' },
-  { id: 'pitch-master', name: 'Pitch Master', role: 'Apresentação de Impacto', description: 'Refine sua fala comercial para convencer parceiros e clientes em poucos segundos.', icon: Rocket, color: 'text-purple-600 bg-purple-50', url: '#' }
+  { 
+    id: 'sales-script', 
+    name: 'Script de Vendas', 
+    role: 'Copywriting Comercial', 
+    description: 'IA especializada em criar roteiros persuasivos e quebrar objeções de clientes difíceis no WhatsApp e reuniões.', 
+    icon: ListChecks, 
+    color: 'text-emerald-600 bg-emerald-50', 
+    url: 'https://chatgpt.com/g/g-68459990b2088191b098ebd25fd61558-agente-script-de-ventas/c/6941761e-c880-8332-b27c-3914bfc4e20f' 
+  },
+  { 
+    id: 'follow-up', 
+    name: 'Follow-up Expert', 
+    role: 'Recuperação de Leads', 
+    description: 'Estratégias automatizadas para não deixar nenhuma venda esfriar no seu funil de atendimento regional.', 
+    icon: Repeat, 
+    color: 'text-indigo-600 bg-indigo-50', 
+    url: 'https://chatgpt.com/g/g-67674b9476688191b428941096db4464-agente-follow-up' 
+  },
+  { 
+    id: 'pitch-master', 
+    name: 'Pitch Master', 
+    role: 'Apresentação de Impacto', 
+    description: 'Refine sua fala comercial e sua autoridade para convencer parceiros e clientes em poucos segundos.', 
+    icon: Rocket, 
+    color: 'text-purple-600 bg-purple-50', 
+    url: 'https://chatgpt.com/g/g-676761e39bc08191868b0d801dae75e9-pitchmaster' 
+  },
+  { 
+    id: 'vendas-pro', 
+    name: 'Vendas Mais Pro', 
+    role: 'Alta Performance', 
+    description: 'Consultoria de elite para escala de vendas e fechamento agressivo focado em resultados rápidos.', 
+    icon: Zap, 
+    color: 'text-orange-600 bg-orange-50', 
+    url: 'https://chatgpt.com/g/g-67676238cdc88191a20b8bc0a15240f1-venda-mais-pro' 
+  }
 ];
 
 export const Academy: React.FC = () => {
@@ -81,7 +113,6 @@ export const Academy: React.FC = () => {
             </div>
           </div>
 
-          {/* Abas Padronizadas - Alinhadas à Esquerda na Linha Inferior */}
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
@@ -220,9 +251,9 @@ export const Academy: React.FC = () => {
                  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                  {AI_AGENTS.map(agent => (
-                    <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
+                    <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
                        <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                           <agent.icon className="w-10 h-10" />
                        </div>
@@ -230,14 +261,16 @@ export const Academy: React.FC = () => {
                           <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{agent.role}</p>
                           <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{agent.name}</h3>
                        </div>
-                       <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
+                       <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
                           {agent.description}
                        </p>
                        <a 
                         href={agent.url} 
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
                        >
-                          SAIBA MAIS <ExternalLink className="w-3.5 h-3.5" />
+                          ABRIR AGENTE <ExternalLink className="w-3.5 h-3.5" />
                        </a>
                     </div>
                  ))}

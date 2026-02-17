@@ -12,7 +12,7 @@ import {
   User as UserIcon, AlignLeft, Type as FontIcon,
   Palette as ColorIcon, Sliders, Sparkles, HelpCircle, Home as HomeIcon,
   MousePointer2, UserPlus, Quote, Info, BookOpen, FileText, ChevronLeft,
-  Calendar, User, Upload, Edit2, Zap, MoreHorizontal, X
+  Calendar, User, Upload, Edit2, Zap, MoreHorizontal, X, Send
 } from 'lucide-react';
 import { BioLink, BioConfig, Profile, SocialProof, BlogPost } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
@@ -40,6 +40,7 @@ export const BioBuilder: React.FC = () => {
   const [socialProof, setSocialProof] = useState<SocialProof[]>([]);
   const [blogEnabled, setBlogEnabled] = useState(false);
   const [blogButtonLabel, setBlogButtonLabel] = useState('Nossos Artigos');
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -49,14 +50,22 @@ export const BioBuilder: React.FC = () => {
   const [fontFamily, setFontFamily] = useState('font-sans');
   const [useMeshGradient, setUseMeshGradient] = useState(false);
   const [ctaEnabled, setCtaEnabled] = useState(false);
+  const [qrCodeEnabled, setQrCodeEnabled] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Falar no WhatsApp');
+  
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [newPost, setNewPost] = useState({ title: '', summary: '', content: '', category: 'Dicas' });
 
   useEffect(() => { if (user) loadData(); }, [user]);
 
   const loadData = async () => {
     if (!user) return;
     try {
-        const data = await mockBackend.getProfile(user.id);
+        const [data, posts] = await Promise.all([
+          mockBackend.getProfile(user.id),
+          mockBackend.getBlogPosts() // Simplificado para demo, filtrar por userId em real
+        ]);
+        
         if (data) {
           setProfile(data);
           setLinks(data.bioConfig?.links || [
@@ -66,6 +75,7 @@ export const BioBuilder: React.FC = () => {
           setSocialProof(data.bioConfig?.socialProof || []);
           setBlogEnabled(data.bioConfig?.blogEnabled || false);
           setBlogButtonLabel(data.bioConfig?.blogButtonLabel || 'Nossos Artigos');
+          setBlogPosts(posts.filter(p => p.userId === user.id));
 
           if (data.bioConfig?.customColors) {
             setBgColor(data.bioConfig.customColors.background || '#064e3b');
@@ -78,6 +88,8 @@ export const BioBuilder: React.FC = () => {
               setCtaEnabled(data.bioConfig.floatingCTA.enabled);
               setCtaLabel(data.bioConfig.floatingCTA.label);
           }
+          // Simulação de QR Code state vindo do perfil
+          setQrCodeEnabled(true); 
         }
     } catch (e) {
         console.error("Erro ao carregar dados da Bio:", e);
@@ -112,6 +124,28 @@ export const BioBuilder: React.FC = () => {
       });
       alert('Sua Bio Digital foi publicada com sucesso!');
     } finally { setIsSaving(false); }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    try {
+      const post = await mockBackend.createBlogPost({
+        ...newPost,
+        userId: user.id,
+        author: user.name,
+        imageUrl: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'
+      });
+      setBlogPosts([post, ...blogPosts]);
+      setIsBlogModalOpen(false);
+      setNewPost({ title: '', summary: '', content: '', category: 'Dicas' });
+    } catch (e) {}
+  };
+
+  const handleDeletePost = async (id: string) => {
+    if (!confirm('Deseja excluir este artigo?')) return;
+    await mockBackend.deleteBlogPost(id);
+    setBlogPosts(blogPosts.filter(p => p.id !== id));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,6 +259,13 @@ export const BioBuilder: React.FC = () => {
            <span className="text-[8px] font-black uppercase tracking-widest">Menu de Negócios</span>
         </div>
 
+        {/* Floating QR */}
+        {qrCodeEnabled && (
+           <div className="absolute top-20 right-4 w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/10 shadow-lg">
+              <QrCode className="w-5 h-5" />
+           </div>
+        )}
+
         {/* Floating CTA */}
         {ctaEnabled && (
           <div className="absolute bottom-6 right-6 w-12 h-12 rounded-full bg-emerald-500 shadow-2xl flex items-center justify-center text-white animate-bounce">
@@ -237,7 +278,7 @@ export const BioBuilder: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      {/* Header Estilo Unificado Catálogo */}
+      {/* Header Premium */}
       <div className="bg-[#0F172A] dark:bg-black rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -255,12 +296,12 @@ export const BioBuilder: React.FC = () => {
               
               <div className="flex gap-4">
                 <button onClick={handleSave} disabled={isSaving} className="bg-[#F67C01] text-white px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
-                    {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} PUBLICAR AGORA
+                    {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />} PUBLICAR AGORA
                 </button>
               </div>
           </div>
 
-          {/* Abas Padronizadas - Alinhadas à Esquerda na Linha Inferior */}
+          {/* Abas Padronizadas */}
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Painel geral', icon: HomeIcon },
@@ -376,6 +417,66 @@ export const BioBuilder: React.FC = () => {
                         </div>
                     )}
 
+                    {activeEditorTab === 'blog' && (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><BookOpen className="text-indigo-600" /> Blog e Autoridade</h3>
+                                <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800 p-2 rounded-2xl">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Ativo</span>
+                                    <button onClick={() => setBlogEnabled(!blogEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${blogEnabled ? 'bg-emerald-600' : 'bg-slate-300'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${blogEnabled ? 'left-7' : 'left-1'}`}></div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {blogEnabled ? (
+                                <div className="space-y-10">
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Texto do Botão no Perfil</label>
+                                            <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={blogButtonLabel} onChange={e => setBlogButtonLabel(e.target.value)} placeholder="Ex: Nossos Artigos" />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button onClick={() => setIsBlogModalOpen(true)} className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all active:scale-95">
+                                                <Plus className="w-4 h-4" /> NOVO ARTIGO
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Artigos Publicados</h4>
+                                        {blogPosts.length === 0 ? (
+                                            <div className="py-12 text-center border-4 border-dashed border-gray-50 dark:border-zinc-800 rounded-[2.5rem]">
+                                                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Nenhum artigo ainda</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {blogPosts.map(post => (
+                                                    <div key={post.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex justify-between items-center group">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center text-indigo-600 shadow-sm"><FileText className="w-6 h-6" /></div>
+                                                            <div>
+                                                                <h5 className="font-black text-gray-900 dark:text-white text-sm uppercase italic">{post.title}</h5>
+                                                                <p className="text-[10px] text-slate-400 font-bold uppercase">{post.date} • {post.category}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => handleDeletePost(post.id)} className="p-3 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="py-20 text-center space-y-6">
+                                    <div className="w-20 h-20 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] flex items-center justify-center mx-auto text-gray-200"><BookOpen className="w-10 h-10" /></div>
+                                    <h4 className="text-xl font-black text-gray-300 dark:text-zinc-600 uppercase tracking-widest">Blog Desabilitado</h4>
+                                    <p className="text-slate-400 max-w-xs mx-auto text-sm font-medium">Ative o blog para publicar artigos e ganhar autoridade no seu bairro.</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {activeEditorTab === 'social_proof' && (
                         <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
                             <div className="flex justify-between items-center">
@@ -431,24 +532,33 @@ export const BioBuilder: React.FC = () => {
                             </div>
 
                             <div className="pt-10 border-t border-gray-100 dark:border-zinc-800">
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-8">Efeitos de Fundo</h3>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-3xl">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-8">Efeitos de Fundo e Recursos</h3>
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    <div className="flex flex-col justify-between p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-3xl gap-4">
                                         <div>
                                             <p className="text-xs font-black text-gray-900 dark:text-white uppercase">Gradiente Mesh</p>
-                                            <p className="text-[9px] font-medium text-slate-500">Fundo moderno com brilhos suaves</p>
+                                            <p className="text-[9px] font-medium text-slate-500">Fundo moderno premium</p>
                                         </div>
                                         <button onClick={() => setUseMeshGradient(!useMeshGradient)} className={`w-14 h-8 rounded-full transition-all relative ${useMeshGradient ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-zinc-700'}`}>
-                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${useMeshGradient ? 'left-7' : 'left-1'}`}></div>
+                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all ${useMeshGradient ? 'left-7' : 'left-1'}`}></div>
                                         </button>
                                     </div>
-                                    <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-3xl">
+                                    <div className="flex flex-col justify-between p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-3xl gap-4">
                                         <div>
-                                            <p className="text-xs font-black text-gray-900 dark:text-white uppercase">Botão Flutuante</p>
-                                            <p className="text-[9px] font-medium text-slate-500">CTA de WhatsApp sempre visível</p>
+                                            <p className="text-xs font-black text-gray-900 dark:text-white uppercase">Botão WhatsApp</p>
+                                            <p className="text-[9px] font-medium text-slate-500">CTA flutuante sempre visível</p>
                                         </div>
                                         <button onClick={() => setCtaEnabled(!ctaEnabled)} className={`w-14 h-8 rounded-full transition-all relative ${ctaEnabled ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-zinc-700'}`}>
-                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${ctaEnabled ? 'left-7' : 'left-1'}`}></div>
+                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all ${ctaEnabled ? 'left-7' : 'left-1'}`}></div>
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-col justify-between p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-3xl gap-4">
+                                        <div>
+                                            <p className="text-xs font-black text-gray-900 dark:text-white uppercase">Habilitar QR Code</p>
+                                            <p className="text-[9px] font-medium text-slate-500">Atalho rápido no cabeçalho</p>
+                                        </div>
+                                        <button onClick={() => setQrCodeEnabled(!qrCodeEnabled)} className={`w-14 h-8 rounded-full transition-all relative ${qrCodeEnabled ? 'bg-[#F67C01]' : 'bg-slate-200 dark:bg-zinc-700'}`}>
+                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-all ${qrCodeEnabled ? 'left-7' : 'left-1'}`}></div>
                                         </button>
                                     </div>
                                 </div>
@@ -485,7 +595,7 @@ export const BioBuilder: React.FC = () => {
                     )}
                 </div>
 
-                {/* Lado Direito: Live Mockup (iPhone) */}
+                {/* Lado Direito: Live Mockup */}
                 <div className="lg:col-span-5 hidden lg:block">
                     <div className="sticky top-32">
                         <div className="flex items-center justify-center gap-3 mb-6">
@@ -498,6 +608,41 @@ export const BioBuilder: React.FC = () => {
             </div>
          )}
       </div>
+
+      {/* Modal Criar Artigo (Blog) */}
+      {isBlogModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-fade-in">
+             <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center"><BookOpen className="w-6 h-6 text-brand-primary" /></div>
+                        <div>
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Novo Artigo de Blog</h3>
+                            <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Gere autoridade no seu bairro</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsBlogModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+                <form onSubmit={handleCreatePost} className="p-10 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título Chamativo</label>
+                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={newPost.title} onChange={e => setNewPost({...newPost, title: e.target.value})} placeholder="Ex: 5 dicas para escolher o doce perfeito" />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Resumo Curto (Thumbnail)</label>
+                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={newPost.summary} onChange={e => setNewPost({...newPost, summary: e.target.value})} placeholder="Uma frase impactante para o feed..." />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
+                        <textarea required rows={8} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={newPost.content} onChange={e => setNewPost({...newPost, content: e.target.value})} placeholder="Escreva aqui seu artigo detalhado..." />
+                    </div>
+                    <button type="submit" className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                        <Send className="w-4 h-4" /> PUBLICAR ARTIGO
+                    </button>
+                </form>
+             </div>
+          </div>
+      )}
     </div>
   );
 };

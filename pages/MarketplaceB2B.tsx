@@ -6,7 +6,8 @@ import { B2BOffer } from '../types';
 import { 
   Handshake, Plus, ShieldCheck, Zap, 
   MessageCircle, Info, Lock, Crown, 
-  X, Save, RefreshCw, Home as HomeIcon, Search, ArrowRight
+  X, Save, RefreshCw, Home as HomeIcon, Search, ArrowRight,
+  Target, Rocket, Building2, Star
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -18,6 +19,15 @@ export const MarketplaceB2B: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Create Offer Form
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    discount: '',
+    category: 'Serviços',
+    terms: ''
+  });
 
   useEffect(() => { loadOffers(); }, []);
 
@@ -29,11 +39,34 @@ export const MarketplaceB2B: React.FC = () => {
     } finally { setIsLoading(false); }
   };
 
+  const handleCreateOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const newOffer = await mockBackend.createB2BOffer({
+        ...formData,
+        userId: user.id,
+        businessName: user.name,
+        businessLogo: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`
+      });
+      setOffers([newOffer, ...offers]);
+      setIsModalOpen(false);
+      setFormData({ title: '', description: '', discount: '', category: 'Serviços', terms: '' });
+      setActiveTab('browse');
+    } finally { setIsSaving(false); }
+  };
+
+  const filteredOffers = offers.filter(o => 
+    o.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    o.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (!user) return null;
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
-      {/* Header Estilo Unificado Catálogo */}
+      {/* Header Estilo Unificado */}
       <div className="bg-[#0F172A] dark:bg-black rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -50,7 +83,7 @@ export const MarketplaceB2B: React.FC = () => {
             </div>
             
             <div className="flex gap-4">
-               {user.plan === 'negocios' ? (
+               {user.plan === 'negocios' || user.plan === 'freelancers' ? (
                   <button onClick={() => setIsModalOpen(true)} className="bg-[#F67C01] text-white px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
                       <Plus className="w-4 h-4" /> CRIAR BENEFÍCIO
                   </button>
@@ -63,11 +96,10 @@ export const MarketplaceB2B: React.FC = () => {
             </div>
           </div>
 
-          {/* Abas Padronizadas - Alinhadas à Esquerda na Linha Inferior */}
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Como funciona', icon: HomeIcon },
-                  { id: 'browse', label: 'EXPLORAR', desc: 'Ver acordos', icon: Handshake },
+                  { id: 'browse', label: 'MATCH', desc: 'Ver acordos', icon: Zap },
                   { id: 'my-deals', label: 'MEUS ACORDOS', desc: 'Seus resgates', icon: ShieldCheck }
               ].map(tab => (
                   <button 
@@ -101,13 +133,104 @@ export const MarketplaceB2B: React.FC = () => {
                 "Exclusividade garantida: acordos visíveis apenas para membros."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
-                ctaLabel="VER OPORTUNIDADES"
+                ctaLabel="BUSCAR MEU MATCH"
                 onStart={() => setActiveTab('browse')}
                 icon={Handshake}
                 accentColor="indigo"
             />
         )}
+
+        {activeTab === 'browse' && (
+           <div className="space-y-10">
+              <div className="max-w-xl mx-auto relative">
+                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                 <input 
+                    type="text" 
+                    placeholder="Pesquisar parceiro ou serviço..." 
+                    className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+                 {isLoading ? (
+                    [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
+                 ) : filteredOffers.length === 0 ? (
+                    <div className="col-span-full py-20 text-center">
+                       <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhum acordo disponível no momento.</p>
+                    </div>
+                 ) : filteredOffers.map(offer => (
+                    <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full overflow-hidden">
+                       <div className="flex justify-between items-start mb-6">
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
+                             <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
+                          </div>
+                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
+                             {offer.discount}
+                          </span>
+                       </div>
+                       <div className="flex-1 space-y-3">
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
+                          <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
+                          <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
+                       </div>
+                       <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
+                          SOLICITAR MATCH <ArrowRight className="w-3 h-3" />
+                       </button>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        )}
       </div>
+
+      {/* Modal Criar Benefício */}
+      {isModalOpen && (
+         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Criar Benefício B2B</h3>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Exclusivo para membros da rede</p>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+                <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título do Benefício</label>
+                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: 20% de Desconto em Consultoria Contábil" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Desconto</label>
+                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 20% OFF ou R$ 100" />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
+                            <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                                <option>Serviços</option>
+                                <option>Insumos</option>
+                                <option>Tecnologia</option>
+                                <option>Marketing</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição Curta</label>
+                        <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="O que você está oferecendo para os parceiros?" />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Termos e Condições</label>
+                        <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.terms} onChange={e => setFormData({...formData, terms: e.target.value})} placeholder="Ex: Válido apenas para novos contratos." />
+                    </div>
+                    <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR BENEFÍCIO'}
+                    </button>
+                </form>
+            </div>
+         </div>
+      )}
     </div>
   );
 };
