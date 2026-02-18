@@ -10,9 +10,10 @@ import {
   CheckCircle, ArrowRight, Camera, RefreshCw,
   User as UserIcon, AlignLeft, Info, BookOpen, 
   FileText, ChevronLeft, Calendar, User, Upload, Edit2, 
-  Zap, MoreHorizontal, X, Send, Palette as PaletteIcon, Share2, Home as HomeIcon
+  Zap, MoreHorizontal, X, Send, Palette as PaletteIcon, Share2, Home as HomeIcon,
+  Store, Briefcase, Award, Ticket, Video, Clock
 } from 'lucide-react';
-import { BioLink, BioConfig, Profile, SocialProof } from '../types';
+import { BioLink, BioConfig, Profile, SocialProof, OfferCategory, SchedulingConfig } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 
 const FONTS = [
@@ -29,6 +30,13 @@ const PRESET_THEMES = [
   { id: 'minimal', label: 'Minimalist', bg: '#fcfcfd', btn: '#ffffff', text: '#0f172a' },
 ];
 
+const MARKETPLACE_CATEGORIES = [
+    { id: 'negocios', label: 'Negócios Locais', icon: Store, enum: OfferCategory.NEGOCIOS_LOCAIS },
+    { id: 'profissionais', label: 'Profissionais', icon: Briefcase, enum: OfferCategory.SERVICOS_PROFISSIONAIS },
+    { id: 'mentorias', label: 'Mentorias', icon: Award, enum: OfferCategory.OPORTUNIDADES },
+    { id: 'eventos', label: 'Eventos', icon: Ticket, enum: OfferCategory.OPORTUNIDADES },
+];
+
 export const BioBuilder: React.FC = () => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +51,15 @@ export const BioBuilder: React.FC = () => {
   const [btnColor, setBtnColor] = useState('#059669');
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState('font-sans');
+  const [selectedCategory, setSelectedCategory] = useState('profissionais');
   const [useMeshGradient, setUseMeshGradient] = useState(false);
+  
+  // Scheduling States
+  const [schedEnabled, setSchedEnabled] = useState(false);
+  const [schedDuration, setSchedDuration] = useState(60);
+  const [schedType, setSchedType] = useState<'google_meet' | 'in_person'>('google_meet');
+  const [calendarConnected, setCalendarConnected] = useState(false);
+
   const [ctaEnabled, setCtaEnabled] = useState(false);
   const [qrCodeEnabled, setQrCodeEnabled] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Falar no WhatsApp');
@@ -68,7 +84,14 @@ export const BioBuilder: React.FC = () => {
             setTextColor(data.bioConfig.customColors.text || '#ffffff');
           }
           if (data.bioConfig?.fontFamily) setFontFamily(data.bioConfig.fontFamily);
+          if (data.bioConfig?.themeId) setSelectedCategory(data.bioConfig.themeId);
           if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
+          
+          // Load Scheduling
+          if (data.storeConfig?.schedulingEnabled) {
+              setSchedEnabled(true);
+          }
+
           if (data.bioConfig?.floatingCTA) {
               setCtaEnabled(data.bioConfig.floatingCTA.enabled);
               setCtaLabel(data.bioConfig.floatingCTA.label);
@@ -84,10 +107,15 @@ export const BioBuilder: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      await mockBackend.updateProfile(user.id, { 
+      // 1. Atualizar Perfil Principal
+      const updatedProfile = { 
         ...profile,
+        storeConfig: {
+          ...profile.storeConfig,
+          schedulingEnabled: schedEnabled
+        },
         bioConfig: { 
-          themeId: 'custom', 
+          themeId: selectedCategory, 
           fontFamily: fontFamily as any, 
           links,
           socialProof,
@@ -103,8 +131,48 @@ export const BioBuilder: React.FC = () => {
             text: textColor
           }
         } 
-      });
-      alert('Sua Bio Digital foi publicada com sucesso!');
+      };
+      await mockBackend.updateProfile(user.id, updatedProfile);
+
+      // 2. Sincronizar com Marketplace (Offers)
+      const catObj = MARKETPLACE_CATEGORIES.find(c => c.id === selectedCategory);
+      const categoryEnum = catObj?.enum || OfferCategory.SERVICOS_PROFISSIONAIS;
+      
+      const myOffers = await mockBackend.getMyOffers(user.id);
+      const existingBioOffer = myOffers.find(o => o.description.includes("[BIO_MARKER]"));
+
+      let tags = "[BIO_MARKER]";
+      if (selectedCategory === 'mentorias') tags += " [MENTORIA]";
+      if (selectedCategory === 'eventos') tags += " [EVENTO]";
+
+      const offerData = {
+        title: profile.businessName || user.name,
+        description: `${tags} ${profile.bio || 'Confira meu perfil profissional completo.'}`,
+        category: categoryEnum,
+        city: profile.city || 'Sua Cidade',
+        imageUrl: profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
+        logoUrl: profile.logoUrl,
+        socialLinks: profile.socialLinks,
+        price: 'Consultar',
+        userId: user.id,
+        scheduling: schedEnabled ? {
+            enabled: true,
+            durationMinutes: schedDuration,
+            meetingType: schedType,
+            googleCalendarConnected: calendarConnected
+        } : undefined
+      };
+
+      if (existingBioOffer) {
+        await mockBackend.updateOffer(user.id, existingBioOffer.id, offerData);
+      } else {
+        await mockBackend.createOffer(user.id, offerData);
+      }
+
+      alert(`🚀 SUCESSO! Sua Bio Digital foi sincronizada com o Marketplace na aba "${catObj?.label}".`);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao publicar. Verifique sua conexão.");
     } finally { setIsSaving(false); }
   };
 
@@ -123,16 +191,12 @@ export const BioBuilder: React.FC = () => {
     setLinks([...links, { id: Date.now().toString(), type: 'custom', label: 'Novo Link', url: '', active: true }]);
   };
 
-  const removeLink = (id: string) => {
-    setLinks(links.filter(l => l.id !== id));
-  };
-
   const updateLink = (id: string, fields: Partial<BioLink>) => {
     setLinks(links.map(l => l.id === id ? { ...l, ...fields } : l));
   };
 
-  const addSocialProof = () => {
-    setSocialProof([...socialProof, { id: Date.now().toString(), author: 'Nome do Cliente', text: 'Depoimento incrível...', stars: 5 }]);
+  const removeLink = (id: string) => {
+    setLinks(links.filter(l => l.id !== id));
   };
 
   const applyTheme = (theme: typeof PRESET_THEMES[0]) => {
@@ -156,7 +220,7 @@ export const BioBuilder: React.FC = () => {
         style={{ 
           backgroundColor: bgColor, 
           color: textColor,
-          backgroundImage: useMeshGradient ? `radial-gradient(at 0% 0%, ${btnColor}44 0px, transparent 50%), radial-gradient(at 100% 100%, ${btnColor}22 0px, transparent 50%)` : 'none'
+          backgroundImage: useMeshGradient ? `radial-gradient(at 0% 0%, ${btnColor}66 0px, transparent 50%), radial-gradient(at 100% 0%, ${btnColor}33 0px, transparent 50%), radial-gradient(at 50% 100%, ${btnColor}44 0px, transparent 50%)` : 'none'
         }}
       >
         <div className="w-20 h-20 rounded-full border-4 border-white/20 shadow-xl overflow-hidden mb-4 mt-4 flex-shrink-0 bg-white/10 flex items-center justify-center">
@@ -168,6 +232,16 @@ export const BioBuilder: React.FC = () => {
         </div>
         <h2 className="font-black text-lg text-center leading-tight mb-1">{profile.businessName || 'Seu Negócio'}</h2>
         <p className="text-[10px] opacity-80 text-center font-medium max-w-[200px] mb-8">{profile.bio || 'Bem-vindo ao meu perfil profissional.'}</p>
+        
+        {schedEnabled && (
+           <div 
+             className="w-full py-4 px-4 rounded-2xl text-center font-black text-[10px] shadow-xl mb-4 border border-white/10 animate-pulse flex items-center justify-center gap-2"
+             style={{ backgroundColor: textColor, color: bgColor }}
+           >
+              <Calendar className="w-3.5 h-3.5" /> AGENDAR CONSULTA ({schedDuration}min)
+           </div>
+        )}
+
         <div className="w-full space-y-3 mb-8">
           {links.filter(l => l.active).map(link => (
             <div 
@@ -179,6 +253,7 @@ export const BioBuilder: React.FC = () => {
             </div>
           ))}
         </div>
+
         {socialProof.length > 0 && (
           <div className="w-full space-y-3 mb-8">
             <p className="text-[8px] font-black uppercase tracking-widest opacity-50 text-center">O que dizem sobre nós</p>
@@ -208,7 +283,7 @@ export const BioBuilder: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
-      <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+      <div className="bg-[#0F172A] rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-white/5 rounded-[1.8rem] flex items-center justify-center border border-white/10 shadow-inner">
@@ -216,7 +291,7 @@ export const BioBuilder: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                BIO DIGITAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#9333EA] to-pink-500">PRO</span>
+                BIO DIGITAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
               </h2>
               <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">TRANSFORME SUA PRESENÇA EM RESULTADO REAL.</p>
             </div>
@@ -312,7 +387,7 @@ export const BioBuilder: React.FC = () => {
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
                      <div className="flex justify-between items-center">
                         <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Star className="text-yellow-500 fill-current" /> Depoimentos de Clientes</h3>
-                        <button onClick={addSocialProof} className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest">ADICIONAR PROVA</button>
+                        <button onClick={() => setSocialProof([...socialProof, { id: Date.now().toString(), author: 'Nome do Cliente', text: 'Depoimento incrível...', stars: 5 }])} className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest">ADICIONAR PROVA</button>
                      </div>
                      <div className="space-y-6">
                         {socialProof.map(proof => (
@@ -330,7 +405,88 @@ export const BioBuilder: React.FC = () => {
                )}
 
                {activeEditorTab === 'design' && (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
+                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
+                     
+                     {/* Seleção de Categoria Marketplace */}
+                     <div className="space-y-6">
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Layout className="text-brand-primary" /> Categoria da Vitrine</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Escolha onde sua Bio aparecerá no Marketplace global.</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {MARKETPLACE_CATEGORIES.map(cat => (
+                                <button 
+                                    key={cat.id} 
+                                    onClick={() => setSelectedCategory(cat.id)}
+                                    className={`p-6 rounded-[2rem] border-2 flex flex-col items-center gap-3 transition-all hover:scale-105 ${selectedCategory === cat.id ? 'border-brand-primary bg-orange-50 dark:bg-orange-950/20 text-brand-primary shadow-xl shadow-orange-500/10' : 'border-gray-50 dark:border-zinc-800 text-slate-400'}`}
+                                >
+                                    <cat.icon className="w-8 h-8" />
+                                    <span className="text-[9px] font-black uppercase text-center leading-tight tracking-tighter">{cat.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                     </div>
+
+                     <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
+
+                     {/* NOVO: Mesh Gradient Control */}
+                     <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-brand-primary" /> Fundo Premium</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ative o efeito Mesh Gradient ultra-fluido.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked={useMeshGradient} onChange={e => setUseMeshGradient(e.target.checked)} className="sr-only peer" />
+                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
+                        </div>
+                     </div>
+
+                     <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
+
+                     {/* NOVO: Agendamento Automático */}
+                     <div className="space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-xl font-black text-indigo-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Calendar className="text-indigo-600" /> Agendamento</h3>
+                                <p className="text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400 uppercase tracking-widest mt-1">Permita que clientes reservem seu horário.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked={schedEnabled} onChange={e => setSchedEnabled(e.target.checked)} className="sr-only peer" />
+                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        {schedEnabled && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-indigo-900/40 uppercase tracking-widest">Duração da Sessão</label>
+                                        <select className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-sm" value={schedDuration} onChange={e => setSchedDuration(Number(e.target.value))}>
+                                            <option value={30}>30 Minutos</option>
+                                            <option value={60}>1 Hora</option>
+                                            <option value={90}>1h 30m</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-indigo-900/40 uppercase tracking-widest">Tipo de Reunião</label>
+                                        <select className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-sm" value={schedType} onChange={e => setSchedType(e.target.value as any)}>
+                                            <option value="google_meet">Online (Meet)</option>
+                                            <option value="in_person">Presencial</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setCalendarConnected(!calendarConnected)} 
+                                    className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-600 text-white shadow-xl'}`}
+                                >
+                                    {calendarConnected ? <><CheckCircle className="w-4 h-4" /> AGENDA CONECTADA</> : <><RefreshCw className="w-4 h-4" /> CONECTAR GOOGLE CALENDAR</>}
+                                </button>
+                            </div>
+                        )}
+                     </div>
+
+                     <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
+
                      <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-brand-primary" /> Estilo Visual</h3>
                      <div className="space-y-8">
                         <div>
@@ -394,15 +550,10 @@ export const BioBuilder: React.FC = () => {
                            </button>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
-                           <div className="p-8 bg-white dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center space-y-4 shadow-sm">
+                           <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center space-y-4 shadow-sm">
                               <QrCode className="w-12 h-12 text-gray-900 dark:text-white" />
                               <h4 className="font-black text-sm uppercase italic">QR Code Personalizado</h4>
                               <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Download QR Code</button>
-                           </div>
-                           <div className="p-8 bg-white dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center space-y-4 shadow-sm">
-                              <ImageIcon className="w-12 h-12 text-gray-900 dark:text-white" />
-                              <h4 className="font-black text-sm uppercase italic">Card para Instagram</h4>
-                              <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Gerar Criativo IA</button>
                            </div>
                         </div>
                      </div>

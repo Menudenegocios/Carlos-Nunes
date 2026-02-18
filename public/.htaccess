@@ -2,10 +2,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   
-  # Se o arquivo ou diretório solicitado não existir fisicamente
+  # Impede a listagem de diretórios
+  Options -Indexes
+
+  # Fallback para rotas SPA (Single Page Application)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Redireciona tudo para o index.html
-  RewriteRule ^ index.html [QSA,L]
+  RewriteRule ^ index.html [L]
 </IfModule>

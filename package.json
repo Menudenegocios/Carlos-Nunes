@@ -6,20 +6,26 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "mkdir -p dist && echo 'Build virtual concluído' > dist/deploy.txt"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "express": "^4.18.2",
     "path": "^0.12.7",
     "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.561.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-router-dom": "^7.10.1",
-    "react-markdown": "^10.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.22.3",
+    "react-markdown": "^9.0.1",
     "@google/genai": "^1.33.0"
   },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.4"
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

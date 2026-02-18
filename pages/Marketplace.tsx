@@ -48,8 +48,7 @@ export const Marketplace: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
-  const [professionalOffers, setProfessionalOffers] = useState<Offer[]>([]);
-  const [mentorshipOffers, setMentorshipOffers] = useState<Offer[]>([]);
+  const [allOffers, setAllOffers] = useState<Offer[]>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   useEffect(() => { loadData(); }, []);
@@ -57,32 +56,60 @@ export const Marketplace: React.FC = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const prods = await mockBackend.getAllProducts();
+      const [prods, offers] = await Promise.all([
+        mockBackend.getAllProducts(),
+        mockBackend.getOffers()
+      ]);
       setProducts(prods);
-      
-      const allOffers = await mockBackend.getOffers();
-      setProfessionalOffers(allOffers.filter(o => o.category === OfferCategory.SERVICOS_PROFISSIONAIS || o.category === OfferCategory.SAUDE_BEM_ESTAR || o.category === OfferCategory.IMOVEIS_SERVICOS));
-      setMentorshipOffers(allOffers.filter(o => o.category === OfferCategory.OPORTUNIDADES || o.title.toLowerCase().includes('mentoria')));
+      setAllOffers(offers);
     } finally { setIsLoading(false); }
   };
 
   const handleContact = (item: any) => {
-    const phone = item.businessPhone || '5511999999999';
+    const phone = item.businessPhone || item.socialLinks?.whatsapp || '5511999999999';
     const message = `Olá! Vi seu anúncio "*${item.name || item.title}*" no Marketplace do Menu ADS e gostaria de mais informações.`;
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const getFilteredItems = () => {
     const term = searchTerm.toLowerCase();
+    
     switch (activeTab) {
       case 'negocios':
-        return products.filter(p => p.name.toLowerCase().includes(term) || (p.businessName && p.businessName.toLowerCase().includes(term)));
+        // Mostra Produtos + Bios marcadas como Negócios Locais com [BIO_MARKER]
+        const localProds = products.filter(p => p.name.toLowerCase().includes(term) || (p.businessName && p.businessName.toLowerCase().includes(term)));
+        const localBios = allOffers.filter(o => 
+          o.category === OfferCategory.NEGOCIOS_LOCAIS && 
+          o.description.includes("[BIO_MARKER]") &&
+          (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+        );
+        return [...localProds, ...localBios];
+
       case 'profissionais':
-        return professionalOffers.filter(o => o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term));
+        // Bios marcadas como Profissionais com [BIO_MARKER]
+        return allOffers.filter(o => 
+            (o.category === OfferCategory.SERVICOS_PROFISSIONAIS || o.category === OfferCategory.SAUDE_BEM_ESTAR || o.category === OfferCategory.IMOVEIS_SERVICOS) && 
+            !o.description.includes("[MENTORIA]") && !o.description.includes("[EVENTO]") &&
+            o.description.includes("[BIO_MARKER]") &&
+            (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+        );
+
       case 'mentorias':
-        return mentorshipOffers.filter(o => o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term));
+        // Bios marcadas com a tag de Mentoria
+        return allOffers.filter(o => 
+            (o.title.toLowerCase().includes('mentoria') || o.description.includes("[MENTORIA]")) && 
+            (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+        );
+
       case 'eventos':
-        return MOCK_EVENTS.filter(e => e.title.toLowerCase().includes(term));
+        // Bios marcadas com a tag de Evento + Mocks
+        const realEvents = allOffers.filter(o => 
+            o.description.includes("[EVENTO]") && 
+            (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+        );
+        const mocks = MOCK_EVENTS.filter(e => e.title.toLowerCase().includes(term));
+        return [...realEvents, ...mocks];
+
       default:
         return [];
     }
@@ -146,77 +173,56 @@ export const Marketplace: React.FC = () => {
         ) : (
             <div className={`grid gap-10 ${activeTab === 'negocios' || activeTab === 'eventos' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
             
-            {/* Render: Negócios Locais (Products) */}
-            {activeTab === 'negocios' && (filteredItems as MarketplaceProduct[]).map(product => (
-                <div key={product.id} onClick={() => setSelectedItem({...product, type: 'product'})} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer">
-                    <div className="relative h-56 overflow-hidden block">
-                        <img src={product.imageUrl || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={product.name} />
-                        <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-lg">
-                                <img src={product.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${product.businessName}`} className="w-full h-full object-cover" />
-                            </div>
-                            <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg uppercase">{product.businessName}</span>
-                        </div>
-                    </div>
-                    <div className="p-8 flex-1 flex flex-col">
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight mb-2 line-clamp-2">{product.name}</h3>
-                        <div className="mt-auto pt-6 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
-                            <p className="text-xl font-black text-indigo-600 dark:text-brand-primary">R$ {product.price.toFixed(2)}</p>
-                            <div className="bg-gray-900 dark:bg-zinc-800 text-white p-4 rounded-2xl group-hover:bg-indigo-600 transition-all">
-                                <ArrowRight className="w-5 h-5" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ))}
+            {filteredItems.map((item: any) => {
+                const isOffer = !!item.category;
+                const isProduct = !isOffer;
 
-            {/* Render: Profissionais & Mentorias (Offers) */}
-            {(activeTab === 'profissionais' || activeTab === 'mentorias') && (filteredItems as Offer[]).map(offer => (
-                <OfferCard key={offer.id} offer={offer} onClick={() => setSelectedItem({...offer, type: 'offer'})} />
-            ))}
-
-            {/* Render: Eventos */}
-            {activeTab === 'eventos' && (filteredItems as any[]).map(event => (
-                <div key={event.id} onClick={() => setSelectedItem({...event, type: 'event'})} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer">
-                    <div className="relative h-56 overflow-hidden">
-                        <img src={event.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={event.title} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                        <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/40 dark:border-zinc-700 shadow-sm">
-                           <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-widest">{event.type}</span>
-                        </div>
-                    </div>
-                    <div className="p-8 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 text-gray-400 dark:text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-4">
-                            <Clock className="w-3.5 h-3.5" /> {event.date} às {event.time}
-                        </div>
-                        <h3 className="text-2xl font-black text-gray-900 dark:text-white leading-tight mb-6 group-hover:text-indigo-600 transition-colors">{event.title}</h3>
-                        
-                        <div className="space-y-4 mb-10 text-gray-500 dark:text-zinc-400 text-sm font-medium">
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-4 h-4 text-gray-400" /> {event.location}
+                if (isProduct) {
+                    return (
+                        <div key={item.id} onClick={() => setSelectedItem({...item, type: 'product'})} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer">
+                            <div className="relative h-56 overflow-hidden block">
+                                <img src={item.imageUrl || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={item.name} />
+                                <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-lg">
+                                        <img src={item.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${item.businessName}`} className="w-full h-full object-cover" />
+                                    </div>
+                                    <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg uppercase">{item.businessName}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <Users className="w-4 h-4 text-gray-400" /> {event.attendees} inscritos
+                            <div className="p-8 flex-1 flex flex-col">
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight mb-2 line-clamp-2">{item.name}</h3>
+                                <div className="mt-auto pt-6 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
+                                    <p className="text-xl font-black text-indigo-600 dark:text-brand-primary">R$ {item.price.toFixed(2)}</p>
+                                    <div className="bg-gray-900 dark:bg-zinc-800 text-white p-4 rounded-2xl group-hover:bg-indigo-600 transition-all">
+                                        <ArrowRight className="w-5 h-5" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    );
+                }
 
-                    <div className="mt-auto pt-8 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase mb-1">Investimento</p>
-                            <p className="text-xl font-black text-gray-900 dark:text-white">{event.price}</p>
-                        </div>
-                        <button className="bg-gray-900 dark:bg-zinc-800 text-white p-4 rounded-2xl group-hover:bg-indigo-600 transition-all shadow-xl">
-                            <Ticket className="w-5 h-5" />
-                        </button>
+                return (
+                    <div key={item.id} className="relative">
+                        <OfferCard 
+                            offer={item} 
+                            onClick={() => setSelectedItem({...item, type: item.description.includes("[EVENTO]") ? 'event' : 'offer'})} 
+                        />
+                        {item.scheduling?.enabled && (
+                            <div className="absolute top-4 right-4 z-10">
+                                <span className="bg-emerald-600 text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-lg flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" /> AGENDÁVEL
+                                </span>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </div>
-            ))}
+                );
+            })}
             </div>
         )}
       </section>
 
-      {/* 3. ITEM DETAIL MODAL (SIMULATED PAGE) */}
+      {/* 3. ITEM DETAIL MODAL */}
       {selectedItem && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
            <div className="bg-white dark:bg-zinc-900 w-full max-w-5xl h-fit max-h-[90vh] rounded-[3.5rem] shadow-2xl overflow-hidden relative flex flex-col lg:flex-row animate-scale-in">
@@ -227,7 +233,6 @@ export const Marketplace: React.FC = () => {
                  <X className="w-6 h-6" />
               </button>
 
-              {/* Modal Left: Visual */}
               <div className="w-full lg:w-1/2 h-[300px] lg:h-auto relative">
                  <img src={selectedItem.image || selectedItem.imageUrl} className="w-full h-full object-cover" alt="Detail" />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -246,11 +251,10 @@ export const Marketplace: React.FC = () => {
                  </div>
               </div>
 
-              {/* Modal Right: Info */}
               <div className="flex-1 p-10 md:p-16 overflow-y-auto flex flex-col">
                  <div className="flex items-center gap-4 mb-10 pb-8 border-b border-gray-100 dark:border-zinc-800">
                     <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-                       <img src={selectedItem.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedItem.businessName || 'Admin'}`} className="w-full h-full object-cover" />
+                       <img src={selectedItem.businessLogo || selectedItem.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedItem.businessName || 'Admin'}`} className="w-full h-full object-cover" />
                     </div>
                     <div>
                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Publicado por</p>
@@ -260,21 +264,31 @@ export const Marketplace: React.FC = () => {
 
                  <div className="space-y-8 flex-1">
                     <div className="prose prose-indigo dark:prose-invert max-w-none">
-                       <p className="text-gray-500 dark:text-zinc-400 text-lg font-medium leading-relaxed">
-                          {selectedItem.description}
+                       <p className="text-gray-50 dark:text-zinc-400 text-lg font-medium leading-relaxed">
+                          {selectedItem.description.replace(/\[MENTORIA\]|\[EVENTO\]|\[BIO_MARKER\]/g, '')}
                        </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
+                       {selectedItem.scheduling?.enabled ? (
+                           <div className="col-span-2 p-6 bg-emerald-50 dark:bg-emerald-950/30 rounded-3xl border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-between">
+                               <div>
+                                   <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Agendamento Ativo</p>
+                                   <p className="font-black text-gray-900 dark:text-white text-sm">Sessão de {selectedItem.scheduling.durationMinutes}min ({selectedItem.scheduling.meetingType === 'google_meet' ? 'Online' : 'Presencial'})</p>
+                               </div>
+                               <button className="bg-emerald-600 text-white px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg">RESERVAR</button>
+                           </div>
+                       ) : null}
+
                        {selectedItem.type === 'event' ? (
                           <>
                              <div className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-3xl border border-gray-100 dark:border-zinc-700">
                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Data & Hora</p>
-                                <p className="font-black text-gray-900 dark:text-white text-sm leading-tight">{selectedItem.date} <br/> às {selectedItem.time}</p>
+                                <p className="font-black text-gray-900 dark:text-white text-sm leading-tight">{selectedItem.date || 'Consultar'} <br/> {selectedItem.time ? `às ${selectedItem.time}` : ''}</p>
                              </div>
                              <div className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-3xl border border-gray-100 dark:border-zinc-700">
                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Local</p>
-                                <p className="font-black text-gray-900 dark:text-white text-sm leading-tight">{selectedItem.location}</p>
+                                <p className="font-black text-gray-900 dark:text-white text-sm leading-tight">{selectedItem.location || selectedItem.city}</p>
                              </div>
                           </>
                        ) : (
@@ -301,12 +315,12 @@ export const Marketplace: React.FC = () => {
                     >
                        <MessageCircle className="w-4 h-4" /> FALAR NO WHATSAPP
                     </button>
-                    {selectedItem.type === 'product' && (
+                    {selectedItem.userId && (
                        <Link 
                          to={`/store/${selectedItem.userId}`}
                          className="flex-1 bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-white py-5 rounded-[1.8rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white transition-all border border-indigo-100 dark:border-zinc-700 flex items-center justify-center gap-3"
                        >
-                          <Store className="w-4 h-4" /> VISITAR LOJA
+                          <Store className="w-4 h-4" /> VISITAR VITRINE
                        </Link>
                     )}
                  </div>
