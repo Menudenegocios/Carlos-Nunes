@@ -11,7 +11,7 @@ import {
   QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
   Tag, Info, Target, Briefcase, Award, Globe, AlignLeft, HelpCircle, Home as HomeIcon,
   Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap, Video, BarChart, Ticket,
-  ShoppingCart, Camera, Save, Phone, Smartphone, Minus, MessageCircle, Instagram
+  ShoppingCart, Camera, Save, Phone, Smartphone, Minus, MessageCircle, Instagram, Youtube, Play
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -23,6 +23,7 @@ const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], s
   const [activeCat, setActiveCat] = useState('todos');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
   
   const filteredProducts = activeCat === 'todos' 
     ? products 
@@ -71,73 +72,115 @@ const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], s
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const id = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+        return `https://www.youtube.com/embed/${id}?autoplay=1`;
+    }
+    if (url.includes('instagram.com/reel')) {
+        return `${url.split('?')[0]}embed`;
+    }
+    return url;
+  };
+
   return (
-    <div className="bg-gray-50 dark:bg-[#020617] min-h-screen pb-20 -m-6 md:-m-10 animate-fade-in relative">
-      <div className="bg-white dark:bg-zinc-900 p-4 sticky top-0 z-[100] border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between shadow-sm">
+    <div className="bg-gray-50 dark:bg-[#020617] min-h-screen pb-32 -m-6 md:-m-10 animate-fade-in relative">
+      <div className="bg-white dark:bg-zinc-900 p-6 sticky top-0 z-[100] border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between shadow-md">
         <button onClick={onBack} className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary font-black text-[10px] uppercase tracking-widest hover:opacity-70 transition-all">
            <ArrowLeft className="w-4 h-4" /> VOLTAR AO EDITOR
         </button>
         <div className="flex items-center gap-4">
-            <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Loja Online Ativa</span>
-            <button onClick={() => setIsCartOpen(true)} className="relative p-2 bg-gray-100 dark:bg-zinc-800 rounded-xl text-gray-700 dark:text-white">
-                <ShoppingCart className="w-5 h-5" />
-                {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">{cart.reduce((a, b) => a + b.quantity, 0)}</span>}
+            <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200">Prévia da Vitrine</span>
+            <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-gray-100 dark:bg-zinc-800 rounded-2xl text-gray-700 dark:text-white shadow-sm">
+                <ShoppingCart className="w-6 h-6" />
+                {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">{cart.reduce((a, b) => a + b.quantity, 0)}</span>}
             </button>
         </div>
       </div>
 
-      <div className="relative h-64 md:h-80 w-full bg-[#0F172A] overflow-hidden">
+      {/* Hero Preview */}
+      <div className="relative h-[60vh] min-h-[400px] w-full bg-[#0F172A] overflow-hidden">
         {profile.storeConfig?.coverUrl ? (
-           <img src={profile.storeConfig.coverUrl} className="w-full h-full object-cover opacity-60" alt="Cover" />
+           <img src={profile.storeConfig.coverUrl} className="w-full h-full object-cover opacity-70" alt="Cover" />
         ) : (
            <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-emerald-900 opacity-60"></div>
         )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
-           <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-white p-1 shadow-2xl mb-4 overflow-hidden border-[6px] border-white/20">
-              <img src={profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.businessName}`} className="w-full h-full object-cover rounded-[2.2rem]" alt="Logo" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center">
+           <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-white p-1.5 shadow-2xl mb-6 overflow-hidden border-[6px] border-white/20 backdrop-blur-sm">
+              <img src={profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.businessName}`} className="w-full h-full object-cover rounded-[2rem]" alt="Logo" />
            </div>
-           <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-center">{profile.businessName || 'Minha loja'}</h1>
-           <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.2em] mt-2 flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-              <MapPin className="w-3 h-3 text-[#F67C01]" /> {profile.city || 'Sua localização'}
-           </p>
+           <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic text-center mb-6 leading-tight">{profile.businessName || 'Minha loja'}</h1>
+           
+           <div className="flex flex-col items-center gap-6">
+                <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/5">
+                    <CheckCircle className="w-3.5 h-3.5" /> Aberto Agora
+                </span>
+           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 -mt-10 relative z-10 space-y-10">
-        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-100 dark:border-zinc-800 flex gap-1 overflow-x-auto scrollbar-hide">
+      <div className="max-w-6xl mx-auto px-6 -mt-12 relative z-10 space-y-16">
+        {/* Barra de Categorias Centralizada e Reordenada no Editor */}
+        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-3 shadow-2xl border border-gray-100 dark:border-zinc-800 flex gap-3 overflow-x-auto scrollbar-hide justify-center items-center">
+            
+            {/* 1. Todos os Itens */}
             <button 
               onClick={() => setActiveCat('todos')}
-              className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCat === 'todos' ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+              className={`px-10 py-5 rounded-[2.2rem] text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCat === 'todos' ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
             >
                 🔥 Todos os itens
             </button>
+
+            {/* 2. Sua Localização */}
+            <span className="px-8 py-4 rounded-[2rem] bg-[#F67C01] text-white shadow-xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
+                <MapPin className="w-4 h-4" /> {profile.city || 'Sua localização'}
+            </span>
+
+            {/* 3. Assista Nosso Vídeo */}
+            {profile.storeConfig?.videoUrl && (
+                <button 
+                    onClick={() => setVideoModalUrl(profile.storeConfig?.videoUrl || null)}
+                    className="px-8 py-4 rounded-[2rem] bg-[#F67C01] text-white shadow-xl hover:scale-105 transition-all flex items-center gap-3 text-[11px] font-black uppercase tracking-widest whitespace-nowrap group"
+                >
+                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-[#F67C01] transition-colors">
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                    </div>
+                    Assista Nosso Vídeo
+                </button>
+            )}
+
+            <div className="w-px h-8 bg-gray-200 dark:bg-zinc-800 self-center mx-2 hidden sm:block"></div>
+
+            {/* Outras Categorias */}
             {storeCategories.map(cat => (
                 <button 
                   key={cat.id}
                   onClick={() => setActiveCat(cat.id)}
-                  className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCat === cat.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                  className={`px-10 py-5 rounded-[2.2rem] text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeCat === cat.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
                 >
                     {cat.name}
                 </button>
             ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
            {filteredProducts.map(prod => (
-              <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-4 pb-8 shadow-sm border border-gray-100 dark:border-zinc-800 hover:shadow-2xl transition-all duration-500 flex flex-col">
-                 <div className="aspect-square rounded-[2rem] bg-gray-50 dark:bg-zinc-800 mb-6 overflow-hidden shadow-inner relative group">
-                    {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={prod.name} /> : <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-zinc-700"><ImageIcon className="w-10 h-10" /></div>}
+              <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[3rem] p-5 pb-10 shadow-sm border border-gray-100 dark:border-zinc-800 hover:shadow-2xl transition-all duration-700 flex flex-col">
+                 <div className="aspect-square rounded-[2.5rem] bg-gray-50 dark:bg-zinc-800 mb-8 overflow-hidden shadow-inner relative group">
+                    {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={prod.name} /> : <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-zinc-700"><ImageIcon className="w-12 h-12" /></div>}
                  </div>
-                 <div className="px-2 flex-1 flex flex-col">
-                    <h4 className="font-black text-gray-900 dark:text-white text-xs mb-2 truncate uppercase italic tracking-tight">{prod.name}</h4>
-                    <p className="text-gray-50 dark:text-zinc-500 text-[10px] line-clamp-2 mb-6 font-medium leading-relaxed">{prod.description}</p>
+                 <div className="px-3 flex-1 flex flex-col">
+                    <h4 className="font-black text-gray-900 dark:text-white text-lg mb-2 truncate uppercase italic tracking-tight">{prod.name}</h4>
+                    <p className="text-gray-50 dark:text-zinc-500 text-xs line-clamp-2 mb-8 font-medium leading-relaxed">{prod.description}</p>
                     <div className="mt-auto flex justify-between items-end">
-                        <p className="text-[#F67C01] font-black text-xl">R$ {prod.price.toFixed(2)}</p>
+                        <p className="text-[#F67C01] font-black text-2xl">R$ {prod.price.toFixed(2)}</p>
                         <button 
                           onClick={() => addToCart(prod)}
-                          className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg hover:scale-110 transition-transform"
+                          className="p-4 bg-emerald-600 text-white rounded-2xl shadow-xl hover:bg-emerald-700 transition-all active:scale-90"
                         >
-                           <Plus className="w-4 h-4" />
+                           <Plus className="w-6 h-6" />
                         </button>
                     </div>
                  </div>
@@ -146,47 +189,63 @@ const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], s
         </div>
       </div>
 
-      {/* Cart Modal */}
+      {/* Cart Modal Preview */}
       {isCartOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-              <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
-                  <div className="p-8 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
+                  <div className="p-10 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
                       <h3 className="text-2xl font-black italic uppercase tracking-tighter dark:text-white">Meu Carrinho</h3>
-                      <button onClick={() => setIsCartOpen(false)} className="text-slate-400"><X className="w-6 h-6" /></button>
+                      <button onClick={() => setIsCartOpen(false)} className="text-slate-400 p-2 hover:bg-gray-50 rounded-2xl"><X className="w-8 h-8" /></button>
                   </div>
-                  <div className="p-8 max-h-[400px] overflow-y-auto space-y-4">
+                  <div className="p-10 max-h-[400px] overflow-y-auto space-y-6">
                       {cart.length === 0 ? (
-                          <p className="text-center text-slate-400 py-10 font-bold uppercase text-[10px] tracking-widest">Carrinho vazio</p>
+                          <p className="text-center text-slate-400 py-10 font-bold uppercase text-[10px] tracking-widest italic">Carrinho vazio</p>
                       ) : cart.map(item => (
-                          <div key={item.id} className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                          <div key={item.id} className="flex items-center gap-5">
+                              <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-gray-100 shrink-0 shadow-sm">
                                   <img src={item.imageUrl} className="w-full h-full object-cover" />
                               </div>
                               <div className="flex-1">
-                                  <h4 className="font-bold text-sm dark:text-white">{item.name}</h4>
-                                  <p className="text-xs text-emerald-600 font-black">R$ {(item.promoPrice || item.price).toFixed(2)}</p>
+                                  <h4 className="font-bold text-sm dark:text-white leading-tight">{item.name}</h4>
+                                  <p className="text-xs text-emerald-600 font-black mt-1">R$ {(item.promoPrice || item.price).toFixed(2)}</p>
                               </div>
-                              <div className="flex items-center gap-2">
-                                  <button onClick={() => updateQuantity(item.id, -1)} className="p-1 rounded-lg bg-gray-100 dark:bg-zinc-800 dark:text-white"><Minus className="w-3 h-3" /></button>
+                              <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800 rounded-xl p-1">
+                                  <button onClick={() => updateQuantity(item.id, -1)} className="p-1.5 rounded-lg text-slate-400"><Minus className="w-3 h-3" /></button>
                                   <span className="text-xs font-black dark:text-white">{item.quantity}</span>
-                                  <button onClick={() => updateQuantity(item.id, 1)} className="p-1 rounded-lg bg-gray-100 dark:bg-zinc-800 dark:text-white"><Plus className="w-3 h-3" /></button>
+                                  <button onClick={() => updateQuantity(item.id, 1)} className="p-1.5 rounded-lg text-slate-400"><Plus className="w-3 h-3" /></button>
                               </div>
                           </div>
                       ))}
                   </div>
-                  <div className="p-8 bg-gray-50 dark:bg-zinc-800/50 border-t border-gray-100 dark:border-zinc-800 space-y-6">
-                      <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total do Pedido</span>
-                          <span className="text-2xl font-black text-emerald-600">R$ {subtotal.toFixed(2)}</span>
+                  <div className="p-10 bg-gray-50 dark:bg-zinc-800/50 border-t border-gray-100 dark:border-zinc-800 space-y-8">
+                      <div className="flex justify-between items-end">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor do Pedido</span>
+                          <span className="text-3xl font-black text-emerald-600">R$ {subtotal.toFixed(2)}</span>
                       </div>
                       <button 
                         onClick={handleFinishOrder}
                         disabled={cart.length === 0}
-                        className="w-full py-5 bg-emerald-600 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        className="w-full py-6 bg-emerald-600 text-white rounded-[2.2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-95"
                       >
-                          <MessageCircle className="w-5 h-5" /> FINALIZAR NO WHATSAPP
+                          <MessageCircle className="w-6 h-6" /> FINALIZAR NO WHATSAPP
                       </button>
                   </div>
+              </div>
+          </div>
+      )}
+
+      {/* Video Modal Cinema Preview */}
+      {videoModalUrl && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
+              <button onClick={() => setVideoModalUrl(null)} className="absolute top-10 right-10 text-white p-5 bg-white/10 hover:bg-white/20 rounded-full transition-all z-50"><X className="w-10 h-10" /></button>
+              <div className="w-full max-w-xl aspect-[9/16] bg-black rounded-[4rem] overflow-hidden shadow-2xl relative border-[10px] border-white/10">
+                  <iframe 
+                      src={getEmbedUrl(videoModalUrl) || ''} 
+                      className="w-full h-full" 
+                      frameBorder="0" 
+                      allow="autoplay; encrypted-media; fullscreen" 
+                      allowFullScreen
+                  ></iframe>
               </div>
           </div>
       )}
@@ -307,7 +366,6 @@ export const MyCatalog: React.FC = () => {
   const handleSaveCoupon = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!user) return;
-      // Para simplificar no mock, vinculamos ao primeiro serviço ou criamos um mock id
       const offerId = products[0]?.id || 'mock-offer'; 
       await mockBackend.addCoupon(user.id, offerId, couponForm);
       setCoupons([...coupons, { ...couponForm, id: Date.now().toString() } as Coupon]);
@@ -346,7 +404,6 @@ export const MyCatalog: React.FC = () => {
               </div>
             </div>
 
-            {/* Abas Padronizadas com Sublegenda */}
             <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 overflow-x-auto scrollbar-hide gap-1">
                 <button 
                   onClick={() => setCurrentStep('home')} 
@@ -438,6 +495,13 @@ export const MyCatalog: React.FC = () => {
                                         <div className="relative group">
                                           <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
                                           <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 pl-12 font-bold dark:text-white" value={profile.socialLinks?.website || ''} onChange={e => handleProfileUpdate({ socialLinks: { ...profile.socialLinks, website: e.target.value } })} placeholder="https://seusite.com.br" />
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Link de Vídeo (YouTube ou Reels)</label>
+                                        <div className="relative group">
+                                          <Youtube className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />
+                                          <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 pl-12 font-bold dark:text-white" value={profile.storeConfig?.videoUrl || ''} onChange={e => handleProfileUpdate({ storeConfig: { ...profile.storeConfig, videoUrl: e.target.value } })} placeholder="https://www.youtube.com/watch?v=... ou Reels" />
                                         </div>
                                     </div>
                                 </div>
