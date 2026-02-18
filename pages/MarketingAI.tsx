@@ -184,7 +184,8 @@ export const MarketingAI: React.FC = () => {
                     <form onSubmit={handleGenerateImage} className="space-y-6">
                         <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">O que você quer ver? (Seja específico)</label>
-                            <textarea required rows={4} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-brand-primary/10 transition-all dark:text-white resize-none" placeholder="Ex: Um hambúrguer suculento em um prato de madeira, luz natural, fundo desfocado de restaurante rústico, ultra detalhado..." value={imagePrompt} onChange={e => imagePrompt} />
+                            {/* Fix: Updated onChange handler to correctly call setImagePrompt with target value */}
+                            <textarea required rows={4} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-brand-primary/10 transition-all dark:text-white resize-none" placeholder="Ex: Um hambúrguer suculento em um prato de madeira, luz natural, fundo desfocado de restaurante rústico, ultra detalhado..." value={imagePrompt} onChange={e => setImagePrompt(e.target.value)} />
                         </div>
 
                         <div>

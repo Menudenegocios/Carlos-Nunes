@@ -1,10 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
 import { BlogPost } from '../types';
-import { Calendar, User, BookOpen, Search, ArrowRight, Store, X, ChevronLeft, Share2, Sparkles, Clock, TrendingUp } from 'lucide-react';
+import { Calendar, User, BookOpen, Search, ArrowRight, Store, ChevronLeft, Share2, Clock } from 'lucide-react';
 
 export const Blog: React.FC = () => {
+  const location = useLocation();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -14,10 +16,18 @@ export const Blog: React.FC = () => {
     const loadPosts = async () => {
       const data = await mockBackend.getBlogPosts();
       setPosts(data.sort((a, b) => Number(b.id) - Number(a.id)));
+      
+      // Checa se há filtro de categoria na URL
+      const params = new URLSearchParams(location.search);
+      const categoryFilter = params.get('category');
+      if (categoryFilter) {
+        setSearchTerm(categoryFilter);
+      }
+      
       setLoading(false);
     };
     loadPosts();
-  }, []);
+  }, [location.search]);
 
   const filteredPosts = posts.filter(post => {
     const term = searchTerm.toLowerCase();
@@ -118,6 +128,9 @@ export const Blog: React.FC = () => {
         <div className="flex items-center gap-4 px-4">
            <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Artigos Mais Recentes</h2>
+           {searchTerm && (
+             <button onClick={() => setSearchTerm('')} className="ml-auto text-xs font-black text-indigo-600 underline uppercase tracking-widest">Limpar Filtro</button>
+           )}
         </div>
 
         {loading ? (
@@ -151,7 +164,7 @@ export const Blog: React.FC = () => {
                     <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-4 leading-tight group-hover:text-indigo-600 transition-colors">
                     {post.title}
                     </h2>
-                    <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium mb-10 flex-1 line-clamp-3 leading-relaxed">
+                    <p className="text-gray-50 dark:text-zinc-400 text-sm font-medium mb-10 flex-1 line-clamp-3 leading-relaxed">
                     {post.summary}
                     </p>
                     

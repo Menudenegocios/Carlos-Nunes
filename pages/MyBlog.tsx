@@ -1,0 +1,114 @@
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { mockBackend } from '../services/mockBackend';
+import { BlogPost } from '../types';
+import { 
+  BookOpen, Plus, FileText, Home as HomeIcon, Layout, 
+  ChevronRight, Calendar, Edit2, Trash2, X, Send, RefreshCw
+} from 'lucide-react';
+import { SectionLanding } from '../components/SectionLanding';
+
+export const MyBlog: React.FC = () => {
+  const { user } = useAuth();
+  const [activeSubTab, setActiveSubTab] = useState<'home' | 'manage'>('home');
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => { loadPosts(); }, []);
+
+  const loadPosts = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const data = await mockBackend.getBlogPosts();
+      setPosts(data.filter(p => p.userId === user.id));
+    } finally { setIsLoading(false); }
+  };
+
+  if (!user) return null;
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
+      <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-white/5 rounded-[1.8rem] flex items-center justify-center border border-white/10 shadow-inner">
+               <BookOpen className="w-10 h-10 text-[#F67C01]" />
+            </div>
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
+                BLOG & ARTIGOS <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#9333EA] to-pink-500">PRO</span>
+              </h2>
+              <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">GERE AUTORIDADE E EDUQUE SEU MERCADO.</p>
+            </div>
+          </div>
+          <button onClick={() => setIsModalOpen(true)} className="bg-[#F67C01] text-white px-12 py-5 rounded-[1.8rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+            <Plus className="w-5 h-5" /> NOVO ARTIGO
+          </button>
+        </div>
+
+        <div className="bg-white/5 rounded-[2.5rem] p-1.5 mt-10 flex gap-1 overflow-x-auto scrollbar-hide border border-white/5">
+          {[
+            { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
+            { id: 'manage', label: 'GESTÃO', desc: 'Seus artigos', icon: FileText },
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as any)}
+              className={`flex items-center gap-4 px-8 py-4 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}
+            >
+              <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
+              <div className="text-left">
+                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1 italic">{tab.label}</p>
+                <p className={`text-[8px] font-medium opacity-50 ${activeSubTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+      </div>
+
+      <div className="pt-4 px-2">
+        {activeSubTab === 'home' ? (
+          <SectionLanding 
+            title="Gere autoridade e eduque seu bairro."
+            subtitle="Blog & Artigos"
+            description="Escreva artigos sobre seu nicho de atuação para atrair clientes qualificados. Conteúdos educativos ajudam seu perfil a aparecer melhor no Google."
+            benefits={["Publicação direta no blog principal", "SEO regional otimizado", "Aumento do índice de confiança", "Compartilhamento fácil"]}
+            youtubeId="dQw4w9WgXcQ"
+            ctaLabel="GERENCIAR MEUS ARTIGOS"
+            onStart={() => setActiveSubTab('manage')}
+            icon={BookOpen}
+          />
+        ) : (
+          <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-8">
+            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Sua Biblioteca</h3>
+            {isLoading ? (
+              <div className="text-center py-20 text-slate-400">Carregando...</div>
+            ) : (
+              <div className="grid gap-4">
+                {posts.map(post => (
+                  <div key={post.id} className="p-6 bg-white/5 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all">
+                    <div className="flex items-center gap-6">
+                       <img src={post.imageUrl} className="w-16 h-16 rounded-2xl object-cover" />
+                       <div>
+                          <h4 className="font-black text-gray-900 dark:text-white text-lg uppercase italic">{post.title}</h4>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{post.category} • {post.date}</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-2">
+                       <button className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 border border-gray-100 dark:border-zinc-700 shadow-sm"><Edit2 className="w-4 h-4" /></button>
+                       <button className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 border border-gray-100 dark:border-zinc-700 shadow-sm"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

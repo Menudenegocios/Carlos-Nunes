@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Smartphone, Package, 
   Trophy, LogOut, Menu, X, Star, Layout, 
   Store, ChevronLeft, Briefcase, GraduationCap,
-  Sun, Moon, Handshake, CreditCard, Sparkles
+  Sun, Moon, Handshake, CreditCard, Sparkles, BookOpen
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
@@ -23,7 +23,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
-    { label: 'Minha Vitrine', icon: Store, to: '/my-vitrine' }, // Hub centralizado
+    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
+    { label: 'Catálogo & Loja', icon: Package, to: '/catalog' },
+    { label: 'Blog & Artigos', icon: BookOpen, to: '/my-blog' },
     { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
     { label: 'Marketplace B2B', icon: Handshake, to: '/marketplace-b2b' },
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
@@ -69,7 +71,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                     : 'text-slate-500 dark:text-slate-400 hover:bg-brand-surface dark:hover:bg-slate-800/50 hover:text-brand-dark dark:hover:text-brand-surface'
                 } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
               >
-                {/* Indicador Laranja Ativo */}
                 {isActive(item.to) && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#F67C01] rounded-r-full shadow-[2px_0_10px_rgba(246,124,1,0.5)]"></div>
                 )}

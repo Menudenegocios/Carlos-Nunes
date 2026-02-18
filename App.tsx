@@ -31,7 +31,7 @@ import { Events } from './pages/Events';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
-import { MyVitrine } from './pages/MyVitrine';
+import { MyBlog } from './pages/MyBlog';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -65,12 +65,12 @@ const AppRoutes = () => {
 
       {/* Dashboard Routes */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/my-vitrine" element={<PrivateRoute><MyVitrine /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
       <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
+      <Route path="/my-blog" element={<PrivateRoute><MyBlog /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />

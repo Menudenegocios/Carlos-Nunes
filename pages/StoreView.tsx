@@ -208,12 +208,29 @@ export const StoreView: React.FC = () => {
                 <div className="w-28 h-28 md:w-36 md:h-36 rounded-[2.5rem] bg-white p-1.5 shadow-2xl mb-6 overflow-hidden border-[6px] border-white/10 backdrop-blur-md transform hover:rotate-2 transition-transform duration-700">
                     <img src={profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.businessName}`} className="w-full h-full object-cover rounded-[2rem]" alt="Logo" />
                 </div>
-                <h1 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic mb-6 leading-tight drop-shadow-2xl">{profile.businessName}</h1>
+                <h1 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic mb-8 leading-tight drop-shadow-2xl">{profile.businessName}</h1>
                 
-                <div className="flex flex-col items-center gap-6">
+                {/* Change: Localização e Vídeo agora ficam ao lado do 'Aberto Agora' */}
+                <div className="flex flex-wrap items-center justify-center gap-4">
                     <span className="flex items-center gap-2 bg-emerald-600/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg">
                         <CheckCircle className="w-4 h-4" /> Aberto Agora
                     </span>
+
+                    <span className="flex items-center gap-2 bg-indigo-600/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg">
+                        <MapPin className="w-4 h-4" /> {profile.city || 'São Paulo'}
+                    </span>
+
+                    {profile.storeConfig?.videoUrl && (
+                        <button 
+                            onClick={() => setVideoModalUrl(profile.storeConfig?.videoUrl || null)}
+                            className="flex items-center gap-2 bg-brand-primary/90 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform group"
+                        >
+                            <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-brand-primary transition-colors">
+                                <Play className="w-2 h-2 fill-current" />
+                            </div>
+                            Assista Nosso Vídeo
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -293,11 +310,10 @@ export const StoreView: React.FC = () => {
                 {/* MAIN CONTENT */}
                 <div className="lg:col-span-8 xl:col-span-9 space-y-12">
                     
-                    {/* Barra de Categorias e Info Centralizada e Reordenada */}
+                    {/* Barra de Categorias Simplificada */}
                     <div className="sticky top-20 z-30 bg-gray-50/95 dark:bg-black/90 backdrop-blur-xl py-8 -mx-6 px-6 sm:mx-0 sm:px-0 mb-4">
                         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 justify-center items-center">
                             
-                            {/* 1. Todos os Itens */}
                             <button 
                                 onClick={() => setActiveCat('todos')}
                                 className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-lg ${activeCat === 'todos' ? 'bg-[#F67C01] text-white scale-105' : 'bg-white dark:bg-zinc-900 text-slate-400 border border-gray-100 dark:border-zinc-800 hover:bg-gray-50'}`}
@@ -305,27 +321,8 @@ export const StoreView: React.FC = () => {
                                 🔥 Todos os Itens
                             </button>
 
-                            {/* 2. Sua Localização */}
-                            <span className="px-8 py-4 rounded-[2rem] bg-[#F67C01] text-white shadow-xl flex items-center gap-3 text-[11px] font-black uppercase tracking-widest whitespace-nowrap">
-                                <MapPin className="w-4 h-4" /> {profile.city || 'São Paulo'}
-                            </span>
+                            <div className="w-px h-8 bg-gray-200 dark:bg-zinc-800 self-center mx-4 hidden sm:block"></div>
 
-                            {/* 3. Assista Nosso Vídeo */}
-                            {profile.storeConfig?.videoUrl && (
-                                <button 
-                                    onClick={() => setVideoModalUrl(profile.storeConfig?.videoUrl || null)}
-                                    className="px-8 py-4 rounded-[2rem] bg-[#F67C01] text-white shadow-xl hover:scale-105 transition-all flex items-center gap-3 text-[11px] font-black uppercase tracking-widest whitespace-nowrap group"
-                                >
-                                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-[#F67C01] transition-colors">
-                                        <Play className="w-2.5 h-2.5 fill-current" />
-                                    </div>
-                                    Assista Nosso Vídeo
-                                </button>
-                            )}
-
-                            <div className="w-px h-8 bg-gray-200 dark:bg-zinc-800 self-center mx-2 hidden sm:block"></div>
-
-                            {/* Outras Categorias */}
                             {categories.map(cat => (
                                 <button 
                                     key={cat.id}
@@ -377,7 +374,7 @@ export const StoreView: React.FC = () => {
                                     <div className="flex justify-between items-start mb-3">
                                         <h3 className="font-black text-gray-900 dark:text-white text-xl leading-tight italic uppercase tracking-tighter line-clamp-1 group-hover:text-emerald-600 transition-colors">{prod.name}</h3>
                                     </div>
-                                    <p className="text-gray-500 dark:text-zinc-500 text-xs line-clamp-2 mb-10 font-medium leading-relaxed">{prod.description}</p>
+                                    <p className="text-gray-50 dark:text-zinc-500 text-xs line-clamp-2 mb-10 font-medium leading-relaxed">{prod.description}</p>
                                     
                                     <div className="mt-auto flex items-end justify-between">
                                         <div className="flex flex-col">
