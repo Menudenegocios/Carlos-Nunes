@@ -11,8 +11,7 @@ import {
   QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
   Tag, Info, Target, Briefcase, Award, Globe, AlignLeft, HelpCircle, Home as HomeIcon,
   Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap, Video, BarChart, Ticket,
-  // Added MessageCircle to imports
-  ShoppingCart, Camera, Save, Phone, Smartphone, Minus, MessageCircle
+  ShoppingCart, Camera, Save, Phone, Smartphone, Minus, MessageCircle, Instagram
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -99,7 +98,7 @@ const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], s
            </div>
            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-center">{profile.businessName || 'Minha loja'}</h1>
            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.2em] mt-2 flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-              <MapPin className="w-3 h-3 text-[#F67C01]" /> {profile.neighborhood || profile.city || 'Sua localização'}
+              <MapPin className="w-3 h-3 text-[#F67C01]" /> {profile.city || 'Sua localização'}
            </p>
         </div>
       </div>
@@ -416,18 +415,35 @@ export const MyCatalog: React.FC = () => {
                                     <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-brand-primary/10 dark:text-white" value={profile.businessName || ''} onChange={e => handleProfileUpdate({ businessName: e.target.value })} placeholder="Ex: Doceria da Ana" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Bairro / Região</label>
-                                        <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-brand-primary/10 dark:text-white" value={profile.neighborhood || ''} onChange={e => handleProfileUpdate({ neighborhood: e.target.value })} placeholder="Ex: Jardins" />
-                                    </div>
-                                    <div>
+                                    <div className="col-span-2 md:col-span-1">
                                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
                                         <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-brand-primary/10 dark:text-white" value={profile.city || ''} onChange={e => handleProfileUpdate({ city: e.target.value })} placeholder="Ex: São Paulo" />
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Instagram (@usuario)</label>
+                                        <div className="relative group">
+                                          <Instagram className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-500" />
+                                          <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 pl-12 font-bold dark:text-white" value={profile.socialLinks?.instagram || ''} onChange={e => handleProfileUpdate({ socialLinks: { ...profile.socialLinks, instagram: e.target.value } })} placeholder="Ex: ana_doces" />
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">WhatsApp de Contato</label>
+                                        <div className="relative group">
+                                          <MessageCircle className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                          <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 pl-12 font-bold dark:text-white" value={profile.socialLinks?.whatsapp || ''} onChange={e => handleProfileUpdate({ socialLinks: { ...profile.socialLinks, whatsapp: e.target.value } })} placeholder="Ex: 5511999999999" />
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Website / Link Externo</label>
+                                        <div className="relative group">
+                                          <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
+                                          <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 pl-12 font-bold dark:text-white" value={profile.socialLinks?.website || ''} onChange={e => handleProfileUpdate({ socialLinks: { ...profile.socialLinks, website: e.target.value } })} placeholder="https://seusite.com.br" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Biografia Curta (Marketplace)</label>
-                                    <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-brand-primary/10 dark:text-white resize-none" value={profile.bio || ''} onChange={e => handleProfileUpdate({ bio: e.target.value })} placeholder="Conte em 2 frases o diferencial do seu negócio..." />
+                                    <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm focus:ring-4 focus:ring-brand-primary/10 dark:text-white resize-none transition-all" value={profile.bio || ''} onChange={e => handleProfileUpdate({ bio: e.target.value })} placeholder="Conte em 2 frases o diferencial do seu negócio..." />
                                 </div>
                             </div>
                         </div>
@@ -458,6 +474,7 @@ export const MyCatalog: React.FC = () => {
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera className="w-8 h-8 text-white" /></div>
                                 </div>
                                 <input type="file" ref={fileInputCoverRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'coverUrl')} />
+                                <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase text-center">Recomendado 1200x400 pixel</p>
                             </div>
                         </div>
                     </div>
@@ -620,7 +637,7 @@ export const MyCatalog: React.FC = () => {
                                     <p className="text-slate-300 font-black uppercase text-sm tracking-[0.4em]">Seu estoque está vazio</p>
                                 </div>
                             ) : products.map(prod => (
-                                <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 p-4 pb-8 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
+                                <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 p-4 pb-8 shadow-sm border border-gray-100 dark:border-zinc-800 hover:shadow-2xl transition-all duration-500 flex flex-col">
                                     <div className="aspect-square rounded-[2rem] bg-gray-50 dark:bg-zinc-800 mb-6 overflow-hidden relative group">
                                         {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={prod.name} /> : <div className="w-full h-full flex items-center justify-center text-gray-200"><ImageIcon className="w-10 h-10" /></div>}
                                         <div className="absolute top-4 right-4 flex gap-2">
