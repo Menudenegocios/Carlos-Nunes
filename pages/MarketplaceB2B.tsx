@@ -5,9 +5,9 @@ import { mockBackend } from '../services/mockBackend';
 import { B2BOffer } from '../types';
 import { 
   Handshake, Plus, ShieldCheck, Zap, 
-  MessageCircle, Info, Lock, Crown, 
-  X, Save, RefreshCw, Home as HomeIcon, Search, ArrowRight,
-  Target, Rocket, Building2, Star
+  MessageCircle, Lock, Crown, 
+  X, RefreshCw, Home as HomeIcon, Search, ArrowRight,
+  Star, ArrowUpRight
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
@@ -20,7 +20,7 @@ export const MarketplaceB2B: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Create Offer Form
+  // Create Opportunity Form
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -53,7 +53,7 @@ export const MarketplaceB2B: React.FC = () => {
       setOffers([newOffer, ...offers]);
       setIsModalOpen(false);
       setFormData({ title: '', description: '', discount: '', category: 'Serviços', terms: '' });
-      // Redireciona automaticamente para a aba de navegação (Match) após salvar
+      // Redireciona para a aba de Match (Browse) após salvar com sucesso
       setActiveTab('browse');
     } finally { setIsSaving(false); }
   };
@@ -101,7 +101,7 @@ export const MarketplaceB2B: React.FC = () => {
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Como funciona', icon: HomeIcon },
                   { id: 'browse', label: 'MATCH', desc: 'Ver acordos', icon: Zap },
-                  { id: 'my-deals', label: 'MINHAS OPOR.', desc: 'Seus resgates', icon: ShieldCheck }
+                  { id: 'my-deals', label: 'MINHAS OPOR.', desc: 'Suas parcerias', icon: ShieldCheck }
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -125,12 +125,12 @@ export const MarketplaceB2B: React.FC = () => {
             <SectionLanding 
                 title="Aumente seu lucro com parcerias inteligentes."
                 subtitle="Business to Business Connect"
-                description="O Marketplace B2B é o espaço exclusivo onde membros do ecossistema Menu ADS se conectam. Economize em custos operacionais e encontre novos clientes corporativos."
+                description="O Marketplace B2B é o espaço exclusivo onde membros do ecossistema Menu ADS se conectam. Encontre oportunidades de crescimento mútuo."
                 benefits={[
-                "Acesse descontos agressivos em serviços essenciais.",
+                "Acesse oportunidades agressivas em serviços essenciais.",
                 "Crie redes de networking real com outros empresários.",
                 "Capture clientes PJ (Pessoa Jurídica) sem custos de anúncio.",
-                "Fortaleça a circulação de valor dentro do seu bairro.",
+                "Fortaleça a circulação de valor dentro da sua cidade.",
                 "Exclusividade garantida: acordos visíveis apenas para membros."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
