@@ -53,6 +53,7 @@ export const MarketplaceB2B: React.FC = () => {
       setOffers([newOffer, ...offers]);
       setIsModalOpen(false);
       setFormData({ title: '', description: '', discount: '', category: 'Serviços', terms: '' });
+      // Redireciona automaticamente para a aba de navegação (Match) após salvar
       setActiveTab('browse');
     } finally { setIsSaving(false); }
   };
@@ -85,7 +86,7 @@ export const MarketplaceB2B: React.FC = () => {
             <div className="flex gap-4">
                {user.plan === 'negocios' || user.plan === 'freelancers' ? (
                   <button onClick={() => setIsModalOpen(true)} className="bg-[#F67C01] text-white px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
-                      <Plus className="w-4 h-4" /> CRIAR BENEFÍCIO
+                      <Plus className="w-4 h-4" /> CRIAR OPORTUNIDADE
                   </button>
                ) : (
                   <div className="bg-white/5 backdrop-blur-md px-6 py-3 rounded-3xl border border-white/10 flex items-center gap-3">
@@ -100,7 +101,7 @@ export const MarketplaceB2B: React.FC = () => {
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Como funciona', icon: HomeIcon },
                   { id: 'browse', label: 'MATCH', desc: 'Ver acordos', icon: Zap },
-                  { id: 'my-deals', label: 'MEUS ACORDOS', desc: 'Seus resgates', icon: ShieldCheck }
+                  { id: 'my-deals', label: 'MINHAS OPOR.', desc: 'Seus resgates', icon: ShieldCheck }
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -158,7 +159,7 @@ export const MarketplaceB2B: React.FC = () => {
                     [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
                  ) : filteredOffers.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
-                       <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhum acordo disponível no momento.</p>
+                       <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade disponível no momento.</p>
                     </div>
                  ) : filteredOffers.map(offer => (
                     <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full overflow-hidden">
@@ -183,22 +184,30 @@ export const MarketplaceB2B: React.FC = () => {
               </div>
            </div>
         )}
+
+        {activeTab === 'my-deals' && (
+            <div className="py-20 text-center bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-zinc-800">
+               <ShieldCheck className="w-20 h-20 text-slate-200 mx-auto mb-8" />
+               <h4 className="text-xl font-black text-slate-400 uppercase tracking-widest">Nenhuma Oportunidade Resgatada</h4>
+               <button onClick={() => setActiveTab('browse')} className="mt-6 text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline">Ver Oportunidades Ativas</button>
+            </div>
+        )}
       </div>
 
-      {/* Modal Criar Benefício */}
+      {/* Modal Criar Oportunidade */}
       {isModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Criar Benefício B2B</h3>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Criar Oportunidade B2B</h3>
                         <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Exclusivo para membros da rede</p>
                     </div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
                 <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título do Benefício</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Oportunidade</label>
                         <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: 20% de Desconto em Consultoria Contábil" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -225,7 +234,7 @@ export const MarketplaceB2B: React.FC = () => {
                         <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.terms} onChange={e => setFormData({...formData, terms: e.target.value})} placeholder="Ex: Válido apenas para novos contratos." />
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR BENEFÍCIO'}
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR OPORTUNIDADE'}
                     </button>
                 </form>
             </div>

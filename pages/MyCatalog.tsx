@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory } from '../types';
+import { Product, Profile, StoreCategory, Coupon } from '../types';
 import { 
   Store, Settings, LayoutGrid, Package, CheckCircle, ChevronRight, 
   Upload, Sparkles, Clock, CreditCard, 
@@ -11,25 +11,79 @@ import {
   QrCode, X, Calendar, Wallet, Check, MapPin, Link as LinkIcon,
   Tag, Info, Target, Briefcase, Award, Globe, AlignLeft, HelpCircle, Home as HomeIcon,
   Table as TableIcon, FileText, Download, Wand2, RefreshCw, Zap, Video, BarChart, Ticket,
-  ShoppingCart, Camera, Save, Phone, Smartphone
+  // Added MessageCircle to imports
+  ShoppingCart, Camera, Save, Phone, Smartphone, Minus, MessageCircle
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 
-const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], storeCategories: StoreCategory[], onBack: () => void }> = ({ profile, products, storeCategories, onBack }) => {
+interface CartItem extends Product {
+  quantity: number;
+}
+
+const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], storeCategories: StoreCategory[], coupons: Coupon[], onBack: () => void }> = ({ profile, products, storeCategories, coupons, onBack }) => {
   const [activeCat, setActiveCat] = useState('todos');
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   const filteredProducts = activeCat === 'todos' 
     ? products 
     : products.filter(p => p.storeCategoryId === activeCat);
 
+  const subtotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + (item.promoPrice || item.price) * item.quantity, 0);
+  }, [cart]);
+
+  const addToCart = (product: Product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const updateQuantity = (productId: string, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === productId) {
+        return { ...item, quantity: Math.max(1, item.quantity + delta) };
+      }
+      return item;
+    }));
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const handleFinishOrder = () => {
+    const phone = profile.phone?.replace(/\D/g, '') || '';
+    if (!phone) {
+        alert("Configure um número de WhatsApp nas configurações da loja.");
+        return;
+    }
+
+    let msg = `🛒 *NOVO PEDIDO - ${profile.businessName?.toUpperCase()}*\n\n`;
+    cart.forEach(item => {
+        msg += `✅ ${item.quantity}x ${item.name} - R$ ${((item.promoPrice || item.price) * item.quantity).toFixed(2)}\n`;
+    });
+    msg += `\n*TOTAL: R$ ${subtotal.toFixed(2)}*\n\n_Pedido enviado via Menu de Negócios_`;
+    
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
   return (
-    <div className="bg-gray-50 dark:bg-[#020617] min-h-screen pb-20 -m-6 md:-m-10 animate-fade-in">
+    <div className="bg-gray-50 dark:bg-[#020617] min-h-screen pb-20 -m-6 md:-m-10 animate-fade-in relative">
       <div className="bg-white dark:bg-zinc-900 p-4 sticky top-0 z-[100] border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between shadow-sm">
         <button onClick={onBack} className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary font-black text-[10px] uppercase tracking-widest hover:opacity-70 transition-all">
            <ArrowLeft className="w-4 h-4" /> VOLTAR AO EDITOR
         </button>
-        <div className="flex items-center gap-2">
-            <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Modo preview real</span>
+        <div className="flex items-center gap-4">
+            <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Loja Online Ativa</span>
+            <button onClick={() => setIsCartOpen(true)} className="relative p-2 bg-gray-100 dark:bg-zinc-800 rounded-xl text-gray-700 dark:text-white">
+                <ShoppingCart className="w-5 h-5" />
+                {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">{cart.reduce((a, b) => a + b.quantity, 0)}</span>}
+            </button>
         </div>
       </div>
 
@@ -80,15 +134,63 @@ const StorePreview: React.FC<{ profile: Partial<Profile>, products: Product[], s
                     <p className="text-gray-50 dark:text-zinc-500 text-[10px] line-clamp-2 mb-6 font-medium leading-relaxed">{prod.description}</p>
                     <div className="mt-auto flex justify-between items-end">
                         <p className="text-[#F67C01] font-black text-xl">R$ {prod.price.toFixed(2)}</p>
-                        <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg">
-                           <ShoppingCart className="w-4 h-4" />
-                        </div>
+                        <button 
+                          onClick={() => addToCart(prod)}
+                          className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg hover:scale-110 transition-transform"
+                        >
+                           <Plus className="w-4 h-4" />
+                        </button>
                     </div>
                  </div>
               </div>
            ))}
         </div>
       </div>
+
+      {/* Cart Modal */}
+      {isCartOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
+                  <div className="p-8 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+                      <h3 className="text-2xl font-black italic uppercase tracking-tighter dark:text-white">Meu Carrinho</h3>
+                      <button onClick={() => setIsCartOpen(false)} className="text-slate-400"><X className="w-6 h-6" /></button>
+                  </div>
+                  <div className="p-8 max-h-[400px] overflow-y-auto space-y-4">
+                      {cart.length === 0 ? (
+                          <p className="text-center text-slate-400 py-10 font-bold uppercase text-[10px] tracking-widest">Carrinho vazio</p>
+                      ) : cart.map(item => (
+                          <div key={item.id} className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                                  <img src={item.imageUrl} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1">
+                                  <h4 className="font-bold text-sm dark:text-white">{item.name}</h4>
+                                  <p className="text-xs text-emerald-600 font-black">R$ {(item.promoPrice || item.price).toFixed(2)}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                  <button onClick={() => updateQuantity(item.id, -1)} className="p-1 rounded-lg bg-gray-100 dark:bg-zinc-800 dark:text-white"><Minus className="w-3 h-3" /></button>
+                                  <span className="text-xs font-black dark:text-white">{item.quantity}</span>
+                                  <button onClick={() => updateQuantity(item.id, 1)} className="p-1 rounded-lg bg-gray-100 dark:bg-zinc-800 dark:text-white"><Plus className="w-3 h-3" /></button>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+                  <div className="p-8 bg-gray-50 dark:bg-zinc-800/50 border-t border-gray-100 dark:border-zinc-800 space-y-6">
+                      <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total do Pedido</span>
+                          <span className="text-2xl font-black text-emerald-600">R$ {subtotal.toFixed(2)}</span>
+                      </div>
+                      <button 
+                        onClick={handleFinishOrder}
+                        disabled={cart.length === 0}
+                        className="w-full py-5 bg-emerald-600 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                      >
+                          <MessageCircle className="w-5 h-5" /> FINALIZAR NO WHATSAPP
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
@@ -101,9 +203,11 @@ export const MyCatalog: React.FC = () => {
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   
   const [newCatName, setNewCatName] = useState('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
     name: '', 
@@ -113,6 +217,13 @@ export const MyCatalog: React.FC = () => {
     storeCategoryId: '', 
     available: true,
     imageUrl: ''
+  });
+  const [couponForm, setCouponForm] = useState<Partial<Coupon>>({
+    code: '',
+    title: '',
+    discount: '',
+    pointsReward: 50,
+    description: ''
   });
 
   const fileInputLogoRef = useRef<HTMLInputElement>(null);
@@ -125,14 +236,19 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-        const [prof, cats, prods] = await Promise.all([
+        const [prof, cats, prods, myOffers] = await Promise.all([
             mockBackend.getProfile(user.id),
             mockBackend.getStoreCategories(user.id),
-            mockBackend.getProducts(user.id)
+            mockBackend.getProducts(user.id),
+            mockBackend.getMyOffers(user.id)
         ]);
         setProfile(prof || { userId: user.id, storeConfig: { paymentMethods: { pix: { enabled: true }, onDelivery: true, creditCard: true } } } as any);
         setStoreCategories(cats);
         setProducts(prods || []);
+        
+        const allCoupons: Coupon[] = [];
+        myOffers.forEach(o => { if(o.coupons) allCoupons.push(...o.coupons); });
+        setCoupons(allCoupons);
     } finally { setIsLoading(false); }
   };
 
@@ -175,7 +291,6 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     try {
         if (editingProduct) {
-            // Mock backend implementation usually needs an updateProduct method
             const updated = { ...editingProduct, ...productForm };
             setProducts(products.map(p => p.id === editingProduct.id ? (updated as Product) : p));
         } else {
@@ -190,7 +305,23 @@ export const MyCatalog: React.FC = () => {
     }
   };
 
-  if (viewMode === 'preview') return <StorePreview profile={profile} products={products} storeCategories={storeCategories} onBack={() => setViewMode('setup')} />;
+  const handleSaveCoupon = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!user) return;
+      // Para simplificar no mock, vinculamos ao primeiro serviço ou criamos um mock id
+      const offerId = products[0]?.id || 'mock-offer'; 
+      await mockBackend.addCoupon(user.id, offerId, couponForm);
+      setCoupons([...coupons, { ...couponForm, id: Date.now().toString() } as Coupon]);
+      setIsCouponModalOpen(false);
+      setCouponForm({ code: '', title: '', discount: '', pointsReward: 50, description: '' });
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+      if (!confirm('Deseja remover este cupom?')) return;
+      setCoupons(coupons.filter(c => c.id !== id));
+  };
+
+  if (viewMode === 'preview') return <StorePreview profile={profile} products={products} storeCategories={storeCategories} coupons={coupons} onBack={() => setViewMode('setup')} />;
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
@@ -232,7 +363,8 @@ export const MyCatalog: React.FC = () => {
                     { id: 1, label: 'Identidade', desc: 'Marca e logo', icon: Store },
                     { id: 2, label: 'Operação', desc: 'Configurações', icon: Settings },
                     { id: 3, label: 'Categorias', desc: 'Organização', icon: LayoutGrid },
-                    { id: 4, label: 'Produtos', desc: 'Gerenciar itens', icon: Package }
+                    { id: 4, label: 'Cupons', desc: 'Descontos', icon: Ticket },
+                    { id: 5, label: 'Produtos', desc: 'Gerenciar itens', icon: Package }
                 ].map((step) => (
                     <button 
                       key={step.id} 
@@ -323,7 +455,7 @@ export const MyCatalog: React.FC = () => {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-200"><ImageIcon className="w-8 h-8" /></div>
                                     )}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera className="w-6 h-6 text-white" /></div>
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Camera className="w-8 h-8 text-white" /></div>
                                 </div>
                                 <input type="file" ref={fileInputCoverRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'coverUrl')} />
                             </div>
@@ -429,8 +561,47 @@ export const MyCatalog: React.FC = () => {
                     </div>
                 )}
 
-                {/* STEP 4: PRODUTOS */}
+                {/* STEP 4: CUPONS */}
                 {currentStep === 4 && (
+                    <div className="space-y-10 animate-fade-in">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div>
+                                <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Meus Cupons ({coupons.length})</h3>
+                                <p className="text-slate-500 font-medium">Gere descontos e fidelize clientes locais.</p>
+                            </div>
+                            <button onClick={() => { setCouponForm({ code: '', title: '', discount: '', pointsReward: 50, description: '' }); setIsCouponModalOpen(true); }} className="bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-2 hover:bg-indigo-700 transition-all active:scale-95">
+                                <Plus className="w-4 h-4" /> CRIAR NOVO CUPOM
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {coupons.length === 0 ? (
+                                <div className="col-span-full py-32 text-center border-4 border-dashed border-gray-100 dark:border-zinc-800 rounded-[4rem]">
+                                    <Ticket className="w-20 h-20 text-slate-100 mx-auto mb-8" />
+                                    <p className="text-slate-300 font-black uppercase text-sm tracking-[0.4em]">Nenhum cupom ativo</p>
+                                </div>
+                            ) : coupons.map(coupon => (
+                                <div key={coupon.id} className="bg-white dark:bg-zinc-800 p-8 rounded-[2.5rem] border-2 border-dashed border-indigo-100 dark:border-zinc-700 relative overflow-hidden group">
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-mono font-black text-lg px-4 py-2 rounded-xl border border-indigo-100">{coupon.code}</span>
+                                            <button onClick={() => handleDeleteCoupon(coupon.id)} className="p-2 text-slate-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                        <h4 className="font-black text-gray-900 dark:text-white text-xl italic uppercase tracking-tighter mb-2">{coupon.discount} OFF</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-8">{coupon.title}</p>
+                                        <div className="mt-auto flex items-center gap-2 text-emerald-600 font-black text-[10px] uppercase">
+                                            <Zap className="w-3 h-3 fill-current" /> Recompensa: {coupon.pointsReward} pts
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-indigo-50 dark:bg-indigo-950/30 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP 5: PRODUTOS */}
+                {currentStep === 5 && (
                     <div className="space-y-10 animate-fade-in">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                             <div>
@@ -451,7 +622,7 @@ export const MyCatalog: React.FC = () => {
                             ) : products.map(prod => (
                                 <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 p-4 pb-8 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
                                     <div className="aspect-square rounded-[2rem] bg-gray-50 dark:bg-zinc-800 mb-6 overflow-hidden relative group">
-                                        {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={prod.name} /> : <div className="w-full h-full flex items-center justify-center text-gray-200"><ImageIcon className="w-8 h-8" /></div>}
+                                        {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={prod.name} /> : <div className="w-full h-full flex items-center justify-center text-gray-200"><ImageIcon className="w-10 h-10" /></div>}
                                         <div className="absolute top-4 right-4 flex gap-2">
                                             <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-600 shadow-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all"><Edit2 className="w-4 h-4" /></button>
                                             <button className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-500 shadow-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all delay-75"><Trash2 className="w-4 h-4" /></button>
@@ -464,7 +635,7 @@ export const MyCatalog: React.FC = () => {
                                                 {prod.available ? 'ATIVO' : 'OCULTO'}
                                             </span>
                                         </div>
-                                        <p className="text-gray-500 dark:text-zinc-500 text-[10px] font-medium leading-relaxed line-clamp-2 mb-6">{prod.description}</p>
+                                        <p className="text-gray-50 dark:text-zinc-500 text-[10px] font-medium leading-relaxed line-clamp-2 mb-6">{prod.description}</p>
                                         <div className="mt-auto flex justify-between items-end">
                                             <p className="text-[#F67C01] font-black text-xl leading-none">R$ {prod.price.toFixed(2)}</p>
                                             <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-2xl text-slate-300">
@@ -488,7 +659,7 @@ export const MyCatalog: React.FC = () => {
                 <div className="bg-[#0F172A] p-8 md:p-10 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-3xl font-black uppercase italic tracking-tighter">{editingProduct ? 'Editar Item' : 'Novo Item'}</h3>
-                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Preencha os detalhes para publicação</p>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Preencha os detalhes para publication</p>
                     </div>
                     <button onClick={() => setIsProductModalOpen(false)} className="p-4 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
@@ -534,7 +705,7 @@ export const MyCatalog: React.FC = () => {
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria Vinculada</label>
-                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-indigo-500/10" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
+                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-indigo-50/10" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
                                     <option value="">Sem categoria</option>
                                     {storeCategories.map(cat => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -558,6 +729,35 @@ export const MyCatalog: React.FC = () => {
                 </form>
              </div>
           </div>
+       )}
+
+       {/* COUPON MODAL */}
+       {isCouponModalOpen && (
+           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                  <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">Novo Cupom</h3>
+                      <button onClick={() => setIsCouponModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                  </div>
+                  <form onSubmit={handleSaveCoupon} className="p-10 space-y-6">
+                      <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Código do Cupom</label>
+                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-mono font-black text-lg uppercase dark:text-white" value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} placeholder="Ex: BEMVINDO10" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Desconto</label>
+                              <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.discount} onChange={e => setCouponForm({...couponForm, discount: e.target.value})} placeholder="Ex: 10% ou R$ 5" />
+                          </div>
+                          <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Pontos (Clube ADS)</label>
+                              <input required type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.pointsReward} onChange={e => setCouponForm({...couponForm, pointsReward: Number(e.target.value)})} />
+                          </div>
+                      </div>
+                      <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all">GERAR CUPOM</button>
+                  </form>
+              </div>
+           </div>
        )}
     </div>
   );

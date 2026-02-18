@@ -33,6 +33,20 @@
             fontFamily: {
               sans: ['Raleway', 'sans-serif'],
             },
+            animation: {
+              'marquee': 'marquee 40s linear infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              marquee: {
+                '0%': { transform: 'translateX(0)' },
+                '100%': { transform: 'translateX(-50%)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              }
+            }
           }
         }
       }
@@ -62,6 +76,16 @@
       }
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .marquee-container {
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+      }
+      .marquee-content {
+        display: flex;
+        width: max-content;
+      }
     </style>
 
     <script type="importmap">
@@ -87,7 +111,6 @@
   <body class="bg-brand-surface dark:bg-brand-dark text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>
     
-    <!-- Carregamos um .js virtual que o Node servirá como o conteúdo do .tsx -->
     <script 
       type="text/babel" 
       data-type="module" 
