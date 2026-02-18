@@ -2,45 +2,34 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory, Coupon, Offer } from '../types';
+import { Product, Profile, StoreCategory, Offer } from '../types';
 import { 
   Store, Settings, LayoutGrid, Package, CheckCircle, 
   Plus, Trash2, Edit2, 
   Image as ImageIcon, Eye,
   X, RefreshCw, Save, Camera, Home as HomeIcon,
-  Tag, Phone, MapPin, CreditCard, ChevronRight, Video, Play, Youtube, Ticket, AlertCircle, Zap, Instagram, Globe, MessageCircle
+  Tag, Phone, MapPin, CreditCard, Video, Play, Zap, Instagram, Globe, MessageCircle
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const MyCatalog: React.FC = () => {
   const { user } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'ops' | 'cats' | 'products' | 'coupons'>('home');
+  const navigate = useNavigate();
+  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'ops' | 'cats' | 'products'>('home');
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [myOffers, setMyOffers] = useState<Offer[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
   
   const [newCatName, setNewCatName] = useState('');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
     name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', videoUrl: ''
-  });
-
-  const [couponForm, setCouponForm] = useState({
-    offerId: '',
-    code: '',
-    title: '',
-    discount: '',
-    pointsReward: 50,
-    description: ''
   });
 
   const fileInputLogoRef = useRef<HTMLInputElement>(null);
@@ -63,10 +52,6 @@ export const MyCatalog: React.FC = () => {
         setStoreCategories(cats);
         setProducts(prods || []);
         setMyOffers(offers || []);
-        
-        const allCoupons: Coupon[] = [];
-        offers.forEach(o => { if(o.coupons) allCoupons.push(...o.coupons); });
-        setCoupons(allCoupons);
     } finally { setIsLoading(false); }
   };
 
@@ -76,6 +61,17 @@ export const MyCatalog: React.FC = () => {
     try {
       await mockBackend.updateProfile(user.id, profile);
       alert('Perfil do catálogo atualizado!');
+    } finally { setIsSaving(false); }
+  };
+
+  const handleFinalizeStore = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+        // Garante que o perfil está salvo antes de publicar
+        await mockBackend.updateProfile(user.id, profile);
+        alert('🎉 PARABÉNS! Sua loja foi finalizada e publicada com sucesso no diretório principal.');
+        navigate('/stores');
     } finally { setIsSaving(false); }
   };
 
@@ -120,56 +116,15 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
-  const handleCouponSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !couponForm.offerId) return;
-    setIsSaving(true);
-    try {
-        const payload = {
-            code: couponForm.code.toUpperCase(),
-            title: couponForm.title,
-            discount: couponForm.discount,
-            pointsReward: Number(couponForm.pointsReward),
-            description: couponForm.description
-        };
-        if (editingCoupon) {
-            await mockBackend.updateCoupon(user.id, couponForm.offerId, editingCoupon.id, payload);
-        } else {
-            await mockBackend.addCoupon(user.id, couponForm.offerId, payload);
-        }
-        setIsCouponModalOpen(false);
-        loadData();
-    } finally { setIsSaving(false); }
-  };
-
   const handleEditProduct = (prod: Product) => {
     setEditingProduct(prod);
     setProductForm(prod);
     setIsProductModalOpen(true);
   };
 
-  const handleEditCoupon = (coupon: Coupon, offerId: string) => {
-      setEditingCoupon(coupon);
-      setCouponForm({
-          offerId,
-          code: coupon.code,
-          title: coupon.title,
-          discount: coupon.discount,
-          pointsReward: coupon.pointsReward,
-          description: coupon.description
-      });
-      setIsCouponModalOpen(true);
-  };
-
   const handleDeleteProduct = async (id: string) => {
     if (!window.confirm('Deseja realmente excluir este produto?')) return;
     await mockBackend.deleteBlogPost(id); 
-    loadData();
-  };
-
-  const handleDeleteCoupon = async (couponId: string, offerId: string) => {
-    if (!user || !window.confirm('Tem certeza que deseja excluir este cupom?')) return;
-    await mockBackend.deleteCoupon(user.id, offerId, couponId);
     loadData();
   };
 
@@ -185,16 +140,20 @@ export const MyCatalog: React.FC = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter leading-none">
                 CATÁLOGO & LOJA <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#9333EA] to-pink-500 font-black">PRO</span>
               </h2>
-              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Venda 24h por dia no seu WhatsApp.</p>
+              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Sua vitrine profissional pronta para vender.</p>
             </div>
           </div>
-          {/* Change: target="_blank" removed to keep in same window, directed to user store */}
-          <Link to={`/store/${user?.id}`} className="bg-[#F67C01] text-white px-12 py-5 rounded-[1.8rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
-            <Eye className="w-5 h-5" /> VER VITRINE
-          </Link>
+          
+          <div className="flex flex-wrap gap-3 justify-center md:justify-end">
+            <Link to={`/store/${user?.id}`} className="bg-white/5 text-white border border-white/10 px-8 py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all flex items-center gap-3">
+              <Eye className="w-5 h-5" /> VER VITRINE
+            </Link>
+            <button onClick={handleFinalizeStore} className="bg-emerald-600 text-white px-10 py-5 rounded-[1.8rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+              <CheckCircle className="w-5 h-5" /> FINALIZAR LOJA
+            </button>
+          </div>
         </div>
 
-        {/* Change: gap-0.5 and px-4 for closer tabs */}
         <div className="bg-white/5 rounded-[2.5rem] p-1 mt-10 flex gap-0.5 overflow-x-auto scrollbar-hide border border-white/5">
           {[
             { id: 'home', label: 'Início', desc: 'Boas-vindas', icon: HomeIcon },
@@ -202,7 +161,6 @@ export const MyCatalog: React.FC = () => {
             { id: 'ops', label: 'Operação', desc: 'Configurações', icon: Settings },
             { id: 'cats', label: 'Categorias', desc: 'Organização', icon: LayoutGrid },
             { id: 'products', label: 'Produtos', desc: 'Gerenciar itens', icon: Package },
-            { id: 'coupons', label: 'Cupons', desc: 'Ofertas/Promo', icon: Ticket },
           ].map(tab => (
             <button 
               key={tab.id}
@@ -246,19 +204,18 @@ export const MyCatalog: React.FC = () => {
                    <div className="grid md:grid-cols-2 gap-10">
                       <div className="space-y-6">
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Nome Fantasia</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome Fantasia</label>
                             <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={profile.businessName || ''} onChange={e => setProfile({...profile, businessName: e.target.value})} />
                          </div>
-                         {/* Change: Endereço Público moved here from Ops */}
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Endereço Público</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Endereço Público</label>
                             <div className="flex gap-2 items-center bg-gray-50 dark:bg-zinc-800 rounded-2xl px-4">
                                 <MapPin className="w-4 h-4 text-indigo-400" />
                                 <input type="text" className="flex-1 bg-transparent border-none py-4 font-bold dark:text-white text-sm" placeholder="Rua das Flores, 123" value={profile.address || ''} onChange={e => setProfile({...profile, address: e.target.value})} />
                             </div>
                          </div>
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Bio / Slogan</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Bio / Slogan</label>
                             <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} />
                          </div>
                       </div>
@@ -323,7 +280,6 @@ export const MyCatalog: React.FC = () => {
                          </div>
                       </div>
                       <div className="space-y-8">
-                         {/* Change: Social Media Section added here */}
                          <div className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 space-y-6">
                             <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest italic">Redes Sociais da Vitrine</h4>
                             
@@ -376,9 +332,14 @@ export const MyCatalog: React.FC = () => {
                          <h3 className="text-2xl font-black text-gray-900 dark:text-white italic tracking-tight">Meus Produtos & Serviços</h3>
                          <p className="text-slate-400 font-bold text-[10px] tracking-widest uppercase">{products.length} itens cadastrados no total</p>
                       </div>
-                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', videoUrl: '' }); setIsProductModalOpen(true); }} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
-                         <Plus className="w-5 h-5" /> NOVO ITEM
-                      </button>
+                      <div className="flex gap-3">
+                        <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', videoUrl: '' }); setIsProductModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+                            <Plus className="w-5 h-5" /> NOVO ITEM
+                        </button>
+                        <button onClick={handleFinalizeStore} className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5" /> FINALIZAR LOJA
+                        </button>
+                      </div>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -403,46 +364,6 @@ export const MyCatalog: React.FC = () => {
                          </div>
                       ))}
                       {products.length === 0 && <div className="col-span-full py-32 text-center border-4 border-dashed border-gray-50 rounded-[4rem] text-slate-300 font-black uppercase text-sm tracking-widest">Sua vitrine está pronta para receber itens.</div>}
-                   </div>
-                </div>
-             )}
-
-             {activeSubTab === 'coupons' && (
-                <div className="space-y-10">
-                   <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                      <div>
-                         <h3 className="text-2xl font-black text-gray-900 dark:text-white italic tracking-tighter">Cupons & Ofertas</h3>
-                         <p className="text-slate-400 font-bold text-[10px] tracking-widest uppercase">Crie incentivos para seus clientes locais.</p>
-                      </div>
-                      <button onClick={() => { setEditingCoupon(null); setCouponForm({ offerId: '', code: '', title: '', discount: '', pointsReward: 50, description: '' }); setIsCouponModalOpen(true); }} className="bg-pink-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
-                         <Plus className="w-5 h-5" /> NOVO CUPOM
-                      </button>
-                   </div>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {coupons.length === 0 ? (
-                         <div className="col-span-full py-32 text-center border-4 border-dashed border-gray-50 rounded-[4rem] text-slate-300 font-black uppercase text-sm tracking-widest">
-                            Nenhum cupom ativo no momento.
-                         </div>
-                      ) : coupons.map(c => (
-                         <div key={c.id} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm relative overflow-hidden flex flex-col hover:shadow-xl transition-all">
-                            <div className="flex justify-between items-start mb-6">
-                               <div className="w-12 h-12 bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center"><Ticket className="w-6 h-6" /></div>
-                               <div className="flex gap-2">
-                                  <button onClick={() => handleEditCoupon(c, myOffers.find(o => o.coupons?.some(cu => cu.id === c.id))?.id || '')} className="p-2 bg-gray-50 dark:bg-zinc-800 rounded-lg text-indigo-400"><Edit2 className="w-4 h-4" /></button>
-                                  <button onClick={() => handleDeleteCoupon(c.id, myOffers.find(o => o.coupons?.some(cu => cu.id === c.id))?.id || '')} className="p-2 bg-gray-50 dark:bg-zinc-800 rounded-lg text-rose-400"><Trash2 className="w-4 h-4" /></button>
-                               </div>
-                            </div>
-                            <h4 className="font-black text-gray-900 dark:text-white text-xl mb-1 italic leading-tight">{c.discount} OFF</h4>
-                            <p className="font-bold text-gray-500 uppercase text-[10px] tracking-widest mb-4">{c.title}</p>
-                            <div className="bg-gray-50 dark:bg-zinc-950 p-4 rounded-xl text-center font-mono font-black text-pink-600 text-lg border-2 border-dashed border-pink-100 dark:border-pink-900/30">
-                               {c.code}
-                            </div>
-                            <p className="mt-6 text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
-                               <Zap className="w-3 h-3 fill-current" /> Ganha +{c.pointsReward} pts
-                            </p>
-                         </div>
-                      ))}
                    </div>
                 </div>
              )}
@@ -501,61 +422,6 @@ export const MyCatalog: React.FC = () => {
                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR NO CATÁLOGO'}
                     </button>
-                </form>
-            </div>
-         </div>
-      )}
-
-      {/* MODAL CUPOM */}
-      {isCouponModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingCoupon ? 'Editar Cupom' : 'Novo Cupom'}</h3>
-                    <button onClick={() => setIsCouponModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
-                </div>
-                <form onSubmit={handleCouponSubmit} className="p-10 space-y-6">
-                   {myOffers.length === 0 ? (
-                      <div className="p-4 bg-yellow-50 text-yellow-700 rounded-lg flex gap-2">
-                         <AlertCircle className="w-5 h-5 shrink-0" />
-                         <p className="text-sm text-left">Você precisa cadastrar um produto/serviço antes para vincular o cupom.</p>
-                      </div>
-                   ) : (
-                      <>
-                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-left">Vincular a item</label>
-                            <select required className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={couponForm.offerId} onChange={e => setCouponForm({...couponForm, offerId: e.target.value})}>
-                               <option value="">Selecione...</option>
-                               {myOffers.map(o => <option key={o.id} value={o.id}>{o.title}</option>)}
-                            </select>
-                         </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-left">Código (Ex: VEM10)</label>
-                               <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white uppercase" value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} />
-                            </div>
-                            <div>
-                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-left">Desconto (Ex: 20%)</label>
-                               <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={couponForm.discount} onChange={e => setCouponForm({...couponForm, discount: e.target.value})} />
-                            </div>
-                         </div>
-                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-left">Título da oferta</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={couponForm.title} onChange={e => setCouponForm({...couponForm, title: e.target.value})} />
-                         </div>
-                         <div className="bg-pink-50 dark:bg-pink-950/20 p-4 rounded-xl border border-pink-100 dark:border-pink-900/30">
-                            <label className="block text-[10px] font-black text-pink-600 dark:text-pink-400 uppercase tracking-widest mb-2 text-left">Recompensa ADS</label>
-                            <div className="flex items-center gap-3">
-                               <Zap className="w-4 h-4 text-yellow-500 fill-current" />
-                               <input type="number" className="w-20 bg-white dark:bg-zinc-900 border-none rounded-lg p-2 font-bold dark:text-white" value={couponForm.pointsReward} onChange={e => setCouponForm({...couponForm, pointsReward: Number(e.target.value)})} />
-                               <span className="text-xs font-bold text-pink-700 dark:text-pink-300 uppercase">Pontos no Clube</span>
-                            </div>
-                         </div>
-                         <button type="submit" disabled={isSaving} className="w-full bg-pink-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-pink-700 transition-all">
-                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'ATIVAR CUPOM'}
-                         </button>
-                      </>
-                   )}
                 </form>
             </div>
          </div>
