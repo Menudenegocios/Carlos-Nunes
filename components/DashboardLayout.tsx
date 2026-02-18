@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Smartphone, Package, 
   Trophy, LogOut, Menu, X, Star, Layout, 
   Store, ChevronLeft, Briefcase, GraduationCap,
-  Sun, Moon, Handshake, CreditCard
+  Sun, Moon, Handshake, CreditCard, Sparkles
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
@@ -23,8 +23,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
-    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
-    { label: 'Catálogo & Loja', icon: Package, to: '/catalog' },
+    { label: 'Minha Vitrine', icon: Store, to: '/my-vitrine' }, // Hub centralizado
     { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
     { label: 'Marketplace B2B', icon: Handshake, to: '/marketplace-b2b' },
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },

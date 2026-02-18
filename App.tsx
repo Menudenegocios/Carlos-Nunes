@@ -31,6 +31,7 @@ import { Events } from './pages/Events';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
+import { MyVitrine } from './pages/MyVitrine';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -64,6 +65,7 @@ const AppRoutes = () => {
 
       {/* Dashboard Routes */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/my-vitrine" element={<PrivateRoute><MyVitrine /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
