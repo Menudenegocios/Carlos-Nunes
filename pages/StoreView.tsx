@@ -6,8 +6,8 @@ import { Product, Profile, StoreCategory } from '../types';
 import { 
   MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
-  /* Fix: Added Handshake to the imports from lucide-react */
-  Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake
+  Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
+  QrCode, Download
 } from 'lucide-react';
 
 export const StoreView: React.FC = () => {
@@ -80,6 +80,16 @@ export const StoreView: React.FC = () => {
   const isProfessional = profile.storeConfig?.businessType === 'professional';
   const bannerImages = profile.storeConfig?.bannerImages || [profile.storeConfig?.coverUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200'];
 
+  const showcaseEnabled = profile.bioConfig?.showcase?.enabled;
+  const showcaseTitle = profile.bioConfig?.showcase?.title || 'Vitrine em Destaque';
+  const showcaseType = profile.bioConfig?.showcase?.type || 'services';
+  
+  // Se for "services", priorizamos itens que não são locais, se for "products" o oposto, 
+  // mas como o catálogo é genérico, apenas filtramos o que houver.
+  const showcaseItems = products.slice(0, 10);
+
+  const shareCardEnabled = profile.bioConfig?.shareCard?.enabled;
+
   return (
     <div className="bg-[#F8FAFC] dark:bg-[#020617] min-h-screen font-sans selection:bg-indigo-600 selection:text-white pb-32">
         
@@ -147,6 +157,34 @@ export const StoreView: React.FC = () => {
                 {/* LADO ESQUERDO: INFOS E AUTORIDADE */}
                 <div className="lg:col-span-8 space-y-12">
                     
+                    {/* VITRINE EM DESTAQUE (CARROSSEL PREMIUM HORIZONTAL) */}
+                    {showcaseEnabled && showcaseItems.length > 0 && (
+                        <section className="space-y-8 animate-fade-in px-2">
+                            <div className="text-center">
+                                <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">{showcaseTitle}</h3>
+                                <div className="h-1 w-20 bg-[#F67C01] mx-auto mt-2 rounded-full"></div>
+                            </div>
+                            
+                            <div className="flex gap-6 overflow-x-auto scrollbar-hide snap-x pb-8 -mx-4 px-4">
+                                {showcaseItems.map(item => (
+                                    <div key={item.id} className="min-w-[280px] md:min-w-[340px] bg-black dark:bg-black rounded-[2.5rem] border-2 border-[#F67C01]/50 shadow-[0_15px_40px_rgba(246,124,1,0.15)] flex p-4 gap-5 snap-center transition-transform hover:scale-[1.02]">
+                                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-[1.8rem] bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/10 shadow-lg">
+                                            <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.name} />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-center text-left space-y-1">
+                                            <h4 className="text-sm md:text-base font-black text-white uppercase italic tracking-tighter leading-tight line-clamp-2">{item.name}</h4>
+                                            <p className="text-[10px] md:text-xs font-bold text-[#F67C01] uppercase tracking-widest">Compre Aqui!</p>
+                                            <div className="pt-2 flex items-center justify-between">
+                                                <span className="font-black text-white text-xs md:text-sm">R$ {item.price.toFixed(2)}</span>
+                                                <button className="p-2 bg-white/5 text-white rounded-xl hover:bg-[#F67C01] transition-all"><ArrowRight className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
                     {/* SOBRE MIM */}
                     <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 lg:p-16 shadow-xl border border-gray-100 dark:border-zinc-800 animate-fade-in">
                         <div className="flex items-center gap-4 mb-10">
@@ -240,6 +278,35 @@ export const StoreView: React.FC = () => {
                         </div>
                         <Handshake className="absolute bottom-[-20px] left-[-20px] w-64 h-64 text-white/5 -rotate-12" />
                     </section>
+
+                    {/* NOVO: CARTÃO QR CODE ESTILIZADO (RODAPÉ DA BIO) */}
+                    {shareCardEnabled && (
+                        <section className="bg-black rounded-[3.5rem] p-12 md:p-16 text-center space-y-10 border border-white/5 animate-fade-in relative overflow-hidden">
+                            <div className="relative z-10 space-y-2">
+                                <h3 className="text-3xl md:text-4xl font-black text-white uppercase italic tracking-tighter">Código QR</h3>
+                                <div className="h-1 w-24 bg-[#F67C01] mx-auto rounded-full"></div>
+                            </div>
+                            
+                            <div className="relative z-10 flex flex-col items-center">
+                                <div className="w-24 h-24 rounded-full border-4 border-white mb-8 overflow-hidden shadow-2xl">
+                                    <img src={profile.logoUrl} className="w-full h-full object-cover" alt="Profile" />
+                                </div>
+                                
+                                <div className="p-6 bg-white rounded-[2.5rem] shadow-[0_0_50px_rgba(255,255,255,0.1)] border border-white/10 w-fit mx-auto group hover:scale-105 transition-transform cursor-pointer">
+                                    <QrCode className="w-48 h-48 md:w-64 md:h-64 text-black" />
+                                </div>
+
+                                <div className="pt-10">
+                                    <button className="flex items-center gap-3 px-10 py-5 bg-white/5 text-white border border-white/10 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">
+                                        <Download className="w-4 h-4" /> SALVAR MEU CARTÃO
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Detalhes de Background */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] aspect-square bg-gradient-to-t from-[#F67C01]/5 to-transparent rounded-full pointer-events-none"></div>
+                        </section>
+                    )}
                 </div>
 
                 {/* SIDEBAR DIREITA: CONTATOS E REDES */}

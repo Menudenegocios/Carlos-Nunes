@@ -99,6 +99,14 @@ export interface BioConfig {
   socialProof?: SocialProof[];
   blogEnabled?: boolean;
   blogButtonLabel?: string;
+  showcase?: {
+    enabled: boolean;
+    title: string;
+    type: 'products' | 'services';
+  };
+  shareCard?: {
+    enabled: boolean;
+  };
 }
 
 export interface StoreConfig {
