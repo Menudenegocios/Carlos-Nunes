@@ -32,7 +32,6 @@ import { Events } from './pages/Events';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
-import { MyBlog } from './pages/MyBlog';
 import { AdminCentral } from './pages/AdminCentral';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -73,7 +72,6 @@ const AppRoutes = () => {
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
       <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
-      <Route path="/my-blog" element={<PrivateRoute><MyBlog /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />

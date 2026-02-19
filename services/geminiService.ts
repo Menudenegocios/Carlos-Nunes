@@ -12,7 +12,7 @@ REGRAS DE OURO:
    - Profissionais: Grátis (Bio Digital, IA para bio).
    - Freelancers: R$ 29,90/mês (Anúncios no feed, Vitrine de serviços).
    - Negócios Locais: R$ 59,90/mês (Catálogo completo, Pagamentos Pix/Cartão, Destaque Regional).
-4. FUNCIONALIDADES: Bio Digital (link no Instagram), Catálogo WhatsApp, CRM Menuflow (Gestão de Leads), Academy (Treinamentos), Clube ADS (Pontos por engajamento).
+4. FUNCIONALIDADES: Bio Digital (link no Instagram), Catálogo WhatsApp, CRM Menuflow (Gestão de Leads), Academy (Treinamentos), Menu Club (Pontos por engajamento).
 5. Se o usuário perguntar sobre suporte humano, direcione-o para a página de "Suporte" ou WhatsApp oficial.
 6. Mantenha as respostas concisas e formatadas com tópicos quando necessário.
 `;
@@ -63,7 +63,7 @@ export const generateMarketingCopy = async (
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const prompt = `
-      Atue como um especialista em marketing digital e copywriting.
+      Atue como um especialista em marketing digital e copywriter.
       Crie uma copy persuasiva para um negócio local.
       
       Tipo de negócio: ${businessType}

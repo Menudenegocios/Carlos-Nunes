@@ -32,11 +32,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     // Recursos Restritos
     ...(hasAdvancedAccess ? [
       { label: 'Catálogo & Lojas', icon: Package, to: '/catalog' },
-      { label: 'Blog & Artigos', icon: BookOpen, to: '/my-blog' },
       { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
     ] : []),
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
-    { label: 'Clube de Vantagens', icon: Trophy, to: '/rewards' },
+    { label: 'Menu Club', icon: Trophy, to: '/rewards' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans' },
   ];
 

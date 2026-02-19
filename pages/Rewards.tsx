@@ -20,7 +20,7 @@ export const Rewards: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      {/* Header Estilo Unificado Clube ADS */}
+      {/* Header Estilo Unificado Menu Club */}
       <div className="bg-[#0F172A] dark:bg-black rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -30,7 +30,7 @@ export const Rewards: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    Clube <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">ADS</span>
+                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">Club</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">TRANSFORME SUA ATIVIDADE EM CRESCIMENTO REAL.</p>
               </div>
@@ -86,7 +86,7 @@ export const Rewards: React.FC = () => {
             <SectionLanding 
                 title="Sua Atividade é a sua Melhor Propaganda."
                 subtitle="Clube de Vantagens"
-                description="O Clube ADS recompensa seu engajamento com pontos que podem ser trocados por visibilidade extra e parcerias estratégicas no seu negócio."
+                description="O Menu Club recompensa seu engajamento com pontos que podem ser trocados por visibilidade extra e parcerias estratégicas no seu negócio."
                 benefits={[
                 "Suba de nível e ganhe prioridade no diretório de lojas.",
                 "Ganhe pontos ao atualizar seu catálogo e bio.",

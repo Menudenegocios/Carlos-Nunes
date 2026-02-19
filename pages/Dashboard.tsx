@@ -127,7 +127,7 @@ export const Dashboard: React.FC = () => {
                    </div>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-                   <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Clube ADS</p>
+                   <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Menu Club</p>
                    <div className="flex items-end justify-between">
                       <h4 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">{user.points}</h4>
                       <div className="w-10 h-10 rounded-xl bg-orange-50 text-brand-primary flex items-center justify-center"><Zap className="w-5 h-5" /></div>
@@ -222,7 +222,7 @@ export const Dashboard: React.FC = () => {
                 <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950 rounded-2xl flex items-center justify-center text-indigo-600"><Bot className="w-6 h-6" /></div>
                 <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight">Insight Menu Flow</h3>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">
-                  "Sua Bio Digital recebeu 15 cliques na última hora. Que tal criar um cupom de desconto exclusivo no Menu Flow para converter esses visitantes?"
+                  "Sua Bio Digital recebeu 15 cliques na última hora. Que tal criar um cupom de desconto exclusivo no Menu Club para converter esses visitantes?"
                 </p>
                 <Link to="/bio-builder" className="inline-flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:gap-3 transition-all">
                   TURBINAR BIO AGORA <ArrowRight className="w-4 h-4" />
