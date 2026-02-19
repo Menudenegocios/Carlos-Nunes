@@ -3,12 +3,14 @@ import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfil
 import { supabase } from './supabaseClient';
 
 const isDemoUser = (userId: string) => 
+  userId && (
   userId === 'de30de30-0000-4000-a000-000000000000' || 
   userId === 'c0a80101-0000-4000-a000-000000000000' ||
   userId === 'adadadad-0000-4000-a000-000000000000' ||
-  userId.includes('mock_') ||
-  userId.includes('demo') || 
-  userId.includes('carlos');
+  (userId.includes && userId.includes('mock_')) ||
+  (userId.includes && userId.includes('demo')) || 
+  (userId.includes && userId.includes('carlos'))
+);
 
 const localStore = {
   save: (key: string, userId: string, data: any) => {

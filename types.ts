@@ -264,6 +264,10 @@ export interface BlogPost {
   date: string;
   imageUrl: string;
   category: string;
+  // added for internal tracking and sorting in StoreView.tsx
+  created_at?: string;
+  // added for consistency with other backend objects
+  createdAt?: string | number;
 }
 
 export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lost';

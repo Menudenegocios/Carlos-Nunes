@@ -33,7 +33,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   const [networkError, setNetworkError] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
-    if (userId === DEMO_USER_ID || userId === CARLOS_BATIDA_ID || userId === ADMIN_USER_ID || userId.startsWith('mock_')) {
+    // Safety check for userId
+    if (!userId || userId === DEMO_USER_ID || userId === CARLOS_BATIDA_ID || userId === ADMIN_USER_ID || (userId && userId.startsWith && userId.startsWith('mock_'))) {
         setIsLoading(false);
         return;
     }
@@ -87,9 +88,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   const refreshProfile = async () => {
-    if (user) {
-      // Fix: Changed CARLOS_BATINA_ID to CARLOS_BATIDA_ID to resolve reference error
-      if (user.id === DEMO_USER_ID || user.id === CARLOS_BATIDA_ID || user.id === ADMIN_USER_ID || user.id.startsWith('mock_')) return;
+    if (user && user.id) {
+      if (user.id === DEMO_USER_ID || user.id === CARLOS_BATIDA_ID || user.id === ADMIN_USER_ID || (user.id.startsWith && user.id.startsWith('mock_'))) return;
       await fetchUserProfile(user.id);
     }
   };
