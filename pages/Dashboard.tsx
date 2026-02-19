@@ -222,7 +222,7 @@ export const Dashboard: React.FC = () => {
                 <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950 rounded-2xl flex items-center justify-center text-indigo-600"><Bot className="w-6 h-6" /></div>
                 <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight">Insight Menu Flow</h3>
                 <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium leading-relaxed">
-                  "Sua Bio Digital recebeu 15 cliques na última hora. Que tal criar um cupom de desconto exclusivo no Menu Club para converter esses visitantes?"
+                  "Sua Menu Pages recebeu 15 cliques na última hora. Que tal criar um cupom de desconto exclusivo no Menu Club para converter esses visitantes?"
                 </p>
                 <Link to="/bio-builder" className="inline-flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:gap-3 transition-all">
                   TURBINAR BIO AGORA <ArrowRight className="w-4 h-4" />

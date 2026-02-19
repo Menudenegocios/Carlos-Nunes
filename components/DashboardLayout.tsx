@@ -28,11 +28,11 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
-    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
+    { label: 'Menu Pages', icon: Smartphone, to: '/bio-builder' },
     // Recursos Restritos
     ...(hasAdvancedAccess ? [
-      { label: 'Catálogo & Lojas', icon: Package, to: '/catalog' },
-      { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
+      { label: 'Menu Pages Pro', icon: Package, to: '/catalog' },
+      { label: 'Menu CRM', icon: Briefcase, to: '/business-suite' },
     ] : []),
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
     { label: 'Menu Club', icon: Trophy, to: '/rewards' },

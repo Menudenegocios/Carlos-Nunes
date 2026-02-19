@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
@@ -378,7 +379,7 @@ export const BioBuilder: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                BIO DIGITAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
+                MENU PAGES <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
               </h2>
               <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">Sua vitrine inteligente no bairro.</p>
             </div>
@@ -668,7 +669,7 @@ export const BioBuilder: React.FC = () => {
 
                {activeEditorTab === 'share' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar Bio Digital</h3>
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar Menu Pages</h3>
                      <div className="space-y-8">
                         <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 text-center space-y-8">
                            <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-sm text-indigo-600">
@@ -767,7 +768,7 @@ export const BioBuilder: React.FC = () => {
                           <Sparkles className="w-12 h-12 text-emerald-500" />
                       </div>
                       <div className="space-y-4">
-                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">BIO DIGITAL <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
+                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">MENU PAGES <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
                           <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitantes.</p>
                       </div>
                       <div className="bg-gray-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-gray-100 dark:border-zinc-800">

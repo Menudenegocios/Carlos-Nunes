@@ -235,7 +235,7 @@ export const MyCatalog: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                VITRINE & <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">CONTEÚDO</span>
+                MENU PAGES <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">PRO</span>
               </h2>
               <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Gerencie sua presença digital, catálogo e autoridade.</p>
             </div>
