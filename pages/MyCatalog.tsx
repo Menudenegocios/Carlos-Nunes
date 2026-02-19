@@ -11,7 +11,8 @@ import {
   Phone, MapPin, MessageCircle, 
   Briefcase, Quote, Smartphone, ArrowRight, Star, Settings, GripVertical,
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
-  Lock, Crown, User, Info, ListChecks, Target, Heart
+  Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
+  Share2
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,7 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export const MyCatalog: React.FC = () => {
   const { user, realAdmin } = useAuth();
   const navigate = useNavigate();
-  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'landing' | 'cats' | 'products'>('home');
+  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'cats' | 'products' | 'landing'>('home');
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
@@ -57,7 +58,7 @@ export const MyCatalog: React.FC = () => {
         
         const initialProfile = prof || { 
             userId: user.id, 
-            socialLinks: {}, 
+            socialLinks: { instagram: '', whatsapp: '', website: '' }, 
             storeConfig: { 
                 whatsappFormEnabled: true,
                 paymentMethods: { pix: true, card: true, cash: true, credit: true },
@@ -74,6 +75,10 @@ export const MyCatalog: React.FC = () => {
                 businessType: 'local_business',
                 bannerImages: []
             };
+        }
+
+        if (!initialProfile.socialLinks) {
+            initialProfile.socialLinks = { instagram: '', whatsapp: '', website: '' };
         }
 
         setProfile(initialProfile as any);
@@ -196,9 +201,9 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'landing', label: 'Landing Page', desc: 'Classificados', icon: LayoutGrid },
             { id: 'cats', label: 'Categorias', desc: 'Organização', icon: LayoutGrid },
             { id: 'products', label: 'Produtos', desc: 'Gestão de Itens', icon: Package },
+            { id: 'landing', label: 'Landing Page', desc: 'Classificados', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
@@ -269,6 +274,47 @@ export const MyCatalog: React.FC = () => {
                 </div>
             )}
 
+            {activeSubTab === 'cats' && (
+                <div className="space-y-10">
+                   <div className="flex justify-between items-center">
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight">Categorias de Itens</h3>
+                      <button onClick={() => setIsCategoryModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase">+ NOVA CATEGORIA</button>
+                   </div>
+                   <div className="grid gap-4">
+                      {storeCategories.map(cat => (
+                         <div key={cat.id} className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border flex items-center justify-between">
+                            <h4 className="font-black uppercase italic">{cat.name}</h4>
+                            <button onClick={async () => { if(window.confirm('Excluir?')) { await mockBackend.deleteStoreCategory(cat.id, user!.id); loadData(); } }} className="text-rose-400"><Trash2 className="w-5 h-5" /></button>
+                         </div>
+                      ))}
+                   </div>
+                </div>
+            )}
+
+            {activeSubTab === 'products' && (
+                <div className="space-y-10">
+                   <div className="flex justify-between items-center">
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Gerenciamento de Itens</h3>
+                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-2"><Plus className="w-5 h-5" /> ADICIONAR ITEM</button>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {products.map(prod => (
+                         <div key={prod.id} className="p-5 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border flex items-center gap-5 group hover:bg-white hover:shadow-xl transition-all">
+                            <div className="w-16 h-16 rounded-2xl bg-gray-200 overflow-hidden flex-shrink-0"><img src={prod.imageUrl} className="w-full h-full object-cover" /></div>
+                            <div className="flex-1">
+                               <h5 className="font-black text-gray-900 dark:text-white text-sm line-clamp-1">{prod.name}</h5>
+                               <p className="text-xs font-black text-emerald-600">{prod.price > 0 ? `R$ ${prod.price.toFixed(2)}` : 'SOB CONSULTA'}</p>
+                            </div>
+                            <div className="flex gap-1">
+                               <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-2 text-indigo-400"><Edit2 className="w-4 h-4" /></button>
+                               <button onClick={async () => { if(window.confirm('Excluir?')) { loadData(); } }} className="p-2 text-rose-400"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                </div>
+            )}
+
             {activeSubTab === 'landing' && (
                 <div className="max-w-4xl mx-auto space-y-12">
                    <div className="flex justify-between items-center">
@@ -317,46 +363,24 @@ export const MyCatalog: React.FC = () => {
                          </div>
                       </div>
                    </div>
-                </div>
-            )}
 
-            {activeSubTab === 'cats' && (
-                <div className="space-y-10">
-                   <div className="flex justify-between items-center">
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight">Categorias de Itens</h3>
-                      <button onClick={() => setIsCategoryModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase">+ NOVA CATEGORIA</button>
-                   </div>
-                   <div className="grid gap-4">
-                      {storeCategories.map(cat => (
-                         <div key={cat.id} className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border flex items-center justify-between">
-                            <h4 className="font-black uppercase italic">{cat.name}</h4>
-                            <button onClick={async () => { if(window.confirm('Excluir?')) { await mockBackend.deleteStoreCategory(cat.id, user!.id); loadData(); } }} className="text-rose-400"><Trash2 className="w-5 h-5" /></button>
+                   {/* NOVO: Canais de Contato & Redes Sociais */}
+                   <div className="space-y-6 bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Share2 className="w-5 h-5" /> Redes Sociais & Contato</h4>
+                      <div className="grid md:grid-cols-3 gap-6">
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><MessageCircle className="w-3 h-3" /> WhatsApp</label>
+                            <input type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-xs" value={profile.phone || ''} onChange={e => setProfile({...profile, phone: e.target.value})} placeholder="5511999999999" />
                          </div>
-                      ))}
-                   </div>
-                </div>
-            )}
-
-            {activeSubTab === 'products' && (
-                <div className="space-y-10">
-                   <div className="flex justify-between items-center">
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Gerenciamento de Itens</h3>
-                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-2"><Plus className="w-5 h-5" /> ADICIONAR ITEM</button>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {products.map(prod => (
-                         <div key={prod.id} className="p-5 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border flex items-center gap-5 group hover:bg-white hover:shadow-xl transition-all">
-                            <div className="w-16 h-16 rounded-2xl bg-gray-200 overflow-hidden flex-shrink-0"><img src={prod.imageUrl} className="w-full h-full object-cover" /></div>
-                            <div className="flex-1">
-                               <h5 className="font-black text-gray-900 dark:text-white text-sm line-clamp-1">{prod.name}</h5>
-                               <p className="text-xs font-black text-emerald-600">{prod.price > 0 ? `R$ ${prod.price.toFixed(2)}` : 'SOB CONSULTA'}</p>
-                            </div>
-                            <div className="flex gap-1">
-                               <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-2 text-indigo-400"><Edit2 className="w-4 h-4" /></button>
-                               <button onClick={async () => { if(window.confirm('Excluir?')) { loadData(); } }} className="p-2 text-rose-400"><Trash2 className="w-4 h-4" /></button>
-                            </div>
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Instagram className="w-3 h-3" /> Instagram</label>
+                            <input type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-xs" value={profile.socialLinks?.instagram || ''} onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, instagram: e.target.value}})} placeholder="@usuario" />
                          </div>
-                      ))}
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Globe className="w-3 h-3" /> Site / Link</label>
+                            <input type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-xs" value={profile.socialLinks?.website || ''} onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, website: e.target.value}})} placeholder="https://seusite.com" />
+                         </div>
+                      </div>
                    </div>
                 </div>
             )}
