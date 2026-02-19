@@ -53,7 +53,7 @@ export const Stores: React.FC = () => {
            <Sparkles className="w-3.5 h-3.5" /> Conexão Regional
         </div>
         <h1 className="text-5xl md:text-8xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9] max-w-5xl mx-auto">
-          O Diretório de <br/>
+          A Vitrine de <br/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 dark:from-brand-primary dark:to-brand-accent italic">
             Negócios Locais.
           </span>
@@ -189,7 +189,7 @@ export const Stores: React.FC = () => {
             </p>
             <div className="pt-6">
                <Link to="/register" className="bg-white text-gray-900 px-16 py-6 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all inline-flex items-center gap-3 shadow-2xl active:scale-95 group">
-                 ANUNCIAR MINHA LOJA <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                 ANUNCIAR MINHA VITRINE <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                </Link>
             </div>
          </div>

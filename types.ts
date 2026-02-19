@@ -8,6 +8,17 @@ export interface User {
   level: 'bronze' | 'prata' | 'ouro';
   referralCode: string;
   referralsCount: number;
+  role?: 'user' | 'admin';
+}
+
+export interface PortfolioItem {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  category?: string;
+  createdAt: number;
 }
 
 export interface B2BOffer {
@@ -92,27 +103,35 @@ export interface BioConfig {
 
 export interface StoreConfig {
   coverUrl?: string;
+  bannerImages?: string[]; // Suporte para até 3 fotos no banner
   themeColor?: string;
   videoUrl?: string;
   openingHours?: string;
+  businessType?: 'local_business' | 'professional';
   salesType?: 'product' | 'service' | 'both';
   aiChatEnabled?: boolean;
   schedulingEnabled?: boolean;
   gaId?: string;
   pixelId?: string;
+  vitrineTheme?: 'modern' | 'classic' | 'minimal';
+  whatsappFormEnabled?: boolean;
+  whatsappFormTitle?: string;
+  // Campos para Landing Page de Especialista
+  aboutMe?: string;
+  solutions?: string;
+  problemsSolved?: string;
+  businessInterests?: string;
+  highlightedProductIds?: string[]; // Até 3 IDs de produtos em destaque
   paymentMethods?: {
-    pix: {
-      enabled: boolean;
-      key?: string;
-      keyType?: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random';
-    };
-    mercadoPago: {
-      enabled: boolean;
-      accessToken?: string;
-      publicKey?: string;
-    };
-    onDelivery: boolean;
-    creditCard: boolean;
+    pix: boolean;
+    card: boolean;
+    cash: boolean;
+    credit: boolean;
+  };
+  socialLinks?: {
+    instagram?: string;
+    whatsapp?: string;
+    website?: string;
   };
 }
 
@@ -317,4 +336,13 @@ export interface Review {
   comment: string;
   date: string;
   reply?: string;
+}
+
+export interface PlatformEvent {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  description: string;
+  type: 'Online' | 'Presencial';
 }

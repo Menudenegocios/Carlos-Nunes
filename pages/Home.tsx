@@ -126,7 +126,7 @@ export const Home: React.FC = () => {
                     <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 transition-transform">
                         <Briefcase className="w-8 h-8" />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-4">Serviços <br/>Profissionais</h3>
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-4">Vitrine de <br/>Lojas</h3>
                     <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium leading-relaxed">Contrate especialistas qualificados na sua cidade. De advogados a técnicos, tudo por perto.</p>
                 </div>
                 <div className="relative z-10 pt-6">

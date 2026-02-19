@@ -7,13 +7,14 @@ import {
   LayoutDashboard, Smartphone, Package, 
   Trophy, LogOut, Menu, X, Star, Layout, 
   Store, ChevronLeft, Briefcase, GraduationCap,
-  Sun, Moon, Handshake, CreditCard, Sparkles, BookOpen
+  Sun, Moon, Handshake, CreditCard, Sparkles, BookOpen, Settings2,
+  AlertCircle, ChevronRight
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isImpersonating, stopImpersonating, realAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,26 +22,55 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   if (!user) return null;
 
+  // Verifica se o usuário tem permissão de acesso (Se for Admin ou se o plano for PRO/Business)
+  const isAdmin = user.role === 'admin' || realAdmin?.role === 'admin';
+  const hasAdvancedAccess = isAdmin || user.plan === 'freelancers' || user.plan === 'negocios';
+
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
     { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
-    { label: 'Catálogo & Loja', icon: Package, to: '/catalog' },
-    { label: 'Blog & Artigos', icon: BookOpen, to: '/my-blog' },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
-    { label: 'Marketplace B2B', icon: Handshake, to: '/marketplace-b2b' },
+    // Recursos Restritos
+    ...(hasAdvancedAccess ? [
+      { label: 'Catálogo & Lojas', icon: Package, to: '/catalog' },
+      { label: 'Blog & Artigos', icon: BookOpen, to: '/my-blog' },
+      { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
+    ] : []),
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
     { label: 'Clube de Vantagens', icon: Trophy, to: '/rewards' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans' },
   ];
 
+  if (isAdmin) {
+    menuItems.push({ label: 'Central', icon: Settings2, to: '/admin-central' });
+  }
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="flex h-screen bg-brand-surface dark:bg-brand-dark overflow-hidden transition-colors duration-300 font-sans">
+      
+      {/* BANNER DE PERSONIFICAÇÃO */}
+      {isImpersonating && (
+        <div className="fixed top-0 left-0 right-0 z-[110] bg-[#F67C01] text-white py-2 px-6 flex items-center justify-between shadow-xl animate-slide-in-top">
+           <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 animate-pulse" />
+              <p className="text-xs font-black uppercase tracking-widest">
+                Modo Personificação: Editando a vitrine de <span className="underline italic">{user.name}</span>
+              </p>
+           </div>
+           <button 
+             onClick={stopImpersonating}
+             className="bg-white text-[#F67C01] px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-zinc-100 transition-all"
+           >
+             SAIR DA CONTA
+           </button>
+        </div>
+      )}
+
       <aside 
         className={`hidden lg:flex flex-col bg-white dark:bg-[#0F172A] border-r border-brand-secondary/10 h-full flex-shrink-0 transition-all duration-300 ease-in-out ${
           isExpanded ? 'w-72' : 'w-20'
-        }`}
+        } ${isImpersonating ? 'pt-10' : ''}`}
       >
         <div className="p-5">
           <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-between px-2' : 'justify-center'}`}>
@@ -101,7 +131,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       </aside>
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <header className="h-20 bg-white dark:bg-[#0F172A] border-b border-brand-secondary/10 px-6 lg:px-10 flex justify-between items-center sticky top-0 z-30 flex-shrink-0">
+        <header className={`h-20 bg-white dark:bg-[#0F172A] border-b border-brand-secondary/10 px-6 lg:px-10 flex justify-between items-center sticky top-0 z-30 flex-shrink-0 ${isImpersonating ? 'mt-10' : ''}`}>
            <div className="flex items-center gap-6">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -112,7 +142,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               
               <nav className="hidden md:flex items-center gap-8">
                 <Link to="/" className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors">SITE PRINCIPAL</Link>
-                <Link to="/stores" className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors">DIRETÓRIO</Link>
+                <Link to="/stores" className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors">VITRINE</Link>
               </nav>
 
               <div className="h-6 w-px bg-brand-secondary/10 hidden md:block"></div>
@@ -179,7 +209,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         </div>
       )}
 
-      {/* Assistente de IA no Dashboard */}
       <AIChatAgent />
     </div>
   );

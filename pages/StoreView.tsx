@@ -1,504 +1,338 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory, Coupon } from '../types';
+import { Product, Profile, StoreCategory } from '../types';
 import { 
-  MapPin, Clock, CreditCard, MessageCircle, Instagram, Globe, 
-  Search, ShoppingCart, Star, Share2, ArrowLeft, Image as ImageIcon,
-  CheckCircle, Store, X, Phone, Plus, Zap, Ticket, Play, Minus,
-  Trash2, AlertTriangle, ExternalLink
+  MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight,
+  ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
+  /* Fix: Added Handshake to the imports from lucide-react */
+  Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake
 } from 'lucide-react';
-
-interface CartItem extends Product {
-  quantity: number;
-}
 
 export const StoreView: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [activeCat, setActiveCat] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
   
-  // Cart State
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [activeCoupon, setActiveCoupon] = useState<Coupon | null>(null);
+  // Agendamento / Lead Form
+  const [isSchedModalOpen, setIsSchedModalOpen] = useState(false);
+  const [schedForm, setSchedForm] = useState({ name: '', email: '', whatsapp: '' });
+  
+  // Banner Triplo
+  const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
   useEffect(() => {
     if (userId) loadStoreData();
   }, [userId]);
 
+  // Efeito para trocar banner automaticamente
+  useEffect(() => {
+    const banners = profile?.storeConfig?.bannerImages || [];
+    if (banners.length > 1) {
+        const interval = setInterval(() => {
+            setCurrentBannerIdx(prev => (prev + 1) % banners.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }
+  }, [profile]);
+
   const loadStoreData = async () => {
     if (!userId) return;
     try {
-      const prof = await mockBackend.getProfile(userId);
-      const prods = await mockBackend.getProducts(userId);
-      const cats = await mockBackend.getStoreCategories(userId);
-      const myOffers = await mockBackend.getMyOffers(userId);
-      
-      const allCoupons: Coupon[] = [];
-      myOffers.forEach(o => { if(o.coupons) allCoupons.push(...o.coupons); });
-      
+      const [prof, prods, cats] = await Promise.all([
+        mockBackend.getProfile(userId),
+        mockBackend.getProducts(userId),
+        mockBackend.getStoreCategories(userId)
+      ]);
       setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
-      setCoupons(allCoupons);
-      
-      if (prof?.storeConfig?.gaId) console.log(`[GA Tracking] view_shop: ${prof.businessName}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const addToCart = (product: Product) => {
-    if (product.stock !== undefined && product.stock <= 0) return;
+  const handleSchedSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const phone = profile?.phone?.replace(/\D/g, '') || '';
+    const message = `Olá! Sou *${schedForm.name}* (Email: ${schedForm.email}).\nAcabo de preencher o formulário na sua Vitrine de Especialista e gostaria de agendar uma consulta.\n\n_Enviado via Menu de Negócios_`;
     
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-    
-    if (profile?.storeConfig?.gaId) console.log(`[GA Tracking] add_to_cart: ${product.name}`);
+    // Simula salvamento no CRM do usuário
+    await mockBackend.addLeads([{
+        userId: profile?.userId || '',
+        name: schedForm.name,
+        phone: schedForm.whatsapp,
+        source: 'manual',
+        stage: 'new',
+        notes: `Interesse em agendamento via Landing Page. Email: ${schedForm.email}`
+    }]);
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    setIsSchedModalOpen(false);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.id !== productId));
-  };
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-xs tracking-widest text-slate-400">Carregando vitrine de elite...</div>;
+  if (!profile) return <div className="min-h-screen flex items-center justify-center">Especialista não encontrado.</div>;
 
-  const updateQuantity = (productId: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === productId) {
-        const newQty = Math.max(1, item.quantity + delta);
-        if (delta > 0 && item.stock !== undefined && newQty > item.stock) return item;
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    }));
-  };
-
-  const subtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + (item.promoPrice || item.price) * item.quantity, 0);
-  }, [cart]);
-
-  const discountValue = useMemo(() => {
-    if (!activeCoupon) return 0;
-    if (activeCoupon.discount.includes('%')) {
-        const percentage = parseFloat(activeCoupon.discount.replace('%', ''));
-        return (subtotal * percentage) / 100;
-    }
-    return parseFloat(activeCoupon.discount.replace(/[^0-9.]/g, '')) || 0;
-  }, [activeCoupon, subtotal]);
-
-  const total = Math.max(0, subtotal - discountValue);
-
-  const applyCoupon = () => {
-    const found = coupons.find(c => c.code.toUpperCase() === couponCode.toUpperCase());
-    if (found) {
-        setActiveCoupon(found);
-        alert(`Cupom "${found.title}" aplicado!`);
-    } else {
-        alert("Cupom inválido ou expirado.");
-        setActiveCoupon(null);
-    }
-  };
-
-  const handleCheckoutWhatsApp = () => {
-      const phone = profile?.phone?.replace(/\D/g, '') || profile?.socialLinks?.whatsapp?.replace(/\D/g, '') || '';
-      if (!phone) {
-          alert("Esta loja não configurou um telefone de contato.");
-          return;
-      }
-      
-      let message = `🛒 *NOVO PEDIDO - ${profile?.businessName?.toUpperCase()}*\n`;
-      message += `--------------------------------\n\n`;
-      
-      cart.forEach(item => {
-        message += `✅ *${item.quantity}x* ${item.name} - R$ ${((item.promoPrice || item.price) * item.quantity).toFixed(2)}\n`;
-      });
-      
-      message += `\n--------------------------------\n`;
-      message += `💰 *Subtotal:* R$ ${subtotal.toFixed(2)}\n`;
-      if (activeCoupon) {
-        message += `🎫 *Cupom:* ${activeCoupon.code} (-R$ ${discountValue.toFixed(2)})\n`;
-      }
-      message += `⭐ *TOTAL: R$ ${total.toFixed(2)}*\n\n`;
-      message += `📍 *Endereço de Entrega:* [Por favor, informe aqui]\n`;
-      message += `💳 *Forma de Pagamento:* [Dinheiro / Pix / Cartão]\n\n`;
-      message += `_Enviado via Menu de Negócios_`;
-
-      if (profile?.storeConfig?.pixelId) console.log(`[Meta Pixel Tracking] initiate_checkout: Total R$ ${total.toFixed(2)}`);
-
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const getEmbedUrl = (url: string) => {
-    if (!url) return null;
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const id = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-        return `https://www.youtube.com/embed/${id}?autoplay=1`;
-    }
-    if (url.includes('vimeo.com')) {
-        const id = url.split('/').pop();
-        return `https://player.vimeo.com/video/${id}?autoplay=1`;
-    }
-    if (url.includes('instagram.com/reel')) {
-        return `${url.split('?')[0]}embed`;
-    }
-    return url;
-  };
-
-  const filteredProducts = activeCat === 'todos' 
-      ? products 
-      : products.filter(p => p.storeCategoryId === activeCat);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Carregando loja...</div>;
-  if (!profile) return <div className="min-h-screen flex items-center justify-center">Loja não encontrada.</div>;
+  const isProfessional = profile.storeConfig?.businessType === 'professional';
+  const bannerImages = profile.storeConfig?.bannerImages || [profile.storeConfig?.coverUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200'];
 
   return (
-    <div className="bg-gray-50 min-h-screen font-sans pb-32">
+    <div className="bg-[#F8FAFC] dark:bg-[#020617] min-h-screen font-sans selection:bg-indigo-600 selection:text-white pb-32">
         
-        {/* 1. Header Fixo com Desfoque Premium */}
-        <header className="fixed top-0 z-[100] w-full transition-all duration-300 bg-white/95 backdrop-blur-xl border-b border-gray-100/50 shadow-sm">
-            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                <Link to="/stores" className="p-3 rounded-2xl hover:bg-gray-100 text-gray-700 transition-colors">
-                    <ArrowLeft className="w-5 h-5" />
-                </Link>
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-100 hidden sm:block">
-                        <img src={profile.logoUrl} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="font-black text-xl text-gray-900 truncate max-w-[150px] sm:max-w-[300px] uppercase tracking-tighter italic">
-                        <span className="text-emerald-600">{profile.businessName?.split(' ')[0]}</span> {profile.businessName?.split(' ').slice(1).join(' ')}
-                    </span>
+        {/* TOP NAV MINI */}
+        <div className="fixed top-0 left-0 right-0 z-[100] p-4 flex justify-between items-center pointer-events-none">
+            <Link to="/stores" className="p-3 bg-white/20 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/40 transition-all pointer-events-auto">
+                <ArrowLeft className="w-5 h-5" />
+            </Link>
+        </div>
+
+        {/* 1. HERO SLIDER BANNER */}
+        <div className="relative h-[65vh] lg:h-[75vh] w-full overflow-hidden bg-slate-900">
+            {bannerImages.map((img, idx) => (
+                <div 
+                    key={idx}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentBannerIdx ? 'opacity-60' : 'opacity-0'}`}
+                >
+                    <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx}`} />
                 </div>
-                <div className="flex gap-2">
+            ))}
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAFC] dark:from-[#020617] via-transparent to-black/20"></div>
+
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-7xl px-8 flex flex-col md:flex-row items-end justify-between gap-8 animate-fade-in">
+                <div className="flex items-center gap-8 text-center md:text-left">
+                   <div className="w-32 h-32 lg:w-44 lg:h-44 rounded-full border-[10px] border-white dark:border-zinc-900 bg-white shadow-2xl overflow-hidden flex-shrink-0">
+                      <img src={profile.logoUrl} className="w-full h-full object-cover" alt="Avatar" />
+                   </div>
+                   <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                            <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
+                            <div className="flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-indigo-600 text-[10px] font-black shadow-sm">
+                                <ShieldCheck className="w-4 h-4 fill-current opacity-20" /> VERIFICADO
+                            </div>
+                        </div>
+                        <h1 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">{profile.businessName}</h1>
+                        <p className="text-xl font-bold text-indigo-600 dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'Membro do Ecossistema'}</p>
+                   </div>
+                </div>
+
+                <div className="flex gap-4">
                     <button 
-                        onClick={() => setIsCartOpen(true)}
-                        className="p-4 bg-emerald-600 text-white rounded-2xl hover:scale-105 hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 flex items-center gap-3"
+                      onClick={() => setIsSchedModalOpen(true)}
+                      className="bg-indigo-600 text-white px-12 py-6 rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-4"
                     >
-                        <ShoppingCart className="w-5 h-5" />
-                        {cart.length > 0 && <span className="bg-white text-emerald-600 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-sm">{cart.reduce((a,b) => a + b.quantity, 0)}</span>}
+                        <Calendar className="w-6 h-6" /> AGENDAR AGORA
                     </button>
                 </div>
             </div>
-        </header>
 
-        {/* 2. Immersive Hero */}
-        <div className="relative h-[55vh] min-h-[400px] lg:h-[60vh] w-full overflow-hidden">
-            {profile.storeConfig?.coverUrl ? (
-                <img src={profile.storeConfig.coverUrl} className="w-full h-full object-cover animate-fade-in" alt="Cover" />
-            ) : (
-                <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-800 flex items-center justify-center">
-                    <Store className="w-32 h-32 text-white/5" />
+            {/* Dots navigation */}
+            {bannerImages.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                    {bannerImages.map((_, i) => (
+                        <div key={i} className={`h-1 rounded-full transition-all ${i === currentBannerIdx ? 'w-8 bg-indigo-600' : 'w-2 bg-white/30'}`}></div>
+                    ))}
                 </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center animate-[fade-in_1s_ease-out]">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-[2.5rem] bg-white p-1.5 shadow-2xl mb-6 overflow-hidden border-[6px] border-white/10 backdrop-blur-md transform hover:rotate-2 transition-transform duration-700">
-                    <img src={profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.businessName}`} className="w-full h-full object-cover rounded-[2rem]" alt="Logo" />
-                </div>
-                <h1 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic mb-8 leading-tight drop-shadow-2xl">{profile.businessName}</h1>
+        </div>
+
+        {/* 2. LANDING PAGE CONTENT GRID */}
+        <div className="max-w-7xl mx-auto px-8 pt-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 
-                {/* Change: Localização e Vídeo agora ficam ao lado do 'Aberto Agora' */}
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                    <span className="flex items-center gap-2 bg-emerald-600/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg">
-                        <CheckCircle className="w-4 h-4" /> Aberto Agora
-                    </span>
+                {/* LADO ESQUERDO: INFOS E AUTORIDADE */}
+                <div className="lg:col-span-8 space-y-12">
+                    
+                    {/* SOBRE MIM */}
+                    <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 lg:p-16 shadow-xl border border-gray-100 dark:border-zinc-800 animate-fade-in">
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-600"><Info className="w-6 h-6" /></div>
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Sobre o Especialista</h2>
+                        </div>
+                        <div className="prose prose-xl dark:prose-invert max-w-none">
+                            <p className="text-xl text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
+                                "{profile.storeConfig?.aboutMe || profile.bio || 'Bem-vindo ao meu perfil profissional de elite.'}"
+                            </p>
+                        </div>
+                    </section>
 
-                    <span className="flex items-center gap-2 bg-indigo-600/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg">
-                        <MapPin className="w-4 h-4" /> {profile.city || 'São Paulo'}
-                    </span>
-
-                    {profile.storeConfig?.videoUrl && (
-                        <button 
-                            onClick={() => setVideoModalUrl(profile.storeConfig?.videoUrl || null)}
-                            className="flex items-center gap-2 bg-brand-primary/90 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform group"
-                        >
-                            <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-brand-primary transition-colors">
-                                <Play className="w-2 h-2 fill-current" />
+                    {/* PROBLEMAS QUE RESOLVO E SOLUÇÕES (GRID) */}
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <section className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden group">
+                            <div className="relative z-10 space-y-8">
+                                <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+                                    <Target className="w-6 h-6" /> Problemas que resolvo
+                                </h3>
+                                <div className="space-y-4">
+                                    {(profile.storeConfig?.problemsSolved || 'Resolvo seus principais desafios de negócio com maestria.').split('\n').map((item, i) => (
+                                        <div key={i} className="flex items-start gap-4">
+                                            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
+                                            <p className="font-bold text-lg leading-tight">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            Assista Nosso Vídeo
-                        </button>
-                    )}
+                            <Zap className="absolute -bottom-8 -right-8 w-32 h-32 text-white/5 rotate-12 group-hover:scale-125 transition-transform" />
+                        </section>
+
+                        <section className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                             <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3 mb-8">
+                                <ListTodo className="w-6 h-6 text-indigo-600" /> Soluções & Serviços
+                             </h3>
+                             <div className="space-y-6">
+                                {(profile.storeConfig?.solutions || 'Consultoria Estratégica, Gestão de Alta Performance, Resultados Garantidos.').split(',').map((item, i) => (
+                                    <div key={i} className="p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-zinc-800 font-black text-xs uppercase tracking-widest text-slate-500">
+                                        {item.trim()}
+                                    </div>
+                                ))}
+                             </div>
+                        </section>
+                    </div>
+
+                    {/* PORTFÓLIO DESTAQUE (MÁX 3) */}
+                    <section className="space-y-10">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Portfólio em Destaque</h2>
+                            <Link to="/marketplace" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Ver tudo</Link>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {products.length > 0 ? products.slice(0, 3).map(prod => (
+                                <div key={prod.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all flex flex-col h-full overflow-hidden">
+                                    <div className="aspect-square bg-gray-50 dark:bg-zinc-800 overflow-hidden relative">
+                                        <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" alt={prod.name} />
+                                        <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">DESTAQUE</div>
+                                    </div>
+                                    <div className="p-6 flex-1 flex flex-col space-y-2">
+                                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-tight line-clamp-1">{prod.name}</h4>
+                                        <p className="text-xs text-slate-400 font-medium line-clamp-2">{prod.description}</p>
+                                        <div className="pt-4 mt-auto">
+                                            <span className="text-lg font-black text-indigo-600">
+                                                {prod.price > 0 ? `R$ ${prod.price.toFixed(2)}` : 'SOB CONSULTA'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-900/40 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                                    <Package className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                    <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Catálogo sendo atualizado</p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* INTERESSES DE NEGÓCIO */}
+                    <section className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden group">
+                        <div className="relative z-10 grid md:grid-cols-2 gap-10 items-center">
+                            <div className="space-y-6">
+                                <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-tight">Interesses de <br/><span className="text-brand-primary">Negócio & Match</span></h3>
+                                <p className="text-slate-400 text-lg font-medium leading-relaxed">
+                                    {profile.storeConfig?.aboutMe || profile.bio || 'Busco conexões estratégicas com parceiros da região para escalar impacto mútuo.'}
+                                </p>
+                            </div>
+                            <div className="flex justify-end">
+                                <Link to="/rewards" className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-brand-primary hover:text-white transition-all">BUSCAR MATCH NO CLUBE</Link>
+                            </div>
+                        </div>
+                        <Handshake className="absolute bottom-[-20px] left-[-20px] w-64 h-64 text-white/5 -rotate-12" />
+                    </section>
+                </div>
+
+                {/* SIDEBAR DIREITA: CONTATOS E REDES */}
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-xl border border-gray-100 dark:border-zinc-800 sticky top-12">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 text-center italic">Canais de Atendimento</h4>
+                        
+                        <div className="space-y-4">
+                            <a 
+                                href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}`} 
+                                target="_blank"
+                                className="w-full py-5 bg-emerald-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 active:scale-95"
+                            >
+                                <MessageCircle className="w-5 h-5" /> FALAR NO WHATSAPP
+                            </a>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                {profile.socialLinks?.instagram && (
+                                    <a href={`https://instagram.com/${profile.socialLinks.instagram}`} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] hover:bg-indigo-50 transition-all group">
+                                        <Instagram className="w-6 h-6 text-pink-500 group-hover:scale-110 transition-transform" />
+                                        <span className="text-[9px] font-black uppercase text-slate-400">Instagram</span>
+                                    </a>
+                                )}
+                                {profile.socialLinks?.website && (
+                                    <a href={profile.socialLinks.website} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] hover:bg-blue-50 transition-all group">
+                                        <Globe className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                                        <span className="text-[9px] font-black uppercase text-slate-400">Site Oficial</span>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-12 pt-8 border-t border-gray-50 dark:border-zinc-800 text-center">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Localização</p>
+                            <div className="flex items-center justify-center gap-2 text-gray-900 dark:text-white font-black text-sm uppercase italic">
+                                <MapPin className="w-4 h-4 text-indigo-600" /> {profile.city || 'Atendimento Remoto'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
+                        <Award className="w-12 h-12 mx-auto text-brand-primary" />
+                        <h4 className="text-xl font-black uppercase italic tracking-tighter">Membro Elite <br/>Menu de Negócios</h4>
+                        <p className="text-indigo-100 text-xs font-bold leading-relaxed">Este profissional utiliza inteligência artificial e tecnologia local para entregar resultados superiores.</p>
+                        <ShieldCheck className="absolute top-0 right-0 w-24 h-24 text-white/10 -mr-8 -mt-8" />
+                    </div>
                 </div>
             </div>
         </div>
 
-        <main className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                
-                {/* SIDEBAR */}
-                <div className="lg:col-span-4 xl:col-span-3 space-y-8">
-                    {/* Cupons da Loja */}
-                    {coupons.length > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-2xl shadow-gray-200/50 border border-gray-100 dark:border-zinc-800 space-y-8 relative overflow-hidden group">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2"><Ticket className="w-4 h-4 text-emerald-500" /> Ofertas do Momento</h3>
-                            </div>
-                            <div className="space-y-6">
-                                {coupons.map(c => (
-                                    <div key={c.id} className="bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-200 dark:border-emerald-800/50 p-6 rounded-[2.2rem] text-center transition-all hover:bg-emerald-50">
-                                        <p className="text-4xl font-black text-emerald-600 mb-1">{c.discount}</p>
-                                        <p className="text-[10px] font-black text-emerald-700/60 uppercase tracking-widest mb-4">{c.title}</p>
-                                        <div className="bg-white dark:bg-zinc-800 text-emerald-600 border border-emerald-100 dark:border-emerald-900 font-mono font-black text-xs py-3 rounded-2xl select-all shadow-sm tracking-[0.2em]">
-                                            {c.code}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+        {/* MODAL DE AGENDAMENTO (LEAD MAGNET) */}
+        {isSchedModalOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
+                <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
+                    <div className="bg-indigo-600 p-10 text-white flex justify-between items-center flex-shrink-0">
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none">Solicitar Agendamento</h3>
+                            <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Reserva de horário direta com o especialista</p>
                         </div>
-                    )}
-
-                    {/* Informações da Loja */}
-                    <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-2xl shadow-gray-200/50 border border-gray-100 dark:border-zinc-800 space-y-10">
-                        <div className="space-y-4">
-                           <h3 className="font-black text-gray-900 dark:text-white text-xl uppercase tracking-tighter italic">Sobre a Marca</h3>
-                           <p className="text-gray-500 dark:text-zinc-400 text-sm leading-relaxed font-medium">
-                              {profile.bio || 'Bem-vindo à nossa loja! Confira nosso cardápio e catálogo completo abaixo.'}
-                           </p>
-                        </div>
-                        
-                        <div className="space-y-8">
-                            {profile.address && (
-                                <div className="flex gap-5 items-start">
-                                    <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-[1.4rem] text-indigo-600 dark:text-brand-primary"><MapPin className="w-5 h-5" /></div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Localização</p>
-                                        <p className="text-sm font-bold text-gray-800 dark:text-zinc-200 leading-tight">{profile.address}</p>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="flex gap-5 items-start">
-                                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-[1.4rem] text-emerald-600 dark:text-emerald-400"><CreditCard className="w-5 h-5" /></div>
-                                <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Formas de Pagamento</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="text-[9px] bg-gray-50 dark:bg-zinc-800 text-slate-500 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest border border-gray-100 dark:border-zinc-700">PIX</span>
-                                        <span className="text-[9px] bg-gray-50 dark:bg-zinc-800 text-slate-500 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest border border-gray-100 dark:border-zinc-700">CARTÃO</span>
-                                        <span className="text-[9px] bg-gray-50 dark:bg-zinc-800 text-slate-500 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest border border-gray-100 dark:border-zinc-700">DINHEIRO</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-4 gap-3 pt-10 border-t border-gray-100 dark:border-zinc-800">
-                            {profile.socialLinks?.instagram && (
-                                <a href={`https://instagram.com/${profile.socialLinks.instagram}`} target="_blank" className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-pink-50 hover:text-pink-600 transition-all"><Instagram className="w-5 h-5" /></a>
-                            )}
-                            {profile.socialLinks?.whatsapp && (
-                                <a href={`https://wa.me/${profile.socialLinks.whatsapp}`} target="_blank" className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-green-50 hover:text-green-600 transition-all"><MessageCircle className="w-5 h-5" /></a>
-                            )}
-                            {profile.socialLinks?.website && (
-                                <a href={profile.socialLinks.website} target="_blank" className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all"><Globe className="w-5 h-5" /></a>
-                            )}
-                            <button className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all"><Share2 className="w-5 h-5" /></button>
-                        </div>
+                        <button onClick={() => setIsSchedModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                     </div>
-                </div>
 
-                {/* MAIN CONTENT */}
-                <div className="lg:col-span-8 xl:col-span-9 space-y-12">
-                    
-                    {/* Barra de Categorias Simplificada */}
-                    <div className="sticky top-20 z-30 bg-gray-50/95 dark:bg-black/90 backdrop-blur-xl py-8 -mx-6 px-6 sm:mx-0 sm:px-0 mb-4">
-                        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 justify-center items-center">
-                            
-                            <button 
-                                onClick={() => setActiveCat('todos')}
-                                className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-lg ${activeCat === 'todos' ? 'bg-[#F67C01] text-white scale-105' : 'bg-white dark:bg-zinc-900 text-slate-400 border border-gray-100 dark:border-zinc-800 hover:bg-gray-50'}`}
-                            >
-                                🔥 Todos os Itens
+                    <form onSubmit={handleSchedSubmit} className="p-12 space-y-8 flex-1 overflow-y-auto">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome Completo</label>
+                                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={schedForm.name} onChange={e => setSchedForm({...schedForm, name: e.target.value})} placeholder="Como quer ser chamado?" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email para Contato</label>
+                                <input required type="email" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={schedForm.email} onChange={e => setSchedForm({...schedForm, email: e.target.value})} placeholder="seu@email.com" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp (DDD + Número)</label>
+                                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={schedForm.whatsapp} onChange={e => setSchedForm({...schedForm, whatsapp: e.target.value})} placeholder="Ex: 5511999999999" />
+                            </div>
+                        </div>
+
+                        <div className="pt-6">
+                            <button type="submit" className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4 group">
+                                CONFIRMAR AGENDAMENTO <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                             </button>
-
-                            <div className="w-px h-8 bg-gray-200 dark:bg-zinc-800 self-center mx-4 hidden sm:block"></div>
-
-                            {categories.map(cat => (
-                                <button 
-                                    key={cat.id}
-                                    onClick={() => setActiveCat(cat.id)}
-                                    className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-lg ${activeCat === cat.id ? 'bg-[#F67C01] text-white scale-105' : 'bg-white dark:bg-zinc-900 text-slate-400 border border-gray-100 dark:border-zinc-800 hover:bg-gray-50'}`}
-                                >
-                                    {cat.name}
-                                </button>
-                            ))}
+                            <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-widest mt-6">Seus dados serão enviados ao especialista para confirmação de disponibilidade.</p>
                         </div>
-                    </div>
-
-                    {/* Product Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                        {filteredProducts.map(prod => (
-                            <div 
-                                key={prod.id} 
-                                className="group bg-white dark:bg-zinc-900 rounded-[3rem] p-5 pb-10 shadow-sm border border-gray-100 dark:border-zinc-800 hover:shadow-2xl hover:-translate-y-3 transition-all duration-700 flex flex-col"
-                            >
-                                <div className="aspect-square rounded-[2.5rem] overflow-hidden bg-gray-50 dark:bg-zinc-800 relative mb-8 group">
-                                    {prod.imageUrl ? (
-                                        <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={prod.name} />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-200"><ImageIcon className="w-12 h-12" /></div>
-                                    )}
-                                    
-                                    <div className="absolute top-5 left-5 right-5 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                        <div className="flex flex-col gap-2">
-                                            {prod.promoPrice && <span className="bg-rose-600 text-white text-[9px] font-black px-4 py-1.5 rounded-xl shadow-xl uppercase tracking-widest">OFERTA</span>}
-                                        </div>
-                                        {prod.videoUrl && (
-                                            <button 
-                                                onClick={() => setVideoModalUrl(prod.videoUrl || null)}
-                                                className="w-12 h-12 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center shadow-2xl text-emerald-600 hover:scale-110 transition-transform"
-                                            >
-                                                <Play className="w-5 h-5 fill-current" />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {prod.stock !== undefined && prod.stock <= 0 && (
-                                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-                                            <div className="bg-rose-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl">ESGOTADO</div>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                <div className="px-4 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h3 className="font-black text-gray-900 dark:text-white text-xl leading-tight italic uppercase tracking-tighter line-clamp-1 group-hover:text-emerald-600 transition-colors">{prod.name}</h3>
-                                    </div>
-                                    <p className="text-gray-50 dark:text-zinc-500 text-xs line-clamp-2 mb-10 font-medium leading-relaxed">{prod.description}</p>
-                                    
-                                    <div className="mt-auto flex items-end justify-between">
-                                        <div className="flex flex-col">
-                                            {prod.promoPrice ? (
-                                                <>
-                                                    <span className="text-3xl font-black text-emerald-600 leading-none">R$ {prod.promoPrice.toFixed(2)}</span>
-                                                    <span className="text-[10px] text-gray-400 line-through font-bold mt-1">R$ {prod.price.toFixed(2)}</span>
-                                                </>
-                                            ) : (
-                                                <span className="text-3xl font-black text-gray-900 dark:text-white leading-none">R$ {prod.price.toFixed(2)}</span>
-                                            )}
-                                        </div>
-                                        
-                                        <button 
-                                            onClick={() => addToCart(prod)}
-                                            disabled={prod.stock !== undefined && prod.stock <= 0}
-                                            className="p-5 bg-emerald-600 text-white rounded-2xl shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all active:scale-90 disabled:opacity-50"
-                                        >
-                                            <Plus className="w-6 h-6" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {filteredProducts.length === 0 && (
-                        <div className="text-center py-40 bg-white dark:bg-zinc-900 rounded-[4rem] border-2 border-dashed border-gray-100 dark:border-zinc-800">
-                            <Store className="w-16 h-16 text-gray-100 dark:text-zinc-800 mx-auto mb-6" />
-                            <p className="text-gray-400 font-black uppercase tracking-widest text-sm italic">Nenhum produto nesta categoria.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </main>
-
-        {/* Global Floating Cart Button */}
-        {cart.length > 0 && !isCartOpen && (
-            <button 
-                onClick={() => setIsCartOpen(true)}
-                className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[150] bg-gray-900 text-white px-12 py-6 rounded-full font-black text-[11px] uppercase tracking-[0.2em] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] flex items-center gap-5 animate-bounce active:scale-95 transition-all"
-            >
-                <div className="relative">
-                    <ShoppingCart className="w-6 h-6 text-emerald-400" />
-                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[8px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900">
-                        {cart.reduce((a,b) => a + b.quantity, 0)}
-                    </span>
-                </div>
-                FECHAR MEU PEDIDO
-                <span className="w-px h-4 bg-white/20"></span>
-                <span className="text-emerald-400">R$ {total.toFixed(2)}</span>
-            </button>
-        )}
-
-        {/* Cart Drawer & Modals */}
-        {isCartOpen && (
-             <div className="fixed inset-0 z-[200] animate-fade-in flex justify-end">
-                <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setIsCartOpen(false)}></div>
-                <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 h-full shadow-2xl flex flex-col animate-slide-in-right">
-                    <div className="p-10 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <ShoppingCart className="w-8 h-8 text-emerald-600" />
-                            <h3 className="text-2xl font-black italic uppercase tracking-tighter dark:text-white">Meu Pedido</h3>
-                        </div>
-                        <button onClick={() => setIsCartOpen(false)} className="p-3 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-2xl"><X className="w-8 h-8 text-slate-300" /></button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-10 space-y-8 scrollbar-hide">
-                        {cart.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                                <div className="w-24 h-24 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] flex items-center justify-center text-gray-200"><ShoppingCart className="w-10 h-10" /></div>
-                                <h4 className="text-2xl font-black text-gray-300 uppercase tracking-tighter">Seu carrinho está vazio</h4>
-                            </div>
-                        ) : cart.map(item => (
-                            <div key={item.id} className="flex gap-6 items-center group">
-                                <div className="w-24 h-24 rounded-[1.8rem] overflow-hidden bg-gray-100 flex-shrink-0 shadow-inner">
-                                    <img src={item.imageUrl} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                    <h4 className="font-black text-gray-900 dark:text-white text-base leading-tight italic">{item.name}</h4>
-                                    <p className="text-sm font-black text-emerald-600">R$ {((item.promoPrice || item.price) * item.quantity).toFixed(2)}</p>
-                                    <div className="flex items-center gap-4 pt-2">
-                                        <div className="flex items-center bg-gray-50 dark:bg-zinc-800 rounded-xl border border-gray-100 dark:border-zinc-700">
-                                            <button onClick={() => updateQuantity(item.id, -1)} className="p-2.5 text-slate-400 hover:text-emerald-600"><Minus className="w-4 h-4" /></button>
-                                            <span className="w-8 text-center text-xs font-black dark:text-white">{item.quantity}</span>
-                                            <button onClick={() => updateQuantity(item.id, 1)} className="p-2.5 text-slate-400 hover:text-emerald-600"><Plus className="w-4 h-4" /></button>
-                                        </div>
-                                        <button onClick={() => removeFromCart(item.id)} className="p-2.5 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="p-10 bg-gray-50 dark:bg-zinc-950 border-t border-gray-100 dark:border-zinc-800 space-y-8">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-gray-500 font-bold uppercase text-[10px] tracking-widest">
-                                <span>Subtotal</span>
-                                <span>R$ {subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-end pt-4 border-t border-gray-200 dark:border-zinc-800">
-                                <span className="font-black text-gray-900 dark:text-white uppercase text-xs tracking-widest">Valor Final</span>
-                                <span className="font-black text-4xl text-emerald-600 leading-none">R$ {total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={handleCheckoutWhatsApp}
-                            disabled={cart.length === 0}
-                            className="w-full bg-emerald-600 text-white font-black py-7 rounded-[2.2rem] shadow-2xl shadow-emerald-900/40 uppercase tracking-widest text-sm flex items-center justify-center gap-4 hover:bg-emerald-700 transition-all active:scale-95"
-                        >
-                            <MessageCircle className="w-6 h-6" /> FINALIZAR NO WHATSAPP
-                        </button>
-                    </div>
-                </div>
-             </div>
-        )}
-
-        {/* Video Modal Cinema */}
-        {videoModalUrl && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
-                <button onClick={() => setVideoModalUrl(null)} className="absolute top-10 right-10 text-white p-5 bg-white/10 hover:bg-white/20 rounded-full transition-all z-50"><X className="w-10 h-10" /></button>
-                <div className="w-full max-w-xl aspect-[9/16] bg-black rounded-[4rem] overflow-hidden shadow-2xl relative border-[10px] border-white/10">
-                    <iframe src={getEmbedUrl(videoModalUrl) || ''} className="w-full h-full" frameBorder="0" allow="autoplay; encrypted-media; fullscreen" allowFullScreen></iframe>
+                    </form>
                 </div>
             </div>
         )}
+
+        <footer className="text-center py-20 opacity-30 mt-20">
+             <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.4em] mb-4 italic">Plataforma Menu de Negócios • Conexão Local</p>
+             <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.4em]">&copy; {new Date().getFullYear()} {profile.businessName}.</p>
+        </footer>
     </div>
   );
 };

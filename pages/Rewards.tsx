@@ -5,32 +5,16 @@ import { mockBackend } from '../services/mockBackend';
 import { 
   Trophy, Gift, TrendingUp, Star,
   Zap, Crown, ChevronRight,
-  CheckCircle, ListTodo, History, Medal, Home as HomeIcon,
+  CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
-  // Added Ticket and Wand2 icons to fix the reference errors
-  Ticket, Wand2
+  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw
 } from 'lucide-react';
-import { Prize, PointsTransaction, User } from '../types';
+import { Prize, PointsTransaction, User, B2BOffer } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'store' | 'missions' | 'history' | 'ranking'>('home');
-  const [history, setHistory] = useState<PointsTransaction[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-
-  useEffect(() => {
-    if (user) loadHistory();
-  }, [user, activeTab]);
-
-  const loadHistory = async () => {
-    if (!user) return;
-    setIsLoadingHistory(true);
-    try {
-      const data = await mockBackend.getPointsHistory(user.id);
-      setHistory(data);
-    } finally { setIsLoadingHistory(false); }
-  };
+  const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'missions' | 'match' | 'ranking'>('home');
 
   if (!user) return null;
 
@@ -77,9 +61,8 @@ export const Rewards: React.FC = () => {
                   { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
                   { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
                   { id: 'missions', label: 'MISSÕES', desc: 'Ganhar pontos', icon: ListTodo },
+                  { id: 'match', label: 'MATCH', desc: 'Parcerias B2B', icon: Handshake },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
-                  { id: 'store', label: 'RESGATAR', desc: 'Seus prêmios', icon: Gift },
-                  { id: 'history', label: 'EXTRATO', desc: 'Histórico', icon: History }
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -103,11 +86,11 @@ export const Rewards: React.FC = () => {
             <SectionLanding 
                 title="Sua Atividade é a sua Melhor Propaganda."
                 subtitle="Clube de Vantagens"
-                description="O Clube ADS recompensa seu engajamento com pontos que podem ser trocados por visibilidade extra e prêmios reais no seu negócio."
+                description="O Clube ADS recompensa seu engajamento com pontos que podem ser trocados por visibilidade extra e parcerias estratégicas no seu negócio."
                 benefits={[
                 "Suba de nível e ganhe prioridade no diretório de lojas.",
                 "Ganhe pontos ao atualizar seu catálogo e bio.",
-                "Resgate vouchers e consultorias exclusivas.",
+                "Crie e encontre parcerias exclusivas na aba MATCH.",
                 "Participe do ranking local do seu bairro.",
                 "Desbloqueie selos de verificado para seu perfil."
                 ]}
@@ -121,10 +104,168 @@ export const Rewards: React.FC = () => {
 
         {activeTab === 'acceleration' && <LevelsView user={user} />}
         {activeTab === 'missions' && <MissionsView />}
+        {activeTab === 'match' && <B2BMatchView user={user} />}
         {activeTab === 'ranking' && <RankingView />}
-        {activeTab === 'store' && <StoreView userPoints={user.points} />}
-        {activeTab === 'history' && <HistoryView history={history} isLoading={isLoadingHistory} />}
       </div>
+    </div>
+  );
+};
+
+const B2BMatchView = ({ user }: { user: User }) => {
+  const [offers, setOffers] = useState<B2BOffer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    discount: '',
+    category: 'Serviços',
+    terms: ''
+  });
+
+  useEffect(() => { 
+    loadOffers(); 
+  }, []);
+
+  const loadOffers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await mockBackend.getB2BOffers();
+      setOffers(data);
+    } finally { 
+      setIsLoading(false); 
+    }
+  };
+
+  const handleCreateOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const newOffer = await mockBackend.createB2BOffer({
+        ...formData,
+        userId: user.id,
+        businessName: user.name,
+        businessLogo: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`
+      });
+      // Atualiza a lista local imediatamente para visualização instantânea
+      setOffers(prev => [newOffer, ...prev]);
+      setIsModalOpen(false);
+      setFormData({ title: '', description: '', discount: '', category: 'Serviços', terms: '' });
+    } catch (err) {
+      console.error("Erro ao publicar:", err);
+      alert("Erro ao publicar oportunidade. Tente novamente.");
+    } finally { 
+      setIsSaving(false); 
+    }
+  };
+
+  const filteredOffers = offers.filter(o => 
+    o.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    o.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-10 animate-fade-in">
+       <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-xl mb-12">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="space-y-4 max-w-xl">
+                <h3 className="text-3xl font-black italic uppercase tracking-tighter">Explorar Match B2B</h3>
+                <p className="text-indigo-100 font-medium">Crie conexões diretas com outros empresários da rede e aproveite benefícios exclusivos de colaboração.</p>
+             </div>
+             <button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-white text-indigo-600 px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3 active:scale-95"
+             >
+                <Plus className="w-5 h-5" /> PUBLICAR OPORTUNIDADE
+             </button>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+       </div>
+
+       <div className="max-w-xl mx-auto relative mb-12">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input 
+             type="text" 
+             placeholder="Filtrar parceiros por serviço ou nome..." 
+             className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
+             value={searchTerm}
+             onChange={e => setSearchTerm(e.target.value)}
+          />
+       </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {isLoading ? (
+             [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
+          ) : filteredOffers.length === 0 ? (
+             <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de match encontrada.</p>
+             </div>
+          ) : filteredOffers.map(offer => (
+             <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-6">
+                   <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
+                      <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
+                   </div>
+                   <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
+                      {offer.discount}
+                   </span>
+                </div>
+                <div className="flex-1 space-y-3">
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
+                   <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
+                   <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
+                </div>
+                <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
+                   SOLICITAR CONEXÃO <ArrowRight className="w-3 h-3" />
+                </button>
+             </div>
+          ))}
+       </div>
+
+       {isModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                     <div>
+                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">Publicar Oportunidade</h3>
+                         <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Sua oferta ficará visível na aba MATCH</p>
+                     </div>
+                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                 </div>
+                 <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
+                     <div>
+                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Título da Oportunidade</label>
+                         <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Parceria em Gestão de Redes Sociais" />
+                     </div>
+                     <div className="grid grid-cols-2 gap-4">
+                         <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Benefício / Desconto</label>
+                             <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 15% OFF ou Consultoria Grátis" />
+                         </div>
+                         <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Categoria B2B</label>
+                             <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                                 <option>Serviços</option>
+                                 <option>Insumos</option>
+                                 <option>Tecnologia</option>
+                                 <option>Marketing</option>
+                             </select>
+                         </div>
+                     </div>
+                     <div>
+                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">O que você está oferecendo?</label>
+                         <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descreva os detalhes da parceria..." />
+                     </div>
+                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR OPORTUNIDADE AGORA'}
+                     </button>
+                 </form>
+             </div>
+          </div>
+       )}
     </div>
   );
 };
@@ -243,75 +384,6 @@ const RankingView = () => {
                    <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
                    <ArrowUp className="w-4 h-4 text-emerald-500" />
                 </div>
-             </div>
-          ))}
-       </div>
-    </div>
-  );
-};
-
-const StoreView = ({ userPoints }: { userPoints: number }) => {
-  const prizes = [
-    { title: 'Selo de Verificado', desc: 'Destaque visual no diretório por 30 dias.', cost: 1000, icon: CheckCircle, color: 'bg-blue-600' },
-    { title: 'Voucher R$ 50 Ads', desc: 'Crédito para destaque regional.', cost: 500, icon: Ticket, color: 'bg-orange-600' },
-    { title: 'Consultoria IA', desc: 'Analise seu negócio com o Menu Flow PRO.', cost: 2000, icon: Wand2, color: 'bg-purple-600' }
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in">
-       {prizes.map((p, i) => (
-          <div key={i} className="group bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col">
-             <div className={`w-16 h-16 rounded-2xl ${p.color} mb-8 flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform`}>
-                <p.icon className="w-8 h-8" />
-             </div>
-             <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic mb-2 tracking-tighter">{p.title}</h3>
-             <p className="text-sm text-slate-500 font-medium leading-relaxed mb-10 flex-1">{p.desc}</p>
-             
-             <div className="mt-auto space-y-4">
-                <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
-                   <span className="text-slate-400">Custo:</span>
-                   <span className="text-brand-primary">{p.cost} pts</span>
-                </div>
-                <button 
-                  disabled={userPoints < p.cost}
-                  className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${userPoints >= p.cost ? 'bg-[#0F172A] text-white hover:bg-brand-primary' : 'bg-gray-100 text-slate-300 cursor-not-allowed'}`}
-                >
-                   {userPoints >= p.cost ? 'RESGATAR AGORA' : 'PONTOS INSUFICIENTES'}
-                </button>
-             </div>
-          </div>
-       ))}
-    </div>
-  );
-};
-
-const HistoryView = ({ history, isLoading }: { history: PointsTransaction[], isLoading: boolean }) => {
-  return (
-    <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl animate-fade-in">
-       <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter mb-10">Extrato de Atividades</h3>
-       
-       <div className="space-y-2">
-          {isLoading ? (
-             <div className="py-20 text-center animate-pulse text-slate-400">Carregando histórico...</div>
-          ) : history.length === 0 ? (
-             <div className="py-24 text-center border-4 border-dashed border-gray-50 rounded-[3rem]">
-                <Clock className="w-16 h-16 mx-auto text-slate-200 mb-6" />
-                <p className="text-slate-400 font-black uppercase text-[11px] tracking-widest">Nenhuma transação registrada.</p>
-             </div>
-          ) : history.map(t => (
-             <div key={t.id} className="flex items-center justify-between p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-6">
-                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.points > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      {t.points > 0 ? <Zap className="w-5 h-5 fill-current" /> : <Gift className="w-5 h-5" />}
-                   </div>
-                   <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white text-sm">{t.action}</h4>
-                      <p className="text-[10px] font-black text-slate-400 uppercase mt-1">{new Date(t.createdAt).toLocaleDateString('pt-BR')} • {t.category}</p>
-                   </div>
-                </div>
-                <span className={`font-black text-lg ${t.points > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                   {t.points > 0 ? '+' : ''}{t.points}
-                </span>
              </div>
           ))}
        </div>

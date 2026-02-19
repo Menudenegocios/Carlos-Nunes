@@ -34,7 +34,6 @@ const MARKETPLACE_CATEGORIES = [
     { id: 'negocios', label: 'Negócios Locais', icon: Store, enum: OfferCategory.NEGOCIOS_LOCAIS },
     { id: 'profissionais', label: 'Profissionais', icon: Briefcase, enum: OfferCategory.SERVICOS_PROFISSIONAIS },
     { id: 'mentorias', label: 'Mentorias', icon: Award, enum: OfferCategory.OPORTUNIDADES },
-    { id: 'eventos', label: 'Eventos', icon: Ticket, enum: OfferCategory.OPORTUNIDADES },
 ];
 
 export const BioBuilder: React.FC = () => {
@@ -87,7 +86,6 @@ export const BioBuilder: React.FC = () => {
           if (data.bioConfig?.themeId) setSelectedCategory(data.bioConfig.themeId);
           if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
           
-          // Load Scheduling
           if (data.storeConfig?.schedulingEnabled) {
               setSchedEnabled(true);
           }
@@ -134,7 +132,7 @@ export const BioBuilder: React.FC = () => {
       };
       await mockBackend.updateProfile(user.id, updatedProfile);
 
-      // 2. Sincronizar com Marketplace (Offers)
+      // 2. Sincronizar com Marketplace
       const catObj = MARKETPLACE_CATEGORIES.find(c => c.id === selectedCategory);
       const categoryEnum = catObj?.enum || OfferCategory.SERVICOS_PROFISSIONAIS;
       
@@ -143,7 +141,6 @@ export const BioBuilder: React.FC = () => {
 
       let tags = "[BIO_MARKER]";
       if (selectedCategory === 'mentorias') tags += " [MENTORIA]";
-      if (selectedCategory === 'eventos') tags += " [EVENTO]";
 
       const offerData = {
         title: profile.businessName || user.name,
@@ -152,7 +149,10 @@ export const BioBuilder: React.FC = () => {
         city: profile.city || 'Sua Cidade',
         imageUrl: profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
         logoUrl: profile.logoUrl,
-        socialLinks: profile.socialLinks,
+        socialLinks: profile.socialLinks || {
+            whatsapp: profile.phone || '',
+            instagram: profile.socialLinks?.instagram || ''
+        },
         price: 'Consultar',
         userId: user.id,
         scheduling: schedEnabled ? {
@@ -169,11 +169,14 @@ export const BioBuilder: React.FC = () => {
         await mockBackend.createOffer(user.id, offerData);
       }
 
-      alert(`🚀 SUCESSO! Sua Bio Digital foi sincronizada com o Marketplace na aba "${catObj?.label}".`);
+      alert(`🚀 SUCESSO! Sua Bio Digital foi salva e enviada instantaneamente para o Marketplace na aba "${catObj?.label}".`);
+      setActiveEditorTab('share');
     } catch (err) {
-      console.error(err);
-      alert("Erro ao publicar. Verifique sua conexão.");
-    } finally { setIsSaving(false); }
+      console.error("Erro ao salvar Bio:", err);
+      alert("Houve um erro ao publicar. Verifique sua conexão e tente novamente.");
+    } finally { 
+      setIsSaving(false); 
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,12 +296,9 @@ export const BioBuilder: React.FC = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
                 BIO DIGITAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
               </h2>
-              <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">TRANSFORME SUA PRESENÇA EM RESULTADO REAL.</p>
+              <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">Sua vitrine inteligente no bairro.</p>
             </div>
           </div>
-          <button onClick={handleSave} disabled={isSaving} className="bg-[#F67C01] text-white px-12 py-5 rounded-[1.8rem] font-black text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_50px_-10px_rgba(246,124,1,0.4)] hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
-            {isSaving ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} PUBLICAR AGORA
-          </button>
         </div>
 
         <div className="bg-white/5 rounded-[2.5rem] p-1.5 mt-10 flex gap-1 overflow-x-auto scrollbar-hide border border-white/5">
@@ -307,7 +307,7 @@ export const BioBuilder: React.FC = () => {
             { id: 'content', label: 'CONTEÚDO', desc: 'Links e bio', icon: AlignLeft },
             { id: 'social_proof', label: 'PROVA SOCIAL', desc: 'Depoimentos', icon: Star },
             { id: 'design', label: 'DESIGN', desc: 'Temas e cores', icon: PaletteIcon },
-            { id: 'share', label: 'ATIVAR', desc: 'Compartilhar', icon: Share2 },
+            { id: 'share', label: 'ATIVAR', desc: 'Sincronizar', icon: Share2 },
           ].map(tab => (
             <button 
               key={tab.id}
@@ -407,11 +407,10 @@ export const BioBuilder: React.FC = () => {
                {activeEditorTab === 'design' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
                      
-                     {/* Seleção de Categoria Marketplace */}
                      <div className="space-y-6">
                         <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Layout className="text-brand-primary" /> Categoria da Vitrine</h3>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Escolha onde sua Bio aparecerá no Marketplace global.</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {MARKETPLACE_CATEGORIES.map(cat => (
                                 <button 
                                     key={cat.id} 
@@ -427,7 +426,6 @@ export const BioBuilder: React.FC = () => {
 
                      <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
 
-                     {/* NOVO: Mesh Gradient Control */}
                      <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -443,7 +441,6 @@ export const BioBuilder: React.FC = () => {
 
                      <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
 
-                     {/* NOVO: Agendamento Automático */}
                      <div className="space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30">
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -522,7 +519,7 @@ export const BioBuilder: React.FC = () => {
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Tipografia</label>
                               <div className="grid gap-2">
                                  {FONTS.map(f => (
-                                    <button key={f.id} onClick={() => setFontFamily(f.id)} className={`p-4 rounded-xl text-left text-sm border-2 transition-all ${fontFamily === f.id ? 'border-brand-primary bg-orange-50 dark:bg-orange-950/20 text-brand-primary' : 'border-gray-50 dark:border-zinc-800 text-gray-500'}`} style={{fontFamily: f.family}}>
+                                    <button key={f.id} onClick={() => setFontFamily(f.id)} className={`p-4 rounded-xl text-left text-sm border-2 transition-all ${fontFamily === f.id ? 'border-brand-primary bg-orange-50 dark:bg-orange-950/20 text-brand-primary' : 'border-gray-100 dark:border-zinc-800 text-gray-500'}`} style={{fontFamily: f.family}}>
                                        {f.label}
                                     </button>
                                  ))}
@@ -535,9 +532,9 @@ export const BioBuilder: React.FC = () => {
 
                {activeEditorTab === 'share' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar e Compartilhar</h3>
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar e Sincronizar</h3>
                      <div className="space-y-8">
-                        <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 text-center space-y-4">
+                        <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 text-center space-y-8">
                            <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-sm text-indigo-600">
                               <Globe className="w-8 h-8" />
                            </div>
@@ -545,15 +542,25 @@ export const BioBuilder: React.FC = () => {
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seu Link Público</p>
                               <p className="text-lg font-black text-gray-900 dark:text-white truncate">{window.location.origin}/#/store/{user?.id}</p>
                            </div>
-                           <button onClick={copyBioLink} className={`px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${copied ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
-                              {copied ? 'COPIADO!' : 'COPIAR LINK'}
-                           </button>
+                           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                              <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
+                                 {copied ? 'COPIADO!' : 'COPIAR LINK'}
+                              </button>
+                              <button 
+                                 onClick={handleSave} 
+                                 disabled={isSaving} 
+                                 className="bg-[#F67C01] text-white px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                              >
+                                 {isSaving ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} SALVAR E PUBLICAR
+                              </button>
+                           </div>
+                           <p className="text-[9px] font-bold text-slate-400 uppercase max-w-xs mx-auto">Ao clicar em SALVAR E PUBLICAR, sua Bio será atualizada e aparecerá automaticamente na vitrine do Marketplace global.</p>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
                            <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 flex flex-col items-center text-center space-y-4 shadow-sm">
                               <QrCode className="w-12 h-12 text-gray-900 dark:text-white" />
-                              <h4 className="font-black text-sm uppercase italic">QR Code Personalizado</h4>
-                              <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Download QR Code</button>
+                              <h4 className="font-black text-sm uppercase italic">QR Code para Impressão</h4>
+                              <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Download JPG</button>
                            </div>
                         </div>
                      </div>

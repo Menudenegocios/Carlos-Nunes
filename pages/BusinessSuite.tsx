@@ -7,19 +7,40 @@ import {
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
   X, Trash2, CheckCircle, Clock, Briefcase, 
   Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical,
-  Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle
+  Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle,
+  Lock, Crown
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
+import { Link } from 'react-router-dom';
 
 export const BusinessSuite: React.FC = () => {
-  const { user } = useAuth();
+  const { user, realAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'crm' | 'finance' | 'schedule'>('home');
 
   if (!user) return null;
 
+  const isAdmin = user.role === 'admin' || realAdmin?.role === 'admin';
+  const hasAccess = isAdmin || (user.plan !== 'profissionais');
+
+  if (!hasAccess) {
+      return (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-fade-in">
+              <div className="w-24 h-24 bg-brand-primary/10 dark:bg-brand-primary/20 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl border border-brand-primary/20">
+                  <Lock className="w-10 h-10 text-brand-primary" />
+              </div>
+              <h2 className="text-4xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter mb-4">Módulo de Gestão Business</h2>
+              <p className="text-gray-500 dark:text-zinc-400 max-w-md text-lg font-medium leading-relaxed mb-10">
+                  A Central de Negócios (CRM, Financeiro e Agenda) é exclusiva para planos <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
+              </p>
+              <Link to="/plans" className="bg-[#F67C01] text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
+                  <Crown className="w-5 h-5" /> DESBLOQUEAR FERRAMENTAS
+              </Link>
+          </div>
+      );
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      {/* Header Premium SaaS */}
       <div className="bg-[#0F172A] dark:bg-black rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
