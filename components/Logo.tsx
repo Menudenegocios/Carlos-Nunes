@@ -10,77 +10,110 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'full', size = 'md', forceWhite = false }) => {
   const iconSizes = {
-    xs: 'h-6',
-    sm: 'h-16',
-    md: 'h-20',
-    lg: 'h-32',
-    xl: 'h-44'
+    xs: 'h-8',
+    sm: 'h-20',
+    md: 'h-32',
+    lg: 'h-48',
+    xl: 'h-64'
   };
 
   const fontSizes = {
-    xs: { top: 'text-[6px]', bottom: 'text-[14px]', spacing: '-mt-1.5', gap: 'gap-1' },
-    sm: { top: 'text-[12px]', bottom: 'text-[30px]', spacing: '-mt-3', gap: 'gap-2' },
-    md: { top: 'text-[14px]', bottom: 'text-[36px]', spacing: '-mt-3.5', gap: 'gap-3' },
-    lg: { top: 'text-[22px]', bottom: 'text-[58px]', spacing: '-mt-6', gap: 'gap-4' },
-    xl: { top: 'text-[32px]', bottom: 'text-[84px]', spacing: '-mt-9', gap: 'gap-6' }
+    xs: { top: 'text-[8px]', bottom: 'text-[18px]', spacing: 'mt-1', gap: 'gap-1' },
+    sm: { top: 'text-[14px]', bottom: 'text-[36px]', spacing: 'mt-2', gap: 'gap-2' },
+    md: { top: 'text-[20px]', bottom: 'text-[52px]', spacing: 'mt-3', gap: 'gap-3' },
+    lg: { top: 'text-[28px]', bottom: 'text-[76px]', spacing: 'mt-4', gap: 'gap-4' },
+    xl: { top: 'text-[40px]', bottom: 'text-[110px]', spacing: 'mt-6', gap: 'gap-6' }
   };
 
   const currentFont = fontSizes[size];
-  const primaryColor = forceWhite ? "#FFFFFF" : "#F67C01";
-  const textColor = forceWhite ? "#FFFFFF" : "currentColor";
+  
+  // Cor oficial fornecida pelo usuário: #F67C01
+  const brandOrange = "#F67C01";
+  const iconColor = forceWhite ? "#FFFFFF" : brandOrange;
+  const topTextColor = forceWhite ? "#FFFFFF" : "#000000"; 
+  const bottomTextColor = forceWhite ? "#FFFFFF" : brandOrange;
 
   return (
-    <div className={`flex items-center ${size === 'xs' || size === 'sm' ? 'gap-2' : 'gap-4'} ${className}`}>
-      {/* NOVO ÍCONE HEXAGONAL COMPLEXO */}
+    <div className={`flex items-center ${size === 'xs' || size === 'sm' ? 'gap-3' : 'gap-6'} ${className}`}>
+      {/* ÍCONE COMPLEXO REPRODUZIDO DA IMAGEM */}
       <svg 
-        viewBox="0 0 200 200" 
+        viewBox="0 0 300 300" 
         className={`${iconSizes[size]} w-auto flex-shrink-0 drop-shadow-sm`}
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path d="M100 40L145 65V115L100 140L55 115V65L100 40Z" stroke={primaryColor} strokeWidth="1.5" />
-        <path d="M100 25V40M160 55L145 65M160 125L145 115M100 155V140M40 125L55 115M40 55L55 65" stroke={primaryColor} strokeWidth="1" strokeLinecap="round"/>
-        <path d="M100 40L55 115M100 40L145 115M55 65L145 65M55 115L145 115" stroke={primaryColor} strokeWidth="0.8" strokeOpacity="0.5"/>
-
-        <circle cx="100" cy="25" r="12" stroke={primaryColor} strokeWidth="1" fill={forceWhite ? "rgba(255,255,255,0.05)" : "rgba(246,124,1,0.05)"}/>
-        <path d="M96 22H104M96 28H104M100 20V30" stroke={primaryColor} strokeWidth="0.8"/>
+        {/* Estrutura Hexagonal Principal */}
+        <path d="M150 40L230 85V175L150 220L70 175V85L150 40Z" stroke={iconColor} strokeWidth="2.5" />
         
-        <circle cx="160" cy="55" r="12" stroke={primaryColor} strokeWidth="1"/>
-        <rect x="157" y="50" width="6" height="8" rx="3" stroke={primaryColor} strokeWidth="0.8"/>
-        <path d="M154 54C154 57 157 59 160 59C163 59 166 57 166 54" stroke={primaryColor} strokeWidth="0.8"/>
+        {/* Conexões Internas */}
+        <path d="M150 40V220M70 85L230 175M230 85L70 175" stroke={iconColor} strokeWidth="1.5" strokeOpacity="0.6" />
         
-        <circle cx="160" cy="125" r="12" stroke={primaryColor} strokeWidth="1"/>
-        <path d="M155 130H165M157 127L160 122L163 125L166 118" stroke={primaryColor} strokeWidth="0.8"/>
+        {/* Triângulo Central Invertido */}
+        <path d="M150 220L230 85H70L150 220Z" stroke={iconColor} strokeWidth="2" fill={iconColor} fillOpacity="0.05" />
 
-        <circle cx="40" cy="125" r="12" stroke={primaryColor} strokeWidth="1"/>
-        <text x="35" y="128" fill={primaryColor} fontSize="7" fontWeight="900" style={{fontFamily: 'Raleway, sans-serif'}}>IA</text>
-        <circle cx="40" cy="125" r="8" stroke={primaryColor} strokeWidth="0.5" strokeDasharray="1 1"/>
+        {/* Nódulos com Ícones */}
+        {/* Topo: Dinheiro/Vendas */}
+        <circle cx="150" cy="30" r="28" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(138, 18) scale(1.1)">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </g>
 
-        <circle cx="40" cy="55" r="12" stroke={primaryColor} strokeWidth="1"/>
-        <path d="M35 55L38 52M45 55L42 52M37 57L43 57" stroke={primaryColor} strokeWidth="0.8" strokeLinecap="round"/>
+        {/* Superior Direito: Podcast/Microfone */}
+        <circle cx="255" cy="85" r="28" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(243, 73) scale(1.1)">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke={iconColor} strokeWidth="2"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke={iconColor} strokeWidth="2"/>
+          <line x1="12" y1="19" x2="12" y2="23" stroke={iconColor} strokeWidth="2"/>
+          <line x1="8" y1="23" x2="16" y2="23" stroke={iconColor} strokeWidth="2"/>
+        </g>
 
-        <path d="M100 75L115 90L100 105L85 90L100 75Z" stroke={primaryColor} strokeWidth="1.5" fill={primaryColor} fillOpacity="0.1"/>
-        <circle cx="100" cy="90" r="18" stroke={primaryColor} strokeWidth="1" strokeOpacity="0.3"/>
+        {/* Inferior Direito: Academy/Quadro */}
+        <circle cx="250" cy="185" r="28" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(238, 173) scale(1.1)">
+          <path d="M2 3h20v14H2z" stroke={iconColor} strokeWidth="2"/>
+          <path d="M8 21l2-4M16 21l-2-4" stroke={iconColor} strokeWidth="2"/>
+          <path d="M7 10h2M11 8h2M15 12h2" stroke={iconColor} strokeWidth="1.5"/>
+        </g>
 
-        <g transform="translate(85, 140) scale(0.6)">
-            <rect x="10" y="5" width="20" height="35" rx="4" stroke={primaryColor} strokeWidth="2.5"/>
-            <path d="M5 45C5 45 8 55 15 55C22 55 25 45 25 45" stroke={primaryColor} strokeWidth="2.5" strokeLinecap="round"/>
-            <path d="M30 15C35 15 38 18 38 22V35" stroke={primaryColor} strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="20" cy="32" r="1.5" fill={primaryColor}/>
+        {/* Base: Smartphone/Mão (Elemento Crucial da Imagem) */}
+        <g transform="translate(110, 225)">
+           <rect x="25" y="10" width="35" height="60" rx="6" stroke={iconColor} strokeWidth="2.5" fill="white" />
+           <path d="M38 15h10" stroke={iconColor} strokeWidth="2" strokeLinecap="round"/>
+           <rect x="38" y="60" width="8" height="4" rx="1" fill={iconColor} />
+           <path d="M20 50c-5 0-10 5-10 15s5 15 10 15h30l5-5" stroke={iconColor} strokeWidth="2" strokeLinecap="round"/>
+           <path d="M65 30c5 0 8 2 8 5s-3 5-8 5M65 45c5 0 8 2 8 5s-3 5-8 5M65 60c5 0 8 2 8 5s-3 5-8 5" stroke={iconColor} strokeWidth="2" strokeLinecap="round"/>
+        </g>
+
+        {/* Inferior Esquerdo: IA/Engrenagem */}
+        <circle cx="45" cy="185" r="28" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(33, 173) scale(1.1)">
+           <circle cx="12" cy="12" r="8" stroke={iconColor} strokeWidth="1.5" strokeDasharray="2 2"/>
+           <text x="7" y="15" fill={iconColor} fontSize="8" fontWeight="900" style={{fontFamily: 'Raleway, sans-serif'}}>IA</text>
+        </g>
+
+        {/* Superior Esquerdo: Networking/Aperto de Mão */}
+        <circle cx="45" cy="85" r="28" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(33, 73) scale(1.1)">
+          <path d="M18 8a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8Z" stroke={iconColor} strokeWidth="2"/>
+          <path d="M10 12l-2 2 4 4 6-6" stroke={iconColor} strokeWidth="2" strokeLinecap="round"/>
+        </g>
+
+        {/* Centro: Diamante/Valor */}
+        <circle cx="150" cy="125" r="32" fill="white" stroke={iconColor} strokeWidth="2" />
+        <g transform="translate(138, 113) scale(1.2)">
+          <path d="M6 3h12l4 8-10 10L2 11l4-8z" stroke={iconColor} strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M11 3l-3 8 7 10M13 3l3 8-7 10M2 11h20" stroke={iconColor} strokeWidth="1" strokeOpacity="0.4"/>
         </g>
       </svg>
 
       {variant === 'full' && (
-        <div className="flex flex-col">
+        <div className="flex flex-col leading-none">
           <div className={`flex items-baseline ${currentFont.gap}`}>
-            <span className={`font-light tracking-[0.4em] uppercase ${currentFont.top}`} style={{ fontFamily: 'Raleway, sans-serif', color: textColor }}>
-              MENU
-            </span>
-            <span className={`font-light tracking-[0.4em] uppercase ${currentFont.top}`} style={{ fontFamily: 'Raleway, sans-serif', color: textColor }}>
-              DE
+            <span className={`font-light tracking-[0.4em] uppercase ${currentFont.top}`} style={{ fontFamily: 'Raleway, sans-serif', color: topTextColor }}>
+              MENU DE
             </span>
           </div>
-          <span className={`font-black ${currentFont.spacing} ${currentFont.bottom} tracking-tighter`} style={{ fontFamily: 'Raleway, sans-serif', color: primaryColor }}>
+          <span className={`font-black ${currentFont.spacing} ${currentFont.bottom} tracking-tighter`} style={{ fontFamily: 'Raleway, sans-serif', color: bottomTextColor }}>
             negócios
           </span>
         </div>

@@ -47,10 +47,10 @@ export const Login: React.FC = () => {
         <div className="inline-flex mb-10 transform hover:scale-105 transition-transform">
            <Logo size="lg" />
         </div>
-        <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">
-          Bem-vindo ao <br/><span className="text-emerald-600">Menu ADS.</span>
+        <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none uppercase italic">
+          Bem-vindo ao <br/><span className="text-emerald-600">MENU PAGES.</span>
         </h2>
-        <p className="mt-3 text-center text-gray-500 dark:text-slate-400 font-medium">
+        <p className="mt-3 text-center text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           Sua vitrine inteligente no bairro.
         </p>
       </div>

@@ -38,9 +38,9 @@ export const Home: React.FC = () => {
                 <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-800 shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100 dark:border-slate-700">
                     <Sparkles className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema da sua Cidade
                 </div>
-                <h1 className="text-6xl md:text-8xl font-black text-brand-dark dark:text-white tracking-tighter leading-[0.9]">
-                  Tudo o que sua cidade oferece, <br/>
-                  <span className="text-brand-primary italic">em um só lugar.</span>
+                <h1 className="text-5xl md:text-8xl font-black text-brand-dark dark:text-white tracking-tighter leading-[0.9]">
+                  Menu de Negócios <br/>
+                  <span className="text-brand-primary italic">sua plataforma de oportunidades.</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed">
                   Conectamos você aos melhores produtos, serviços, oportunidades e mentorias locais. Sem taxas, sem burocracia.
@@ -101,7 +101,7 @@ export const Home: React.FC = () => {
       <section className="max-w-7xl mx-auto w-full px-6 py-24">
         <div className="mb-16 text-center space-y-4">
            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">As 4 Verticais do <span className="text-brand-primary">Crescimento</span></h2>
-           <p className="text-slate-500 font-medium max-w-xl mx-auto">Tudo o que um ecossistema próspero precisa para conectar valor entre pessoas e empresas.</p>
+           <p className="text-slate-500 font-medium max-xl mx-auto">Tudo o que um ecossistema próspero precisa para conectar valor entre pessoas e empresas.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -185,7 +185,7 @@ export const Home: React.FC = () => {
                       {[
                         { step: '01', title: 'Explore', desc: 'Filtre por categoria, cidade ou palavra-chave para encontrar o que sua região oferece.', icon: Search },
                         { step: '02', title: 'Conecte', desc: 'Fale direto com o responsável via WhatsApp ou Chat Inteligente. Negocie em tempo real.', icon: MessageCircle },
-                        { step: '03', title: 'Evolua', desc: 'Feche negócios, realize pagamentos sem taxas de plataforma e suba de nível no Clube ADS.', icon: Rocket },
+                        { step: '03', title: 'Evolua', desc: 'Feche negócios, realize pagamentos sem taxas de plataforma e suba de nível no Menu Club.', icon: Rocket },
                       ].map((item, i) => (
                         <div key={i} className="flex gap-8 group">
                            <div className="text-4xl font-black text-white/10 italic group-hover:text-brand-primary/40 transition-colors">{item.step}</div>
@@ -224,7 +224,7 @@ export const Home: React.FC = () => {
                      <Users className="w-4 h-4" /> Mural da Cidade
                   </div>
                   <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white leading-none tracking-tighter uppercase italic">O que está acontecendo <span className="text-brand-primary">agora.</span></h2>
-                  <p className="text-slate-500 font-medium max-w-lg">Confira as últimas movimentações e novidades do nosso ecossistema regional.</p>
+                  <p className="text-slate-500 font-medium max-lg">Confira as últimas movimentações e novidades do nosso ecossistema regional.</p>
                </div>
                <Link to="/register" className="bg-gray-900 dark:bg-brand-primary text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 hover:opacity-90 transition-all active:scale-95">
                   PARTICIPAR DA REDE <ArrowUpRight className="w-4 h-4" />
@@ -256,7 +256,7 @@ export const Home: React.FC = () => {
                             <p className="text-[9px] font-black text-brand-primary uppercase">Gourmet Fit • Curitiba</p>
                         </div>
                     </div>
-                    <p className="text-sm text-indigo-50 font-medium leading-relaxed mt-6 italic">"Lancei meu novo catálogo de Páscoa e os pedidos pelo Zap já começaram! O Menu ADS mudou meu jogo."</p>
+                    <p className="text-sm text-indigo-50 font-medium leading-relaxed mt-6 italic">"Lancei meu novo catálogo de Páscoa e os pedidos pelo Zap já começaram! O MENU de Negócios mudou meu jogo."</p>
                   </div>
                   <Zap className="absolute -bottom-6 -right-6 w-32 h-32 text-white/5 rotate-12" />
                </div>

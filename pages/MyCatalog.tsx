@@ -235,9 +235,9 @@ export const MyCatalog: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                MENU PAGES <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">PRO</span>
+                MENU PAGES
               </h2>
-              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Gerencie sua presença digital, catálogo e autoridade.</p>
+              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Sua vitrine inteligente.</p>
             </div>
           </div>
           
@@ -384,7 +384,7 @@ export const MyCatalog: React.FC = () => {
                             <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight flex items-center gap-2">
                                <LayoutGrid className="w-6 h-6 text-indigo-600" /> Categorias de Itens
                             </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Organize seus produtos para facilitar a navegação.</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Organize seus produtos para facilitar na navegação.</p>
                          </div>
                          <button onClick={() => setIsCategoryModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all">+ NOVA CATEGORIA</button>
                       </div>
@@ -467,7 +467,7 @@ export const MyCatalog: React.FC = () => {
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Target className="w-3 h-3" /> Problemas que resolvo</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, problemsSolved: e.target.value}})} placeholder="Quais dores você elimina?" />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, problemsSolved: e.target.value}})} placeholder="Quais dores você elimina?" />
                          </div>
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Heart className="w-3 h-3" /> Interesses de Negócio</label>
@@ -526,7 +526,7 @@ export const MyCatalog: React.FC = () => {
                          <div className="lg:col-span-5">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Capa do Artigo</label>
                             <div className="aspect-[4/3] bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border-4 border-dashed border-gray-100 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
-                               {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
+                               {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px) font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
                                <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
                             </div>
                          </div>

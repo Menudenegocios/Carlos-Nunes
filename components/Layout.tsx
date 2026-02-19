@@ -8,6 +8,7 @@ import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Fix: changed incorrect hook call userAuth to useAuth
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -93,7 +94,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div className="col-span-1 md:col-span-1 space-y-6">
               <Link to="/">
-                <Logo size="md" forceWhite />
+                <Logo size="sm" forceWhite />
               </Link>
               <p className="text-brand-secondary text-sm leading-relaxed font-medium">
                 Elevando a conexão entre negócios locais e consumidores através de tecnologia inteligente e design funcional.
@@ -130,7 +131,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           
           <div className="pt-8 border-t border-brand-surface/10 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-[10px] text-brand-secondary font-bold uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS. Inteligência Local.
+              &copy; {new Date().getFullYear()} MENU PAGES. Sua vitrine inteligente.
             </p>
             <div className="flex gap-8 text-[10px] text-brand-secondary font-bold uppercase tracking-widest">
               <Link to="/privacy" className="hover:text-brand-surface transition-colors">Privacidade</Link>

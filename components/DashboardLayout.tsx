@@ -28,10 +28,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
-    { label: 'Menu Pages', icon: Smartphone, to: '/bio-builder' },
+    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
     // Recursos Restritos
     ...(hasAdvancedAccess ? [
-      { label: 'Menu Pages Pro', icon: Package, to: '/catalog' },
+      { label: 'Menu Pages', icon: Package, to: '/catalog' },
       { label: 'Menu CRM', icon: Briefcase, to: '/business-suite' },
     ] : []),
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
@@ -170,7 +170,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
           <footer className="bg-white dark:bg-[#0F172A] border-t border-brand-secondary/10 py-8 px-10 mt-auto">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-brand-secondary">
               <div className="flex items-center gap-2">
-                 <Logo size="xs" />
+                 <Logo size="sm" forceWhite={theme === 'dark'} />
               </div>
               <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
                 &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS INC.
