@@ -2,7 +2,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory } from '../types';
+import { Product, Profile, StoreCategory, BlogPost } from '../types';
+// Added Calendar to the imports from lucide-react to fix the reference error on line 374
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
   Plus, Trash2, Edit2, 
@@ -12,7 +13,8 @@ import {
   Briefcase, Quote, Smartphone, ArrowRight, Star, Settings, GripVertical,
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
   Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
-  Share2, Link as LinkIcon
+  Share2, Link as LinkIcon, Tag, BookOpen, FileText, Send, AlignLeft, Type,
+  Calendar
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -49,14 +51,16 @@ const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promis
 export const MyCatalog: React.FC = () => {
   const { user, realAdmin } = useAuth();
   const navigate = useNavigate();
-  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'cats' | 'products' | 'landing'>('home');
+  const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'blog' | 'products' | 'landing'>('home');
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -66,23 +70,35 @@ export const MyCatalog: React.FC = () => {
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
 
+  // Blog Form State
+  const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
+  const [blogForm, setBlogForm] = useState({
+    title: '',
+    category: 'Marketing',
+    summary: '',
+    content: '',
+    imageUrl: ''
+  });
+
   const fileInputLogoRef = useRef<HTMLInputElement>(null);
   const fileInputProductRef = useRef<HTMLInputElement>(null);
+  const fileInputBlogRef = useRef<HTMLInputElement>(null);
   const bannerInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   const isAdmin = user?.role === 'admin' || realAdmin?.role === 'admin';
   const hasAccess = isAdmin || (user?.plan !== 'profissionais');
 
-  useEffect(() => { if (user && hasAccess) loadData(); }, [user, hasAccess]);
+  useEffect(() => { if (user && hasAccess) loadData(); }, [user, hasAccess, activeSubTab]);
 
   const loadData = async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-        const [prof, cats, prods] = await Promise.all([
+        const [prof, cats, prods, allPosts] = await Promise.all([
             mockBackend.getProfile(user.id),
             mockBackend.getStoreCategories(user.id),
-            mockBackend.getProducts(user.id)
+            mockBackend.getProducts(user.id),
+            mockBackend.getBlogPosts()
         ]);
         
         const initialProfile = prof || { 
@@ -113,6 +129,7 @@ export const MyCatalog: React.FC = () => {
         setProfile(initialProfile as any);
         setStoreCategories(cats);
         setProducts(prods || []);
+        setBlogPosts(allPosts.filter(p => p.userId === user.id));
     } finally { setIsLoading(false); }
   };
 
@@ -124,7 +141,7 @@ export const MyCatalog: React.FC = () => {
               </div>
               <h2 className="text-4xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter mb-4">Recurso do Plano PRO</h2>
               <p className="text-gray-500 dark:text-zinc-400 max-w-md text-lg font-medium leading-relaxed mb-10">
-                  A gestão de Catálogo e Loja Virtual está disponível apenas para membros nos níveis <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
+                  A gestão de Catálogo, Blog e Loja Virtual está disponível apenas para membros nos níveis <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
               </p>
               <Link to="/plans" className="bg-[#F67C01] text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
                   <Crown className="w-5 h-5" /> FAZER UPGRADE AGORA
@@ -146,19 +163,19 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'banner0' | 'banner1' | 'banner2') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const result = reader.result as string;
-        // Redimensionar dependendo do tipo
-        const isBanner = field.startsWith('banner') || field === 'coverUrl';
-        const compressed = await resizeImage(result, isBanner ? 1000 : 500, isBanner ? 600 : 500);
+        const isWide = field === 'coverUrl' || field.startsWith('banner') || field === 'blogUrl';
+        const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
 
         if (field === 'logoUrl') setProfile(prev => ({ ...prev, logoUrl: compressed }));
         else if (field === 'coverUrl') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, coverUrl: compressed } }));
         else if (field === 'productUrl') setProductForm(prev => ({ ...prev, imageUrl: compressed }));
+        else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, imageUrl: compressed }));
         else if (field.startsWith('banner')) {
             const index = parseInt(field.replace('banner', ''));
             const currentBanners = [...(profile.storeConfig?.bannerImages || [])];
@@ -185,12 +202,43 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
+  const handleBlogSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSaving(true);
+    try {
+        if (editingBlogPost) {
+            await mockBackend.deleteBlogPost(editingBlogPost.id);
+        }
+        await mockBackend.createBlogPost({
+            ...blogForm,
+            userId: user.id,
+            author: profile.businessName || user.name,
+            date: new Date().toLocaleDateString('pt-BR')
+        });
+        setIsBlogModalOpen(false);
+        loadData();
+    } finally { setIsSaving(false); }
+  };
+
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !categoryForm.name) return;
     await mockBackend.createStoreCategory(user.id, categoryForm.name);
     setCategoryForm({ name: '' });
     setIsCategoryModalOpen(false);
+    loadData();
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if(!user || !window.confirm('Excluir esta categoria? Os itens vinculados a ela ficarão como "Sem Categoria".')) return;
+    await mockBackend.deleteStoreCategory(id, user.id);
+    loadData();
+  };
+
+  const handleDeleteBlog = async (id: string) => {
+    if(!window.confirm('Excluir este artigo permanentemente?')) return;
+    await mockBackend.deleteBlogPost(id);
     loadData();
   };
 
@@ -206,7 +254,7 @@ export const MyCatalog: React.FC = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
                 VITRINE & <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">CONTEÚDO</span>
               </h2>
-              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Configurações da sua página de especialista.</p>
+              <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Gerencie sua presença digital e catálogo de vendas.</p>
             </div>
           </div>
           
@@ -221,8 +269,8 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'cats', label: 'Categorias', desc: 'Organização', icon: LayoutGrid },
-            { id: 'products', label: 'Produtos', desc: 'Gestão de Itens', icon: Package },
+            { id: 'blog', label: 'Blog', desc: 'Gerar Autoridade', icon: BookOpen },
+            { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'landing', label: 'Landing Page', desc: 'Classificados', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
@@ -294,44 +342,151 @@ export const MyCatalog: React.FC = () => {
                 </div>
             )}
 
-            {activeSubTab === 'cats' && (
-                <div className="space-y-10">
-                   <div className="flex justify-between items-center">
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight">Categorias de Itens</h3>
-                      <button onClick={() => setIsCategoryModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase">+ NOVA CATEGORIA</button>
-                   </div>
-                   <div className="grid gap-4">
-                      {storeCategories.map(cat => (
-                         <div key={cat.id} className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border flex items-center justify-between">
-                            <h4 className="font-black uppercase italic">{cat.name}</h4>
-                            <button onClick={async () => { if(window.confirm('Excluir?')) { await mockBackend.deleteStoreCategory(cat.id, user!.id); loadData(); } }} className="text-rose-400"><Trash2 className="w-5 h-5" /></button>
-                         </div>
-                      ))}
-                   </div>
+            {activeSubTab === 'blog' && (
+                <div className="space-y-10 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight flex items-center gap-2">
+                                <BookOpen className="w-6 h-6 text-indigo-600" /> Artigos do Blog
+                            </h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Publique conteúdos educativos e ganhe autoridade no seu nicho.</p>
+                        </div>
+                        <button 
+                            onClick={() => {
+                                setEditingBlogPost(null);
+                                setBlogForm({ title: '', category: 'Marketing', summary: '', content: '', imageUrl: '' });
+                                setIsBlogModalOpen(true);
+                            }}
+                            className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <Plus className="w-5 h-5" /> CRIAR ARTIGO
+                        </button>
+                    </div>
+
+                    <div className="grid gap-6">
+                        {blogPosts.length > 0 ? blogPosts.map(post => (
+                            <div key={post.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row items-center justify-between group hover:bg-white dark:hover:bg-zinc-800 transition-all hover:shadow-2xl">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white dark:border-zinc-700 shadow-md">
+                                        <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[9px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-widest bg-white dark:bg-zinc-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-zinc-700 shadow-sm mb-2 inline-block">{post.category}</span>
+                                        <h4 className="font-black text-gray-900 dark:text-white text-xl uppercase italic tracking-tight leading-tight">{post.title}</h4>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2"><Calendar className="w-3 h-3" /> {post.date}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 mt-6 md:mt-0">
+                                    <button onClick={() => { setEditingBlogPost(post); setBlogForm(post); setIsBlogModalOpen(true); }} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 border border-gray-100 dark:border-zinc-700 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => handleDeleteBlog(post.id)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 border border-gray-100 dark:border-zinc-700 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-4 h-4" /></button>
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="py-24 text-center bg-gray-50 dark:bg-zinc-900/40 rounded-[4rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                                <FileText className="w-20 h-20 text-gray-200 dark:text-zinc-800 mx-auto mb-8" />
+                                <h4 className="text-xl font-black text-slate-400 uppercase tracking-[0.3em]">Blog Vazio</h4>
+                                <p className="text-sm text-slate-400 mt-2 font-medium">Seus artigos aparecerão no site principal e no seu perfil.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
             {activeSubTab === 'products' && (
-                <div className="space-y-10">
-                   <div className="flex justify-between items-center">
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Gerenciamento de Itens</h3>
-                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', externalLink: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-2"><Plus className="w-5 h-5" /> ADICIONAR ITEM</button>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {products.map(prod => (
-                         <div key={prod.id} className="p-5 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border flex items-center gap-5 group hover:bg-white hover:shadow-xl transition-all">
-                            <div className="w-16 h-16 rounded-2xl bg-gray-200 overflow-hidden flex-shrink-0"><img src={prod.imageUrl} className="w-full h-full object-cover" /></div>
-                            <div className="flex-1">
-                               <h5 className="font-black text-gray-900 dark:text-white text-sm line-clamp-1">{prod.name}</h5>
-                               <p className="text-xs font-black text-emerald-600">{prod.price > 0 ? `R$ ${prod.price.toFixed(2)}` : 'SOB CONSULTA'}</p>
-                            </div>
-                            <div className="flex gap-1">
-                               <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-2 text-indigo-400"><Edit2 className="w-4 h-4" /></button>
-                               <button onClick={async () => { if(window.confirm('Excluir?')) { loadData(); } }} className="p-2 text-rose-400"><Trash2 className="w-4 h-4" /></button>
-                            </div>
+                <div className="space-y-16 animate-fade-in">
+                   {/* SEÇÃO: CATEGORIAS DE ITENS */}
+                   <section className="space-y-8 bg-gray-50 dark:bg-zinc-800/30 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                         <div>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight flex items-center gap-2">
+                               <LayoutGrid className="w-6 h-6 text-indigo-600" /> Categorias de Itens
+                            </h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Organize seus produtos para facilitar a navegação do cliente.</p>
                          </div>
-                      ))}
-                   </div>
+                         <button 
+                            onClick={() => setIsCategoryModalOpen(true)} 
+                            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                         >
+                            + NOVA CATEGORIA
+                         </button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                         {storeCategories.length > 0 ? storeCategories.map(cat => (
+                            <div key={cat.id} className="flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-700 shadow-sm group hover:border-indigo-200 transition-all">
+                               <Tag className="w-3.5 h-3.5 text-indigo-500" />
+                               <span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight">{cat.name}</span>
+                               <button 
+                                  onClick={() => handleDeleteCategory(cat.id)}
+                                  className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                                  title="Excluir Categoria"
+                               >
+                                  <X className="w-3.5 h-3.5" />
+                               </button>
+                            </div>
+                         )) : (
+                            <div className="w-full py-8 text-center bg-white/50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-gray-200 dark:border-zinc-800">
+                               <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Nenhuma categoria criada ainda.</p>
+                            </div>
+                         )}
+                      </div>
+                   </section>
+
+                   {/* SEÇÃO: GERENCIAMENTO DE ITENS */}
+                   <section className="space-y-8">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                         <div>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight flex items-center gap-2">
+                               <Package className="w-6 h-6 text-[#F67C01]" /> Gerenciamento de Itens
+                            </h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cadastre seus serviços ou produtos com fotos e preços.</p>
+                         </div>
+                         <button 
+                            onClick={() => { 
+                               setEditingProduct(null); 
+                               setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', externalLink: '' }); 
+                               setIsProductModalOpen(true); 
+                            }} 
+                            className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
+                         >
+                            <Plus className="w-5 h-5" /> ADICIONAR ITEM
+                         </button>
+                      </div>
+
+                      {products.length === 0 ? (
+                         <div className="py-24 text-center bg-gray-50 dark:bg-zinc-900/40 rounded-[4rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                            <Package className="w-20 h-20 text-gray-200 dark:text-zinc-800 mx-auto mb-8" />
+                            <h4 className="text-xl font-black text-slate-400 uppercase tracking-[0.3em]">Catálogo Vazio</h4>
+                            <p className="text-sm text-slate-400 mt-2 font-medium">Comece adicionando seu primeiro produto ou serviço.</p>
+                         </div>
+                      ) : (
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {products.map(prod => {
+                               const catName = storeCategories.find(c => c.id === prod.storeCategoryId)?.name || 'Sem Categoria';
+                               return (
+                                  <div key={prod.id} className="group bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 flex items-center gap-6 p-6 transition-all hover:bg-white dark:hover:bg-zinc-800 hover:shadow-2xl relative overflow-hidden">
+                                     <div className="w-20 h-20 rounded-[1.8rem] bg-white dark:bg-zinc-900 shadow-md overflow-hidden flex-shrink-0 border border-white dark:border-zinc-700">
+                                        <img src={prod.imageUrl} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                           <span className="text-[8px] font-black px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 uppercase tracking-widest truncate">{catName}</span>
+                                        </div>
+                                        <h5 className="font-black text-gray-900 dark:text-white text-base truncate uppercase italic tracking-tight">{prod.name}</h5>
+                                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                                           {prod.price > 0 ? `R$ ${prod.price.toFixed(2)}` : 'SOB CONSULTA'}
+                                        </p>
+                                     </div>
+                                     <div className="flex flex-col gap-2 relative z-10">
+                                        <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 border border-gray-100 dark:border-zinc-700 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-4 h-4" /></button>
+                                        <button onClick={async () => { if(window.confirm('Excluir este item permanentemente?')) { loadData(); } }} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 border border-gray-100 dark:border-zinc-700 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-4 h-4" /></button>
+                                     </div>
+                                  </div>
+                               );
+                            })}
+                         </div>
+                      )}
+                   </section>
                 </div>
             )}
 
@@ -407,13 +562,87 @@ export const MyCatalog: React.FC = () => {
         </div>
       </div>
 
+      {/* MODAL: NOVO ARTIGO BLOG */}
+      {isBlogModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
+                  <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
+                      <div>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingBlogPost ? 'Editar Artigo' : 'Novo Artigo de Autoridade'}</h3>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Seu conteúdo aparecerá no Blog principal e na sua Vitrine.</p>
+                      </div>
+                      <button onClick={() => setIsBlogModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                  </div>
+                  
+                  <form onSubmit={handleBlogSubmit} className="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
+                      <div className="grid lg:grid-cols-12 gap-10">
+                         <div className="lg:col-span-7 space-y-8">
+                            <div>
+                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> Título Impactante</label>
+                               <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight dark:text-white" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} placeholder="Ex: Como escolher o melhor serviço para sua casa" />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                               <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria Principal</label>
+                                  <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={blogForm.category} onChange={e => setBlogForm({...blogForm, category: e.target.value})}>
+                                     <option>Marketing</option>
+                                     <option>Estratégia</option>
+                                     <option>Dicas</option>
+                                     <option>Novidades</option>
+                                     <option>Case de Sucesso</option>
+                                     <option>Gastronomia</option>
+                                  </select>
+                               </div>
+                               <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Autor / Responsável</label>
+                                  <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white opacity-50" value={profile.businessName || user?.name} readOnly />
+                               </div>
+                            </div>
+
+                            <div>
+                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><AlignLeft className="w-3 h-3" /> Resumo do Artigo</label>
+                               <textarea rows={2} required className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed dark:text-white resize-none" value={blogForm.summary} onChange={e => setBlogForm({...blogForm, summary: e.target.value})} placeholder="Uma breve descrição que aparece na listagem..." />
+                            </div>
+                         </div>
+
+                         <div className="lg:col-span-5">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Foto de Capa</label>
+                            <div className="aspect-[4/3] bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border-4 border-dashed border-gray-100 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
+                               {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload da Foto</span></div>}
+                               <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
+                            </div>
+                         </div>
+
+                         <div className="lg:col-span-12">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
+                            <textarea rows={12} required className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-[2.5rem] p-10 text-lg font-medium leading-relaxed dark:text-white" value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} placeholder="Escreva seu artigo aqui..." />
+                         </div>
+                      </div>
+                      
+                      <div className="pt-6">
+                        <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4">
+                            {isSaving ? <RefreshCw className="animate-spin w-6 h-6" /> : <><Send className="w-5 h-5" /> PUBLICAR ARTIGO AGORA</>}
+                        </button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      )}
+
       {isCategoryModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-sm shadow-2xl overflow-hidden">
-                <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center"><h3 className="font-black uppercase italic">Nova Categoria</h3><button onClick={() => setIsCategoryModalOpen(false)}><X className="w-6 h-6" /></button></div>
-                <form onSubmit={handleCategorySubmit} className="p-8 space-y-6">
-                    <input required type="text" className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} placeholder="Ex: Consultoria" />
-                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-[10px]">CRIAR CATEGORIA</button>
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
+                   <h3 className="font-black uppercase italic tracking-widest text-sm">Nova Categoria</h3>
+                   <button onClick={() => setIsCategoryModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
+                </div>
+                <form onSubmit={handleCategorySubmit} className="p-10 space-y-8">
+                    <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome da Categoria</label>
+                       <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} placeholder="Ex: Consultoria" />
+                    </div>
+                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-[10px] tracking-[0.2em] hover:opacity-90 active:scale-95 transition-all">CRIAR CATEGORIA AGORA</button>
                 </form>
             </div>
          </div>
@@ -421,25 +650,58 @@ export const MyCatalog: React.FC = () => {
 
       {isProductModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center"><h3 className="text-2xl font-black uppercase italic">{editingProduct ? 'Editar Item' : 'Novo Item'}</h3><button onClick={() => setIsProductModalOpen(false)}><X className="w-8 h-8" /></button></div>
-                <form onSubmit={handleProductSubmit} className="p-10 space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                       <div className="space-y-4">
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título</label><input required type="text" className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label><input required type="number" step="0.01" className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} /></div>
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label><select className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}><option value="">Nenhuma</option>{storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
+                   <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingProduct ? 'Editar Item' : 'Novo Item no Catálogo'}</h3>
+                   <button onClick={() => setIsProductModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+                <form onSubmit={handleProductSubmit} className="p-10 space-y-8 overflow-y-auto scrollbar-hide flex-1">
+                    <div className="grid md:grid-cols-2 gap-10">
+                       <div className="space-y-6">
+                          <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título do Produto/Serviço</label>
+                             <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                             <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Preço (R$)</label>
+                                <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
+                             </div>
+                             <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Vincular Categoria</label>
+                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}>
+                                   <option value="">Nenhuma</option>
+                                   {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
+                                </select>
+                             </div>
+                          </div>
+                          <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição Curta</label>
+                             <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium dark:text-white text-sm resize-none" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} />
+                          </div>
                        </div>
-                       <div className="space-y-4">
-                          <div className="aspect-square bg-gray-50 rounded-[1.5rem] border-2 border-dashed relative overflow-hidden group cursor-pointer" onClick={() => fileInputProductRef.current?.click()}>{productForm.imageUrl ? <img src={productForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-gray-300"><Camera className="w-8 h-8" /></div>}<input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} /></div>
+                       <div className="space-y-6">
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Imagem do Item</label>
+                          <div className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border-4 border-dashed border-gray-100 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => fileInputProductRef.current?.click()}>
+                             {productForm.imageUrl ? (
+                                <img src={productForm.imageUrl} className="w-full h-full object-cover" />
+                             ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
+                                   <Camera className="w-12 h-12" />
+                                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload da Foto</span>
+                                </div>
+                             )}
+                             <input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} />
+                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><RefreshCw className="w-10 h-10 text-white animate-spin-slow" /></div>
+                          </div>
                        </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2"><LinkIcon className="w-3 h-3" /> Link de Redirecionamento (Opcional)</label>
-                        <input type="url" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" value={productForm.externalLink || ''} onChange={e => setProductForm({...productForm, externalLink: e.target.value})} placeholder="https://loja.com/produto ou link de checkout..." />
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><LinkIcon className="w-3 h-3" /> Link de Redirecionamento (Opcional)</label>
+                        <input type="url" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" value={productForm.externalLink || ''} onChange={e => setProductForm({...productForm, externalLink: e.target.value})} placeholder="https://loja.com/produto ou link de checkout..." />
                     </div>
-                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90 transition-all active:scale-95">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR NO CATÁLOGO'}
+                    <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all active:scale-95">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR NO MEU CATÁLOGO'}
                     </button>
                 </form>
             </div>

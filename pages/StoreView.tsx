@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory } from '../types';
+import { Product, Profile, StoreCategory, BlogPost } from '../types';
 import { 
   MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
-  QrCode, Download
+  QrCode, Download, BookOpen, FileText
 } from 'lucide-react';
 
 export const StoreView: React.FC = () => {
@@ -15,6 +15,7 @@ export const StoreView: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Agendamento / Lead Form
@@ -42,14 +43,16 @@ export const StoreView: React.FC = () => {
   const loadStoreData = async () => {
     if (!userId) return;
     try {
-      const [prof, prods, cats] = await Promise.all([
+      const [prof, prods, cats, allPosts] = await Promise.all([
         mockBackend.getProfile(userId),
         mockBackend.getProducts(userId),
-        mockBackend.getStoreCategories(userId)
+        mockBackend.getStoreCategories(userId),
+        mockBackend.getBlogPosts()
       ]);
       setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
+      setBlogPosts(allPosts.filter(p => p.userId === userId).slice(0, 3)); // Pega os 3 mais recentes
     } finally {
       setLoading(false);
     }
@@ -193,6 +196,35 @@ export const StoreView: React.FC = () => {
                         </section>
                     </div>
 
+                    {/* SEÇÃO BLOG / ARTIGOS DO ESPECIALISTA */}
+                    {blogPosts.length > 0 && (
+                        <section className="space-y-10">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
+                                    <BookOpen className="w-6 h-6 text-indigo-600" /> Insights & Artigos
+                                </h2>
+                                <Link to="/blog" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Ver Blog Global</Link>
+                            </div>
+                            <div className="grid gap-6">
+                                {blogPosts.map(post => (
+                                    <Link key={post.id} to={`/blog?id=${post.id}`} className="flex flex-col md:flex-row gap-6 p-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 hover:shadow-2xl transition-all group">
+                                        <div className="w-full md:w-48 h-40 rounded-3xl overflow-hidden shadow-md flex-shrink-0">
+                                            <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-center">
+                                            <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">{post.category}</span>
+                                            <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-indigo-600 transition-colors mb-2">{post.title}</h4>
+                                            <p className="text-sm text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">{post.summary}</p>
+                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
+                                                <Calendar className="w-3 h-3" /> {post.date} • <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" /> Ler mais
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
                     {/* PORTFÓLIO DESTAQUE */}
                     <section className="space-y-10">
                         <div className="flex items-center justify-between">
@@ -272,7 +304,7 @@ export const StoreView: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="mt-12 pt-8 border-t border-gray-50 dark:border-zinc-800 text-center">
+                        <div className="mt-12 pt-8 border-t border-gray-100 dark:border-zinc-800 text-center">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Localização</p>
                             <div className="flex items-center justify-center gap-2 text-gray-900 dark:text-white font-black text-sm uppercase italic">
                                 <MapPin className="w-4 h-4 text-indigo-600" /> {profile.city || 'Atendimento Remoto'}
