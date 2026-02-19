@@ -213,10 +213,13 @@ export const MyCatalog: React.FC = () => {
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !categoryForm.name) return;
-    await mockBackend.createStoreCategory(user.id, categoryForm.name);
-    setCategoryForm({ name: '' });
-    setIsCategoryModalOpen(false);
-    loadData();
+    setIsSaving(true);
+    try {
+        await mockBackend.createStoreCategory(user.id, categoryForm.name);
+        setCategoryForm({ name: '' });
+        setIsCategoryModalOpen(false);
+        loadData();
+    } finally { setIsSaving(false); }
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -453,6 +456,46 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
+                   {/* CONTATO & REDES SOCIAIS */}
+                   <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-8">
+                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><MessageCircle className="w-5 h-5" /> Contato & Redes Sociais</h4>
+                      <div className="grid md:grid-cols-2 gap-8">
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Phone className="w-3 h-3" /> WhatsApp Comercial</label>
+                            <input 
+                               type="text" 
+                               className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
+                               value={profile.phone || ''} 
+                               onChange={e => setProfile({...profile, phone: e.target.value})} 
+                               placeholder="Ex: 5511999999999" 
+                            />
+                         </div>
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Instagram className="w-3 h-3" /> Instagram (Usuário)</label>
+                            <div className="flex bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden">
+                               <div className="bg-gray-100 dark:bg-zinc-800 px-4 flex items-center text-slate-400 font-bold text-sm">@</div>
+                               <input 
+                                  type="text" 
+                                  className="flex-1 bg-transparent border-none p-4 font-bold dark:text-white outline-none" 
+                                  value={profile.socialLinks?.instagram || ''} 
+                                  onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, instagram: e.target.value}})} 
+                                  placeholder="seu.perfil" 
+                               />
+                            </div>
+                         </div>
+                         <div className="md:col-span-2">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Globe className="w-3 h-3" /> Website Oficial</label>
+                            <input 
+                               type="url" 
+                               className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
+                               value={profile.socialLinks?.website || ''} 
+                               onChange={e => setProfile({...profile, socialLinks: {...profile.socialLinks, website: e.target.value}})} 
+                               placeholder="https://www.seusite.com.br" 
+                            />
+                         </div>
+                      </div>
+                   </div>
+
                    <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-6">
                          <div>
@@ -467,7 +510,7 @@ export const MyCatalog: React.FC = () => {
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Target className="w-3 h-3" /> Problemas que resolvo</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, problemsSolved: e.target.value}})} placeholder="Quais dores você elimina?" />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, problemsSolved: e.target.value}})} placeholder="Quais dores você elimina?" />
                          </div>
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Heart className="w-3 h-3" /> Interesses de Negócio</label>
@@ -526,7 +569,7 @@ export const MyCatalog: React.FC = () => {
                          <div className="lg:col-span-5">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Capa do Artigo</label>
                             <div className="aspect-[4/3] bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border-4 border-dashed border-gray-100 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
-                               {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px) font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
+                               {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
                                <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
                             </div>
                          </div>
@@ -547,20 +590,25 @@ export const MyCatalog: React.FC = () => {
           </div>
       )}
 
-      {/* MODAL: CATEGORIA */}
+      {/* MODAL: CATEGORIA - ATUALIZADO PARA IGUALAR AO MODAL DE PRODUTO */}
       {isCategoryModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
-                <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
-                   <h3 className="font-black uppercase italic tracking-widest text-sm">Nova Categoria</h3>
-                   <button onClick={() => setIsCategoryModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
+                    <div>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Nova Categoria</h3>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Organize seus itens para facilitar a navegação dos clientes.</p>
+                    </div>
+                    <button onClick={() => setIsCategoryModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
                 <form onSubmit={handleCategorySubmit} className="p-10 space-y-8">
                     <div>
-                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome</label>
-                       <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} />
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome da Categoria</label>
+                       <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} placeholder="Ex: Hamburgueres Artesanais, Serviços de Design..." />
                     </div>
-                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-[10px] tracking-[0.2em]">CRIAR AGORA</button>
+                    <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CRIAR CATEGORIA AGORA'}
+                    </button>
                 </form>
             </div>
          </div>

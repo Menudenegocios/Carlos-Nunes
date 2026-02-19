@@ -29,6 +29,7 @@ const PRESET_THEMES = [
   { id: 'dark', label: 'Deep Night', bg: '#0f172a', btn: '#1e293b', text: '#ffffff' },
   { id: 'indigo', label: 'Royal Blue', bg: '#312e81', btn: '#4338ca', text: '#ffffff' },
   { id: 'minimal', label: 'Minimalist', bg: '#fcfcfd', btn: '#ffffff', text: '#0f172a' },
+  { id: 'brand', label: 'Menu Oficial', bg: '#F8FAFC', btn: '#F67C01', text: '#0F172A' },
 ];
 
 // Helper para redimensionar imagem para economizar localStorage
@@ -82,8 +83,6 @@ export const BioBuilder: React.FC = () => {
   
   const [schedEnabled, setSchedEnabled] = useState(false);
   const [schedDuration, setSchedDuration] = useState(60);
-  const [schedType, setSchedType] = useState<'google_meet' | 'in_person'>('google_meet');
-  const [calendarConnected, setCalendarConnected] = useState(false);
 
   const [ctaEnabled, setCtaEnabled] = useState(false);
   const [ctaLabel, setCtaLabel] = useState('Falar no WhatsApp');
@@ -182,8 +181,7 @@ export const BioBuilder: React.FC = () => {
 
   const copyBioLink = () => {
     const identifier = profile.slug || user?.id;
-    // Embora o roteamento use #/bio/, o usuário quer o link curto para divulgação
-    const url = `menudenegocios.com/${identifier}`;
+    const url = `${window.location.origin}/#/bio/${identifier}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -228,6 +226,18 @@ export const BioBuilder: React.FC = () => {
 
   const removeLink = (id: string) => {
     setLinks(links.filter(l => l.id !== id));
+  };
+
+  const addSocialProof = () => {
+    setSocialProof([...socialProof, { id: Date.now().toString(), author: 'Nome do Cliente', text: 'Depoimento incrível sobre o serviço.', stars: 5 }]);
+  };
+
+  const updateSocialProof = (id: string, fields: Partial<SocialProof>) => {
+    setSocialProof(socialProof.map(s => s.id === id ? { ...s, ...fields } : s));
+  };
+
+  const removeSocialProof = (id: string) => {
+    setSocialProof(socialProof.filter(s => s.id !== id));
   };
 
   const applyTheme = (theme: typeof PRESET_THEMES[0]) => {
@@ -337,7 +347,7 @@ export const BioBuilder: React.FC = () => {
             {socialProof.slice(0, 2).map(proof => (
               <div key={proof.id} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5 shadow-xl">
                 <div className="flex text-yellow-400 gap-0.5 mb-1 scale-75 origin-left">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+                  {[...Array(proof.stars)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
                 </div>
                 <p className="text-[9px] font-medium leading-relaxed opacity-90">"{proof.text.slice(0, 60)}..."</p>
                 <p className="text-[8px] font-black mt-2 uppercase">{proof.author}</p>
@@ -547,14 +557,155 @@ export const BioBuilder: React.FC = () => {
 
                {activeEditorTab === 'social_proof' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Star className="text-brand-primary" /> Prova Social</h3>
-                     {/* ... (resto do componente mantido) */}
+                     <div className="flex justify-between items-center">
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Star className="text-brand-primary" /> Prova Social</h3>
+                        <button onClick={addSocialProof} className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest">ADICIONAR DEPOIMENTO</button>
+                     </div>
+                     
+                     <div className="space-y-6">
+                        {socialProof.length > 0 ? socialProof.map(proof => (
+                           <div key={proof.id} className="p-8 bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6 group relative">
+                              <button onClick={() => removeSocialProof(proof.id)} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"><X className="w-5 h-5" /></button>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Nome do Cliente</label>
+                                    <input type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-sm font-bold dark:text-white shadow-sm" value={proof.author} onChange={e => updateSocialProof(proof.id, { author: e.target.value })} />
+                                 </div>
+                                 <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Avaliação (1 a 5 estrelas)</label>
+                                    <div className="flex gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl shadow-sm w-fit">
+                                       {[1, 2, 3, 4, 5].map(star => (
+                                          <button 
+                                             key={star} 
+                                             type="button" 
+                                             onClick={() => updateSocialProof(proof.id, { stars: star })}
+                                             className={`p-1 transition-all ${star <= proof.stars ? 'text-yellow-400' : 'text-slate-200'}`}
+                                          >
+                                             <Star className={`w-6 h-6 ${star <= proof.stars ? 'fill-current' : ''}`} />
+                                          </button>
+                                       ))}
+                                    </div>
+                                 </div>
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">O que o cliente disse?</label>
+                                 <textarea rows={3} className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-sm font-medium dark:text-white shadow-sm resize-none" value={proof.text} onChange={e => updateSocialProof(proof.id, { text: e.target.value })} />
+                              </div>
+                           </div>
+                        )) : (
+                           <div className="py-20 text-center border-4 border-dashed border-gray-50 dark:border-zinc-800 rounded-[3rem]">
+                              <Star className="w-12 h-12 text-slate-100 dark:text-zinc-800 mx-auto mb-4" />
+                              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Nenhum depoimento cadastrado.</p>
+                           </div>
+                        )}
+                     </div>
                   </div>
                )}
 
                {activeEditorTab === 'design' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
-                     {/* ... (resto do componente mantido) */}
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-[#F67C01]" /> Identidade Visual</h3>
+                     
+                     <div className="space-y-8">
+                        {/* Temas Rápidos */}
+                        <div>
+                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Sugestões de Temas</label>
+                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              {PRESET_THEMES.map(theme => (
+                                 <button 
+                                    key={theme.id} 
+                                    onClick={() => applyTheme(theme)}
+                                    className="group flex flex-col items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 hover:border-brand-primary transition-all"
+                                 >
+                                    <div className="w-full aspect-square rounded-xl shadow-lg flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: theme.bg }}>
+                                       <div className="w-3/4 h-3 rounded-full" style={{ backgroundColor: theme.btn }}></div>
+                                       <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 rounded-bl-full"></div>
+                                    </div>
+                                    <span className="text-[9px] font-black text-slate-500 uppercase text-center leading-tight">{theme.label}</span>
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+
+                        {/* Cores Personalizadas */}
+                        <div className="grid md:grid-cols-3 gap-8 pt-8 border-t border-gray-50 dark:border-zinc-800">
+                           <div className="space-y-4">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Fundo</label>
+                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                                 <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={bgColor} onChange={e => setBgColor(e.target.value)} />
+                                 <span className="text-[10px] font-mono font-bold uppercase">{bgColor}</span>
+                              </div>
+                           </div>
+                           <div className="space-y-4">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Botões</label>
+                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                                 <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={btnColor} onChange={e => setBtnColor(e.target.value)} />
+                                 <span className="text-[10px] font-mono font-bold uppercase">{btnColor}</span>
+                              </div>
+                           </div>
+                           <div className="space-y-4">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Textos</label>
+                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                                 <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={textColor} onChange={e => setTextColor(e.target.value)} />
+                                 <span className="text-[10px] font-mono font-bold uppercase">{textColor}</span>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Tipografia */}
+                        <div className="pt-8 border-t border-gray-50 dark:border-zinc-800">
+                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Estilo de Fonte</label>
+                           <div className="grid md:grid-cols-2 gap-4">
+                              {FONTS.map(font => (
+                                 <button 
+                                    key={font.id} 
+                                    onClick={() => setFontFamily(font.family)}
+                                    className={`p-6 rounded-2xl border text-left transition-all ${fontFamily === font.family ? 'border-brand-primary bg-orange-50 dark:bg-orange-950/20' : 'border-gray-100 dark:border-zinc-800'}`}
+                                 >
+                                    <h4 className={`text-xl font-bold ${font.family}`}>{font.label}</h4>
+                                    <p className="text-[9px] text-slate-400 uppercase font-black mt-1">Abc 123 • Exemplo de Texto</p>
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+
+                        {/* Componentes Extras & Efeitos Premium */}
+                        <div className="pt-8 border-t border-gray-50 dark:border-zinc-800">
+                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8">Personalização Avançada</label>
+                           <div className="grid gap-6">
+                              {/* Fundo Premium */}
+                              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100 dark:border-zinc-700">
+                                 <div className="flex gap-4 items-center">
+                                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-indigo-600"><Sparkles className="w-6 h-6" /></div>
+                                    <div>
+                                       <h4 className="font-black text-sm uppercase italic tracking-tighter">Fundo Premium (Mesh Gradient)</h4>
+                                       <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Ative o efeito de gradiente fluido para um visual de elite.</p>
+                                    </div>
+                                 </div>
+                                 <label className="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked={useMeshGradient} onChange={e => setUseMeshGradient(e.target.checked)} className="sr-only peer" />
+                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
+                                 </label>
+                              </div>
+
+                              {/* Bloco QR Code */}
+                              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100 dark:border-zinc-700">
+                                 <div className="flex gap-4 items-center">
+                                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-[#F67C01]"><QrCode className="w-6 h-6" /></div>
+                                    <div>
+                                       <h4 className="font-black text-sm uppercase italic tracking-tighter">Bloco QR Code</h4>
+                                       <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Exiba um código de acesso rápido no rodapé da sua Bio.</p>
+                                    </div>
+                                 </div>
+                                 <label className="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked={shareCardEnabled} onChange={e => setShareCardEnabled(e.target.checked)} className="sr-only peer" />
+                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
+                                 </label>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
                   </div>
                )}
 
@@ -660,7 +811,7 @@ export const BioBuilder: React.FC = () => {
                       </div>
                       <div className="space-y-4">
                           <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">BIO DIGITAL <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
-                          <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitantes.</p>
+                          <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitors.</p>
                       </div>
                       <div className="bg-gray-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-gray-100 dark:border-zinc-800">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Link da sua Bio</p>

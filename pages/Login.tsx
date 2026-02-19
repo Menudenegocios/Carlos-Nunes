@@ -48,10 +48,10 @@ export const Login: React.FC = () => {
            <Logo size="lg" />
         </div>
         <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none uppercase italic">
-          Bem-vindo ao <br/><span className="text-emerald-600">MENU PAGES.</span>
+          Bem-vindo ao <br/><span className="text-brand-primary">Menu de Negócios</span>
         </h2>
         <p className="mt-3 text-center text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-          Sua vitrine inteligente no bairro.
+          Sua plataforma de negócios.
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export const Login: React.FC = () => {
                 E-mail de Acesso
               </label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
                   <Mail className="w-5 h-5" />
                 </div>
                 <input
@@ -85,7 +85,7 @@ export const Login: React.FC = () => {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-600 sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
                 />
               </div>
             </div>
@@ -95,7 +95,7 @@ export const Login: React.FC = () => {
                 Sua Senha
               </label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
@@ -106,7 +106,7 @@ export const Login: React.FC = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-600 sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
                 />
               </div>
             </div>
@@ -122,7 +122,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-5 px-4 border border-transparent rounded-2xl shadow-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-all uppercase tracking-widest active:scale-95 disabled:opacity-50"
+                className="w-full flex justify-center py-5 px-4 border border-transparent rounded-2xl shadow-xl text-xs font-black text-white bg-brand-primary hover:opacity-90 transition-all uppercase tracking-widest active:scale-95 disabled:opacity-50"
               >
                 {loading ? 'Acessando...' : 'Entrar no Sistema'}
               </button>
@@ -135,7 +135,7 @@ export const Login: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDemoLogin}
-                className="w-full flex items-center justify-center gap-2 py-5 px-4 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 transition-all uppercase tracking-widest"
+                className="w-full flex items-center justify-center gap-2 py-5 px-4 border border-brand-primary/20 dark:border-brand-primary/30 rounded-2xl text-xs font-black text-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 hover:bg-brand-primary/10 transition-all uppercase tracking-widest"
               >
                 <Sparkles className="w-4 h-4" /> Acesso Rápido (Demo)
               </button>
@@ -145,7 +145,7 @@ export const Login: React.FC = () => {
           <div className="mt-10 pt-8 border-t border-gray-50 dark:border-zinc-800 text-center">
              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 Ainda não tem conta? 
-                <Link to="/register" className="ml-2 text-emerald-600 hover:underline">Cadastrar Grátis</Link>
+                <Link to="/register" className="ml-2 text-brand-primary hover:underline">Cadastrar Grátis</Link>
              </p>
           </div>
         </div>
