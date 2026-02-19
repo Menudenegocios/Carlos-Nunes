@@ -81,6 +81,14 @@ export interface SocialProof {
   stars: number;
 }
 
+export interface BioShowcaseItem {
+  id: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  link: string;
+}
+
 export interface BioConfig {
   themeId: string;
   fontFamily: 'font-sans' | 'font-serif' | 'font-mono' | 'font-display';
@@ -103,6 +111,7 @@ export interface BioConfig {
     enabled: boolean;
     title: string;
     type: 'products' | 'services';
+    items?: BioShowcaseItem[];
   };
   shareCard?: {
     enabled: boolean;

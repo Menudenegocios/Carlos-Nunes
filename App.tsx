@@ -22,6 +22,7 @@ import { MyCatalog } from './pages/MyCatalog';
 import { Stores } from './pages/Stores';
 import { StoreView } from './pages/StoreView';
 import { BioBuilder } from './pages/BioBuilder';
+import { BioView } from './pages/BioView';
 import { BusinessSuite } from './pages/BusinessSuite';
 import { MarketplaceB2B } from './pages/MarketplaceB2B';
 import { Academy } from './pages/Academy';
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Categories />} />} path="/categories" />
       <Route element={<Layout children={<Stores />} />} path="/stores" />
       <Route element={<Layout children={<StoreView />} />} path="/store/:userId" />
+      <Route element={<Layout children={<BioView />} />} path="/bio/:userId" />
       <Route element={<Layout children={<Coupons />} />} path="/coupons" />
       <Route element={<Layout children={<Login />} />} path="/login" />
       <Route element={<Layout children={<Register />} />} path="/register" />

@@ -1,3 +1,4 @@
+
 import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem } from '../types';
 import { supabase } from './supabaseClient';
 
@@ -11,14 +12,23 @@ const isDemoUser = (userId: string) =>
 
 const localStore = {
   save: (key: string, userId: string, data: any) => {
-    localStorage.setItem(`menu_${key}_${userId}`, JSON.stringify(data));
+    try {
+      localStorage.setItem(`menu_${key}_${userId}`, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Storage quota exceeded. Using memory only or reducing data.", e);
+      // Opcional: Aqui poderíamos limpar dados antigos se necessário
+    }
   },
   get: (key: string, userId: string) => {
     const saved = localStorage.getItem(`menu_${key}_${userId}`);
     return saved ? JSON.parse(saved) : null;
   },
   saveGlobal: (key: string, data: any) => {
-    localStorage.setItem(`menu_global_${key}`, JSON.stringify(data));
+    try {
+      localStorage.setItem(`menu_global_${key}`, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Global storage quota exceeded.", e);
+    }
   },
   getGlobal: (key: string) => {
     const saved = localStorage.getItem(`menu_global_${key}`);
@@ -122,7 +132,6 @@ export const mockBackend = {
     return data ? { ...data, userId: data.user_id } : { ...entry, id: Math.random().toString() } as FinancialEntry;
   },
 
-  /* Fix: Added updateFinanceEntry method to mockBackend to resolve error in BusinessSuite.tsx */
   updateFinanceEntry: async (id: string, entry: Partial<FinancialEntry>): Promise<void> => {
     const userId = entry.userId || '';
     if (userId && isDemoUser(userId)) {
@@ -172,7 +181,6 @@ export const mockBackend = {
     if (isDemoUser(userId)) return localStore.get('profile', userId);
     const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
     if (error || !data) return null;
-    /* Fix: Mapped snake_case database fields to camelCase Profile interface fields */
     return { id: data.id, userId: data.user_id, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
   },
 
@@ -212,7 +220,7 @@ export const mockBackend = {
         return { ...product, id: Math.random().toString() };
     }
     const { data } = await supabase.from('products').insert({ user_id: product.userId, store_category_id: product.storeCategoryId, name: product.name, description: product.description, price: product.price, promo_price: product.promoPrice, image_url: product.imageUrl, video_url: product.videoUrl, category: product.category, available: product.available, variations: product.variations, button_type: product.buttonType || 'buy', external_link: product.externalLink, stock: product.stock, points_reward: product.pointsReward, is_local: product.isLocal }).select().single();
-    return data ? { ...data, userId: data.user_id, imageUrl: data.image_url, videoUrl: data.video_url, stock: data.stock, buttonType: data.button_type } : { ...product, id: Math.random().toString() };
+    return data ? { ...data, userId: data.user_id, imageUrl: data.image_url, video_url: data.video_url, stock: data.stock, buttonType: data.button_type } : { ...product, id: Math.random().toString() };
   },
 
   getAllProducts: async (): Promise<any[]> => {

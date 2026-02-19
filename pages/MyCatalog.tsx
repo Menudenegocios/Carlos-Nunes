@@ -17,6 +17,35 @@ import {
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
 
+// Helper para redimensionar imagem para economizar localStorage
+const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7)); // Comprime para JPEG 70%
+    };
+  });
+};
+
 export const MyCatalog: React.FC = () => {
   const { user, realAdmin } = useAuth();
   const navigate = useNavigate();
@@ -121,15 +150,19 @@ export const MyCatalog: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const result = reader.result as string;
-        if (field === 'logoUrl') setProfile(prev => ({ ...prev, logoUrl: result }));
-        else if (field === 'coverUrl') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, coverUrl: result } }));
-        else if (field === 'productUrl') setProductForm(prev => ({ ...prev, imageUrl: result }));
+        // Redimensionar dependendo do tipo
+        const isBanner = field.startsWith('banner') || field === 'coverUrl';
+        const compressed = await resizeImage(result, isBanner ? 1000 : 500, isBanner ? 600 : 500);
+
+        if (field === 'logoUrl') setProfile(prev => ({ ...prev, logoUrl: compressed }));
+        else if (field === 'coverUrl') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, coverUrl: compressed } }));
+        else if (field === 'productUrl') setProductForm(prev => ({ ...prev, imageUrl: compressed }));
         else if (field.startsWith('banner')) {
             const index = parseInt(field.replace('banner', ''));
             const currentBanners = [...(profile.storeConfig?.bannerImages || [])];
-            currentBanners[index] = result;
+            currentBanners[index] = compressed;
             setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, bannerImages: currentBanners } }));
         }
       };
@@ -159,19 +192,6 @@ export const MyCatalog: React.FC = () => {
     setCategoryForm({ name: '' });
     setIsCategoryModalOpen(false);
     loadData();
-  };
-
-  const togglePaymentMethod = (method: 'pix' | 'card' | 'cash' | 'credit') => {
-    setProfile(prev => ({
-        ...prev,
-        storeConfig: {
-            ...prev.storeConfig,
-            paymentMethods: {
-                ...prev.storeConfig?.paymentMethods,
-                [method]: !prev.storeConfig?.paymentMethods?.[method]
-            }
-        }
-    }));
   };
 
   return (
@@ -364,7 +384,7 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* NOVO: Canais de Contato & Redes Sociais */}
+                   {/* Canais de Contato & Redes Sociais */}
                    <div className="space-y-6 bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
                       <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Share2 className="w-5 h-5" /> Redes Sociais & Contato</h4>
                       <div className="grid md:grid-cols-3 gap-6">

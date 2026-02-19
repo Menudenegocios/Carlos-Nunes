@@ -12,9 +12,9 @@ import {
   FileText, ChevronLeft, Calendar, User, Upload, Edit2, 
   Zap, MoreHorizontal, X, Send, Palette as PaletteIcon, Share2, Home as HomeIcon,
   Store, Briefcase, Award, Ticket, Video, Clock, ExternalLink, Sparkles, LayoutGrid,
-  Package, Hash
+  Package, Hash, Link as LinkIcon
 } from 'lucide-react';
-import { BioLink, BioConfig, Profile, SocialProof, OfferCategory, SchedulingConfig, Product } from '../types';
+import { BioLink, BioConfig, Profile, SocialProof, OfferCategory, SchedulingConfig, Product, BioShowcaseItem } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 
 const FONTS = [
@@ -37,15 +37,44 @@ const MARKETPLACE_CATEGORIES = [
     { id: 'mentorias', label: 'Mentorias', icon: Award, enum: OfferCategory.OPORTUNIDADES },
 ];
 
+// Helper para redimensionar imagem para economizar localStorage
+const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7)); // Comprime para JPEG 70%
+    };
+  });
+};
+
 export const BioBuilder: React.FC = () => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const productImgInputRef = useRef<HTMLInputElement>(null);
+  const bioShowcaseImgInputRef = useRef<HTMLInputElement>(null);
   const [activeEditorTab, setActiveEditorTab] = useState<'home' | 'content' | 'social_proof' | 'design' | 'share'>('home');
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [links, setLinks] = useState<BioLink[]>([]);
   const [socialProof, setSocialProof] = useState<SocialProof[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [bioShowcaseItems, setBioShowcaseItems] = useState<BioShowcaseItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -66,15 +95,14 @@ export const BioBuilder: React.FC = () => {
   const [ctaLabel, setCtaLabel] = useState('Falar no WhatsApp');
 
   const [showcaseEnabled, setShowcaseEnabled] = useState(false);
-  const [showcaseTitle, setShowcaseTitle] = useState('Nossos Serviços');
-  const [showcaseType, setShowcaseType] = useState<'products' | 'services'>('services');
+  const [showcaseTitle, setShowcaseTitle] = useState('Destaques');
   const [shareCardEnabled, setShareCardEnabled] = useState(false);
 
-  // Estados para Modal de Produto
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState<Partial<Product>>({ 
-    name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: ''
+  // Estados para Modal de Item da Vitrine da Bio
+  const [isBioItemModalOpen, setIsBioItemModalOpen] = useState(false);
+  const [editingBioItem, setEditingBioItem] = useState<BioShowcaseItem | null>(null);
+  const [bioItemForm, setBioItemForm] = useState<Partial<BioShowcaseItem>>({ 
+    name: '', price: 0, link: '', imageUrl: ''
   });
 
   useEffect(() => { if (user) loadData(); }, [user]);
@@ -82,10 +110,7 @@ export const BioBuilder: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
     try {
-        const [data, prods] = await Promise.all([
-            mockBackend.getProfile(user.id),
-            mockBackend.getProducts(user.id)
-        ]);
+        const data = await mockBackend.getProfile(user.id);
         
         if (data) {
           setProfile(data);
@@ -94,6 +119,7 @@ export const BioBuilder: React.FC = () => {
             { id: '2', type: 'instagram', label: 'Siga no Instagram', url: '', active: true }
           ]);
           setSocialProof(data.bioConfig?.socialProof || []);
+          setBioShowcaseItems(data.bioConfig?.showcase?.items || []);
 
           if (data.bioConfig?.customColors) {
             setBgColor(data.bioConfig.customColors.background || '#064e3b');
@@ -112,14 +138,12 @@ export const BioBuilder: React.FC = () => {
 
           if (data.bioConfig?.showcase) {
               setShowcaseEnabled(data.bioConfig.showcase.enabled);
-              setShowcaseTitle(data.bioConfig.showcase.title || 'Nossos Serviços');
-              setShowcaseType(data.bioConfig.showcase.type || 'services');
+              setShowcaseTitle(data.bioConfig.showcase.title || 'Destaques');
           }
           if (data.bioConfig?.shareCard) {
               setShareCardEnabled(data.bioConfig.shareCard.enabled);
           }
         }
-        setProducts(prods || []);
     } catch (e) {
         console.error("Erro ao carregar dados da Bio:", e);
     }
@@ -131,25 +155,17 @@ export const BioBuilder: React.FC = () => {
     try {
       const updatedProfile = { 
         ...profile,
-        storeConfig: {
-          ...profile.storeConfig,
-          schedulingEnabled: schedEnabled
-        },
         bioConfig: { 
           themeId: selectedCategory, 
           fontFamily: fontFamily as any, 
           links,
           socialProof,
           meshGradient: useMeshGradient,
-          floatingCTA: {
-              enabled: ctaEnabled,
-              label: ctaLabel,
-              type: 'whatsapp'
-          },
           showcase: {
               enabled: showcaseEnabled,
               title: showcaseTitle,
-              type: showcaseType
+              type: 'services',
+              items: bioShowcaseItems
           },
           shareCard: {
               enabled: shareCardEnabled
@@ -162,43 +178,6 @@ export const BioBuilder: React.FC = () => {
         } 
       };
       await mockBackend.updateProfile(user.id, updatedProfile);
-
-      const catObj = MARKETPLACE_CATEGORIES.find(c => c.id === selectedCategory);
-      const categoryEnum = catObj?.enum || OfferCategory.SERVICOS_PROFISSIONAIS;
-      
-      const myOffers = await mockBackend.getMyOffers(user.id);
-      const existingBioOffer = myOffers.find(o => o.description.includes("[BIO_MARKER]"));
-
-      let tags = "[BIO_MARKER]";
-      if (selectedCategory === 'mentorias') tags += " [MENTORIA]";
-
-      const offerData = {
-        title: profile.businessName || user.name,
-        description: `${tags} ${profile.bio || 'Confira meu perfil profissional completo.'}`,
-        category: categoryEnum,
-        city: profile.city || 'Sua Cidade',
-        imageUrl: profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
-        logoUrl: profile.logoUrl,
-        socialLinks: profile.socialLinks || {
-            whatsapp: profile.phone || '',
-            instagram: profile.socialLinks?.instagram || ''
-        },
-        price: 'Consultar',
-        userId: user.id,
-        scheduling: schedEnabled ? {
-            enabled: true,
-            durationMinutes: schedDuration,
-            meetingType: schedType,
-            googleCalendarConnected: calendarConnected
-        } : undefined
-      };
-
-      if (existingBioOffer) {
-        await mockBackend.updateOffer(user.id, existingBioOffer.id, offerData);
-      } else {
-        await mockBackend.createOffer(user.id, offerData);
-      }
-
       setShowSuccess(true);
     } catch (err) {
       alert("Houve um erro ao publicar. Verifique sua conexão e tente novamente.");
@@ -208,7 +187,7 @@ export const BioBuilder: React.FC = () => {
   };
 
   const copyBioLink = () => {
-    const url = `${window.location.origin}/#/store/${user?.id}`;
+    const url = `${window.location.origin}/#/bio/${user?.id}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -218,19 +197,21 @@ export const BioBuilder: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile(prev => ({ ...prev, logoUrl: reader.result as string }));
+      reader.onloadend = async () => {
+        const compressed = await resizeImage(reader.result as string, 400, 400);
+        setProfile(prev => ({ ...prev, logoUrl: compressed }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBioItemImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setProductForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+      reader.onloadend = async () => {
+        const compressed = await resizeImage(reader.result as string, 600, 600);
+        setBioItemForm(prev => ({ ...prev, imageUrl: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -254,19 +235,18 @@ export const BioBuilder: React.FC = () => {
     setTextColor(theme.text);
   };
 
-  const handleProductSubmit = async (e: React.FormEvent) => {
+  const handleBioItemSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    setIsSaving(true);
-    try {
-      if (editingProduct) {
-        await mockBackend.createProduct({ ...editingProduct, ...productForm } as Product);
-      } else {
-        await mockBackend.createProduct({ ...productForm, userId: user.id } as Product);
-      }
-      setIsProductModalOpen(false);
-      loadData(); // Recarrega produtos e perfil
-    } finally { setIsSaving(false); }
+    if (editingBioItem) {
+        setBioShowcaseItems(prev => prev.map(item => item.id === editingBioItem.id ? { ...item, ...bioItemForm } as BioShowcaseItem : item));
+    } else {
+        setBioShowcaseItems(prev => [...prev, { ...bioItemForm, id: Date.now().toString() } as BioShowcaseItem]);
+    }
+    setIsBioItemModalOpen(false);
+  };
+
+  const removeBioItem = (id: string) => {
+    setBioShowcaseItems(prev => prev.filter(i => i.id !== id));
   };
 
   const BioMockup = () => (
@@ -313,22 +293,22 @@ export const BioBuilder: React.FC = () => {
 
         {showcaseEnabled && (
             <div className="w-full mb-8">
-                <p className="text-[11px] font-black text-white mb-4 text-center border-b border-brand-accent/30 pb-1 w-fit mx-auto">{showcaseTitle}</p>
+                <p className="text-[11px] font-black text-white mb-4 text-center border-b border-brand-accent/30 pb-1 w-fit mx-auto uppercase tracking-widest">{showcaseTitle}</p>
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x px-1">
-                    {products.length > 0 ? products.map(prod => (
-                        <div key={prod.id} 
-                            className="min-w-[240px] rounded-[1.8rem] border-2 flex-shrink-0 snap-center overflow-hidden flex p-3 gap-3"
+                    {bioShowcaseItems.length > 0 ? bioShowcaseItems.map(item => (
+                        <div key={item.id} 
+                            className="min-w-[240px] rounded-[1.8rem] border-2 flex-shrink-0 snap-center overflow-hidden flex p-3 gap-3 shadow-xl"
                             style={{ backgroundColor: btnColor + '33', borderColor: btnColor + '66' }}
                         >
-                             <div className="w-20 h-20 rounded-2xl bg-zinc-900/20 flex-shrink-0 overflow-hidden border border-white/10">
-                                {prod.imageUrl ? (
-                                    <img src={prod.imageUrl} className="w-full h-full object-cover" />
+                             <div className="w-20 h-20 rounded-2xl bg-white/10 flex-shrink-0 overflow-hidden border border-white/10">
+                                {item.imageUrl ? (
+                                    <img src={item.imageUrl} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="h-full flex items-center justify-center text-white/10"><ImageIcon className="w-6 h-6" /></div>
                                 )}
                              </div>
                              <div className="flex-1 flex flex-col justify-center text-left">
-                                 <h5 className="text-[10px] font-black text-white uppercase italic leading-tight mb-1">{prod.name}</h5>
+                                 <h5 className="text-[10px] font-black text-white uppercase italic leading-tight mb-1 line-clamp-1">{item.name}</h5>
                                  <p className="text-[9px] font-bold uppercase tracking-tighter" style={{ color: textColor }}>Compre Aqui!</p>
                              </div>
                         </div>
@@ -337,7 +317,7 @@ export const BioBuilder: React.FC = () => {
                             className="min-w-[240px] rounded-[1.8rem] border-2 flex-shrink-0 snap-center overflow-hidden flex p-3 gap-3"
                             style={{ backgroundColor: btnColor + '33', borderColor: btnColor + '66' }}
                         >
-                             <div className="w-20 h-20 rounded-2xl bg-zinc-900/20 flex-shrink-0 flex items-center justify-center text-white/10">
+                             <div className="w-20 h-20 rounded-2xl bg-white/10 flex-shrink-0 flex items-center justify-center text-white/10">
                                 <ImageIcon className="w-6 h-6" />
                              </div>
                              <div className="flex-1 flex flex-col justify-center text-left">
@@ -352,7 +332,7 @@ export const BioBuilder: React.FC = () => {
 
         {socialProof.length > 0 && (
           <div className="w-full space-y-3 mb-8">
-            <p className="text-[8px] font-black uppercase tracking-widest opacity-50 text-center">O que dizem sobre nós</p>
+            <p className="text-[8px] font-black uppercase tracking-widest opacity-50 text-center">Depoimentos</p>
             {socialProof.slice(0, 2).map(proof => (
               <div key={proof.id} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5">
                 <div className="flex text-yellow-400 gap-0.5 mb-1 scale-75 origin-left">
@@ -470,8 +450,8 @@ export const BioBuilder: React.FC = () => {
                      <div className="space-y-6 pt-10 border-t border-gray-100 dark:border-zinc-800">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><LayoutGrid className="text-indigo-600" /> Vitrine de Itens</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Exiba seus itens do catálogo diretamente na Bio.</p>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><LayoutGrid className="text-indigo-600" /> Vitrine da Bio</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure o carrossel exclusivo da sua Bio Link.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" checked={showcaseEnabled} onChange={e => setShowcaseEnabled(e.target.checked)} className="sr-only peer" />
@@ -481,53 +461,44 @@ export const BioBuilder: React.FC = () => {
                         
                         {showcaseEnabled && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Título da Seção</label>
-                                        <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={showcaseTitle} onChange={e => setShowcaseTitle(e.target.value)} />
+                                <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700">
+                                    <div className="flex justify-between items-center mb-8">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Título da Seção</label>
+                                            <input type="text" className="bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" value={showcaseTitle} onChange={e => setShowcaseTitle(e.target.value)} />
+                                        </div>
+                                        <button 
+                                            onClick={() => { setEditingBioItem(null); setBioItemForm({ name: '', price: 0, link: '', imageUrl: '' }); setIsBioItemModalOpen(true); }}
+                                            className="bg-[#F67C01] text-white px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95"
+                                        >
+                                            <Plus className="w-5 h-5" /> CRIAR ITEM
+                                        </button>
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Tipo de Exibição</label>
-                                        <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={showcaseType} onChange={e => setShowcaseType(e.target.value as any)}>
-                                            <option value="services">Nossos Serviços</option>
-                                            <option value="products">Meus Produtos</option>
-                                        </select>
+
+                                    <div className="grid gap-4">
+                                        {bioShowcaseItems.length > 0 ? bioShowcaseItems.map(item => (
+                                            <div key={item.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 flex items-center justify-between group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
+                                                        {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover" />}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-xs text-gray-900 dark:text-white uppercase">{item.name}</h4>
+                                                        <p className="text-[10px] font-black text-emerald-600">R$ {item.price.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => { setEditingBioItem(item); setBioItemForm(item); setIsBioItemModalOpen(true); }} className="p-2 text-indigo-400 hover:bg-indigo-50 rounded-lg"><Edit2 className="w-4 h-4" /></button>
+                                                    <button onClick={() => removeBioItem(item.id)} className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        )) : (
+                                            <p className="text-center py-10 text-[10px] font-black uppercase text-slate-400 tracking-widest italic">Nenhum item na vitrine da Bio.</p>
+                                        )}
                                     </div>
                                 </div>
-
-                                {/* Seção de Gerenciamento de Itens */}
-                                <div className="space-y-6 bg-gray-50 dark:bg-zinc-800/40 p-6 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700">
-                                   <div className="flex justify-between items-center">
-                                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens da sua vitrine</h4>
-                                      <button 
-                                        onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: showcaseType === 'services' ? 'Serviços' : 'Produtos', available: true, imageUrl: '' }); setIsProductModalOpen(true); }}
-                                        className="bg-[#F67C01] text-white px-6 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg flex items-center gap-2"
-                                      >
-                                        <Plus className="w-3.5 h-3.5" /> ADICIONAR ITEM
-                                      </button>
-                                   </div>
-
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      {products.length > 0 ? products.map(prod => (
-                                         <div key={prod.id} className="p-4 bg-white dark:bg-zinc-900 rounded-[1.5rem] border flex items-center gap-4 group hover:shadow-md transition-all">
-                                            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0">
-                                                {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover" /> : <Package className="w-6 h-6 text-gray-300 m-3" />}
-                                            </div>
-                                            <div className="flex-1">
-                                               <h5 className="font-black text-gray-900 dark:text-white text-xs line-clamp-1">{prod.name}</h5>
-                                               <p className="text-[9px] font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
-                                            </div>
-                                            <div className="flex gap-1">
-                                               <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-2 text-indigo-400 hover:bg-indigo-50 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button>
-                                            </div>
-                                         </div>
-                                      )) : (
-                                         <div className="col-span-full py-10 text-center opacity-40">
-                                            <Package className="w-8 h-8 mx-auto mb-2" />
-                                            <p className="text-[10px] font-black uppercase">Nenhum item cadastrado ainda.</p>
-                                         </div>
-                                      )}
-                                   </div>
+                                <div className="p-6 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 rounded-2xl">
+                                    <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400">Nota: O carrossel da Bio é independente da sua Vitrine Principal. As fotos aparecerão no formato horizontal deslizante.</p>
                                 </div>
                             </div>
                         )}
@@ -578,12 +549,11 @@ export const BioBuilder: React.FC = () => {
                {activeEditorTab === 'design' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
                      
-                     {/* Share Card QR Code Toggle */}
                      <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><QrCode className="text-brand-primary" /> Cartão QR Exclusivo</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Exiba um bloco de QR Code no rodapé da sua Bio para facilitar o compartilhamento.</p>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><QrCode className="text-brand-primary" /> Bloco QR Code</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Exiba um código de acesso rápido no rodapé da Bio.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" checked={shareCardEnabled} onChange={e => setShareCardEnabled(e.target.checked)} className="sr-only peer" />
@@ -598,7 +568,7 @@ export const BioBuilder: React.FC = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-brand-primary" /> Fundo Premium</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ative o efeito Mesh Gradient ultra-fluido.</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Ative o efeito Mesh Gradient fluido.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" checked={useMeshGradient} onChange={e => setUseMeshGradient(e.target.checked)} className="sr-only peer" />
@@ -609,53 +579,10 @@ export const BioBuilder: React.FC = () => {
 
                      <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
 
-                     <div className="space-y-6 bg-indigo-50/50 dark:bg-indigo-950/20 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h3 className="text-xl font-black text-indigo-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Calendar className="text-indigo-600" /> Agendamento</h3>
-                                <p className="text-[10px] font-bold text-indigo-600/60 dark:text-indigo-400 uppercase tracking-widest mt-1">Permita que clientes reservem seu horário.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={schedEnabled} onChange={e => setSchedEnabled(e.target.checked)} className="sr-only peer" />
-                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
-                        </div>
-
-                        {schedEnabled && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-indigo-900/40 uppercase tracking-widest">Duração da Sessão</label>
-                                        <select className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-sm" value={schedDuration} onChange={e => setSchedDuration(Number(e.target.value))}>
-                                            <option value={30}>30 Minutos</option>
-                                            <option value={60}>1 Hora</option>
-                                            <option value={90}>1h 30m</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-indigo-900/40 uppercase tracking-widest">Tipo de Reunião</label>
-                                        <select className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 font-bold text-sm" value={schedType} onChange={e => setSchedType(e.target.value as any)}>
-                                            <option value="google_meet">Online (Meet)</option>
-                                            <option value="in_person">Presencial</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => setCalendarConnected(!calendarConnected)} 
-                                    className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-600 text-white shadow-xl'}`}
-                                >
-                                    {calendarConnected ? <><CheckCircle className="w-4 h-4" /> AGENDA CONECTADA</> : <><RefreshCw className="w-4 h-4" /> CONECTAR GOOGLE CALENDAR</>}
-                                </button>
-                            </div>
-                        )}
-                     </div>
-
-                     <div className="h-px bg-gray-100 dark:bg-zinc-800 w-full"></div>
-
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-brand-primary" /> Estilo Visual</h3>
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-brand-primary" /> Identidade Visual</h3>
                      <div className="space-y-8">
                         <div>
-                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Temas Predefinidos</label>
+                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Temas Rápidos</label>
                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               {PRESET_THEMES.map(t => (
                                  <button key={t.id} onClick={() => applyTheme(t)} className="p-4 rounded-2xl border-2 border-gray-100 dark:border-zinc-800 flex flex-col items-center gap-3 hover:border-brand-primary transition-all">
@@ -667,7 +594,7 @@ export const BioBuilder: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                            <div className="space-y-4">
-                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Cores Personalizadas</label>
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Personalizar Cores (HEX)</label>
                               <div className="space-y-4">
                                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-xl gap-4">
                                     <div className="flex items-center gap-2 flex-1">
@@ -718,29 +645,28 @@ export const BioBuilder: React.FC = () => {
 
                {activeEditorTab === 'share' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar e Sincronizar</h3>
+                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar Bio Digital</h3>
                      <div className="space-y-8">
                         <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 text-center space-y-8">
                            <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-sm text-indigo-600">
                               <Globe className="w-8 h-8" />
                            </div>
                            <div>
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seu Link Público</p>
-                              <p className="text-lg font-black text-gray-900 dark:text-white truncate">{window.location.origin}/#/store/{user?.id}</p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seu Link da Bio</p>
+                              <p className="text-lg font-black text-gray-900 dark:text-white truncate">{window.location.origin}/#/bio/{user?.id}</p>
                            </div>
                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
                               <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
-                                 {copied ? 'COPIADO!' : 'COPIAR LINK'}
+                                 {copied ? 'COPIADO!' : 'COPIAR LINK DA BIO'}
                               </button>
                               <button 
                                  onClick={handleSave} 
                                  disabled={isSaving} 
                                  className="bg-[#F67C01] text-white px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                               >
-                                 {isSaving ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />} SALVAR E PUBLICAR
+                                 {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : <Save className="w-5 h-5" />} SALVAR E PUBLICAR
                               </button>
                            </div>
-                           <p className="text-[9px] font-bold text-slate-400 uppercase max-w-xs mx-auto">Ao clicar em SALVAR E PUBLICAR, sua Bio será atualizada e aparecerá automaticamente na vitrine do Marketplace global.</p>
                         </div>
                      </div>
                   </div>
@@ -751,7 +677,7 @@ export const BioBuilder: React.FC = () => {
               <div className="sticky top-32">
                 <div className="flex items-center justify-center gap-3 mb-6">
                   <Monitor className="w-4 h-4 text-slate-400" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Visualização em tempo real</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Prévia da Bio</span>
                 </div>
                 <BioMockup />
               </div>
@@ -760,124 +686,81 @@ export const BioBuilder: React.FC = () => {
         )}
       </div>
 
-      {/* MODAL DE SUCESSO PREMIUM */}
-      {showSuccess && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
-              <div className="relative bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
-                  {/* Background Efeito */}
-                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-emerald-500 to-indigo-600 opacity-20 blur-3xl pointer-events-none"></div>
-
-                  <div className="p-10 md:p-16 text-center space-y-10 relative z-10">
-                      <div className="w-24 h-24 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto border border-emerald-500/20 animate-bounce">
-                          <Sparkles className="w-12 h-12 text-emerald-500" />
-                      </div>
-
-                      <div className="space-y-4">
-                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">
-                              SUA VITRINE <br/><span className="text-emerald-500">ESTÁ NO AR!</span>
-                          </h2>
-                          <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">
-                              Pronto! Seu link profissional já pode ser adicionado na bio do seu Instagram.
-                          </p>
-                      </div>
-
-                      <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
-                          <div>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Link da sua Bio</p>
-                              <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-                                  <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate flex-1 text-left">
-                                      {window.location.origin}/#/store/{user?.id}
-                                  </span>
-                                  <button onClick={copyBioLink} className={`p-3 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-slate-400 hover:bg-indigo-600 hover:text-white'}`}>
-                                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                  </button>
-                              </div>
-                          </div>
-
-                          <div className="flex flex-col md:flex-row gap-6 items-center">
-                              <div className="p-4 bg-white dark:bg-zinc-900 rounded-[2rem] shadow-xl border border-gray-100 dark:border-zinc-700">
-                                  <QrCode className="w-24 h-24 text-gray-900 dark:text-white" />
-                              </div>
-                              <div className="text-left space-y-3">
-                                  <h4 className="font-black text-sm uppercase italic text-gray-900 dark:text-white">QR Code Exclusivo</h4>
-                                  <p className="text-xs text-slate-400 font-medium leading-relaxed">Imprima e coloque em seu balcão ou cartão de visitas para facilitar o acesso.</p>
-                                  <button className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary font-black text-[10px] uppercase tracking-widest hover:underline">
-                                      <Download className="w-3.5 h-3.5" /> BAIXAR PARA IMPRIMIR
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                          <button 
-                              onClick={() => setShowSuccess(false)}
-                              className="flex-1 py-5 bg-gray-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all"
-                          >
-                              VOLTAR AO EDITOR
-                          </button>
-                          <a 
-                              href={`${window.location.origin}/#/store/${user?.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
-                          >
-                              VER AO VIVO <ExternalLink className="w-4 h-4" />
-                          </a>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* Modal de Produto (Igual ao MyCatalog) */}
-      {isProductModalOpen && (
+      {/* Modal de Item da Vitrine da Bio */}
+      {isBioItemModalOpen && (
          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
             <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingProduct ? 'Editar Item' : 'Novo Item na Bio'}</h3></div>
-                    <button onClick={() => setIsProductModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingBioItem ? 'Editar Item' : 'Novo Item na Bio'}</h3></div>
+                    <button onClick={() => setIsBioItemModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
-                <form onSubmit={handleProductSubmit} className="p-10 space-y-6">
+                <form onSubmit={handleBioItemSubmit} className="p-10 space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                        <div className="space-y-4">
                           <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.name} onChange={e => setBioItemForm({...bioItemForm, name: e.target.value})} />
                           </div>
                           <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label>
-                            <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label>
-                            <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} placeholder="Ex: Doce, Consultoria..." />
+                            <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.price} onChange={e => setBioItemForm({...bioItemForm, price: Number(e.target.value)})} />
                           </div>
                        </div>
                        <div className="space-y-4">
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Foto do Item</label>
-                          <div className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => productImgInputRef.current?.click()}>
-                            {productForm.imageUrl ? (
-                                <img src={productForm.imageUrl} className="w-full h-full object-cover" />
+                          <div className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => bioShowcaseImgInputRef.current?.click()}>
+                            {bioItemForm.imageUrl ? (
+                                <img src={bioItemForm.imageUrl} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-300">
                                     <Camera className="w-8 h-8 mb-2" />
                                     <span className="text-[8px] font-black uppercase">Upload</span>
                                 </div>
                             )}
-                            <input type="file" ref={productImgInputRef} hidden accept="image/*" onChange={handleProductImageUpload} />
+                            <input type="file" ref={bioShowcaseImgInputRef} hidden accept="image/*" onChange={handleBioItemImageUpload} />
                           </div>
                        </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Descrição Curta</label>
-                        <textarea rows={2} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-xl p-4 font-medium text-sm dark:text-white resize-none" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} placeholder="Breve resumo do item..." />
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2"><LinkIcon className="w-3 h-3" /> Link de Redirecionamento</label>
+                        <input required type="url" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.link} onChange={e => setBioItemForm({...bioItemForm, link: e.target.value})} placeholder="https://wa.me/... ou https://loja.com/..." />
                     </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90 active:scale-95 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR NO CATÁLOGO'}
+                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90 active:scale-95 transition-all">
+                        SALVAR ITEM NA BIO
                     </button>
                 </form>
             </div>
          </div>
+      )}
+
+      {/* MODAL DE SUCESSO */}
+      {showSuccess && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
+              <div className="relative bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
+                  <div className="p-10 md:p-16 text-center space-y-10 relative z-10">
+                      <div className="w-24 h-24 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto border border-emerald-500/20">
+                          <Sparkles className="w-12 h-12 text-emerald-500" />
+                      </div>
+                      <div className="space-y-4">
+                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">BIO DIGITAL <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
+                          <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitantes.</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-gray-100 dark:border-zinc-800">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Link da sua Bio</p>
+                          <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
+                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate flex-1 text-left">{window.location.origin}/#/bio/{user?.id}</span>
+                              <button onClick={copyBioLink} className={`p-3 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-slate-400 hover:bg-indigo-600 hover:text-white'}`}>
+                                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                              </button>
+                          </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                          <button onClick={() => setShowSuccess(false)} className="flex-1 py-5 bg-gray-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all">VOLTAR AO EDITOR</button>
+                          <a href={`${window.location.origin}/#/bio/${user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
+                      </div>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );
