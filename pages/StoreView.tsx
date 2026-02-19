@@ -52,7 +52,12 @@ export const StoreView: React.FC = () => {
       setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
-      setBlogPosts(allPosts.filter(p => p.userId === userId).slice(0, 3)); // Pega os 3 mais recentes
+      // Filtrar apenas posts deste usuário e pegar os 3 mais recentes
+      const userPosts = allPosts
+        .filter(p => p.userId === userId)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 3);
+      setBlogPosts(userPosts);
     } finally {
       setLoading(false);
     }
@@ -196,14 +201,16 @@ export const StoreView: React.FC = () => {
                         </section>
                     </div>
 
-                    {/* SEÇÃO BLOG / ARTIGOS DO ESPECIALISTA */}
+                    {/* SEÇÃO BLOG / INSIGHTS - APENAS OS 3 ÚLTIMOS */}
                     {blogPosts.length > 0 && (
                         <section className="space-y-10">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
                                     <BookOpen className="w-6 h-6 text-indigo-600" /> Insights & Artigos
                                 </h2>
-                                <Link to="/blog" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Ver Blog Global</Link>
+                                <Link to="/blog" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2 group">
+                                    VER TODOS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                </Link>
                             </div>
                             <div className="grid gap-6">
                                 {blogPosts.map(post => (

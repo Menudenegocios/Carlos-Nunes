@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
 import { Product, Profile, StoreCategory, BlogPost } from '../types';
-// Added Calendar to the imports from lucide-react to fix the reference error on line 374
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
   Plus, Trash2, Edit2, 
@@ -74,7 +73,7 @@ export const MyCatalog: React.FC = () => {
   const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
   const [blogForm, setBlogForm] = useState({
     title: '',
-    category: 'Marketing',
+    category: 'Dicas',
     summary: '',
     content: '',
     imageUrl: ''
@@ -354,12 +353,12 @@ export const MyCatalog: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setEditingBlogPost(null);
-                                setBlogForm({ title: '', category: 'Marketing', summary: '', content: '', imageUrl: '' });
+                                setBlogForm({ title: '', category: 'Dicas', summary: '', content: '', imageUrl: '' });
                                 setIsBlogModalOpen(true);
                             }}
                             className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
                         >
-                            <Plus className="w-5 h-5" /> CRIAR ARTIGO
+                            <Plus className="w-5 h-5" /> NOVO ARTIGO
                         </button>
                     </div>
 
@@ -610,7 +609,7 @@ export const MyCatalog: React.FC = () => {
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Foto de Capa</label>
                             <div className="aspect-[4/3] bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border-4 border-dashed border-gray-100 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
                                {blogForm.imageUrl ? <img src={blogForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload da Foto</span></div>}
-                               <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
+                               <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={handleImageUpload} />
                             </div>
                          </div>
 
@@ -632,7 +631,7 @@ export const MyCatalog: React.FC = () => {
 
       {isCategoryModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
                    <h3 className="font-black uppercase italic tracking-widest text-sm">Nova Categoria</h3>
                    <button onClick={() => setIsCategoryModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
