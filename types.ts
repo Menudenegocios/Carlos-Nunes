@@ -162,6 +162,7 @@ export interface StoreCategory {
 export interface Profile {
   id: string;
   userId: string;
+  slug?: string;
   businessName?: string;
   category?: string;
   phone?: string;

@@ -12,7 +12,7 @@ import {
   Briefcase, Quote, Smartphone, ArrowRight, Star, Settings, GripVertical,
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
   Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
-  Share2
+  Share2, Link as LinkIcon
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -61,7 +61,7 @@ export const MyCatalog: React.FC = () => {
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
-    name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', storeCategoryId: ''
+    name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', storeCategoryId: '', externalLink: ''
   });
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -315,7 +315,7 @@ export const MyCatalog: React.FC = () => {
                 <div className="space-y-10">
                    <div className="flex justify-between items-center">
                       <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Gerenciamento de Itens</h3>
-                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-2"><Plus className="w-5 h-5" /> ADICIONAR ITEM</button>
+                      <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, imageUrl: '', externalLink: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-2"><Plus className="w-5 h-5" /> ADICIONAR ITEM</button>
                    </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {products.map(prod => (
@@ -426,15 +426,21 @@ export const MyCatalog: React.FC = () => {
                 <form onSubmit={handleProductSubmit} className="p-10 space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                        <div className="space-y-4">
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título</label><input required type="text" className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label><input required type="number" step="0.01" className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} /></div>
-                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label><select className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}><option value="">Nenhuma</option>{storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título</label><input required type="text" className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
+                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label><input required type="number" step="0.01" className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} /></div>
+                          <div><label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Categoria</label><select className="w-full bg-gray-50 rounded-xl p-4 font-bold dark:text-white" value={productForm.storeCategoryId} onChange={e => setProductForm({...productForm, storeCategoryId: e.target.value})}><option value="">Nenhuma</option>{storeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                        </div>
                        <div className="space-y-4">
                           <div className="aspect-square bg-gray-50 rounded-[1.5rem] border-2 border-dashed relative overflow-hidden group cursor-pointer" onClick={() => fileInputProductRef.current?.click()}>{productForm.imageUrl ? <img src={productForm.imageUrl} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-gray-300"><Camera className="w-8 h-8" /></div>}<input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} /></div>
                        </div>
                     </div>
-                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90">{isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR NO CATÁLOGO'}</button>
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2"><LinkIcon className="w-3 h-3" /> Link de Redirecionamento (Opcional)</label>
+                        <input type="url" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" value={productForm.externalLink || ''} onChange={e => setProductForm({...productForm, externalLink: e.target.value})} placeholder="https://loja.com/produto ou link de checkout..." />
+                    </div>
+                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90 transition-all active:scale-95">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR NO CATÁLOGO'}
+                    </button>
                 </form>
             </div>
          </div>

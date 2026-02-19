@@ -173,15 +173,19 @@ export const mockBackend = {
   },
 
   // --- PERFIL ---
-  getProfile: async (userId: string): Promise<Profile | null> => {
+  getProfile: async (identifier: string): Promise<Profile | null> => {
     const allProfiles = localStore.getGlobal('all_profiles') || [];
-    const found = allProfiles.find((p: any) => p.userId === userId);
+    // Busca por userId ou slug
+    const found = allProfiles.find((p: any) => p.userId === identifier || p.slug === identifier);
     if (found) return found;
 
-    if (isDemoUser(userId)) return localStore.get('profile', userId);
-    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+    if (isDemoUser(identifier)) return localStore.get('profile', identifier);
+    
+    // Tenta UUID no Supabase
+    const { data, error } = await supabase.from('profiles').select('*').or(`user_id.eq.${identifier},slug.eq.${identifier}`).single();
     if (error || !data) return null;
-    return { id: data.id, userId: data.user_id, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
+    // Fix: Corrected logo_url mapping to logoUrl as per Profile interface
+    return { id: data.id, userId: data.user_id, slug: data.slug, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
   },
 
   updateProfile: async (userId: string, data: Partial<Profile>) => {
@@ -194,13 +198,13 @@ export const mockBackend = {
     
     localStore.save('profile', userId, { ...data, userId });
     if (!isDemoUser(userId)) {
-        await supabase.from('profiles').update({ business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
+        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
     }
   },
 
   getAllProfiles: async () => {
     const sbData = await safeQuery(supabase.from('profiles').select('*'), []);
-    const mappedSb = sbData.map((p: any) => ({ id: p.id, userId: p.user_id, businessName: p.business_name, category: p.category, city: p.city, bio: p.bio, logoUrl: p.logo_url, plan: p.plan, points: p.points }));
+    const mappedSb = sbData.map((p: any) => ({ id: p.id, userId: p.user_id, slug: p.slug, businessName: p.business_name, category: p.category, city: p.city, bio: p.bio, logoUrl: p.logo_url, plan: p.plan, points: p.points }));
     const local = localStore.getGlobal('all_profiles') || [];
     return [...mappedSb, ...local];
   },
@@ -269,6 +273,7 @@ export const mockBackend = {
     const local = localStore.getGlobal('blog_posts') || [];
     localStore.saveGlobal('blog_posts', [newPost, ...local]);
     if (post.userId && !isDemoUser(post.userId)) {
+        // Fix: Corrected image_url to imageUrl as per BlogPost interface
         await supabase.from('blog_posts').insert({ user_id: post.userId, title: post.title, summary: post.summary, content: post.content, author: post.author, category: post.category, image_url: post.imageUrl, date: newPost.date });
     }
     return newPost;

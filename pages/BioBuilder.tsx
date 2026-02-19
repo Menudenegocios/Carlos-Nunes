@@ -12,7 +12,7 @@ import {
   FileText, ChevronLeft, Calendar, User, Upload, Edit2, 
   Zap, MoreHorizontal, X, Send, Palette as PaletteIcon, Share2, Home as HomeIcon,
   Store, Briefcase, Award, Ticket, Video, Clock, ExternalLink, Sparkles, LayoutGrid,
-  Package, Hash, Link as LinkIcon
+  Package, Hash, Link as LinkIcon, Globe2
 } from 'lucide-react';
 import { BioLink, BioConfig, Profile, SocialProof, OfferCategory, SchedulingConfig, Product, BioShowcaseItem } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
@@ -187,7 +187,8 @@ export const BioBuilder: React.FC = () => {
   };
 
   const copyBioLink = () => {
-    const url = `${window.location.origin}/#/bio/${user?.id}`;
+    const identifier = profile.slug || user?.id;
+    const url = `${window.location.origin}/#/bio/${identifier}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -215,6 +216,11 @@ export const BioBuilder: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSlugChange = (val: string) => {
+    const slugified = val.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/\s+/g, '-');
+    setProfile(prev => ({ ...prev, slug: slugified }));
   };
 
   const addLink = () => {
@@ -426,6 +432,28 @@ export const BioBuilder: React.FC = () => {
                {activeEditorTab === 'content' && (
                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
                      <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><User className="text-indigo-600" /> Perfil Principal</h3>
+                     
+                     {/* URL ALIAS (SLUG) */}
+                     <div className="bg-indigo-50 dark:bg-indigo-950/20 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30 space-y-4">
+                        <div className="flex items-center gap-3">
+                           <Globe2 className="w-5 h-5 text-indigo-600" />
+                           <h4 className="font-black text-sm text-indigo-900 dark:text-indigo-300 uppercase tracking-tight">URL Personalizada</h4>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-0 overflow-hidden rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
+                           <div className="bg-white dark:bg-zinc-800 px-5 py-4 text-xs font-black text-slate-400 border-r border-indigo-100 dark:border-indigo-900 select-none flex items-center">
+                              menudenegocios.bio/
+                           </div>
+                           <input 
+                              type="text" 
+                              className="flex-1 bg-white dark:bg-zinc-900 px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 placeholder:text-slate-300 outline-none"
+                              placeholder="seu-nome"
+                              value={profile.slug || ''}
+                              onChange={e => handleSlugChange(e.target.value)}
+                           />
+                        </div>
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-2">Este será o link curto para seu Cartão de Visitas Digital.</p>
+                     </div>
+
                      <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div className="space-y-6">
                            <div>
@@ -653,10 +681,12 @@ export const BioBuilder: React.FC = () => {
                            </div>
                            <div>
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seu Link da Bio</p>
-                              <p className="text-lg font-black text-gray-900 dark:text-white truncate">{window.location.origin}/#/bio/{user?.id}</p>
+                              <p className="text-lg font-black text-gray-900 dark:text-white truncate">
+                                 {window.location.origin}/#/bio/{profile.slug || user?.id}
+                              </p>
                            </div>
                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                              <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
+                              <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-900 text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
                                  {copied ? 'COPIADO!' : 'COPIAR LINK DA BIO'}
                               </button>
                               <button 
@@ -748,7 +778,7 @@ export const BioBuilder: React.FC = () => {
                       <div className="bg-gray-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-gray-100 dark:border-zinc-800">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Link da sua Bio</p>
                           <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate flex-1 text-left">{window.location.origin}/#/bio/{user?.id}</span>
+                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate flex-1 text-left">{window.location.origin}/#/bio/{profile.slug || user?.id}</span>
                               <button onClick={copyBioLink} className={`p-3 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-slate-400 hover:bg-indigo-600 hover:text-white'}`}>
                                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                               </button>
@@ -756,7 +786,7 @@ export const BioBuilder: React.FC = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
                           <button onClick={() => setShowSuccess(false)} className="flex-1 py-5 bg-gray-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all">VOLTAR AO EDITOR</button>
-                          <a href={`${window.location.origin}/#/bio/${user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
+                          <a href={`${window.location.origin}/#/bio/${profile.slug || user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
                       </div>
                   </div>
               </div>
