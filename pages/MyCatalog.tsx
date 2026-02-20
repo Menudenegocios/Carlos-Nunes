@@ -257,7 +257,7 @@ export const MyCatalog: React.FC = () => {
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
             { id: 'blog', label: 'Blog', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
-            { id: 'landing', label: 'Landing Page', desc: 'Classificados', icon: Smartphone },
+            { id: 'landing', label: 'Landing Page', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
@@ -483,7 +483,7 @@ export const MyCatalog: React.FC = () => {
                                />
                             </div>
                          </div>
-                         <div className="md:col-span-2">
+                         <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Globe className="w-3 h-3" /> Website Oficial</label>
                             <input 
                                type="url" 
@@ -493,6 +493,16 @@ export const MyCatalog: React.FC = () => {
                                placeholder="https://www.seusite.com.br" 
                             />
                          </div>
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Youtube className="w-3 h-3" /> Link de Vídeo (YouTube)</label>
+                            <input 
+                               type="url" 
+                               className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
+                               value={profile.storeConfig?.videoUrl || ''} 
+                               onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, videoUrl: e.target.value}})} 
+                               placeholder="https://www.youtube.com/watch?v=..." 
+                            />
+                         </div>
                       </div>
                    </div>
 
@@ -500,21 +510,21 @@ export const MyCatalog: React.FC = () => {
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><User className="w-3 h-3" /> Sobre Mim</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.aboutMe || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, aboutMe: e.target.value}})} placeholder="Conte sua trajetória..." />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.aboutMe || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, aboutMe: e.target.value}})} placeholder="Conte sua trajetória e formação..." />
                          </div>
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ListChecks className="w-3 h-3" /> Soluções e Serviços</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.solutions || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, solutions: e.target.value}})} placeholder="O que você oferece?" />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.solutions || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, solutions: e.target.value}})} placeholder="Quais serviços ou produtos você oferece?" />
                          </div>
                       </div>
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Target className="w-3 h-3" /> Problemas que resolvo</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, problemsSolved: e.target.value}})} placeholder="Quais dores você elimina?" />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.problemsSolved || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, problemsSolved: e.target.value}})} placeholder="Quais dores ou necessidades do cliente você elimina?" />
                          </div>
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Heart className="w-3 h-3" /> Interesses de Negócio</label>
-                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.businessInterests || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, businessInterests: e.target.value}})} placeholder="Com quem quer se conectar?" />
+                            <textarea rows={5} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm font-medium dark:text-white resize-none" value={profile.storeConfig?.businessInterests || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, businessInterests: e.target.value}})} placeholder="Com que tipo de parceiro ou cliente você quer se conectar?" />
                          </div>
                       </div>
                    </div>
