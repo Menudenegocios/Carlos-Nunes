@@ -9,101 +9,11 @@
     <!-- Favicon para evitar erro 404 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔶</text></svg>">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                primary: '#F67C01', // Atualizado para o Laranja oficial #F67C01
-                secondary: '#94A3B8',
-                accent: '#F9D230', // Invertido: amarelo agora é o acento
-                surface: '#F8FAFC',
-                dark: '#0F172A',
-                contrast: '#1E293B'
-              }
-            },
-            fontFamily: {
-              sans: ['Raleway', 'sans-serif'],
-            },
-            animation: {
-              'marquee': 'marquee 40s linear infinite',
-              'float': 'float 6s ease-in-out infinite',
-            },
-            keyframes: {
-              marquee: {
-                '0%': { transform: 'translateX(0)' },
-                '100%': { transform: 'translateX(-50%)' },
-              },
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-20px)' },
-              }
-            }
-          }
-        }
-      }
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    
-    <style>
-      body { 
-        font-family: 'Raleway', sans-serif; 
-        background-color: #F8FAFC;
-        color: #1E293B;
-        transition: background-color 0.3s ease, color 0.3s ease;
-      }
-      .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(148, 163, 184, 0.2);
-      }
-      .dark .glass-card {
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      .scrollbar-hide::-webkit-scrollbar { display: none; }
-      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      .marquee-container {
-        overflow: hidden;
-        white-space: nowrap;
-        position: relative;
-      }
-      .marquee-content {
-        display: flex;
-        width: max-content;
-      }
-    </style>
-
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.3.1",
-    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
-    "react-dom": "https://esm.sh/react-dom@18.3.1",
-    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?external=react,react-dom",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react",
-    "react-markdown": "https://esm.sh/react-markdown@9.0.1?external=react",
-    "@google/genai": "https://esm.sh/@google/genai",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
   </head>
   <body class="bg-brand-surface dark:bg-brand-dark text-brand-contrast dark:text-brand-surface antialiased">
     <div id="root"></div>

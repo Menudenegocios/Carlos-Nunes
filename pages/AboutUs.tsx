@@ -1,5 +1,5 @@
 
-import React, { border } from 'react';
+import React from 'react';
 import { Target, Eye, Heart, Rocket, Shield, Users, ArrowRight, Store, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

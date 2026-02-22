@@ -23,7 +23,7 @@ export const getAIAssistantResponse = async (
 ): Promise<string> => {
   try {
     // Sempre criar uma nova instância antes da chamada conforme as regras
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
     
     // Filtramos o histórico para garantir que ele comece com uma mensagem de 'user'
     // A API do Gemini prefere que a conversa comece com o usuário.
@@ -60,7 +60,7 @@ export const generateMarketingCopy = async (
   description: string
 ): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
     
     const prompt = `
       Atue como um especialista em marketing digital e copywriter.
@@ -96,7 +96,7 @@ export const generateMarketingImage = async (
   aspectRatio: string = '1:1'
 ): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -128,7 +128,7 @@ export const editMarketingImage = async (
   prompt: string
 ): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
     
     const matches = imageBase64.match(/^data:(.+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {

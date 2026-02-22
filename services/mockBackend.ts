@@ -38,7 +38,7 @@ const localStore = {
   }
 };
 
-const safeQuery = async <T>(query: Promise<{data: T | null, error: any}>, fallback: T): Promise<T> => {
+const safeQuery = async <T>(query: any, fallback: T): Promise<T> => {
   try {
     const { data, error } = await query;
     if (error) return fallback;
@@ -296,7 +296,7 @@ export const mockBackend = {
         query = query.eq('user_id', filters.userId);
     }
     const { data } = await query;
-    return (data || []).map((o: any) => ({ id: o.id, userId: o.user_id, title: o.title, description: o.description, category: o.category, city: o.city, price: o.price, createdAt: o.created_at, imageUrl: o.image_url, videoUrl: o.video_url, logo_url: o.logo_url, social_links: o.social_links, coupons: o.coupons, scheduling: o.scheduling }));
+    return (data || []).map((o: any) => ({ id: o.id, userId: o.user_id, title: o.title, description: o.description, category: o.category, city: o.city, price: o.price, createdAt: o.created_at, imageUrl: o.image_url, videoUrl: o.video_url, logoUrl: o.logo_url, socialLinks: o.social_links, coupons: o.coupons, scheduling: o.scheduling }));
   },
 
   getMyOffers: async (userId: string) => mockBackend.getOffers({ userId }),
@@ -308,8 +308,8 @@ export const mockBackend = {
         localStore.save('offers', userId, next);
         return { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() };
     }
-    const { data } = await supabase.from('offers').insert({ user_id: userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logo_url, social_links: offer.social_links, scheduling: offer.scheduling, created_at: Date.now() }).select().single();
-    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logo_url: data.logo_url, social_links: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() };
+    const { data } = await supabase.from('offers').insert({ user_id: userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling, created_at: Date.now() }).select().single();
+    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: Math.random().toString(), userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
   },
 
   updateOffer: async (userId: string, offerId: string, offer: any): Promise<Offer> => {
@@ -319,8 +319,8 @@ export const mockBackend = {
         localStore.save('offers', userId, next);
         return { ...offer, id: offerId, userId };
     }
-    const { data } = await supabase.from('offers').update({ title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logo_url, social_links: offer.social_links, scheduling: offer.scheduling }).eq('id', offerId).eq('user_id', userId).select().single();
-    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logo_url: data.logo_url, social_links: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { ...offer, id: offerId, userId };
+    const { data } = await supabase.from('offers').update({ title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling }).eq('id', offerId).eq('user_id', userId).select().single();
+    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: offerId, userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
   },
 
   deleteOffer: async (id: string, userId: string): Promise<void> => {

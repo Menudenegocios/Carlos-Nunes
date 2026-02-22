@@ -1,28 +1,38 @@
-
 {
   "name": "menu-de-negocios",
   "version": "1.0.0",
   "description": "Plataforma de conexão local inteligente",
-  "main": "server.js",
+  "main": "server.ts",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "vite",
+    "start": "node server.ts",
+    "dev": "tsx server.ts",
     "build": "vite build",
+    "lint": "tsc",
     "preview": "vite preview"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "path": "^0.12.7",
+    "@google/genai": "^1.33.0",
     "@supabase/supabase-js": "^2.45.4",
+    "express": "^4.18.2",
     "lucide-react": "^0.561.0",
+    "motion": "^12.34.3",
+    "path": "^0.12.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.3",
     "react-markdown": "^9.0.1",
-    "@google/genai": "^1.33.0"
+    "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.2.1",
+    "tailwindcss": "^4.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vite": "^5.1.4"
   },
   "engines": {

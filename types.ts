@@ -284,7 +284,7 @@ export interface Lead {
   userId: string;
   name: string;
   phone: string;
-  source: 'maps' | 'instagram' | 'cnpj' | 'manual';
+  source: 'maps' | 'instagram' | 'cnpj' | 'manual' | 'vitrine_publica';
   stage: PipelineStage;
   notes?: string;
   lastContact?: number;

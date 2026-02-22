@@ -157,7 +157,7 @@ export const BioBuilder: React.FC = () => {
           showcase: {
               enabled: showcaseEnabled,
               title: showcaseTitle,
-              type: 'services',
+              type: 'services' as "products" | "services",
               items: bioShowcaseItems
           },
           shareCard: {

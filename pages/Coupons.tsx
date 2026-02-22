@@ -48,9 +48,9 @@ export const Coupons: React.FC = () => {
       const offers = await mockBackend.getOffers();
       const allCoupons: CouponWithOffer[] = [];
       
-      offers.forEach(offer => {
+      offers.forEach((offer: Offer) => {
         if (offer.coupons && offer.coupons.length > 0) {
-          offer.coupons.forEach(coupon => {
+          offer.coupons.forEach((coupon: Coupon) => {
             allCoupons.push({ ...coupon, offer });
           });
         }

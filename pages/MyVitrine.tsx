@@ -9,7 +9,7 @@ import {
   X, Send, RefreshCw, Image as ImageIcon, Camera, Sparkles,
   Home as HomeIcon, Layout, FileText, ChevronRight, AlignLeft,
   Quote, Palette, Share2, Settings, ListTodo, Medal, Gift, History,
-  LayoutGrid
+  LayoutGrid, Clock
 } from 'lucide-react';
 import { BioBuilder } from './BioBuilder';
 import { MyCatalog } from './MyCatalog';
@@ -17,7 +17,7 @@ import { mockBackend } from '../services/mockBackend';
 import { BlogPost } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 
-type VitrineTab = 'bio' | 'catalog' | 'blog';
+type VitrineTab = 'bio' | 'catalog' | 'blog' | 'scheduling';
 
 export const MyVitrine: React.FC = () => {
   const { user } = useAuth();
@@ -67,6 +67,7 @@ export const MyVitrine: React.FC = () => {
             { id: 'bio', label: 'BIO DIGITAL', desc: 'Links e Estilo', icon: Smartphone },
             { id: 'catalog', label: 'CATÁLOGO & LOJA', desc: 'Produtos/Vendas', icon: Package },
             { id: 'blog', label: 'BLOG & ARTIGOS', desc: 'Autoridade', icon: BookOpen },
+            { id: 'scheduling', label: 'AGENDAMENTOS', desc: 'Gestão de Agenda', icon: Calendar },
           ].map(tab => (
             <button 
               key={tab.id}
@@ -152,6 +153,44 @@ export const MyVitrine: React.FC = () => {
                 icon={Package}
               />
             ) : <div className="text-white text-center py-20 opacity-40">Funcionalidade do Catálogo em desenvolvimento...</div>}
+          </ToolLayout>
+        )}
+
+        {activeTab === 'scheduling' && (
+          <ToolLayout 
+            title="AGENDAMENTOS" 
+            icon={Calendar} 
+            subTabs={[
+              { id: 'home', label: 'INÍCIO', desc: 'Visão Geral', icon: HomeIcon },
+              { id: 'manage', label: 'GERENCIAR', desc: 'Sua Agenda', icon: Clock },
+              { id: 'config', label: 'CONFIGURAR', desc: 'Horários', icon: Settings },
+            ]}
+            activeSubTab={catalogSubTab} // Reusing catalogSubTab state for simplicity or I could add a new one
+            onSubTabChange={setCatalogSubTab}
+          >
+            <div className="space-y-8 animate-fade-in">
+              <div className="flex justify-between items-center px-4">
+                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Central de Agendamentos</h3>
+                <button onClick={() => navigate('/schedule')} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> VER AGENDA COMPLETA
+                </button>
+              </div>
+              
+              <div className="grid gap-4">
+                <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 text-center space-y-4">
+                  <div className="w-16 h-16 bg-indigo-600/20 rounded-2xl flex items-center justify-center mx-auto text-indigo-400">
+                    <Clock className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-xl font-black text-white uppercase italic">Gestão de Horários</h4>
+                  <p className="text-slate-400 text-sm max-w-md mx-auto">
+                    Visualize e gerencie as solicitações de agendamento feitas pelos seus clientes através da sua Vitrine Digital.
+                  </p>
+                  <button onClick={() => navigate('/schedule')} className="text-brand-primary font-black text-[10px] uppercase tracking-widest hover:underline">
+                    Acessar Painel de Controle
+                  </button>
+                </div>
+              </div>
+            </div>
           </ToolLayout>
         )}
 
