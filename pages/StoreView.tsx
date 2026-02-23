@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory, BlogPost } from '../types';
+import { Product, Profile, StoreCategory, BlogPost, VitrineComment } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import { 
-  MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight,
+  MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight, ArrowUpRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
-  QrCode, Download, BookOpen, FileText, Sparkles
+  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare
 } from 'lucide-react';
 
 export const StoreView: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [comments, setComments] = useState<VitrineComment[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'agendamento' | 'blog'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'agendamento' | 'blog' | 'agenda'>('inicio');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [isBooking, setIsBooking] = useState(false);
@@ -46,15 +51,17 @@ export const StoreView: React.FC = () => {
   const loadStoreData = async () => {
     if (!userId) return;
     try {
-      const [prof, prods, cats, allPosts] = await Promise.all([
+      const [prof, prods, cats, allPosts, vitrineComments] = await Promise.all([
         mockBackend.getProfile(userId),
         mockBackend.getProducts(userId),
         mockBackend.getStoreCategories(userId),
-        mockBackend.getBlogPosts()
+        mockBackend.getBlogPosts(),
+        mockBackend.getVitrineComments(userId)
       ]);
       setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
+      setComments(vitrineComments);
       
       // Lógica "Top 3" Artigos Recentes
       const userPosts = allPosts
@@ -69,6 +76,29 @@ export const StoreView: React.FC = () => {
       setBlogPosts(userPosts);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !commentText.trim() || !userId) return;
+
+    setIsSubmittingComment(true);
+    try {
+        await mockBackend.addVitrineComment({
+            vitrineUserId: userId,
+            userId: user.id,
+            userName: user.name,
+            userAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
+            content: commentText
+        });
+        setCommentText('');
+        const updatedComments = await mockBackend.getVitrineComments(userId);
+        setComments(updatedComments);
+    } catch (err) {
+        alert('Erro ao enviar comentário.');
+    } finally {
+        setIsSubmittingComment(false);
     }
   };
 
@@ -110,7 +140,7 @@ export const StoreView: React.FC = () => {
   const bannerImages = profile.storeConfig?.bannerImages?.length ? profile.storeConfig.bannerImages : [profile.storeConfig?.coverUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200'];
 
   return (
-    <div className="bg-[#F8FAFC] dark:bg-[#020617] min-h-screen font-sans selection:bg-indigo-600 selection:text-white pb-32">
+    <div className="bg-[#F8FAFC] dark:bg-[#020617] min-h-screen font-sans selection:bg-brand-dark selection:text-white pb-32">
         
         <div className="fixed top-0 left-0 right-0 z-[100] p-4 flex justify-between items-center pointer-events-none">
             <Link to="/stores" className="p-3 bg-white/20 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/40 transition-all pointer-events-auto">
@@ -133,13 +163,13 @@ export const StoreView: React.FC = () => {
                    </div>
                    <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                            <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
+                            <span className="bg-brand-dark text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
                         </div>
                         <h1 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">{profile.businessName}</h1>
-                        <p className="text-xl font-bold text-indigo-600 dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'Membro Elite'}</p>
+                        <p className="text-xl font-bold text-brand-dark dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'Membro Elite'}</p>
                    </div>
                 </div>
-                <button onClick={() => setIsSchedModalOpen(true)} className="bg-indigo-600 text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-4">
+                <button onClick={() => setIsSchedModalOpen(true)} className="bg-brand-dark text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-brand-dark/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-4">
                     <Calendar className="w-5 h-5" /> AGENDAR AGORA
                 </button>
             </div>
@@ -151,15 +181,16 @@ export const StoreView: React.FC = () => {
                 {[
                     { id: 'inicio', label: 'Início', icon: Info },
                     { id: 'produtos', label: 'Produtos', icon: Package },
-                    { id: 'agendamento', label: 'Agendamento', icon: Calendar },
+                    { id: 'agendamento', label: 'Agendar Agora', icon: Calendar },
                     { id: 'blog', label: 'Blog', icon: BookOpen },
+                    { id: 'agenda', label: 'Agenda', icon: Clock },
                 ].map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-3 px-8 py-4 rounded-[1.8rem] transition-all whitespace-nowrap ${
                             activeTab === tab.id 
-                            ? 'bg-indigo-600 text-white shadow-xl scale-105' 
+                            ? 'bg-brand-dark text-white shadow-xl scale-105' 
                             : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
@@ -178,54 +209,122 @@ export const StoreView: React.FC = () => {
                     {activeTab === 'inicio' && (
                         <div className="space-y-12 animate-fade-in">
                             {/* SOBRE */}
-                            <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 lg:p-16 shadow-xl border border-gray-100 dark:border-zinc-800">
-                                <div className="flex items-center gap-4 mb-10">
-                                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-600"><Info className="w-6 h-6" /></div>
-                                    <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Sobre o Profissional</h2>
+                            <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Info className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Sobre o Profissional</h2>
                                 </div>
-                                <p className="text-xl text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
+                                <p className="text-lg text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
                                     "{profile.storeConfig?.aboutMe || profile.bio || 'Bem-vindo ao meu perfil profissional.'}"
                                 </p>
                             </section>
 
-                            {/* BLOCOS DE VALOR */}
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <section className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl">
-                                    <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3 mb-8">
-                                        <Target className="w-6 h-6" /> Problemas que resolvo
-                                    </h3>
-                                    <div className="space-y-4">
-                                        {(profile.storeConfig?.problemsSolved || 'Soluções estratégicas para seu negócio.').split('\n').map((item, i) => (
-                                            <div key={i} className="flex items-start gap-4">
-                                                <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
-                                                <p className="font-bold text-lg leading-tight">{item}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
+                            {/* PROBLEMAS QUE RESOLVO */}
+                            <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Target className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Problemas que resolvo</h2>
+                                </div>
+                                <div className="space-y-4">
+                                    {(profile.storeConfig?.problemsSolved || 'Soluções estratégicas para seu negócio.').split('\n').map((item, i) => (
+                                        <div key={i} className="flex items-start gap-4 p-5 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                                            <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-1" />
+                                            <p className="text-base font-bold text-gray-700 dark:text-zinc-300 leading-tight italic">{item}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
 
-                                <section className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
-                                     <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3 mb-8">
-                                        <ListTodo className="w-6 h-6 text-indigo-600" /> Soluções & Serviços
-                                     </h3>
-                                     <div className="space-y-4">
-                                        {(profile.storeConfig?.solutions || 'Consultoria, Gestão, Treinamento.').split(',').map((item, i) => (
-                                            <div key={i} className="p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-zinc-800 font-black text-[10px] uppercase tracking-widest text-slate-500">
-                                                {item.trim()}
+                            {/* SOLUÇÕES E SERVIÇOS */}
+                            <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><ListTodo className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Soluções & Serviços</h2>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {(profile.storeConfig?.solutions || 'Consultoria, Gestão, Treinamento.').split(',').map((item, i) => (
+                                        <div key={i} className="p-5 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-zinc-800 flex items-center gap-4 group hover:bg-slate-100 dark:hover:bg-slate-800/20 transition-all">
+                                            <div className="w-7 h-7 bg-white dark:bg-zinc-900 rounded-lg flex items-center justify-center text-brand-dark shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
+                                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-zinc-400">{item.trim()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* INTERESSES DE NEGÓCIO */}
+                            <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Handshake className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Interesses de Negócio</h2>
+                                </div>
+                                <p className="text-lg text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
+                                    "{profile.storeConfig?.businessInterests || 'Aberto a novas conexões e parcerias estratégicas.'}"
+                                </p>
+                            </section>
+
+                            {/* COMENTÁRIOS */}
+                            <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><MessageSquare className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">O que dizem sobre mim</h2>
+                                </div>
+                                
+                                {user ? (
+                                    <form onSubmit={handleCommentSubmit} className="mb-12 space-y-4">
+                                        <textarea 
+                                            required
+                                            placeholder="DEIXE SEU COMENTÁRIO OU DEPOIMENTO..."
+                                            className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-3xl p-6 font-bold text-sm dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-dark/20 transition-all min-h-[120px]"
+                                            value={commentText}
+                                            onChange={e => setCommentText(e.target.value)}
+                                        />
+                                        <button 
+                                            type="submit"
+                                            disabled={isSubmittingComment}
+                                            className="px-10 py-4 bg-brand-dark text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50"
+                                        >
+                                            {isSubmittingComment ? 'ENVIANDO...' : 'PUBLICAR COMENTÁRIO'}
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <div className="mb-12 p-8 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 text-center">
+                                        <p className="text-xs font-black text-brand-dark dark:text-brand-primary uppercase tracking-widest italic">
+                                            Apenas usuários cadastrados podem comentar. <br/>
+                                            <Link to="/auth" className="underline mt-2 inline-block">Faça login para participar</Link>
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="space-y-8">
+                                    {comments.length > 0 ? comments.map(comment => (
+                                        <div key={comment.id} className="flex gap-6 p-8 bg-gray-50 dark:bg-zinc-800/30 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800/50">
+                                            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 shadow-md">
+                                                <img src={comment.userAvatar} className="w-full h-full object-cover" />
                                             </div>
-                                        ))}
-                                     </div>
-                                </section>
-                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-3">
+                                                    <h5 className="font-black text-xs uppercase tracking-widest text-gray-900 dark:text-white">{comment.userName}</h5>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(comment.createdAt).toLocaleDateString('pt-BR')}</span>
+                                                </div>
+                                                <p className="text-gray-600 dark:text-zinc-400 font-medium italic leading-relaxed">
+                                                    "{comment.content}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <p className="text-center text-slate-400 font-bold uppercase tracking-widest text-[10px] italic py-10">Seja o primeiro a comentar!</p>
+                                    )}
+                                </div>
+                            </section>
 
                             {/* SEÇÃO BLOG (Apenas 3 últimos) */}
                             {blogPosts.length > 0 && (
                                 <section className="space-y-10">
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
-                                            <BookOpen className="w-6 h-6 text-indigo-600" /> Insights Recentes
+                                            <BookOpen className="w-6 h-6 text-brand-dark" /> Insights Recentes
                                         </h2>
-                                        <Link to="/blog" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2 group">
+                                        <Link to="/blog" className="text-[10px] font-black text-brand-dark uppercase tracking-widest hover:underline flex items-center gap-2 group">
                                             VER TODOS OS ARTIGOS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </div>
@@ -236,8 +335,8 @@ export const StoreView: React.FC = () => {
                                                     <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                                 </div>
                                                 <div className="flex-1 flex flex-col justify-center">
-                                                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">{post.category}</span>
-                                                    <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-indigo-600 transition-colors mb-2">{post.title}</h4>
+                                                    <span className="text-[9px] font-black text-brand-dark uppercase tracking-widest mb-2">{post.category}</span>
+                                                    <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-brand-dark transition-colors mb-2">{post.title}</h4>
                                                     <p className="text-sm text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">{post.summary}</p>
                                                     <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
                                                         <Calendar className="w-3 h-3" /> {post.date} • Ler Artigo
@@ -254,7 +353,7 @@ export const StoreView: React.FC = () => {
                     {activeTab === 'produtos' && (
                         <section className="space-y-10 animate-fade-in">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-600"><Package className="w-6 h-6" /></div>
+                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-brand-dark"><Package className="w-6 h-6" /></div>
                                 <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Portfólio em Destaque</h2>
                             </div>
                             <div className="grid md:grid-cols-3 gap-8">
@@ -265,7 +364,28 @@ export const StoreView: React.FC = () => {
                                         </div>
                                         <div className="p-6 flex-1 flex flex-col">
                                             <h4 className="text-lg font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-tight mb-2">{prod.name}</h4>
-                                            <span className="text-indigo-600 font-black text-sm">R$ {prod.price.toFixed(2)}</span>
+                                            <div className="flex items-center justify-between mt-auto pt-4">
+                                                <span className="text-brand-dark font-black text-sm">R$ {prod.price.toFixed(2)}</span>
+                                                {prod.externalLink ? (
+                                                    <a 
+                                                        href={prod.externalLink} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="px-4 py-2 bg-brand-dark text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
+                                                    >
+                                                        VER MAIS <ArrowUpRight className="w-3 h-3" />
+                                                    </a>
+                                                ) : (
+                                                    <a 
+                                                        href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${prod.name}`)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2"
+                                                    >
+                                                        PEDIR <MessageCircle className="w-3 h-3" />
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -276,7 +396,7 @@ export const StoreView: React.FC = () => {
                     {activeTab === 'agendamento' && (
                         <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 lg:p-16 shadow-xl border border-gray-100 dark:border-zinc-800 animate-fade-in space-y-12">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-600"><Calendar className="w-6 h-6" /></div>
+                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-brand-dark"><Calendar className="w-6 h-6" /></div>
                                 <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Central de Agendamentos</h2>
                             </div>
 
@@ -287,12 +407,12 @@ export const StoreView: React.FC = () => {
                                     <input 
                                         type="date" 
                                         min={new Date().toISOString().split('T')[0]}
-                                        className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-6 font-black text-lg dark:text-white focus:ring-2 focus:ring-indigo-600/20 transition-all"
+                                        className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-6 font-black text-lg dark:text-white focus:ring-2 focus:ring-brand-dark/20 transition-all"
                                         value={selectedDate}
                                         onChange={e => setSelectedDate(e.target.value)}
                                     />
-                                    <div className="p-6 bg-indigo-50 dark:bg-indigo-950/20 rounded-3xl border border-indigo-100 dark:border-indigo-900/30">
-                                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 leading-relaxed italic">
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-xs font-bold text-brand-dark dark:text-brand-primary leading-relaxed italic">
                                             "Os horários exibidos são baseados na disponibilidade em tempo real do especialista."
                                         </p>
                                     </div>
@@ -308,8 +428,8 @@ export const StoreView: React.FC = () => {
                                                 onClick={() => setSelectedTime(time)}
                                                 className={`py-4 rounded-2xl font-black text-xs transition-all border ${
                                                     selectedTime === time 
-                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105' 
-                                                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-gray-100 dark:border-zinc-700 hover:border-indigo-600'
+                                                    ? 'bg-brand-dark text-white border-brand-dark shadow-lg scale-105' 
+                                                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-gray-100 dark:border-zinc-700 hover:border-brand-dark'
                                                 }`}
                                             >
                                                 {time}
@@ -319,7 +439,7 @@ export const StoreView: React.FC = () => {
                                     {selectedTime && (
                                         <button 
                                             onClick={() => setIsSchedModalOpen(true)}
-                                            className="w-full py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4"
+                                            className="w-full py-6 bg-brand-dark text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-brand-dark/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4"
                                         >
                                             RESERVAR PARA {selectedTime} <ArrowRight className="w-5 h-5" />
                                         </button>
@@ -331,7 +451,7 @@ export const StoreView: React.FC = () => {
                     {activeTab === 'blog' && (
                         <section className="space-y-10 animate-fade-in">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl flex items-center justify-center text-indigo-600"><BookOpen className="w-6 h-6" /></div>
+                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-brand-dark"><BookOpen className="w-6 h-6" /></div>
                                 <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Blog & Insights</h2>
                             </div>
                             <div className="grid gap-6">
@@ -341,8 +461,8 @@ export const StoreView: React.FC = () => {
                                             <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center">
-                                            <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">{post.category}</span>
-                                            <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-indigo-600 transition-colors mb-2">{post.title}</h4>
+                                            <span className="text-[9px] font-black text-brand-dark uppercase tracking-widest mb-2">{post.category}</span>
+                                            <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-brand-dark transition-colors mb-2">{post.title}</h4>
                                             <p className="text-sm text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">{post.summary}</p>
                                             <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
                                                 <Calendar className="w-3 h-3" /> {post.date} • Ler Artigo
@@ -355,6 +475,23 @@ export const StoreView: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+                        </section>
+                    )}
+                    {activeTab === 'agenda' && (
+                        <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-4 lg:p-8 shadow-xl border border-gray-100 dark:border-zinc-800 animate-fade-in overflow-hidden min-h-[800px]">
+                            {profile?.storeConfig?.calendarLink ? (
+                                <iframe 
+                                    src={profile.storeConfig.calendarLink}
+                                    className="w-full h-[800px] rounded-3xl"
+                                    frameBorder="0"
+                                    title="Agenda"
+                                />
+                            ) : (
+                                <div className="h-[400px] flex flex-col items-center justify-center text-center space-y-4">
+                                    <Calendar className="w-16 h-16 text-slate-200" />
+                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Agenda externa não configurada.</p>
+                                </div>
+                            )}
                         </section>
                     )}
                 </div>
@@ -375,15 +512,15 @@ export const StoreView: React.FC = () => {
                                     </a>
                                 )}
                                 {profile.socialLinks?.website && (
-                                    <a href={profile.socialLinks.website} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] hover:bg-blue-50 transition-all group">
-                                        <Globe className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                                    <a href={profile.socialLinks.website} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
+                                        <Globe className="w-6 h-6 text-brand-dark group-hover:scale-110 transition-transform" />
                                         <span className="text-[9px] font-black uppercase text-slate-400">Website</span>
                                     </a>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <div className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
+                    <div className="bg-brand-dark rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
                         <Award className="w-12 h-12 mx-auto text-brand-primary" />
                         <h4 className="text-xl font-black uppercase italic tracking-tighter">Membro Verificado <br/>Menu de Negócios</h4>
                         <ShieldCheck className="absolute top-0 right-0 w-24 h-24 text-white/10 -mr-8 -mt-8" />
@@ -393,32 +530,31 @@ export const StoreView: React.FC = () => {
         </div>
 
         {/* 4. LEAD CAPTURE FORM (BOTTOM) */}
-        <div className="max-w-7xl mx-auto px-8 mt-24">
-            <section className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[4rem] p-12 lg:p-20 text-white shadow-2xl relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-8 mt-16">
+            <section className="bg-brand-dark rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-primary/10 rounded-full -ml-20 -mb-20 blur-3xl"></div>
                 
-                <div className="relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-                    <div className="space-y-8">
-                        <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
+                <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-3 px-5 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
                             <Sparkles className="w-4 h-4 text-brand-primary" />
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Oportunidade de Elite</span>
                         </div>
-                        <h2 className="text-4xl lg:text-6xl font-black uppercase italic tracking-tighter leading-[0.9]">
+                        <h2 className="text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-[0.9]">
                             Fale com o <br/> <span className="text-brand-primary">Especialista</span>
                         </h2>
-                        <p className="text-xl text-indigo-100 font-medium leading-relaxed max-w-md italic">
+                        <p className="text-lg text-slate-300 font-medium leading-relaxed max-w-md italic">
                             Deixe seus dados abaixo para receber uma consultoria personalizada e transformar seus resultados.
                         </p>
-                        <div className="flex items-center gap-6 pt-4">
-                            <div className="flex -space-x-4">
+                        <div className="flex items-center gap-4 pt-2">
+                            <div className="flex -space-x-3">
                                 {[1,2,3].map(i => (
-                                    <div key={i} className="w-12 h-12 rounded-full border-4 border-indigo-700 bg-slate-800 overflow-hidden">
+                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-brand-dark bg-slate-800 overflow-hidden">
                                         <img src={`https://picsum.photos/seed/${i+10}/100/100`} />
                                     </div>
                                 ))}
                             </div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-indigo-200">+500 Clientes Atendidos</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">+500 Clientes Atendidos</p>
                         </div>
                     </div>
 
@@ -452,7 +588,7 @@ export const StoreView: React.FC = () => {
                                 setIsSubmittingLead(false);
                             }
                         }}
-                        className="bg-white/10 backdrop-blur-xl p-8 lg:p-12 rounded-[3rem] border border-white/10 space-y-6 shadow-inner"
+                        className="bg-white/5 backdrop-blur-xl p-6 lg:p-10 rounded-[2rem] border border-white/10 space-y-6 shadow-inner"
                     >
                         <div className="space-y-4">
                             <input 
@@ -483,7 +619,7 @@ export const StoreView: React.FC = () => {
                         <button 
                             type="submit"
                             disabled={isSubmittingLead}
-                            className="w-full bg-white text-indigo-600 py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="w-full bg-white text-brand-dark py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                         >
                             {isSubmittingLead ? 'ENVIANDO...' : 'QUERO ME CONECTAR'} <ArrowRight className="w-5 h-5" />
                         </button>
@@ -499,10 +635,10 @@ export const StoreView: React.FC = () => {
         {isSchedModalOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
                 <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
-                    <div className="bg-indigo-600 p-10 text-white flex justify-between items-center">
+                    <div className="bg-brand-dark p-10 text-white flex justify-between items-center">
                         <div>
                             <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none">Confirmar Reserva</h3>
-                            <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                                 {new Date(selectedDate).toLocaleDateString('pt-BR')} às {selectedTime || 'A combinar'}
                             </p>
                         </div>
@@ -522,7 +658,7 @@ export const StoreView: React.FC = () => {
                         <button 
                             type="submit" 
                             disabled={isBooking}
-                            className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="w-full bg-brand-dark text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                         >
                             {isBooking ? 'PROCESSANDO...' : 'CONFIRMAR AGENDAMENTO'} <Send className="w-5 h-5" />
                         </button>

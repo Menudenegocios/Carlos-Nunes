@@ -150,6 +150,7 @@ export interface StoreConfig {
     whatsapp?: string;
     website?: string;
   };
+  calendarLink?: string;
 }
 
 export interface StoreCategory {
@@ -358,6 +359,16 @@ export interface Review {
   comment: string;
   date: string;
   reply?: string;
+}
+
+export interface VitrineComment {
+  id: string;
+  vitrineUserId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  createdAt: number;
 }
 
 export interface PlatformEvent {

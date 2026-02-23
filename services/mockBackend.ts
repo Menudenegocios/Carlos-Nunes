@@ -1,5 +1,5 @@
 
-import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem } from '../types';
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment } from '../types';
 import { supabase } from './supabaseClient';
 
 const isDemoUser = (userId: string) => 
@@ -394,4 +394,21 @@ export const mockBackend = {
   addCoupon: async (userId: string, offerId: string, data: any) => {},
   getPointsHistory: async (userId: string) => [],
   likePost: async (postId: string, userId: string) => ({} as any),
+  
+  // --- VITRINE COMMENTS ---
+  getVitrineComments: async (vitrineUserId: string): Promise<VitrineComment[]> => {
+    const local = localStore.getGlobal('vitrine_comments') || [];
+    return local.filter((c: any) => c.vitrineUserId === vitrineUserId).sort((a: any, b: any) => b.createdAt - a.createdAt);
+  },
+
+  addVitrineComment: async (comment: Omit<VitrineComment, 'id' | 'createdAt'>): Promise<VitrineComment> => {
+    const newComment: VitrineComment = {
+      ...comment,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: Date.now()
+    };
+    const local = localStore.getGlobal('vitrine_comments') || [];
+    localStore.saveGlobal('vitrine_comments', [newComment, ...local]);
+    return newComment;
+  }
 };

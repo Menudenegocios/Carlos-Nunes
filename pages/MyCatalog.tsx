@@ -494,6 +494,16 @@ export const MyCatalog: React.FC = () => {
                             />
                          </div>
                          <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Calendar className="w-3 h-3" /> Link Agenda (Calendly/Google)</label>
+                            <input 
+                               type="url" 
+                               className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
+                               value={profile.storeConfig?.calendarLink || ''} 
+                               onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, calendarLink: e.target.value}})} 
+                               placeholder="https://calendly.com/seu-link" 
+                            />
+                         </div>
+                         <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Youtube className="w-3 h-3" /> Link de Vídeo (YouTube)</label>
                             <input 
                                type="url" 
@@ -638,6 +648,10 @@ export const MyCatalog: React.FC = () => {
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome do Item</label>
                              <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
+                          </div>
+                          <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Link de Redirecionamento (Opcional)</label>
+                             <input type="url" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={productForm.externalLink || ''} onChange={e => setProductForm({...productForm, externalLink: e.target.value})} placeholder="https://..." />
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                              <div>
