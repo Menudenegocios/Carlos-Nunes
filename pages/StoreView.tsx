@@ -22,16 +22,13 @@ export const StoreView: React.FC = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'agendamento' | 'blog' | 'agenda'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'blog' | 'agenda'>('inicio');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [isBooking, setIsBooking] = useState(false);
   
   const [leadForm, setLeadForm] = useState({ name: '', email: '', whatsapp: '' });
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   
-  const [isSchedModalOpen, setIsSchedModalOpen] = useState(false);
-  const [schedForm, setSchedForm] = useState({ name: '', email: '', whatsapp: '' });
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
   useEffect(() => {
@@ -102,38 +99,6 @@ export const StoreView: React.FC = () => {
     }
   };
 
-  // Fix: Implemented handleSchedSubmit to handle form submission
-    const handleSchedSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile || !userId) return;
-    
-    setIsBooking(true);
-    try {
-        // Salva no backend real (mock)
-        await mockBackend.addScheduleItem({
-            userId: userId,
-            title: `Agendamento: ${profile.businessName}`,
-            client: schedForm.name,
-            date: selectedDate,
-            time: selectedTime || 'Horário a combinar',
-            type: 'servico',
-            status: 'pending'
-        });
-
-        const message = `Olá! Gostaria de confirmar meu agendamento com ${profile.businessName}. \n\n📅 Data: ${new Date(selectedDate).toLocaleDateString('pt-BR')} \n⏰ Horário: ${selectedTime || 'A combinar'} \n👤 Nome: ${schedForm.name} \n📱 WhatsApp: ${schedForm.whatsapp}`;
-        const whatsappUrl = `https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-        
-        setIsSchedModalOpen(false);
-        setSelectedTime('');
-        alert('Agendamento solicitado com sucesso! Você será redirecionado para o WhatsApp para confirmação.');
-    } catch (err) {
-        alert('Erro ao processar agendamento. Tente novamente.');
-    } finally {
-        setIsBooking(false);
-    }
-  };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-xs tracking-widest text-slate-400">Carregando vitrine de elite...</div>;
   if (!profile) return <div className="min-h-screen flex items-center justify-center">Especialista não encontrado.</div>;
 
@@ -169,9 +134,6 @@ export const StoreView: React.FC = () => {
                         <p className="text-xl font-bold text-brand-dark dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'Membro Elite'}</p>
                    </div>
                 </div>
-                <button onClick={() => setIsSchedModalOpen(true)} className="bg-brand-dark text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-brand-dark/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-4">
-                    <Calendar className="w-5 h-5" /> AGENDAR AGORA
-                </button>
             </div>
         </div>
 
@@ -181,7 +143,6 @@ export const StoreView: React.FC = () => {
                 {[
                     { id: 'inicio', label: 'Início', icon: Info },
                     { id: 'produtos', label: 'Produtos', icon: Package },
-                    { id: 'agendamento', label: 'Agendar Agora', icon: Calendar },
                     { id: 'blog', label: 'Blog', icon: BookOpen },
                     { id: 'agenda', label: 'Agenda', icon: Clock },
                 ].map(tab => (
@@ -393,61 +354,6 @@ export const StoreView: React.FC = () => {
                         </section>
                     )}
 
-                    {activeTab === 'agendamento' && (
-                        <section className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 lg:p-16 shadow-xl border border-gray-100 dark:border-zinc-800 animate-fade-in space-y-12">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-brand-dark"><Calendar className="w-6 h-6" /></div>
-                                <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Central de Agendamentos</h2>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-12">
-                                {/* CALENDÁRIO SIMPLIFICADO */}
-                                <div className="space-y-6">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Selecione o Dia</label>
-                                    <input 
-                                        type="date" 
-                                        min={new Date().toISOString().split('T')[0]}
-                                        className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-6 font-black text-lg dark:text-white focus:ring-2 focus:ring-brand-dark/20 transition-all"
-                                        value={selectedDate}
-                                        onChange={e => setSelectedDate(e.target.value)}
-                                    />
-                                    <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-                                        <p className="text-xs font-bold text-brand-dark dark:text-brand-primary leading-relaxed italic">
-                                            "Os horários exibidos são baseados na disponibilidade em tempo real do especialista."
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* HORÁRIOS */}
-                                <div className="space-y-6">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horários Disponíveis</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map(time => (
-                                            <button
-                                                key={time}
-                                                onClick={() => setSelectedTime(time)}
-                                                className={`py-4 rounded-2xl font-black text-xs transition-all border ${
-                                                    selectedTime === time 
-                                                    ? 'bg-brand-dark text-white border-brand-dark shadow-lg scale-105' 
-                                                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-gray-100 dark:border-zinc-700 hover:border-brand-dark'
-                                                }`}
-                                            >
-                                                {time}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {selectedTime && (
-                                        <button 
-                                            onClick={() => setIsSchedModalOpen(true)}
-                                            className="w-full py-6 bg-brand-dark text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-brand-dark/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4"
-                                        >
-                                            RESERVAR PARA {selectedTime} <ArrowRight className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    )}
                     {activeTab === 'blog' && (
                         <section className="space-y-10 animate-fade-in">
                             <div className="flex items-center gap-4">
@@ -630,42 +536,6 @@ export const StoreView: React.FC = () => {
                 </div>
             </section>
         </div>
-
-        {/* MODAL AGENDAMENTO */}
-        {isSchedModalOpen && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
-                <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
-                    <div className="bg-brand-dark p-10 text-white flex justify-between items-center">
-                        <div>
-                            <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none">Confirmar Reserva</h3>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                                {new Date(selectedDate).toLocaleDateString('pt-BR')} às {selectedTime || 'A combinar'}
-                            </p>
-                        </div>
-                        <button onClick={() => setIsSchedModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
-                    </div>
-                    <form onSubmit={handleSchedSubmit} className="p-12 space-y-8 flex-1 overflow-y-auto">
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Seu Nome Completo</label>
-                                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={schedForm.name} onChange={e => setSchedForm({...schedForm, name: e.target.value})} />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp para Contato</label>
-                                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={schedForm.whatsapp} onChange={e => setSchedForm({...schedForm, whatsapp: e.target.value})} />
-                            </div>
-                        </div>
-                        <button 
-                            type="submit" 
-                            disabled={isBooking}
-                            className="w-full bg-brand-dark text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                        >
-                            {isBooking ? 'PROCESSANDO...' : 'CONFIRMAR AGENDAMENTO'} <Send className="w-5 h-5" />
-                        </button>
-                    </form>
-                </div>
-            </div>
-        )}
     </div>
   );
 };
