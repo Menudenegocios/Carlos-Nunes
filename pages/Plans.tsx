@@ -10,6 +10,7 @@ export const Plans: React.FC = () => {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'semestral' | 'anual'>('semestral');
 
   const handleSubscribe = async (plan: 'profissionais' | 'freelancers' | 'negocios') => {
     if (!user) return;
@@ -103,20 +104,74 @@ export const Plans: React.FC = () => {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
+      {/* Billing Toggle */}
+      <div className="flex justify-center">
+        <div className="bg-gray-100 dark:bg-zinc-800 p-1.5 rounded-[2rem] flex gap-1 shadow-inner border border-gray-200 dark:border-zinc-700">
+          <button
+            onClick={() => setBillingCycle('semestral')}
+            className={`px-10 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+              billingCycle === 'semestral'
+                ? 'bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-xl scale-105'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'
+            }`}
+          >
+            Semestral
+          </button>
+          <button
+            onClick={() => setBillingCycle('anual')}
+            className={`px-10 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+              billingCycle === 'anual'
+                ? 'bg-brand-primary text-white shadow-xl scale-105'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'
+            }`}
+          >
+            Anual <span className="bg-white/20 px-2 py-0.5 rounded-full text-[8px]">Economize ✨</span>
+          </button>
+        </div>
+      </div>
+
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start px-4">
         <PlanCard
-          type="ESSENCIAL PARA COMEÇAR" title="Plano Básico" planKey="profissionais" oldPrice="697" pixPrice="297" installments="12x R$ 29,90" icon={User} color="text-indigo-500" btnText="ATIVAR BÁSICO"
+          type="ESSENCIAL PARA COMEÇAR" 
+          title="Plano Básico" 
+          planKey="profissionais" 
+          oldPrice={billingCycle === 'semestral' ? "697" : "897"} 
+          pixPrice={billingCycle === 'semestral' ? "297" : "397"} 
+          installments={billingCycle === 'semestral' ? "12x R$ 29,90" : "12x R$ 39,90"} 
+          icon={User} 
+          color="text-indigo-500" 
+          btnText="ATIVAR BÁSICO"
+          period={billingCycle}
           subtitle="Ideal para profissionais liberais que precisam de uma bio profissional e acesso à rede local de parceiros."
           features={['Bio digital inteligente personalizada', 'Acesso ao Menu Academy fundamental', 'Participação no clube de vantagens', 'Marketplace B2B (modo leitura)', 'Suporte via e-mail']}
         />
         <PlanCard
-          type="ALTA PERFORMANCE" title="Plano PRO" planKey="freelancers" oldPrice="897" pixPrice="497" installments="12x R$ 49,90" icon={Briefcase} color="text-brand-primary" btnText="QUERO SER PRO" recommended={true}
+          type="ALTA PERFORMANCE" 
+          title="Plano PRO" 
+          planKey="freelancers" 
+          oldPrice={billingCycle === 'semestral' ? "897" : "1.297"} 
+          pixPrice={billingCycle === 'semestral' ? "497" : "697"} 
+          installments={billingCycle === 'semestral' ? "12x R$ 49,90" : "12x R$ 69,90"} 
+          icon={Briefcase} 
+          color="text-brand-primary" 
+          btnText="QUERO SER PRO" 
+          recommended={true}
+          period={billingCycle}
           subtitle="Acelere suas vendas com catálogo completo, CRM de gestão e destaque prioritário nas buscas regionais."
           features={['Tudo do Plano Básico incluso', 'Catálogo e loja virtual completa', 'CRM e gestão de vendas profissional', 'Marketplace B2B (anunciar e comprar)', 'Menu Academy PRO (estratégias)', 'Desconto de 50% em eventos']}
         />
         <PlanCard
-          type="DOMINAÇÃO TOTAL" title="Plano Business" planKey="negocios" oldPrice="2.997" pixPrice="1.497" installments="12x R$ 149,90" icon={Store} color="text-emerald-500" btnText="ATIVAR BUSINESS"
+          type="DOMINAÇÃO TOTAL" 
+          title="Plano Business" 
+          planKey="negocios" 
+          oldPrice={billingCycle === 'semestral' ? "2.997" : "3.497"} 
+          pixPrice={billingCycle === 'semestral' ? "1.497" : "1.790"} 
+          installments={billingCycle === 'semestral' ? "12x R$ 149,90" : "12x R$ 179,90"} 
+          icon={Store} 
+          color="text-emerald-500" 
+          btnText="ATIVAR BUSINESS"
+          period={billingCycle}
           subtitle="Consultoria estratégica personalizada e produção de conteúdo de elite para marcas que querem dominar o bairro."
           features={['Tudo do Plano PRO liberado', 'Participação no Menucast oficial', 'Consultoria estratégica mensal individual', 'Produção de vídeo comercial de elite', 'Selo de autoridade máxima no diretório', 'Trilha de negócios personalizada']}
         />
