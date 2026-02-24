@@ -7,7 +7,7 @@ import {
   Zap, Crown, ChevronRight,
   CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
-  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw
+  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield
 } from 'lucide-react';
 import { Prize, PointsTransaction, User, B2BOffer } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
@@ -60,8 +60,8 @@ export const Rewards: React.FC = () => {
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
                   { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
-                  { id: 'missions', label: 'MISSÕES', desc: 'Ganhar pontos', icon: ListTodo },
-                  { id: 'match', label: 'MATCH', desc: 'Parcerias B2B', icon: Handshake },
+                  { id: 'missions', label: 'PONTOS', desc: 'Ganhar pontos', icon: ListTodo },
+                  { id: 'match', label: 'MENU CASH', desc: 'Parcerias B2B', icon: Handshake },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
                   <button 
@@ -84,18 +84,17 @@ export const Rewards: React.FC = () => {
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'home' && (
             <SectionLanding 
-                title="Sua Atividade é a sua Melhor Propaganda."
-                subtitle="Clube de Vantagens"
-                description="O Menu Club recompensa seu engajamento com pontos que podem ser trocados por visibilidade extra e parcerias estratégicas no seu negócio."
+                title="O motor da economia colaborativa"
+                subtitle="Menu Club"
+                description="O Menu Club é o núcleo da movimentação econômica do ecossistema. Aqui, quanto mais o empreendedor se movimenta, mais oportunidades ele gera dentro da comunidade."
                 benefits={[
-                "Suba de nível e ganhe prioridade no diretório de lojas.",
-                "Ganhe pontos ao atualizar seu catálogo e bio.",
-                "Crie e encontre parcerias exclusivas na aba MATCH.",
-                "Participe do ranking local do seu bairro.",
-                "Desbloqueie selos de verificado para seu perfil."
+                "Realizam negócios B2B dentro da rede",
+                "Geram oportunidades por meio de indicações",
+                "Utilizam e acumulam Menu Cash (moeda interna)",
+                "Aumentam visibilidade e autoridade pela participação ativa"
                 ]}
                 youtubeId="dQw4w9WgXcQ"
-                ctaLabel="VER MINHAS MISSÕES"
+                ctaLabel="VER MEUS PONTOS"
                 onStart={() => setActiveTab('missions')}
                 icon={Trophy}
                 accentColor="brand"
@@ -103,7 +102,11 @@ export const Rewards: React.FC = () => {
         )}
 
         {activeTab === 'acceleration' && <LevelsView user={user} />}
-        {activeTab === 'missions' && <MissionsView />}
+        {activeTab === 'missions' && (
+          <div className="space-y-12 animate-fade-in">
+             <MissionsView />
+          </div>
+        )}
         {activeTab === 'match' && <B2BMatchView user={user} />}
         {activeTab === 'ranking' && <RankingView />}
       </div>
@@ -171,8 +174,8 @@ const B2BMatchView = ({ user }: { user: User }) => {
        <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-xl mb-12">
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
              <div className="space-y-4 max-w-xl">
-                <h3 className="text-3xl font-black italic uppercase tracking-tighter">Explorar Match B2B</h3>
-                <p className="text-indigo-100 font-medium">Crie conexões diretas com outros empresários da rede e aproveite benefícios exclusivos de colaboração.</p>
+                <h3 className="text-3xl font-black italic uppercase tracking-tighter">Menu Cash B2B</h3>
+                <p className="text-indigo-100 font-medium">Crie conexões diretas com outros empresários da rede e movimente a economia colaborativa.</p>
              </div>
              <button 
                 onClick={() => setIsModalOpen(true)}
@@ -182,6 +185,57 @@ const B2BMatchView = ({ user }: { user: User }) => {
              </button>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+       </div>
+
+       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl mb-12">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+             <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                   <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-600">
+                      <Zap className="w-6 h-6 fill-current" />
+                   </div>
+                   <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">💰 MENU CASH – A MOEDA INTERNA</h3>
+                </div>
+                <p className="text-gray-500 dark:text-zinc-400 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
+                
+                <div className="space-y-4">
+                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Como funciona:</p>
+                   <div className="grid grid-cols-1 gap-3">
+                      {[
+                        "Compra na plataforma → recebe cashback",
+                        "Indica novo membro → ganha pontos",
+                        "Fecha negócio B2B → ganha pontos",
+                        "Usa Menu Cash para pagar serviços internos"
+                      ].map((text, i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
+                           <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
+                        </div>
+                      ))}
+                   </div>
+                </div>
+             </div>
+
+             <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
+                   <Shield className="w-4 h-4" /> Regra importante
+                </p>
+                <ul className="space-y-4">
+                   {[
+                     "Menu Cash só pode ser usado dentro da plataforma",
+                     "Pode utilizar até 30% do valor de uma compra",
+                     "Saldo válido enquanto o plano estiver ativo"
+                   ].map((text, i) => (
+                     <li key={i} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full mt-1.5 shrink-0"></div>
+                        {text}
+                     </li>
+                   ))}
+                </ul>
+                <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
+                   <p className="text-sm font-black text-gray-900 dark:text-white italic">"Isso cria circulação e retenção."</p>
+                </div>
+             </div>
+          </div>
        </div>
 
        <div className="max-w-xl mx-auto relative mb-12">
@@ -201,7 +255,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
           ) : filteredOffers.length === 0 ? (
              <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
                 <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de match encontrada.</p>
+                <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de Menu Cash encontrada.</p>
              </div>
           ) : filteredOffers.map(offer => (
              <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
@@ -231,7 +285,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                  <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                      <div>
                          <h3 className="text-2xl font-black uppercase italic tracking-tighter">Publicar Oportunidade</h3>
-                         <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Sua oferta ficará visível na aba MATCH</p>
+                         <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Sua oferta ficará visível na aba MENU CASH</p>
                      </div>
                      <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                  </div>
@@ -272,56 +326,67 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
 const LevelsView = ({ user }: { user: User }) => {
   const levels = [
-    { name: 'Bronze', points: 'Iniciante', color: 'bg-orange-900', benefits: ['Perfil visível no diretório', 'Acesso ao Blog', 'Bio Digital Básica'] },
-    { name: 'Prata', points: '500 pts', color: 'bg-slate-400', benefits: ['Destaque 2x maior na busca', 'Selo de Membro Prata', 'Acesso ao Menu Academy fundamental'] },
-    { name: 'Ouro', points: '2.000 pts', color: 'bg-yellow-500', benefits: ['Destaque Prioritário Máximo', 'Selo de Verificado Oficial', 'Prioridade no suporte humano'] }
+    { name: 'Elite', points: '200 pts', color: 'bg-indigo-600', criteria: 'Mínimo 1 indicação Direta', description: 'Elite é ativação.', benefits: ['Ativação no ecossistema', 'Acesso ao Menu Club', 'Bio Digital Básica'] },
+    { name: 'Bronze', points: '1.000 pts', color: 'bg-orange-900', criteria: 'Mínimo 3 indicações Diretas', description: 'Bronze é consistência.', benefits: ['Perfil visível no diretório', 'Acesso ao Blog', 'Selo de Membro Bronze'] },
+    { name: 'Ouro', points: '3.000 pts', color: 'bg-yellow-500', criteria: 'Mínimo 5 indicações Diretas', description: 'Ouro é posicionamento.', benefits: ['Destaque Prioritário', 'Selo de Verificado Oficial', 'Acesso ao Menu Academy PRO'] },
+    { name: 'Diamante', points: '10.000 pts', color: 'bg-blue-500', criteria: 'Mínimo 10 indicações Diretas', description: 'Diamante é autoridade.', benefits: ['Autoridade Máxima', 'Destaque Prioritário Máximo', 'Mentoria Individual'] }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in">
-      {levels.map((level, i) => (
-        <div key={i} className={`bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border-2 shadow-sm transition-all ${user.level.toLowerCase() === level.name.toLowerCase() ? 'border-brand-primary ring-8 ring-brand-primary/5' : 'border-gray-100 dark:border-zinc-800 opacity-60'}`}>
-           <div className={`w-14 h-14 rounded-2xl ${level.color} mb-6 flex items-center justify-center text-white shadow-xl`}>
-              <Award className="w-8 h-8" />
-           </div>
-           <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic mb-1">{level.name}</h3>
-           <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-8">{level.points}</p>
-           
-           <ul className="space-y-4">
-              {level.benefits.map((b, j) => (
-                <li key={j} className="flex gap-3 text-sm font-medium text-gray-500 dark:text-zinc-400">
-                   <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" /> {b}
-                </li>
-              ))}
-           </ul>
-           {user.level.toLowerCase() === level.name.toLowerCase() && (
-             <div className="mt-10 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 py-3 rounded-2xl text-center font-black text-[10px] uppercase tracking-widest">
-                NÍVEL ATIVO
-             </div>
-           )}
-        </div>
-      ))}
+    <div className="space-y-12 animate-fade-in">
+      <div className="text-center space-y-4">
+        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">🏅 NÍVEIS DO MENU CLUB</h2>
+        <p className="text-slate-500 font-medium">Sua jornada de crescimento e autoridade dentro do ecossistema.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {levels.map((level, i) => (
+          <div key={i} className={`bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border-2 shadow-sm transition-all flex flex-col ${user.level.toLowerCase() === level.name.toLowerCase() ? 'border-brand-primary ring-8 ring-brand-primary/5 scale-105 z-10' : 'border-gray-100 dark:border-zinc-800 opacity-60'}`}>
+            <div className={`w-14 h-14 rounded-2xl ${level.color} mb-6 flex items-center justify-center text-white shadow-xl`}>
+                <Award className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic mb-1">{level.name}</h3>
+            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-2">{level.points}</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-4">{level.criteria}</p>
+            
+            <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 italic mb-6">"{level.description}"</p>
+            
+            <ul className="space-y-4 flex-1">
+                {level.benefits.map((b, j) => (
+                  <li key={j} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> {b}
+                  </li>
+                ))}
+            </ul>
+            {user.level.toLowerCase() === level.name.toLowerCase() && (
+              <div className="mt-10 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 py-3 rounded-2xl text-center font-black text-[10px] uppercase tracking-widest">
+                  NÍVEL ATIVO
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
 const MissionsView = () => {
   const missions = [
-    { title: 'Atualizar Catálogo', desc: 'Adicione ou edite 1 produto hoje.', pts: 50, icon: ShoppingBag },
-    { title: 'Mural da Comunidade', desc: 'Faça uma postagem no mural.', pts: 20, icon: Users },
-    { title: 'Compartilhar Bio', desc: 'Receba 10 cliques no seu link.', pts: 100, icon: Rocket },
-    { title: 'Primeira Venda', desc: 'Feche um negócio via WhatsApp.', pts: 200, icon: Zap }
+    { title: 'Indicação Direta', desc: 'Traga um novo membro para a rede.', pts: 200, icon: Users },
+    { title: 'Negócio B2B', desc: 'Feche um acordo com outro membro.', pts: 100, icon: Handshake },
+    { title: 'Compra na Store', desc: '1 ponto por cada R$ 1,00 gasto.', pts: '1:1', icon: ShoppingBag },
+    { title: 'Participação em Evento', desc: 'Presença confirmada em eventos oficiais.', pts: 50, icon: Ticket }
   ];
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-12 animate-fade-in">
        <div className="flex justify-between items-end">
           <div>
-            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Missões do Dia</h3>
-            <p className="text-slate-500 font-medium mt-1">Complete tarefas e ganhe autoridade no bairro.</p>
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">📊 PONTOS</h3>
+            <p className="text-slate-500 font-medium mt-1">Os pontos determinam seu nível e ranking no ecossistema.</p>
           </div>
-          <div className="bg-gray-50 dark:bg-zinc-800 px-6 py-3 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest">
-             Reseta em: <span className="text-gray-900 dark:text-white">14:22:10</span>
+          <div className="bg-gray-50 dark:bg-zinc-800 px-6 py-3 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+             Simples. Claro. Objetivo.
           </div>
        </div>
 
@@ -339,7 +404,7 @@ const MissionsView = () => {
                 </div>
                 <div className="text-right">
                    <div className="flex items-center gap-1.5 text-brand-primary font-black text-xl italic">
-                      +{m.pts} <Zap className="w-4 h-4 fill-current" />
+                      {typeof m.pts === 'number' ? `+${m.pts}` : m.pts} <Zap className="w-4 h-4 fill-current" />
                    </div>
                 </div>
              </div>
@@ -358,34 +423,82 @@ const RankingView = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-10 animate-fade-in">
-       <div className="flex items-center gap-4">
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl text-yellow-600">
-             <Medal className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Ranking Regional</h3>
-            <p className="text-slate-500 font-medium">Os empreendedores mais influentes da rede.</p>
+    <div className="space-y-12 animate-fade-in">
+       {/* Info Section */}
+       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+             <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl text-yellow-600">
+                      <Medal className="w-6 h-6" />
+                   </div>
+                   <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">🥇 Ranking Oficial</h3>
+                </div>
+                <div className="space-y-3">
+                   {[
+                     "Atualização mensal",
+                     "Top 5 maiores pontuadores",
+                     "Reconhecimento público"
+                   ].map((text, i) => (
+                     <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
+                        <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
+                     </div>
+                   ))}
+                </div>
+             </div>
+
+             <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Divulgação:</p>
+                <div className="grid grid-cols-2 gap-4">
+                   {[
+                     "Plataforma",
+                     "Instagram",
+                     "Eventos",
+                     "Newsletter"
+                   ].map((text, i) => (
+                     <div key={i} className="flex items-center gap-2 text-xs font-black text-gray-500 dark:text-zinc-400 uppercase tracking-tight">
+                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+                        {text}
+                     </div>
+                   ))}
+                </div>
+                <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
+                   <p className="text-sm font-black text-gray-900 dark:text-white italic">"Reconhecimento é combustível de movimento."</p>
+                </div>
+             </div>
           </div>
        </div>
 
-       <div className="space-y-4">
-          {ranking.map((user, i) => (
-             <div key={i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
-                <div className="flex items-center gap-6">
-                   <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
-                   <img src={user.avatar} className="w-12 h-12 rounded-xl shadow-md" alt="Avatar" />
-                   <div>
-                      <h4 className="font-black text-gray-900 leading-none">{user.name}</h4>
-                      <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user.business}</p>
+       {/* List Section */}
+       <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-10">
+          <div className="flex items-center gap-4">
+             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl text-yellow-600">
+                <Medal className="w-8 h-8" />
+             </div>
+             <div>
+               <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Ranking Regional</h3>
+               <p className="text-slate-500 font-medium">Os empreendedores mais influentes da rede.</p>
+             </div>
+          </div>
+
+          <div className="space-y-4">
+             {ranking.map((user, i) => (
+                <div key={i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
+                   <div className="flex items-center gap-6">
+                      <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
+                      <img src={user.avatar} className="w-12 h-12 rounded-xl shadow-md" alt="Avatar" />
+                      <div>
+                         <h4 className="font-black text-gray-900 leading-none">{user.name}</h4>
+                         <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user.business}</p>
+                      </div>
+                   </div>
+                   <div className="flex items-center gap-3">
+                      <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
+                      <ArrowUp className="w-4 h-4 text-emerald-500" />
                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                   <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
-                   <ArrowUp className="w-4 h-4 text-emerald-500" />
-                </div>
-             </div>
-          ))}
+             ))}
+          </div>
        </div>
     </div>
   );

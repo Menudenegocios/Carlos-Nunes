@@ -208,7 +208,7 @@ export const Home: React.FC = () => {
                           icon: '🏆', 
                           title: 'Menu Club', 
                           tagline: 'O motor da economia colaborativa',
-                          desc: 'Realize negócios B2B, gere oportunidades por indicações e acumule Menu Cash. Quanto mais você se movimenta, mais autoridade e oportunidades você gera na comunidade.' 
+                          desc: 'O núcleo da movimentação econômica do ecossistema. Aqui os membros realizam negócios B2B, geram oportunidades por indicações, utilizam Menu Cash e aumentam sua autoridade pela participação ativa.' 
                         },
                       ].map((item, i) => (
                         <div key={i} className="flex gap-8 group">
