@@ -173,7 +173,7 @@ export const Plans: React.FC = () => {
           btnText="ATIVAR BUSINESS"
           period={billingCycle}
           subtitle="Consultoria estratégica personalizada e produção de conteúdo de elite para marcas que querem dominar o bairro."
-          features={['Tudo do Plano PRO liberado', 'Participação no Menucast oficial', 'Consultoria estratégica mensal individual', 'Produção de vídeo comercial de elite', 'Selo de autoridade máxima no diretório', 'Trilha de negócios personalizada']}
+          features={['Tudo do Plano PRO liberado', 'Participação no Menucast oficial', 'Palestra Pitch Destaque', 'Produção de vídeo comercial de elite', 'Trilha de negócios personalizada', 'Acesso livre aos Eventos Oficiais do MDN', '25% em menu Cash']}
         />
       </div>
 

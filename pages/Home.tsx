@@ -40,10 +40,10 @@ export const Home: React.FC = () => {
                 </div>
                 <h1 className="text-5xl md:text-8xl font-black text-brand-dark dark:text-white tracking-tighter leading-[0.9]">
                   Menu de Negócios <br/>
-                  <span className="text-brand-primary italic">sua plataforma de oportunidades.</span>
+                  <span className="text-brand-primary italic">Ecossistema de Economia Colaborativa</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed">
-                  Conectamos você aos melhores produtos, serviços, oportunidades e mentorias locais. Sem taxas, sem burocracia.
+                  Ganhe ao comprar, indicar e fazer negócios dentro da rede.
                 </p>
             </div>
 
@@ -171,43 +171,76 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. COMO FUNCIONA A CONEXÃO LOCAL */}
+      {/* 4. O ECOSSISTEMA DE CRESCIMENTO */}
       <section className="bg-[#0F172A] py-24 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-             <div className="grid lg:grid-cols-2 gap-20 items-center">
+             <div className="grid lg:grid-cols-2 gap-20 items-start">
                 <div className="space-y-12">
                    <div className="space-y-6">
-                      <h2 className="text-4xl md:text-6xl font-black text-white leading-none tracking-tighter uppercase italic">Conexão Local em <br/><span className="text-brand-primary">3 Passos Simples.</span></h2>
-                      <p className="text-slate-400 text-lg font-medium leading-relaxed">Criamos o caminho mais curto entre quem precisa e quem oferece, sem intermediários.</p>
+                      <h2 className="text-4xl md:text-6xl font-black text-white leading-none tracking-tighter uppercase italic">Aqui, você não apenas <br/><span className="text-brand-primary">divulga seu negócio.</span></h2>
+                      <p className="text-slate-400 text-lg font-medium leading-relaxed">
+                        Você organiza, conecta, aprende e cresce dentro de uma economia ativa. <br/>
+                        <span className="text-white font-black italic">Transformamos conexões em negócios e negócios em crescimento.</span>
+                      </p>
                    </div>
                    
-                   <div className="space-y-8">
+                   <div className="space-y-12">
                       {[
-                        { step: '01', title: 'Explore', desc: 'Filtre por categoria, cidade ou palavra-chave para encontrar o que sua região oferece.', icon: Search },
-                        { step: '02', title: 'Conecte', desc: 'Fale direto com o responsável via WhatsApp ou Chat Inteligente. Negocie em tempo real.', icon: MessageCircle },
-                        { step: '03', title: 'Evolua', desc: 'Feche negócios, realize pagamentos sem taxas de plataforma e suba de nível no Menu Club.', icon: Rocket },
+                        { 
+                          icon: '🌍', 
+                          title: 'Menu Pages', 
+                          tagline: 'Sua estrutura digital de posicionamento e conversão',
+                          desc: 'O Menu Pages é sua base estratégica dentro do ecossistema. Com ele, você cria landing pages profissionais, organiza ofertas, capta leads e facilita o contato direto para acelerar o fechamento.' 
+                        },
+                        { 
+                          icon: '📊', 
+                          title: 'Menu CRM', 
+                          tagline: 'Gestão inteligente e controle total do seu negócio',
+                          desc: 'Centralize sua operação. Organize leads, acompanhe negociações, controle o fluxo financeiro e gerencie sua agenda. Mais organização gera previsibilidade e crescimento.' 
+                        },
+                        { 
+                          icon: '🎓', 
+                          title: 'Menu Academy', 
+                          tagline: 'Formação estratégica e crescimento com inteligência',
+                          desc: 'O centro de desenvolvimento do ecossistema. Treinamentos, mentorias semanais, biblioteca de prompts e agentes de IA para otimizar suas vendas e produtividade.' 
+                        },
+                        { 
+                          icon: '🏆', 
+                          title: 'Menu Club', 
+                          tagline: 'O motor da economia colaborativa',
+                          desc: 'Realize negócios B2B, gere oportunidades por indicações e acumule Menu Cash. Quanto mais você se movimenta, mais autoridade e oportunidades você gera na comunidade.' 
+                        },
                       ].map((item, i) => (
                         <div key={i} className="flex gap-8 group">
-                           <div className="text-4xl font-black text-white/10 italic group-hover:text-brand-primary/40 transition-colors">{item.step}</div>
+                           <div className="text-5xl group-hover:scale-110 transition-transform duration-500">{item.icon}</div>
                            <div className="space-y-2">
                               <h4 className="text-xl font-black text-white uppercase italic tracking-tight flex items-center gap-2">
-                                <item.icon className="w-5 h-5 text-brand-primary" /> {item.title}
+                                {item.title}
                               </h4>
-                              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-sm">{item.desc}</p>
+                              <p className="text-brand-primary text-[10px] font-black uppercase tracking-widest">{item.tagline}</p>
+                              <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xl">{item.desc}</p>
                            </div>
                         </div>
                       ))}
                    </div>
                 </div>
 
-                <div className="relative">
-                   <div className="aspect-square bg-gradient-to-br from-brand-primary/20 to-indigo-600/20 rounded-[4rem] animate-float relative overflow-hidden border border-white/5 flex items-center justify-center">
-                      <div className="p-12 text-center space-y-6">
+                <div className="lg:sticky lg:top-24 space-y-12">
+                   <div className="aspect-square bg-gradient-to-br from-brand-primary/20 to-indigo-600/20 rounded-[4rem] relative overflow-hidden border border-white/5 flex items-center justify-center p-12">
+                      <div className="text-center space-y-8">
                          <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto border border-white/10">
-                            <Zap className="w-12 h-12 text-brand-primary fill-current" />
+                            <Rocket className="w-12 h-12 text-brand-primary fill-current" />
                          </div>
-                         <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none italic">Acelerando a <br/>Economia Local</h3>
-                         <Link to="/register" className="bg-white text-gray-900 px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all">COMEÇAR AGORA</Link>
+                         <div className="space-y-4">
+                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none italic">🚀 O Resultado</h3>
+                            <p className="text-slate-300 font-bold text-sm leading-relaxed">
+                               Posicionamento + Gestão + Economia Interna + Capacitação Inteligente
+                            </p>
+                            <p className="text-slate-400 text-xs font-medium">
+                               Criamos um ambiente onde empreendedores fortalecem empreendedores. Isso não é apenas uma plataforma. É um ecossistema colaborativo de crescimento estruturado.
+                            </p>
+                         </div>
+                         <Link to="/register" className="inline-block bg-white text-gray-900 px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-2xl">COMEÇAR AGORA</Link>
                       </div>
                    </div>
                 </div>
