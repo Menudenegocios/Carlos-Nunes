@@ -5,7 +5,8 @@ export interface User {
   email: string;
   plan: 'profissionais' | 'freelancers' | 'negocios';
   points: number;
-  level: 'bronze' | 'prata' | 'ouro';
+  level: 'elite' | 'bronze' | 'ouro' | 'diamante';
+  menuCash: number;
   referralCode: string;
   referralsCount: number;
   role?: 'user' | 'admin';

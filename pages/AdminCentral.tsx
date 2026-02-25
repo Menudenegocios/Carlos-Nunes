@@ -111,6 +111,7 @@ export const AdminCentral: React.FC = () => {
         plan: (profile as any).plan || 'profissionais',
         points: (profile as any).points || 0,
         level: (profile as any).level || 'bronze',
+        menuCash: (profile as any).menuCash || 0,
         referralCode: (profile as any).referralCode || '',
         referralsCount: (profile as any).referralsCount || 0,
         role: 'user'

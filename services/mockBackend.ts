@@ -58,7 +58,8 @@ export const mockBackend = {
       email: userData.email || '',
       plan: userData.plan || 'profissionais',
       points: userData.points || 0,
-      level: 'bronze',
+      level: 'elite',
+      menuCash: 0,
       referralCode: `REF_${newUserId.toUpperCase()}`,
       referralsCount: 0,
       role: 'user'

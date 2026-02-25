@@ -53,7 +53,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           email: data.email || '',
           plan: data.plan || 'profissionais',
           points: data.points || 0,
-          level: data.level || 'bronze',
+          level: data.level || 'elite',
+          menuCash: data.menu_cash || 0,
           referralCode: data.referral_code || '',
           referralsCount: data.referrals_count || 0,
           role: data.role || 'user'
@@ -105,12 +106,24 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           if (impersonated) {
             const adminUser = user || { id: ADMIN_USER_ID, role: 'admin' } as any;
             setRealAdmin(adminUser);
-            setUser(JSON.parse(impersonated));
+            const parsed = JSON.parse(impersonated);
+            setUser({
+              ...parsed,
+              menuCash: parsed.menuCash || 0,
+              level: parsed.level || 'bronze'
+            });
             setIsImpersonating(true);
           }
         } else {
           const savedDemo = localStorage.getItem('menu_demo_user');
-          if (savedDemo) setUser(JSON.parse(savedDemo));
+          if (savedDemo) {
+            const parsed = JSON.parse(savedDemo);
+            setUser({
+              ...parsed,
+              menuCash: parsed.menuCash || 0,
+              level: parsed.level || 'bronze'
+            });
+          }
           setIsLoading(false);
         }
       } catch (e) {
@@ -133,6 +146,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         plan: 'negocios',
         points: 9999,
         level: 'ouro',
+        menuCash: 500,
         referralCode: 'ADMIN_NUNES',
         referralsCount: 100,
         role: 'admin'
@@ -149,18 +163,19 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       const mockUsers = JSON.parse(savedMockUsers);
       const foundMock = mockUsers.find((u: any) => u.email.toLowerCase() === cleanEmail && u.password === cleanPass);
       
-      if (foundMock) {
-        const mockSessionUser: User = {
-          id: foundMock.id,
-          name: foundMock.name,
-          email: foundMock.email,
-          plan: foundMock.plan,
-          points: foundMock.points,
-          level: foundMock.level,
-          referralCode: foundMock.referralCode,
-          referralsCount: foundMock.referralsCount,
-          role: foundMock.role
-        };
+        if (foundMock) {
+          const mockSessionUser: User = {
+            id: foundMock.id,
+            name: foundMock.name,
+            email: foundMock.email,
+            plan: foundMock.plan,
+            points: foundMock.points,
+            level: foundMock.level,
+            menuCash: foundMock.menuCash || 0,
+            referralCode: foundMock.referralCode,
+            referralsCount: foundMock.referralsCount,
+            role: foundMock.role
+          };
         setUser(mockSessionUser);
         localStorage.setItem('menu_demo_user', JSON.stringify(mockSessionUser));
         setIsLoading(false);
@@ -180,7 +195,16 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const loginAsDemo = () => {
     const demoUser: User = {
-      id: DEMO_USER_ID, name: 'Empreendedor Demo', email: 'demo@menu.com', plan: 'negocios', points: 2500, level: 'ouro', referralCode: 'MENU777', referralsCount: 12, role: 'user'
+      id: DEMO_USER_ID, 
+      name: 'Empreendedor Demo', 
+      email: 'demo@menu.com', 
+      plan: 'negocios', 
+      points: 2500, 
+      level: 'bronze', 
+      menuCash: 150,
+      referralCode: 'MENU777', 
+      referralsCount: 12, 
+      role: 'user'
     };
     setUser(demoUser);
     localStorage.setItem('menu_demo_user', JSON.stringify(demoUser));
