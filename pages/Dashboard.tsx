@@ -70,6 +70,12 @@ export const Dashboard: React.FC = () => {
     return '5%';
   };
 
+  const planNames: Record<string, string> = {
+    profissionais: 'Básico',
+    freelancers: 'Premium',
+    negocios: 'Pro'
+  };
+
   if (!user) return null;
 
   return (
@@ -122,7 +128,7 @@ export const Dashboard: React.FC = () => {
               <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/30">
                 {getCashbackPercent()} Cashback Ativo
               </div>
-              <p className="text-xs text-slate-400 font-medium italic">Plano {user.plan}</p>
+              <p className="text-xs text-slate-400 font-medium italic">Plano {planNames[user.plan]}</p>
             </div>
           </div>
           <Coins className="absolute -bottom-6 -right-6 w-32 h-32 text-emerald-500/5 rotate-12 group-hover:scale-110 transition-transform duration-700" />

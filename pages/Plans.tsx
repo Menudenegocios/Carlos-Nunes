@@ -13,6 +13,10 @@ export const Plans: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'semestral' | 'anual'>('semestral');
 
   const handleSubscribe = async (plan: 'profissionais' | 'freelancers' | 'negocios') => {
+    if (plan === 'negocios') {
+      window.open('https://wa.me/5511999999999?text=Olá! Gostaria de agendar uma reunião para saber mais sobre o Plano Pro.', '_blank');
+      return;
+    }
     if (!user) return;
     setLoading(plan);
     try {
@@ -28,7 +32,7 @@ export const Plans: React.FC = () => {
   };
 
   const PlanCard = ({ 
-    type, title, subtitle, pixPrice, installments, oldPrice, features, recommended = false, icon: Icon, color, btnText, planKey, period = "semestral"
+    type, title, subtitle, pixPrice, installments, oldPrice, features, recommended = false, icon: Icon, color, btnText, planKey, period = "semestral", isContactOnly = false
   }: any) => (
     <div className={`relative flex flex-col p-10 rounded-[3.5rem] border transition-all duration-500 ${recommended ? 'border-brand-primary bg-[#0F172A] text-white shadow-2xl scale-105 z-10' : 'border-gray-100 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-lg hover:shadow-xl hover:-translate-y-2'}`}>
       {recommended && (
@@ -46,14 +50,23 @@ export const Plans: React.FC = () => {
       </div>
       
       <div className="mb-12 flex flex-col">
-         <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>
-         <div className="flex items-baseline gap-1">
-            <span className="text-5xl font-black tracking-tighter italic">{installments}</span>
-            <span className={`text-[10px] font-black uppercase tracking-widest ${recommended ? 'text-slate-500' : 'text-gray-400'}`}>/{period}</span>
-         </div>
-         <p className={`mt-3 text-sm font-bold ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
-            ou R$ {pixPrice} à vista no Pix
-         </p>
+         {isContactOnly ? (
+           <div className="h-[104px] flex flex-col justify-center">
+             <span className="text-3xl font-black uppercase italic tracking-tighter text-brand-primary">Agendar Reunião</span>
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Consultoria Personalizada</p>
+           </div>
+         ) : (
+           <>
+             <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>
+             <div className="flex items-baseline gap-1">
+                <span className="text-5xl font-black tracking-tighter italic">{installments}</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${recommended ? 'text-slate-500' : 'text-gray-400'}`}>/{period}</span>
+             </div>
+             <p className={`mt-3 text-sm font-bold ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                ou R$ {pixPrice} à vista no Pix
+             </p>
+           </>
+         )}
       </div>
 
       <ul className="flex-1 space-y-6 mb-12">
@@ -148,14 +161,14 @@ export const Plans: React.FC = () => {
         />
         <PlanCard
           type="ALTA PERFORMANCE" 
-          title="Plano PRO" 
+          title="Plano Premium" 
           planKey="freelancers" 
           oldPrice={billingCycle === 'semestral' ? "897" : "1.297"} 
           pixPrice={billingCycle === 'semestral' ? "497" : "697"} 
           installments={billingCycle === 'semestral' ? "12x R$ 49,90" : "12x R$ 69,90"} 
           icon={Briefcase} 
           color="text-brand-primary" 
-          btnText="QUERO SER PRO" 
+          btnText="QUERO SER PREMIUM" 
           recommended={true}
           period={billingCycle}
           subtitle="Acelere suas vendas com catálogo completo, CRM de gestão e destaque prioritário nas buscas regionais."
@@ -163,17 +176,18 @@ export const Plans: React.FC = () => {
         />
         <PlanCard
           type="DOMINAÇÃO TOTAL" 
-          title="Plano Business" 
+          title="Plano Pro" 
           planKey="negocios" 
           oldPrice={billingCycle === 'semestral' ? "2.997" : "3.497"} 
           pixPrice={billingCycle === 'semestral' ? "1.497" : "1.790"} 
           installments={billingCycle === 'semestral' ? "12x R$ 149,90" : "12x R$ 179,90"} 
           icon={Store} 
           color="text-emerald-500" 
-          btnText="ATIVAR BUSINESS"
+          btnText="AGENDAR REUNIÃO"
           period={billingCycle}
+          isContactOnly={true}
           subtitle="Consultoria estratégica personalizada e produção de conteúdo de elite para marcas que querem dominar o bairro."
-          features={['Tudo do Plano PRO liberado', 'Participação no Menucast oficial', 'Palestra Pitch Destaque', 'Produção de vídeo comercial de elite', 'Trilha de negócios personalizada', 'Acesso livre aos Eventos Oficiais do MDN', '25% em menu Cash']}
+          features={['Tudo do Plano Premium liberado', 'Participação no Menucast oficial', 'Palestra Pitch Destaque', 'Produção de vídeo comercial de elite', 'Trilha de negócios personalizada', 'Acesso livre aos Eventos Oficiais do MDN', '25% em menu Cash']}
         />
       </div>
 

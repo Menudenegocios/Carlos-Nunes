@@ -45,6 +45,12 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const isActive = (path: string) => location.pathname === path;
 
+  const planNames: Record<string, string> = {
+    profissionais: 'Básico',
+    freelancers: 'Premium',
+    negocios: 'Pro'
+  };
+
   return (
     <div className="flex h-screen bg-brand-surface dark:bg-brand-dark overflow-hidden transition-colors duration-300 font-sans">
       
@@ -75,7 +81,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
           <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-between px-2' : 'justify-center'}`}>
             <div className="flex items-center gap-3 overflow-hidden">
               <Link to="/" className="flex items-center">
-                 <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "sm" : "xs"} />
+                 <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "sm" : "xs"} forceWhite={theme === 'dark'} />
               </Link>
             </div>
             
@@ -154,7 +160,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
            <div className="flex items-center gap-4">
               <div className="hidden sm:flex flex-col text-right">
                  <span className="text-[11px] font-black text-brand-dark dark:text-white leading-none">{user.name}</span>
-                 <span className="text-[9px] text-[#F67C01] font-black tracking-widest mt-1 uppercase">{user.plan}</span>
+                 <span className="text-[9px] text-[#F67C01] font-black tracking-widest mt-1 uppercase">{planNames[user.plan]}</span>
               </div>
               <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-slate-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform">
                 {user.name.charAt(0)}

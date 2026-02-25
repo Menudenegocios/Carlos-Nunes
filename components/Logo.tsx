@@ -30,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'full', si
   // Cor oficial fornecida pelo usuário: #F67C01
   const brandOrange = "#F67C01";
   const iconColor = forceWhite ? "#FFFFFF" : brandOrange;
-  const topTextColor = forceWhite ? "#FFFFFF" : "#000000"; 
+  const topTextColor = forceWhite ? "#FFFFFF" : "var(--brand-text)"; 
   const bottomTextColor = forceWhite ? "#FFFFFF" : brandOrange;
 
   return (

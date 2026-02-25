@@ -7,6 +7,7 @@
   --color-brand-surface: #F8FAFC;
   --color-brand-dark: #0F172A;
   --color-brand-contrast: #1E293B;
+  --color-brand-text: #000000;
   
   --font-sans: "Raleway", ui-sans-serif, system-ui, sans-serif;
   
@@ -24,10 +25,22 @@
 }
 
 @layer base {
+  :root {
+    --brand-text: #000000;
+    --bg-main: #F8FAFC;
+    --text-main: #1E293B;
+  }
+
+  .dark {
+    --brand-text: #FFFFFF;
+    --bg-main: #020617;
+    --text-main: #F8FAFC;
+  }
+
   body { 
     font-family: 'Raleway', sans-serif; 
-    background-color: #F8FAFC;
-    color: #1E293B;
+    background-color: var(--bg-main);
+    color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 }

@@ -31,7 +31,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-brand-dark/80 backdrop-blur-md border-b border-brand-secondary/20 shadow-sm transition-colors">
         <div className="max-w-[1600px] mx-auto px-8 flex justify-between items-center h-24">
           <Link to="/" className="group flex-shrink-0">
-            <Logo size="sm" />
+            <Logo size="sm" forceWhite={theme === 'dark'} />
           </Link>
 
           <nav className="hidden xl:flex items-center gap-12">
