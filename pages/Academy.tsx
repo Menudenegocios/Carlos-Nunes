@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
 import { 
   Play, Star, X, Award, CheckCircle, GraduationCap, 
-  Video, Map, Sparkles, Target,
+  Video, Map, Sparkles, Target, Image,
   Monitor, Layers, Zap, Bot, Home as HomeIcon,
   PlayCircle, RefreshCw, ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp,
   ChevronRight, Clock, Users, BookOpen, MessageSquare, Smartphone
@@ -281,53 +281,52 @@ export const Academy: React.FC = () => {
 
         {activeTab === 'biblioteca' && (
            <div className="space-y-12 px-4">
-              <div className="bg-gradient-to-br from-indigo-900 via-brand-dark to-purple-900 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/5">
-                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="space-y-8 max-w-2xl">
-                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary/20 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary border border-brand-primary/20">
-                          <Sparkles className="w-4 h-4" /> Material Exclusivo
-                       </div>
-                       <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.9]">
-                          Scripts de <br/>
-                          <span className="text-brand-primary">Alta Conversão</span>
-                       </h2>
-                       <p className="text-slate-300 text-lg font-medium leading-relaxed">
-                          Acesse nossa biblioteca completa de scripts validados para WhatsApp, ligações e reuniões presenciais. Copie e cole o que funciona para os maiores players do mercado.
-                       </p>
-                       <a 
-                        href="https://www.notion.so/16c055f18fde8002b658ea22e1bbf29a?v=16c055f18fde81eca778000ce9f09c73" 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 bg-brand-primary text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-[0_20px_40px_rgba(246,124,1,0.3)] active:scale-95"
-                       >
-                          ACESSAR BIBLIOTECA NO NOTION <ExternalLink className="w-5 h-5" />
-                       </a>
-                    </div>
-                    <div className="relative hidden lg:block">
-                       <div className="w-72 h-72 bg-brand-primary/20 rounded-full blur-[100px] absolute inset-0 animate-pulse"></div>
-                       <div className="relative bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
-                          <BookOpen className="w-40 h-40 text-brand-primary opacity-80" />
-                       </div>
-                    </div>
-                 </div>
-                 
-                 {/* Decorative elements */}
-                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-[100px]"></div>
-                 <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-purple-600/20 rounded-full blur-[80px]"></div>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                  {[
-                    { title: 'Scripts de WhatsApp', icon: MessageSquare, desc: 'Modelos prontos para abordagem, quebra de objeções e fechamento.' },
-                    { title: 'Roteiros de Reunião', icon: Users, desc: 'Estrutura passo a passo para apresentações comerciais de alto impacto.' },
-                    { title: 'E-mails Persuasivos', icon: Smartphone, desc: 'Sequências de nutrição e reativação de leads inativos.' }
+                    { 
+                      title: 'Scripts de Alta Conversão', 
+                      role: 'Copywriting Comercial',
+                      icon: ListChecks, 
+                      desc: 'Modelos validados para WhatsApp, ligações e reuniões presenciais para fechar mais negócios.',
+                      url: 'https://www.notion.so/16c055f18fde8002b658ea22e1bbf29a?v=16c055f18fde81eca778000ce9f09c73',
+                      color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
+                    },
+                    { 
+                      title: 'Prompts para Imagem', 
+                      role: 'Design com IA',
+                      icon: Image, 
+                      desc: 'Comandos otimizados para criar artes e fotos profissionais para seus anúncios e redes sociais.',
+                      url: '#',
+                      color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30'
+                    },
+                    { 
+                      title: 'Prompts para Vídeo', 
+                      role: 'Produção Audiovisual',
+                      icon: Video, 
+                      desc: 'Roteiros e comandos para gerar vídeos impactantes que prendem a atenção do seu cliente.',
+                      url: '#',
+                      color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/30'
+                    }
                  ].map((item, i) => (
-                    <div key={i} className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all">
-                       <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-950 rounded-2xl flex items-center justify-center mb-6">
-                          <item.icon className="w-7 h-7 text-indigo-600 dark:text-brand-primary" />
+                    <div key={i} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
+                       <div className={`w-20 h-20 rounded-[2rem] ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                          <item.icon className="w-10 h-10" />
                        </div>
-                       <h4 className="text-lg font-black text-gray-900 dark:text-white uppercase italic mb-2 tracking-tight">{item.title}</h4>
-                       <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">{item.desc}</p>
+                       <div>
+                          <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{item.role}</p>
+                          <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{item.title}</h3>
+                       </div>
+                       <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
+                          {item.desc}
+                       </p>
+                       <a 
+                        href={item.url} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
+                       >
+                          ACESSAR AGORA <ExternalLink className="w-3.5 h-3.5" />
+                       </a>
                     </div>
                  ))}
               </div>
