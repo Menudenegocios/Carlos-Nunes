@@ -325,10 +325,11 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
 const LevelsView = ({ user }: { user: User }) => {
   const levels = [
-    { name: 'Elite', points: '200 pts', color: 'bg-indigo-600', criteria: 'Mínimo 1 indicação Direta', description: 'Elite é ativação.', benefits: ['Ativação no ecossistema', 'Acesso ao Menu Club', 'Bio Digital Básica'] },
+    { name: 'Elite', points: '300 pts', color: 'bg-indigo-600', criteria: 'Mínimo 1 indicação Direta', description: 'Elite é ativação.', benefits: ['Ativação no ecossistema', 'Acesso ao Menu Club', 'Bio Digital Básica'] },
     { name: 'Bronze', points: '1.000 pts', color: 'bg-orange-900', criteria: 'Mínimo 3 indicações Diretas', description: 'Bronze é consistência.', benefits: ['Perfil visível no diretório', 'Acesso ao Blog', 'Selo de Membro Bronze'] },
-    { name: 'Ouro', points: '3.000 pts', color: 'bg-yellow-500', criteria: 'Mínimo 5 indicações Diretas', description: 'Ouro é posicionamento.', benefits: ['Destaque Prioritário', 'Selo de Verificado Oficial', 'Acesso ao Menu Academy PRO'] },
-    { name: 'Diamante', points: '10.000 pts', color: 'bg-blue-500', criteria: 'Mínimo 10 indicações Diretas', description: 'Diamante é autoridade.', benefits: ['Autoridade Máxima', 'Destaque Prioritário Máximo', 'Mentoria Individual'] }
+    { name: 'Prata', points: '2.000 pts', color: 'bg-slate-400', criteria: 'Mínimo 5 indicações Diretas', description: 'Prata é engajamento.', benefits: ['Maior visibilidade', 'Selo de Membro Prata', 'Acesso a eventos exclusivos'] },
+    { name: 'Ouro', points: '4.000 pts', color: 'bg-yellow-500', criteria: 'Mínimo 10 indicações Diretas', description: 'Ouro é posicionamento.', benefits: ['Destaque Prioritário', 'Selo de Verificado Oficial', 'Acesso ao Menu Academy PRO'] },
+    { name: 'Diamante', points: '8.000 pts', color: 'bg-blue-500', criteria: 'Mínimo 20 indicações Diretas', description: 'Diamante é autoridade.', benefits: ['Autoridade Máxima', 'Destaque Prioritário Máximo', 'Mentoria Individual'] }
   ];
 
   return (
@@ -338,7 +339,7 @@ const LevelsView = ({ user }: { user: User }) => {
         <p className="text-slate-500 font-medium">Sua jornada de crescimento e autoridade dentro do ecossistema.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {levels.map((level, i) => (
           <div key={i} className={`bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border-2 shadow-sm transition-all flex flex-col ${user.level.toLowerCase() === level.name.toLowerCase() ? 'border-brand-primary ring-8 ring-brand-primary/5 scale-105 z-10' : 'border-gray-100 dark:border-zinc-800 opacity-60'}`}>
             <div className={`w-14 h-14 rounded-2xl ${level.color} mb-6 flex items-center justify-center text-white shadow-xl`}>
@@ -371,10 +372,9 @@ const LevelsView = ({ user }: { user: User }) => {
 
 const MissionsView = () => {
   const missions = [
-    { title: 'Indicação Direta', desc: 'Traga um novo membro para a rede.', pts: 200, icon: Users },
-    { title: 'Negócio B2B', desc: 'Feche um acordo com outro membro.', pts: 100, icon: Handshake },
-    { title: 'Compra na Store', desc: '1 ponto por cada R$ 1,00 gasto.', pts: '1:1', icon: ShoppingBag },
-    { title: 'Participação em Evento', desc: 'Presença confirmada em eventos oficiais.', pts: 50, icon: Ticket }
+    { title: 'Indicação Plano Básico', desc: 'Traga um novo membro no plano Básico.', pts: 100, icon: Users },
+    { title: 'Indicação Plano PRO', desc: 'Traga um novo membro no plano PRO.', pts: 300, icon: Crown },
+    { title: 'Compras na Vitrine', desc: 'A cada R$ 2,00 em compras = 1 ponto.', pts: '2:1', icon: ShoppingBag }
   ];
 
   return (
