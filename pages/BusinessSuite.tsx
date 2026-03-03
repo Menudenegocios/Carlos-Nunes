@@ -51,7 +51,7 @@ export const BusinessSuite: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">Menu CRM</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">CRM & Vendas</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">O PAINEL DE CONTROLE DO SEU SUCESSO COMERCIAL.</p>
               </div>
@@ -69,7 +69,7 @@ export const BusinessSuite: React.FC = () => {
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                 { id: 'crm', label: 'CRM', desc: 'Funil de leads', icon: Briefcase },
                 { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
-                { id: 'menuzap_pro', label: 'BIBLIOTECA', desc: 'Agentes de IA', icon: Zap }
+                { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
                 <button 
                   key={tab.id} 
@@ -92,7 +92,7 @@ export const BusinessSuite: React.FC = () => {
         {activeTab === 'home' && (
             <SectionLanding 
                 title="Sua central de operações do dia a dia."
-                subtitle="Menu CRM & Vendas"
+                subtitle="CRM & Vendas"
                 description="Organize leads, controle as finanças e gerencie sua agenda em um só lugar. A produtividade que seu negócio precisa para crescer sem perder o controle."
                 benefits={[
                 "Funil de vendas Kanban: visualize sua receita futura.",

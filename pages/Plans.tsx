@@ -144,7 +144,7 @@ export const Plans: React.FC = () => {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start px-4 max-w-5xl mx-auto">
         <PlanCard
           type="ESSENCIAL PARA COMEÇAR" 
           title="Plano Básico" 
@@ -161,33 +161,18 @@ export const Plans: React.FC = () => {
         />
         <PlanCard
           type="ALTA PERFORMANCE" 
-          title="Plano Premium" 
+          title="Plano PRO" 
           planKey="freelancers" 
           oldPrice={billingCycle === 'semestral' ? "897" : "1.297"} 
           pixPrice={billingCycle === 'semestral' ? "497" : "697"} 
           installments={billingCycle === 'semestral' ? "12x R$ 49,90" : "12x R$ 69,90"} 
           icon={Briefcase} 
           color="text-brand-primary" 
-          btnText="QUERO SER PREMIUM" 
+          btnText="QUERO SER PRO" 
           recommended={true}
           period={billingCycle}
           subtitle="Acelere suas vendas com catálogo completo, CRM de gestão e destaque prioritário nas buscas regionais."
           features={['Tudo do Plano Básico incluso', 'Catálogo e loja virtual completa', 'CRM e gestão de vendas profissional', 'Marketplace B2B (anunciar e comprar)', 'Menu Academy PRO (estratégias)', 'Desconto de 50% em eventos']}
-        />
-        <PlanCard
-          type="DOMINAÇÃO TOTAL" 
-          title="Plano Pro" 
-          planKey="negocios" 
-          oldPrice={billingCycle === 'semestral' ? "2.997" : "3.497"} 
-          pixPrice={billingCycle === 'semestral' ? "1.497" : "1.790"} 
-          installments={billingCycle === 'semestral' ? "12x R$ 149,90" : "12x R$ 179,90"} 
-          icon={Store} 
-          color="text-emerald-500" 
-          btnText="AGENDAR REUNIÃO"
-          period={billingCycle}
-          isContactOnly={true}
-          subtitle="Consultoria estratégica personalizada e produção de conteúdo de elite para marcas que querem dominar o bairro."
-          features={['Tudo do Plano Premium liberado', 'Participação no Menucast oficial', 'Palestra Pitch Destaque', 'Produção de vídeo comercial de elite', 'Trilha de negócios personalizada', 'Acesso livre aos Eventos Oficiais do MDN', '25% em menu Cash']}
         />
       </div>
 
