@@ -20,8 +20,8 @@ import { Quotes } from './pages/Quotes';
 import { Reviews } from './pages/Reviews';
 import { Categories } from './pages/Categories';
 import { MyCatalog } from './pages/MyCatalog';
-import { Stores } from './pages/Stores';
 import { StoreView } from './pages/StoreView';
+import { Vitrine } from './pages/Vitrine';
 import { BioBuilder } from './pages/BioBuilder';
 import { BioView } from './pages/BioView';
 import { BusinessSuite } from './pages/BusinessSuite';
@@ -51,7 +51,8 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route element={<Layout children={<Home />} />} path="/" />
       <Route element={<Layout children={<Categories />} />} path="/categories" />
-      <Route element={<Layout children={<Stores />} />} path="/stores" />
+      <Route element={<Navigate to="/vitrine" replace />} path="/stores" />
+      <Route element={<Layout children={<Vitrine />} />} path="/vitrine" />
       <Route element={<Layout children={<StoreView />} />} path="/store/:userId" />
       <Route element={<Layout children={<BioView />} />} path="/bio/:userId" />
       <Route element={<Layout children={<Coupons />} />} path="/coupons" />
@@ -79,6 +80,9 @@ const AppRoutes = () => {
       <Route path="/reviews" element={<PrivateRoute><Reviews /></PrivateRoute>} />
       <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
       <Route path="/admin-central" element={<PrivateRoute><AdminCentral /></PrivateRoute>} />
+      
+      {/* Vanity URL / Slug - Must be last */}
+      <Route element={<Layout children={<StoreView />} />} path="/:slug" />
     </Routes>
   );
 };

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Menuzap Pro - CRM Integration",
+  "version": "1.0.0",
+  "description": "Integração oficial do Menu de Negócios para WhatsApp Web.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "host_permissions": [
+    "https://ais-dev-w2a7jxyi3yzmolfvmfwmxy-13842340585.us-east5.run.app/*"
+  ]
+}

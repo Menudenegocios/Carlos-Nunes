@@ -8,7 +8,7 @@ import {
   Trophy, LogOut, Menu, X, Star, Layout, 
   Store, ChevronLeft, Briefcase, GraduationCap,
   Sun, Moon, Handshake, CreditCard, Sparkles, BookOpen, Settings2,
-  AlertCircle, ChevronRight
+  AlertCircle, ChevronRight, Globe, LayoutGrid
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
@@ -28,14 +28,13 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
-    { label: 'Bio Digital', icon: Smartphone, to: '/bio-builder' },
     // Recursos Restritos
     ...(hasAdvancedAccess ? [
-      { label: 'Menu Pages', icon: Package, to: '/catalog' },
-      { label: 'Menu CRM', icon: Briefcase, to: '/business-suite' },
+      { label: 'Minha Vitrine', icon: Globe, to: '/catalog' },
+      { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite' },
     ] : []),
-    { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
     { label: 'Menu Club', icon: Trophy, to: '/rewards' },
+    { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans' },
   ];
 
@@ -147,7 +146,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               
               <nav className="hidden md:flex items-center gap-8">
                 <Link to="/" className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors">SITE PRINCIPAL</Link>
-                <Link to="/stores" className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors">VITRINE</Link>
               </nav>
 
               <div className="h-6 w-px bg-brand-secondary/10 hidden md:block"></div>

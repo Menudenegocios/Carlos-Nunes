@@ -164,7 +164,7 @@ export const Home: React.FC = () => {
       <section className="max-w-7xl mx-auto w-full px-6 py-32">
         <div className="mb-20 text-center space-y-4">
            <div className="text-brand-primary font-black text-xs uppercase tracking-[0.3em]">4️⃣ OS 4 PILARES DO ECOSSISTEMA</div>
-           <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">A Base do seu <span className="text-brand-primary">Sucesso</span></h2>
+           <h2 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">Ferramentas para o sucesso do seu <span className="text-brand-primary">negócio.</span></h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

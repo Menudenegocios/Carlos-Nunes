@@ -58,14 +58,6 @@ export const Events: React.FC = () => {
         <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
           De workshops técnicos a encontros de networking. Participe dos eventos que estão transformando o mercado local.
         </p>
-        <div className="flex justify-center gap-4">
-           <button className="bg-gray-900 dark:bg-brand-primary text-white px-10 py-4 rounded-2xl font-black text-sm tracking-tight hover:bg-indigo-600 dark:hover:bg-brand-accent transition-all shadow-xl">
-              Ver Calendário
-           </button>
-           <button className="bg-white dark:bg-zinc-800 text-gray-900 dark:text-white border border-gray-100 dark:border-zinc-700 px-10 py-4 rounded-2xl font-black text-sm tracking-tight hover:bg-gray-50 dark:hover:bg-zinc-700 transition-all shadow-sm">
-              Criar Evento
-           </button>
-        </div>
       </section>
 
       {/* 2. FILTERS & GRID */}

@@ -19,7 +19,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { label: 'Início', path: '/' },
     { label: 'Quem Somos', path: '/quem-somos' },
-    { label: 'Vitrine', path: '/stores' },
+    { label: 'Vitrine', path: '/vitrine' },
     { label: 'Marketplace', path: '/marketplace' },
     { label: 'Parceiros', path: '/partners' },
     { label: 'Eventos', path: '/eventos' },
@@ -69,8 +69,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <Link to="/register" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-dark dark:bg-brand-primary text-white hover:opacity-90 transition-all">
-                  Anunciar Grátis
+                <Link to="/login" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-dark dark:bg-brand-primary text-white hover:opacity-90 transition-all">
+                  Login
                 </Link>
               </div>
             )}
@@ -104,7 +104,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div>
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary mb-8">Navegação</h4>
               <ul className="space-y-4 text-sm font-bold text-brand-surface/80">
-                <li><Link to="/stores" className="hover:text-brand-primary transition-colors">Vitrine de Negócios</Link></li>
+                <li><Link to="/vitrine" className="hover:text-brand-primary transition-colors">Vitrine de Negócios</Link></li>
                 <li><Link to="/marketplace" className="hover:text-brand-primary transition-colors">Catálogo de Produtos</Link></li>
                 <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Eventos & Experiências</Link></li>
                 <li><Link to="/blog" className="hover:text-brand-primary transition-colors">Insights & Dicas</Link></li>
@@ -168,7 +168,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   {theme === 'light' ? <><Moon className="w-6 h-6" /> Modo Escuro</> : <><Sun className="w-6 h-6 text-brand-accent" /> Modo Claro</>}
                </button>
                {!user ? (
-                 <Link to="/register" className="w-full bg-brand-dark dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Anunciar Grátis</Link>
+                 <Link to="/login" className="w-full bg-brand-dark dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Login</Link>
                ) : (
                  <Link to="/dashboard" className="w-full bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
                )}

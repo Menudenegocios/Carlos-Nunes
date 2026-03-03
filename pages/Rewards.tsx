@@ -59,8 +59,8 @@ export const Rewards: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
-                  { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
                   { id: 'missions', label: 'PONTOS', desc: 'Ganhar pontos', icon: ListTodo },
+                  { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
                   { id: 'match', label: 'MENU CASH', desc: 'Parcerias B2B', icon: Handshake },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
@@ -199,13 +199,12 @@ const B2BMatchView = ({ user }: { user: User }) => {
                 <p className="text-gray-500 dark:text-zinc-400 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
                 
                 <div className="space-y-4">
-                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Como funciona:</p>
+                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Regras de Cashback por Nível:</p>
                    <div className="grid grid-cols-1 gap-3">
                       {[
-                        "Compra na plataforma → recebe cashback",
-                        "Indica novo membro → ganha pontos",
-                        "Fecha negócio B2B → ganha pontos",
-                        "Usa Menu Cash para pagar serviços internos"
+                        "Bronze: 5% de cashback",
+                        "Ouro: 10% de cashback",
+                        "Diamante: 20% de cashback + Anunciar na Menu Store"
                       ].map((text, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
                            <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}

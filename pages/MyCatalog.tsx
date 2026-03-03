@@ -238,7 +238,7 @@ export const MyCatalog: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                MENU PAGES
+                MINHA VITRINE
               </h2>
               <p className="text-slate-400 text-xs font-bold tracking-[0.1em] mt-2">Sua vitrine inteligente.</p>
             </div>
@@ -257,7 +257,7 @@ export const MyCatalog: React.FC = () => {
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
             { id: 'blog', label: 'Blog', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
-            { id: 'landing', label: 'Landing Page', desc: 'Especialista', icon: Smartphone },
+            { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
@@ -440,8 +440,36 @@ export const MyCatalog: React.FC = () => {
             {activeSubTab === 'landing' && (
                 <div className="max-w-4xl mx-auto space-y-12">
                    <div className="flex justify-between items-center">
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Configuração da Landing Page</h3>
-                      <button onClick={() => handleProfileSave(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR & PUBLICAR</button>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase">Configurações da Vitrine</h3>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800 px-6 py-3 rounded-2xl border border-gray-100 dark:border-zinc-700">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expor na Vitrine?</span>
+                          <button 
+                            onClick={() => setProfile(prev => ({ ...prev, isPublished: !prev.isPublished }))}
+                            className={`w-12 h-6 rounded-full transition-all relative ${profile.isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${profile.isPublished ? 'left-7' : 'left-1'}`} />
+                          </button>
+                        </div>
+                        <button onClick={() => handleProfileSave(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR & PUBLICAR</button>
+                      </div>
+                   </div>
+
+                   <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Globe className="w-5 h-5" /> Link Personalizado (Slug)</h4>
+                      <div className="flex items-center bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-zinc-700">
+                        <div className="bg-gray-100 dark:bg-zinc-800 px-6 py-4 flex items-center text-slate-400 font-bold text-sm border-r border-gray-200 dark:border-zinc-700">
+                          https://menudenegocios.com/
+                        </div>
+                        <input 
+                          type="text" 
+                          className="flex-1 bg-transparent border-none p-4 font-black text-indigo-600 dark:text-brand-primary outline-none" 
+                          value={profile.slug || ''} 
+                          onChange={e => setProfile({...profile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} 
+                          placeholder="seu-nome-ou-negocio" 
+                        />
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Este será o seu link público oficial para compartilhar com clientes.</p>
                    </div>
 
                    <div className="space-y-6 bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem]">

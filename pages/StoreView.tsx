@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export const StoreView: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId, slug } = useParams<{ userId?: string, slug?: string }>();
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,8 +32,8 @@ export const StoreView: React.FC = () => {
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
   useEffect(() => {
-    if (userId) loadStoreData();
-  }, [userId]);
+    if (userId || slug) loadStoreData();
+  }, [userId, slug]);
 
   useEffect(() => {
     const banners = profile?.storeConfig?.bannerImages || [];
@@ -46,23 +46,31 @@ export const StoreView: React.FC = () => {
   }, [profile]);
 
   const loadStoreData = async () => {
-    if (!userId) return;
+    const identifier = userId || slug;
+    if (!identifier) return;
     try {
-      const [prof, prods, cats, allPosts, vitrineComments] = await Promise.all([
-        mockBackend.getProfile(userId),
-        mockBackend.getProducts(userId),
-        mockBackend.getStoreCategories(userId),
+      const prof = await mockBackend.getProfile(identifier);
+      if (!prof) {
+        setLoading(false);
+        return;
+      }
+
+      setProfile(prof);
+      const targetUserId = prof.userId;
+
+      const [prods, cats, allPosts, vitrineComments] = await Promise.all([
+        mockBackend.getProducts(targetUserId),
+        mockBackend.getStoreCategories(targetUserId),
         mockBackend.getBlogPosts(),
-        mockBackend.getVitrineComments(userId)
+        mockBackend.getVitrineComments(targetUserId)
       ]);
-      setProfile(prof || null);
       setProducts(prods);
       setCategories(cats);
       setComments(vitrineComments);
       
       // Lógica "Top 3" Artigos Recentes
       const userPosts = allPosts
-        .filter(p => p.userId === userId)
+        .filter(p => p.userId === targetUserId)
         .sort((a, b) => {
             // Fix: accessing created_at which is now defined in BlogPost interface
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -78,19 +86,19 @@ export const StoreView: React.FC = () => {
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !commentText.trim() || !userId) return;
+    if (!user || !commentText.trim() || !profile) return;
 
     setIsSubmittingComment(true);
     try {
         await mockBackend.addVitrineComment({
-            vitrineUserId: userId,
+            vitrineUserId: profile.userId,
             userId: user.id,
             userName: user.name,
             userAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
             content: commentText
         });
         setCommentText('');
-        const updatedComments = await mockBackend.getVitrineComments(userId);
+        const updatedComments = await mockBackend.getVitrineComments(profile.userId);
         setComments(updatedComments);
     } catch (err) {
         alert('Erro ao enviar comentário.');
@@ -116,22 +124,22 @@ export const StoreView: React.FC = () => {
         {/* 1. HERO SLIDER BANNER */}
         <div className="relative h-[60vh] lg:h-[70vh] w-full overflow-hidden bg-slate-900">
             {bannerImages.map((img, idx) => (
-                <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentBannerIdx ? 'opacity-60' : 'opacity-0'}`}>
+                <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === currentBannerIdx ? 'opacity-100' : 'opacity-0'}`}>
                     <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx}`} />
                 </div>
             ))}
             <div className="absolute inset-0 bg-gradient-to-t from-[#F8FAFC] dark:from-[#020617] via-transparent to-black/20"></div>
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full max-w-7xl px-8 flex flex-col md:flex-row items-end justify-between gap-8 animate-fade-in">
                 <div className="flex items-center gap-8 text-center md:text-left">
-                   <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full border-[8px] border-white dark:border-zinc-900 bg-white shadow-2xl overflow-hidden flex-shrink-0">
+                   <div className="w-32 h-32 lg:w-44 lg:h-44 rounded-full border-[8px] border-white dark:border-zinc-900 bg-white shadow-2xl overflow-hidden flex-shrink-0">
                       <img src={profile.logoUrl} className="w-full h-full object-cover" />
                    </div>
                    <div className="space-y-2">
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                            <span className="bg-brand-dark text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
+                            <span className="bg-[#0F172A] text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
                         </div>
-                        <h1 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">{profile.businessName}</h1>
-                        <p className="text-xl font-bold text-brand-dark dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'Membro Elite'}</p>
+                        <h1 className="text-5xl lg:text-7xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter leading-none">{profile.businessName}</h1>
+                        <p className="text-2xl font-bold text-[#0F172A] dark:text-brand-primary uppercase italic tracking-tight">{profile.category || 'VENDAS'}</p>
                    </div>
                 </div>
             </div>
@@ -139,7 +147,7 @@ export const StoreView: React.FC = () => {
 
         {/* 2. TAB NAVIGATION */}
         <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-[110]">
-            <div className="bg-white dark:bg-zinc-900 p-2 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-zinc-800 flex gap-2 overflow-x-auto scrollbar-hide">
+            <div className="bg-white dark:bg-zinc-900 p-2 rounded-full shadow-2xl border border-gray-100 dark:border-zinc-800 flex gap-2 overflow-x-auto scrollbar-hide">
                 {[
                     { id: 'inicio', label: 'Início', icon: Info },
                     { id: 'produtos', label: 'Produtos', icon: Package },
@@ -149,9 +157,9 @@ export const StoreView: React.FC = () => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-3 px-8 py-4 rounded-[1.8rem] transition-all whitespace-nowrap ${
+                        className={`flex items-center gap-3 px-10 py-4 rounded-full transition-all whitespace-nowrap ${
                             activeTab === tab.id 
-                            ? 'bg-brand-dark text-white shadow-xl scale-105' 
+                            ? 'bg-[#0F172A] text-white shadow-xl scale-105' 
                             : 'text-slate-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
                         }`}
                     >
@@ -172,8 +180,8 @@ export const StoreView: React.FC = () => {
                             {/* SOBRE */}
                             <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Info className="w-5 h-5" /></div>
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Sobre o Profissional</h2>
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-[#0F172A]"><Info className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter">Sobre o Profissional</h2>
                                 </div>
                                 <p className="text-lg text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
                                     "{profile.storeConfig?.aboutMe || profile.bio || 'Bem-vindo ao meu perfil profissional.'}"
@@ -183,8 +191,8 @@ export const StoreView: React.FC = () => {
                             {/* PROBLEMAS QUE RESOLVO */}
                             <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Target className="w-5 h-5" /></div>
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Problemas que resolvo</h2>
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-[#0F172A]"><Target className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter">Problemas que resolvo</h2>
                                 </div>
                                 <div className="space-y-4">
                                     {(profile.storeConfig?.problemsSolved || 'Soluções estratégicas para seu negócio.').split('\n').map((item, i) => (
@@ -199,13 +207,13 @@ export const StoreView: React.FC = () => {
                             {/* SOLUÇÕES E SERVIÇOS */}
                             <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><ListTodo className="w-5 h-5" /></div>
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Soluções & Serviços</h2>
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-[#0F172A]"><ListTodo className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter">Soluções & Serviços</h2>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {(profile.storeConfig?.solutions || 'Consultoria, Gestão, Treinamento.').split(',').map((item, i) => (
                                         <div key={i} className="p-5 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-zinc-800 flex items-center gap-4 group hover:bg-slate-100 dark:hover:bg-slate-800/20 transition-all">
-                                            <div className="w-7 h-7 bg-white dark:bg-zinc-900 rounded-lg flex items-center justify-center text-brand-dark shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
+                                            <div className="w-7 h-7 bg-white dark:bg-zinc-900 rounded-lg flex items-center justify-center text-[#0F172A] shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
                                             <span className="font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-zinc-400">{item.trim()}</span>
                                         </div>
                                     ))}
@@ -215,8 +223,8 @@ export const StoreView: React.FC = () => {
                             {/* INTERESSES DE NEGÓCIO */}
                             <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><Handshake className="w-5 h-5" /></div>
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Interesses de Negócio</h2>
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-[#0F172A]"><Handshake className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter">Interesses de Negócio</h2>
                                 </div>
                                 <p className="text-lg text-gray-600 dark:text-zinc-400 font-medium leading-relaxed italic">
                                     "{profile.storeConfig?.businessInterests || 'Aberto a novas conexões e parcerias estratégicas.'}"
@@ -226,8 +234,8 @@ export const StoreView: React.FC = () => {
                             {/* COMENTÁRIOS */}
                             <section className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-brand-dark"><MessageSquare className="w-5 h-5" /></div>
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">O que dizem sobre mim</h2>
+                                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center text-[#0F172A]"><MessageSquare className="w-5 h-5" /></div>
+                                    <h2 className="text-2xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter">O que dizem sobre mim</h2>
                                 </div>
                                 
                                 {user ? (
@@ -235,14 +243,14 @@ export const StoreView: React.FC = () => {
                                         <textarea 
                                             required
                                             placeholder="DEIXE SEU COMENTÁRIO OU DEPOIMENTO..."
-                                            className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-3xl p-6 font-bold text-sm dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-dark/20 transition-all min-h-[120px]"
+                                            className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-3xl p-6 font-bold text-sm dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#0F172A]/20 transition-all min-h-[120px]"
                                             value={commentText}
                                             onChange={e => setCommentText(e.target.value)}
                                         />
                                         <button 
                                             type="submit"
                                             disabled={isSubmittingComment}
-                                            className="px-10 py-4 bg-brand-dark text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50"
+                                            className="px-10 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50"
                                         >
                                             {isSubmittingComment ? 'ENVIANDO...' : 'PUBLICAR COMENTÁRIO'}
                                         </button>
@@ -282,10 +290,10 @@ export const StoreView: React.FC = () => {
                             {blogPosts.length > 0 && (
                                 <section className="space-y-10">
                                     <div className="flex items-center justify-between">
-                                        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
-                                            <BookOpen className="w-6 h-6 text-brand-dark" /> Insights Recentes
+                                        <h2 className="text-3xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tighter flex items-center gap-3">
+                                            <BookOpen className="w-6 h-6 text-[#0F172A]" /> Insights Recentes
                                         </h2>
-                                        <Link to="/blog" className="text-[10px] font-black text-brand-dark uppercase tracking-widest hover:underline flex items-center gap-2 group">
+                                        <Link to="/blog" className="text-[10px] font-black text-[#0F172A] uppercase tracking-widest hover:underline flex items-center gap-2 group">
                                             VER TODOS OS ARTIGOS <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                         </Link>
                                     </div>
@@ -296,8 +304,8 @@ export const StoreView: React.FC = () => {
                                                     <img src={post.imageUrl || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                                 </div>
                                                 <div className="flex-1 flex flex-col justify-center">
-                                                    <span className="text-[9px] font-black text-brand-dark uppercase tracking-widest mb-2">{post.category}</span>
-                                                    <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-brand-dark transition-colors mb-2">{post.title}</h4>
+                                                    <span className="text-[9px] font-black text-[#0F172A] uppercase tracking-widest mb-2">{post.category}</span>
+                                                    <h4 className="text-xl font-black text-[#0F172A] dark:text-white uppercase italic tracking-tight leading-tight group-hover:text-[#0F172A] transition-colors mb-2">{post.title}</h4>
                                                     <p className="text-sm text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-4">{post.summary}</p>
                                                     <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
                                                         <Calendar className="w-3 h-3" /> {post.date} • Ler Artigo
@@ -407,7 +415,7 @@ export const StoreView: React.FC = () => {
                     <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 shadow-xl border border-gray-100 dark:border-zinc-800 sticky top-12">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 text-center italic">Canais Oficiais</h4>
                         <div className="space-y-4">
-                            <a href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}`} target="_blank" className="w-full py-5 bg-emerald-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95">
+                            <a href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}`} target="_blank" className="w-full py-5 bg-[#00A884] text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95">
                                 <MessageCircle className="w-5 h-5" /> FALAR NO WHATSAPP
                             </a>
                             <div className="grid grid-cols-2 gap-3">
@@ -419,14 +427,14 @@ export const StoreView: React.FC = () => {
                                 )}
                                 {profile.socialLinks?.website && (
                                     <a href={profile.socialLinks.website} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
-                                        <Globe className="w-6 h-6 text-brand-dark group-hover:scale-110 transition-transform" />
+                                        <Globe className="w-6 h-6 text-[#0F172A] group-hover:scale-110 transition-transform" />
                                         <span className="text-[9px] font-black uppercase text-slate-400">Website</span>
                                     </a>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <div className="bg-brand-dark rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
+                    <div className="bg-[#0F172A] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
                         <Award className="w-12 h-12 mx-auto text-brand-primary" />
                         <h4 className="text-xl font-black uppercase italic tracking-tighter">Membro Verificado <br/>Menu de Negócios</h4>
                         <ShieldCheck className="absolute top-0 right-0 w-24 h-24 text-white/10 -mr-8 -mt-8" />
@@ -437,7 +445,7 @@ export const StoreView: React.FC = () => {
 
         {/* 4. LEAD CAPTURE FORM (BOTTOM) */}
         <div className="max-w-7xl mx-auto px-8 mt-16">
-            <section className="bg-brand-dark rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden">
+            <section className="bg-[#0F172A] rounded-[2.5rem] p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                 
                 <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
@@ -455,7 +463,7 @@ export const StoreView: React.FC = () => {
                         <div className="flex items-center gap-4 pt-2">
                             <div className="flex -space-x-3">
                                 {[1,2,3].map(i => (
-                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-brand-dark bg-slate-800 overflow-hidden">
+                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0F172A] bg-slate-800 overflow-hidden">
                                         <img src={`https://picsum.photos/seed/${i+10}/100/100`} />
                                     </div>
                                 ))}
@@ -467,12 +475,13 @@ export const StoreView: React.FC = () => {
                     <form 
                         onSubmit={async (e) => {
                             e.preventDefault();
-                            if (!userId || !profile) return;
+                            if (!profile) return;
+                            const targetUserId = profile.userId;
                             setIsSubmittingLead(true);
                             try {
                                 // 1. Envia para o CRM (mockBackend)
                                 await mockBackend.addLeads([{
-                                    userId: userId,
+                                    userId: targetUserId,
                                     name: leadForm.name,
                                     phone: leadForm.whatsapp,
                                     source: 'vitrine_publica',
@@ -525,7 +534,7 @@ export const StoreView: React.FC = () => {
                         <button 
                             type="submit"
                             disabled={isSubmittingLead}
-                            className="w-full bg-white text-brand-dark py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            className="w-full bg-white text-[#0F172A] py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                         >
                             {isSubmittingLead ? 'ENVIANDO...' : 'QUERO ME CONECTAR'} <ArrowRight className="w-5 h-5" />
                         </button>

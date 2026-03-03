@@ -1,0 +1,202 @@
+/* Menuzap Pro Advanced Sidebar - Vertical Icon Layout */
+:root {
+    --menuzap-bg: #ffffff;
+    --menuzap-sidebar-bg: #111b21; /* Darker like WhatsApp dark mode sidebar */
+    --menuzap-accent: #F67C01;
+    --menuzap-text: #1e293b;
+    --menuzap-border: #e2e8f0;
+}
+
+#menuzap-sidebar-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: none; /* Controlled by JS */
+    z-index: 9999;
+    flex-direction: row;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Vertical Icon Bar */
+#menuzap-icon-bar {
+    width: 60px;
+    background: var(--menuzap-sidebar-bg);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    gap: 15px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.menuzap-icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8696a0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-size: 20px;
+}
+
+.menuzap-icon-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.menuzap-icon-btn.active {
+    background: var(--menuzap-accent);
+    color: #fff;
+}
+
+/* Main Content Panel */
+#menuzap-panel {
+    width: 320px;
+    background: var(--menuzap-bg);
+    height: 100%;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--menuzap-border);
+}
+
+.menuzap-panel-header {
+    padding: 15px 20px;
+    background: #f0f2f5;
+    border-bottom: 1px solid var(--menuzap-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menuzap-panel-header h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #3b4a54;
+    text-transform: uppercase;
+}
+
+.menuzap-panel-content {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+/* Sections */
+.menuzap-section {
+    display: none;
+}
+
+.menuzap-section.active {
+    display: block;
+}
+
+/* Kanban Styles */
+.kanban-column {
+    margin-bottom: 20px;
+}
+
+.kanban-column-header {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+}
+
+.kanban-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kanban-card {
+    background: #fff;
+    border: 1px solid var(--menuzap-border);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.kanban-card:hover {
+    border-color: var(--menuzap-accent);
+}
+
+.kanban-card-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.kanban-card-phone {
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* UI Components */
+.menuzap-btn {
+    background: var(--menuzap-accent);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    width: 100%;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.menuzap-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--menuzap-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.menuzap-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--menuzap-accent);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+/* AI Box */
+.ai-suggestion-box {
+    background: #f8fafc;
+    border-left: 3px solid var(--menuzap-accent);
+    padding: 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #334155;
+    margin-top: 10px;
+}
+
+/* Scrollbar */
+.menuzap-panel-content::-webkit-scrollbar {
+    width: 4px;
+}
+.menuzap-panel-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}

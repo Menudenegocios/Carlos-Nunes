@@ -8,18 +8,19 @@ import {
   X, Trash2, CheckCircle, Clock, Briefcase, 
   Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical,
   Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle,
-  Lock, Crown
+  Lock, Crown, Smartphone
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link } from 'react-router-dom';
 
 export const BusinessSuite: React.FC = () => {
   const { user, realAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'crm' | 'finance' | 'schedule'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'crm' | 'finance' | 'menuzap_pro'>('home');
 
   if (!user) return null;
 
   const isAdmin = user.role === 'admin' || realAdmin?.role === 'admin';
+  const isPro = isAdmin || user.plan === 'negocios';
   const hasAccess = isAdmin || (user.plan !== 'profissionais');
 
   if (!hasAccess) {
@@ -68,7 +69,7 @@ export const BusinessSuite: React.FC = () => {
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                 { id: 'crm', label: 'CRM', desc: 'Funil de leads', icon: Briefcase },
                 { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
-                { id: 'schedule', label: 'AGENDA', desc: 'Compromissos', icon: Calendar }
+                { id: 'menuzap_pro', label: 'BIBLIOTECA', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
                 <button 
                   key={tab.id} 
@@ -96,7 +97,7 @@ export const BusinessSuite: React.FC = () => {
                 benefits={[
                 "Funil de vendas Kanban: visualize sua receita futura.",
                 "Fluxo de caixa: saiba exatamente o lucro do seu mês.",
-                "Agenda inteligente: organize seus horários de serviço.",
+                "Biblioteca de Agentes de IA para automatizar tarefas.",
                 "Sincronização com nuvem para acesso em qualquer lugar.",
                 "Relatórios simplificados de performance comercial."
                 ]}
@@ -110,8 +111,7 @@ export const BusinessSuite: React.FC = () => {
         {activeTab === 'crm' && <CRMView userId={user.id} />}
         {/* Fix: Added missing FinanceView component mapping */}
         {activeTab === 'finance' && <FinanceView userId={user.id} />}
-        {/* Fix: Added missing ScheduleView component mapping */}
-        {activeTab === 'schedule' && <ScheduleView userId={user.id} />}
+        {activeTab === 'menuzap_pro' && <MenuzapProView user={user} />}
       </div>
     </div>
   );
@@ -529,4 +529,90 @@ const ScheduleView = ({ userId }: { userId: string }) => {
        )}
     </div>
   );
+};
+
+const MenuzapProView = ({ user }: { user: any }) => {
+    return (
+        <div className="space-y-10 animate-fade-in">
+            <div className="bg-gradient-to-br from-[#0F172A] via-brand-dark to-indigo-900 rounded-[3.5rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/5">
+                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+                    <div className="space-y-8 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F67C01]/20 rounded-full text-[10px] font-black uppercase tracking-widest text-[#F67C01] border border-[#F67C01]/20">
+                            <Zap className="w-4 h-4" /> Integração Nativa
+                        </div>
+                        <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.9]">
+                            Menuzap <br/>
+                            <span className="text-[#F67C01]">Pro Extension</span>
+                        </h2>
+                        <p className="text-slate-300 text-lg font-medium leading-relaxed">
+                            Conecte seu WhatsApp Web diretamente ao seu Kanban e Agenda. Gerencie leads, mova cards e agende horários sem sair da conversa.
+                        </p>
+                        <div className="flex flex-wrap gap-4">
+                            <a 
+                                href="/menuzap-pro-placeholder.txt" 
+                                download="menuzap-pro.txt"
+                                className="inline-flex items-center gap-3 bg-[#F67C01] text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl active:scale-95"
+                            >
+                                BAIXAR EXTENSÃO <RefreshCw className="w-5 h-5" />
+                            </a>
+                            <div className="flex items-center gap-3 px-6 py-4 bg-black/20 backdrop-blur-md rounded-2xl border border-white/10">
+                                <div className="text-left">
+                                    <p className="text-[8px] font-black text-[#F67C01] uppercase tracking-widest">SEU TOKEN DE ACESSO</p>
+                                    <p className="text-xs font-mono font-bold tracking-wider">MN-PRO-{user.id.substring(0, 8).toUpperCase()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="relative hidden lg:block">
+                        <div className="w-80 h-80 bg-[#F67C01]/20 rounded-full blur-[100px] absolute inset-0 animate-pulse"></div>
+                        <div className="relative bg-white/5 backdrop-blur-2xl p-10 rounded-[4rem] border border-white/10 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <Smartphone className="w-48 h-48 text-[#F67C01] opacity-80" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                    { 
+                        step: '01', 
+                        title: 'Instale a Extensão', 
+                        desc: 'Baixe o arquivo e adicione ao seu navegador Chrome em segundos.', 
+                        icon: RefreshCw,
+                        instruction: 'Vá em chrome://extensions, ative o "Modo do desenvolvedor" e clique em "Carregar sem compactação". Selecione a pasta baixada.'
+                    },
+                    { 
+                        step: '02', 
+                        title: 'Conecte seu Token', 
+                        desc: 'Copie seu token de acesso acima e cole na barra lateral do WhatsApp.', 
+                        icon: Lock,
+                        instruction: 'Abra o WhatsApp Web, clique no ícone de raio (⚡) e cole seu token MN-PRO.'
+                    },
+                    { 
+                        step: '03', 
+                        title: 'Sincronize Leads', 
+                        desc: 'Seus contatos do WhatsApp agora aparecem direto no seu Kanban.', 
+                        icon: Layout,
+                        instruction: 'Mova cards, crie agendamentos e gerencie seu caixa sem sair da conversa.'
+                    }
+                ].map((item, i) => (
+                    <div key={i} className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-sm space-y-6 group hover:border-orange-500/30 transition-all">
+                        <div className="w-14 h-14 bg-orange-50 dark:bg-orange-950/30 rounded-2xl flex items-center justify-center text-[#F67C01] font-black text-xl italic">
+                            {item.step}
+                        </div>
+                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">
+                            <item.icon className="w-5 h-5 inline-block mr-2 mb-1 text-[#F67C01]" />
+                            {item.title}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">{item.desc}</p>
+                        <div className="pt-4 border-t border-gray-50 dark:border-zinc-800">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                                {item.instruction}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 };

@@ -164,6 +164,7 @@ export interface StoreCategory {
 export interface Profile {
   id: string;
   userId: string;
+  isPublished?: boolean;
   slug?: string;
   businessName?: string;
   category?: string;

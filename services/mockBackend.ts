@@ -188,7 +188,7 @@ export const mockBackend = {
     const { data, error } = await supabase.from('profiles').select('*').or(`user_id.eq.${identifier},slug.eq.${identifier}`).single();
     if (error || !data) return null;
     // Fix: Corrected logo_url mapping to logoUrl as per Profile interface
-    return { id: data.id, userId: data.user_id, slug: data.slug, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
+    return { id: data.id, userId: data.user_id, slug: data.slug, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, isPublished: data.is_published, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
   },
 
   updateProfile: async (userId: string, data: Partial<Profile>) => {
@@ -201,8 +201,29 @@ export const mockBackend = {
     
     localStore.save('profile', userId, { ...data, userId });
     if (!isDemoUser(userId)) {
-        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
+        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, is_published: data.isPublished, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
     }
+  },
+
+  getPublishedProfiles: async (): Promise<Profile[]> => {
+    const allProfiles = localStore.getGlobal('all_profiles') || [];
+    const publishedLocal = allProfiles.filter((p: any) => p.isPublished);
+    
+    const { data: sbProfiles } = await supabase.from('profiles').select('*').eq('is_published', true);
+    const mappedSb = (sbProfiles || []).map((p: any) => ({ 
+      id: p.id, 
+      userId: p.user_id, 
+      slug: p.slug, 
+      businessName: p.business_name, 
+      category: p.category, 
+      phone: p.phone,
+      logoUrl: p.logo_url,
+      isPublished: p.is_published,
+      storeConfig: p.store_config
+    }));
+    
+    const all = [...mappedSb, ...publishedLocal];
+    return Array.from(new Map(all.map(p => [p.userId, p])).values());
   },
 
   getAllProfiles: async () => {
