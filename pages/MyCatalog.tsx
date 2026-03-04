@@ -102,6 +102,7 @@ export const MyCatalog: React.FC = () => {
         
         setProfile(prof || { 
             userId: user.id, 
+            vitrineCategory: 'Produtos',
             socialLinks: { instagram: '', whatsapp: '', website: '' }, 
             storeConfig: { 
                 paymentMethods: { pix: true, card: true, cash: true, credit: true },
@@ -452,6 +453,22 @@ export const MyCatalog: React.FC = () => {
                           </button>
                         </div>
                         <button onClick={() => handleProfileSave(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR & PUBLICAR</button>
+                      </div>
+                   </div>
+
+                   <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><LayoutGrid className="w-5 h-5" /> Categoria na Vitrine Global</h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Escolha onde seu negócio será exibido na Vitrine do site principal.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {['Produtos', 'Serviços', 'Oportunidades'].map(cat => (
+                          <button
+                            key={cat}
+                            onClick={() => setProfile({ ...profile, vitrineCategory: cat as any })}
+                            className={`p-4 rounded-2xl border-2 font-black text-xs uppercase tracking-widest transition-all ${profile.vitrineCategory === cat ? 'border-indigo-600 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:border-brand-primary dark:text-brand-primary' : 'border-gray-200 text-slate-400 hover:border-indigo-300 dark:border-zinc-700 dark:hover:border-zinc-500'}`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
                       </div>
                    </div>
 

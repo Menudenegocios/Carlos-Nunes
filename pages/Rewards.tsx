@@ -9,8 +9,9 @@ import {
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
   Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield
 } from 'lucide-react';
-import { Prize, PointsTransaction, User, B2BOffer } from '../types';
+import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
+import { pointsRules, tiers, rankingRules } from '../config/gamificationConfig';
 
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
@@ -115,6 +116,7 @@ export const Rewards: React.FC = () => {
 };
 
 const B2BMatchView = ({ user }: { user: User }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions'>('offers');
   const [offers, setOffers] = useState<B2BOffer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -177,106 +179,128 @@ const B2BMatchView = ({ user }: { user: User }) => {
                 <h3 className="text-3xl font-black italic uppercase tracking-tighter">Menu Cash B2B</h3>
                 <p className="text-indigo-100 font-medium">Crie conexões diretas com outros empresários da rede e movimente a economia colaborativa.</p>
              </div>
-             <button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-white text-indigo-600 px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3 active:scale-95"
-             >
-                <Plus className="w-5 h-5" /> PUBLICAR OPORTUNIDADE
-             </button>
+             <div className="flex gap-4">
+               <button 
+                  onClick={() => setActiveSubTab('offers')}
+                  className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'offers' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+               >
+                  OPORTUNIDADES
+               </button>
+               <button 
+                  onClick={() => setActiveSubTab('transactions')}
+                  className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'transactions' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+               >
+                  MINHAS TRANSAÇÕES
+               </button>
+             </div>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
        </div>
 
-       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl mb-12">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-             <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                   <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-600">
-                      <Zap className="w-6 h-6 fill-current" />
-                   </div>
-                   <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">💰 MENU CASH – A MOEDA INTERNA</h3>
-                </div>
-                <p className="text-gray-500 dark:text-zinc-400 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
-                
-                <div className="space-y-4">
-                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Regras de Cashback por Nível:</p>
-                   <div className="grid grid-cols-1 gap-3">
-                      {[
-                        "Bronze: 5% de cashback",
-                        "Ouro: 10% de cashback",
-                        "Diamante: 20% de cashback + Anunciar na Menu Store"
-                      ].map((text, i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
-                           <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
+       {activeSubTab === 'offers' ? (
+         <>
+           <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl mb-12">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                 <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                       <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-600">
+                          <Zap className="w-6 h-6 fill-current" />
+                       </div>
+                       <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">💰 MENU CASH – A MOEDA INTERNA</h3>
+                    </div>
+                    <p className="text-gray-500 dark:text-zinc-400 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
+                    
+                    <div className="space-y-4">
+                       <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Regras de Cashback por Nível:</p>
+                       <div className="grid grid-cols-1 gap-3">
+                          {[
+                            "Bronze: 5% de cashback",
+                            "Ouro: 10% de cashback",
+                            "Diamante: 20% de cashback + Anunciar na Menu Store"
+                          ].map((text, i) => (
+                            <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
+                               <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
 
-             <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
-                <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
-                   <Shield className="w-4 h-4" /> Regra importante
-                </p>
-                <ul className="space-y-4">
-                   {[
-                     "Menu Cash só pode ser usado dentro da plataforma",
-                     "Pode utilizar até 30% do valor de uma compra",
-                     "Saldo válido enquanto o plano estiver ativo"
-                   ].map((text, i) => (
-                     <li key={i} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
-                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full mt-1.5 shrink-0"></div>
-                        {text}
-                     </li>
-                   ))}
-                </ul>
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
-                   <p className="text-sm font-black text-gray-900 dark:text-white italic">"Isso cria circulação e retenção."</p>
-                </div>
-             </div>
-          </div>
-       </div>
+                 <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                    <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
+                       <Shield className="w-4 h-4" /> Regra importante
+                    </p>
+                    <ul className="space-y-4">
+                       {[
+                         "Menu Cash só pode ser usado dentro da plataforma",
+                         "Pode utilizar até 30% do valor de uma compra",
+                         "Saldo válido enquanto o plano estiver ativo"
+                       ].map((text, i) => (
+                         <li key={i} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                            <div className="w-1.5 h-1.5 bg-brand-primary rounded-full mt-1.5 shrink-0"></div>
+                            {text}
+                         </li>
+                       ))}
+                    </ul>
+                    <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
+                       <p className="text-sm font-black text-gray-900 dark:text-white italic">"Isso cria circulação e retenção."</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
 
-       <div className="max-w-xl mx-auto relative mb-12">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input 
-             type="text" 
-             placeholder="Filtrar parceiros por serviço ou nome..." 
-             className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
-             value={searchTerm}
-             onChange={e => setSearchTerm(e.target.value)}
-          />
-       </div>
+           <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+             <div className="w-full max-w-xl relative">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input 
+                   type="text" 
+                   placeholder="Filtrar parceiros por serviço ou nome..." 
+                   className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
+                   value={searchTerm}
+                   onChange={e => setSearchTerm(e.target.value)}
+                />
+             </div>
+             <button 
+                onClick={() => setIsModalOpen(true)}
+                className="w-full md:w-auto bg-indigo-600 text-white px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-3 active:scale-95"
+             >
+                <Plus className="w-5 h-5" /> PUBLICAR OPORTUNIDADE
+             </button>
+           </div>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading ? (
-             [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
-          ) : filteredOffers.length === 0 ? (
-             <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
-                <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de Menu Cash encontrada.</p>
-             </div>
-          ) : filteredOffers.map(offer => (
-             <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-6">
-                   <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
-                      <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
-                   </div>
-                   <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
-                      {offer.discount}
-                   </span>
-                </div>
-                <div className="flex-1 space-y-3">
-                   <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
-                   <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
-                   <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
-                </div>
-                <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
-                   SOLICITAR CONEXÃO <ArrowRight className="w-3 h-3" />
-                </button>
-             </div>
-          ))}
-       </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {isLoading ? (
+                 [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
+              ) : filteredOffers.length === 0 ? (
+                 <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                    <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de Menu Cash encontrada.</p>
+                 </div>
+              ) : filteredOffers.map(offer => (
+                 <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-6">
+                       <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
+                          <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
+                       </div>
+                       <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
+                          {offer.discount}
+                       </span>
+                    </div>
+                    <div className="flex-1 space-y-3">
+                       <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
+                       <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
+                       <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
+                    </div>
+                    <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
+                       SOLICITAR CONEXÃO <ArrowRight className="w-3 h-3" />
+                    </button>
+                 </div>
+              ))}
+           </div>
+         </>
+       ) : (
+         <B2BTransactionsView user={user} />
+       )}
 
        {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
@@ -323,14 +347,161 @@ const B2BMatchView = ({ user }: { user: User }) => {
   );
 };
 
+const B2BTransactionsView = ({ user }: { user: User }) => {
+  const [transactions, setTransactions] = useState<B2BTransaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    sellerName: '',
+    amount: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    loadTransactions();
+  }, []);
+
+  const loadTransactions = async () => {
+    setIsLoading(true);
+    try {
+      const data = await mockBackend.getB2BTransactions(user.id);
+      setTransactions(data);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const newTx = await mockBackend.createB2BTransaction({
+        buyerId: user.id,
+        buyerName: user.name,
+        sellerId: 'mock_seller_id', // Na vida real, selecionaria o usuário
+        sellerName: formData.sellerName,
+        amount: parseFloat(formData.amount),
+        description: formData.description
+      });
+      setTransactions(prev => [newTx, ...prev]);
+      setIsModalOpen(false);
+      setFormData({ sellerName: '', amount: '', description: '' });
+    } catch (err) {
+      console.error("Erro ao registrar:", err);
+      alert("Erro ao registrar transação.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirm = async (id: string, status: 'confirmed' | 'rejected') => {
+    try {
+      await mockBackend.updateB2BTransactionStatus(id, status);
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    } catch (err) {
+      console.error("Erro ao atualizar:", err);
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter dark:text-white">Minhas Transações B2B</h3>
+          <p className="text-slate-500 font-medium text-sm">Registre negócios fechados com outros membros para ganhar Menu Cash.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-brand-primary text-white px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all flex items-center gap-3 active:scale-95"
+        >
+          <Plus className="w-5 h-5" /> REGISTRAR NEGÓCIO
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 dark:bg-zinc-800 rounded-3xl animate-pulse"></div>)}
+        </div>
+      ) : transactions.length === 0 ? (
+        <div className="py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+          <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma transação registrada ainda.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {transactions.map(tx => (
+            <div key={tx.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md ${tx.status === 'confirmed' ? 'bg-emerald-500' : tx.status === 'rejected' ? 'bg-red-500' : 'bg-orange-500'}`}>
+                  {tx.status === 'confirmed' ? <CheckCircle className="w-6 h-6" /> : tx.status === 'rejected' ? <X className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                </div>
+                <div>
+                  <h4 className="font-black text-gray-900 dark:text-white text-lg">{tx.buyerId === user.id ? `Compra de ${tx.sellerName}` : `Venda para ${tx.buyerName}`}</h4>
+                  <p className="text-xs text-slate-500 font-medium">{tx.description}</p>
+                </div>
+              </div>
+              <div className="text-right flex items-center gap-6">
+                <div>
+                  <p className="text-lg font-black text-gray-900 dark:text-white">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.amount)}
+                  </p>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${tx.status === 'confirmed' ? 'text-emerald-500' : tx.status === 'rejected' ? 'text-red-500' : 'text-orange-500'}`}>
+                    {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Confirmação'}
+                  </p>
+                </div>
+                {tx.sellerId === user.id && tx.status === 'pending' && (
+                  <div className="flex gap-2">
+                    <button onClick={() => handleConfirm(tx.id, 'confirmed')} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all">
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleConfirm(tx.id, 'rejected')} className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+            <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter">Registrar Negócio</h3>
+                <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">O vendedor precisará confirmar</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+            </div>
+            <form onSubmit={handleCreateTransaction} className="p-10 space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Nome da Empresa / Vendedor</label>
+                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.sellerName} onChange={e => setFormData({...formData, sellerName: e.target.value})} placeholder="Ex: Agência XYZ" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Valor da Compra (R$)</label>
+                <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="Ex: 1500.00" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Descrição do Serviço/Produto</label>
+                <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Criação de identidade visual..." />
+              </div>
+              <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'ENVIAR PARA CONFIRMAÇÃO'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const LevelsView = ({ user }: { user: User }) => {
-  const levels = [
-    { name: 'Elite', points: '300 pts', color: 'bg-indigo-600', criteria: 'Mínimo 1 indicação Direta', description: 'Elite é ativação.', benefits: ['Ativação no ecossistema', 'Acesso ao Menu Club', 'Bio Digital Básica'] },
-    { name: 'Bronze', points: '1.000 pts', color: 'bg-orange-900', criteria: 'Mínimo 3 indicações Diretas', description: 'Bronze é consistência.', benefits: ['Perfil visível no diretório', 'Acesso ao Blog', 'Selo de Membro Bronze'] },
-    { name: 'Prata', points: '2.000 pts', color: 'bg-slate-400', criteria: 'Mínimo 5 indicações Diretas', description: 'Prata é engajamento.', benefits: ['Maior visibilidade', 'Selo de Membro Prata', 'Acesso a eventos exclusivos'] },
-    { name: 'Ouro', points: '4.000 pts', color: 'bg-yellow-500', criteria: 'Mínimo 10 indicações Diretas', description: 'Ouro é posicionamento.', benefits: ['Destaque Prioritário', 'Selo de Verificado Oficial', 'Acesso ao Menu Academy PRO'] },
-    { name: 'Diamante', points: '8.000 pts', color: 'bg-blue-500', criteria: 'Mínimo 20 indicações Diretas', description: 'Diamante é autoridade.', benefits: ['Autoridade Máxima', 'Destaque Prioritário Máximo', 'Mentoria Individual'] }
-  ];
+  const levels = tiers;
 
   return (
     <div className="space-y-12 animate-fade-in">
@@ -346,7 +517,7 @@ const LevelsView = ({ user }: { user: User }) => {
                 <Award className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic mb-1">{level.name}</h3>
-            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-2">{level.points}</p>
+            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-2">{level.points} pts</p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-4">{level.criteria}</p>
             
             <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 italic mb-6">"{level.description}"</p>
@@ -372,9 +543,12 @@ const LevelsView = ({ user }: { user: User }) => {
 
 const MissionsView = () => {
   const missions = [
-    { title: 'Indicação Plano Básico', desc: 'Traga um novo membro no plano Básico.', pts: 100, icon: Users },
-    { title: 'Indicação Plano PRO', desc: 'Traga um novo membro no plano PRO.', pts: 300, icon: Crown },
-    { title: 'Compras na Vitrine', desc: 'A cada R$ 2,00 em compras = 1 ponto.', pts: '2:1', icon: ShoppingBag }
+    { title: 'Indicação Plano Básico', desc: 'Traga um novo membro no plano Básico.', pts: pointsRules.indicacaoBasico, icon: Users },
+    { title: 'Indicação Plano PRO', desc: 'Traga um novo membro no plano PRO.', pts: pointsRules.indicacaoPro, icon: Crown },
+    { title: 'Compras na Vitrine', desc: 'A cada R$ 1,00 em compras = 1 ponto.', pts: `${pointsRules.compraVitrine}:1`, icon: ShoppingBag },
+    { title: 'Login Diário', desc: 'Acesse a plataforma diariamente.', pts: pointsRules.loginDiario, icon: Clock },
+    { title: 'Publicação no Blog', desc: 'Publique um novo artigo no blog.', pts: pointsRules.publicacaoBlog, icon: Sparkles },
+    { title: 'Fechar Negócio', desc: 'Feche um negócio B2B na plataforma.', pts: pointsRules.fecharNegocio, icon: Handshake }
   ];
 
   return (
@@ -436,8 +610,8 @@ const RankingView = () => {
                 <div className="space-y-3">
                    {[
                      "Atualização mensal",
-                     "Top 5 maiores pontuadores",
-                     "Reconhecimento público"
+                     rankingRules.top10Badge ? "Top 10 maiores pontuadores recebem badge especial" : "Top 5 maiores pontuadores",
+                     rankingRules.top3Highlight ? "Top 3 ganham destaque na plataforma" : "Reconhecimento público"
                    ].map((text, i) => (
                      <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
                         <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}

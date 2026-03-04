@@ -188,7 +188,7 @@ export const mockBackend = {
     const { data, error } = await supabase.from('profiles').select('*').or(`user_id.eq.${identifier},slug.eq.${identifier}`).single();
     if (error || !data) return null;
     // Fix: Corrected logo_url mapping to logoUrl as per Profile interface
-    return { id: data.id, userId: data.user_id, slug: data.slug, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, isPublished: data.is_published, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
+    return { id: data.id, userId: data.user_id, slug: data.slug, businessName: data.business_name, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logoUrl: data.logo_url, vitrineCategory: data.vitrine_category, isPublished: data.is_published, socialLinks: data.social_links, storeConfig: data.store_config, bioConfig: data.bio_config };
   },
 
   updateProfile: async (userId: string, data: Partial<Profile>) => {
@@ -201,7 +201,7 @@ export const mockBackend = {
     
     localStore.save('profile', userId, { ...data, userId });
     if (!isDemoUser(userId)) {
-        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, is_published: data.isPublished, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
+        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, vitrine_category: data.vitrineCategory, is_published: data.isPublished, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
     }
   },
 
@@ -218,6 +218,7 @@ export const mockBackend = {
       category: p.category, 
       phone: p.phone,
       logoUrl: p.logo_url,
+      vitrineCategory: p.vitrine_category,
       isPublished: p.is_published,
       storeConfig: p.store_config
     }));
@@ -228,7 +229,7 @@ export const mockBackend = {
 
   getAllProfiles: async () => {
     const sbData = await safeQuery(supabase.from('profiles').select('*'), []);
-    const mappedSb = sbData.map((p: any) => ({ id: p.id, userId: p.user_id, slug: p.slug, businessName: p.business_name, category: p.category, city: p.city, bio: p.bio, logoUrl: p.logo_url, plan: p.plan, points: p.points }));
+    const mappedSb = sbData.map((p: any) => ({ id: p.id, userId: p.user_id, slug: p.slug, businessName: p.business_name, category: p.category, city: p.city, bio: p.bio, logoUrl: p.logo_url, vitrineCategory: p.vitrine_category, plan: p.plan, points: p.points }));
     const local = localStore.getGlobal('all_profiles') || [];
     return [...mappedSb, ...local];
   },
@@ -432,5 +433,29 @@ export const mockBackend = {
     const local = localStore.getGlobal('vitrine_comments') || [];
     localStore.saveGlobal('vitrine_comments', [newComment, ...local]);
     return newComment;
+  },
+
+  // --- B2B TRANSACTIONS ---
+  getB2BTransactions: async (userId: string): Promise<any[]> => {
+    const local = localStore.getGlobal('b2b_transactions') || [];
+    return local.filter((t: any) => t.buyerId === userId || t.sellerId === userId).sort((a: any, b: any) => b.createdAt - a.createdAt);
+  },
+
+  createB2BTransaction: async (transaction: any): Promise<any> => {
+    const newTransaction = {
+      ...transaction,
+      id: Math.random().toString(36).substr(2, 9),
+      status: 'pending',
+      createdAt: Date.now()
+    };
+    const local = localStore.getGlobal('b2b_transactions') || [];
+    localStore.saveGlobal('b2b_transactions', [newTransaction, ...local]);
+    return newTransaction;
+  },
+
+  updateB2BTransactionStatus: async (transactionId: string, status: 'confirmed' | 'rejected'): Promise<void> => {
+    const local = localStore.getGlobal('b2b_transactions') || [];
+    const updated = local.map((t: any) => t.id === transactionId ? { ...t, status } : t);
+    localStore.saveGlobal('b2b_transactions', updated);
   }
 };

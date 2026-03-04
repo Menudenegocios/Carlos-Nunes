@@ -13,6 +13,7 @@ import {
   ChevronRight, Bot, Rocket,
   Copy, Share2, Sparkles
 } from 'lucide-react';
+import { pointsRules, tiers } from '../config/gamificationConfig';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -53,27 +54,35 @@ export const Dashboard: React.FC = () => {
   };
 
   const getNextLevel = () => {
-    if (!user) return { name: 'Bronze', points: 1000 };
-    if (user.points < 200) return { name: 'Elite', points: 200 };
-    if (user.points < 1000) return { name: 'Bronze', points: 1000 };
-    if (user.points < 3000) return { name: 'Ouro', points: 3000 };
-    if (user.points < 10000) return { name: 'Diamante', points: 10000 };
-    return { name: 'Lenda', points: 20000 };
+    if (!user) return { name: tiers[1].name, points: tiers[1].points };
+    for (let i = 0; i < tiers.length; i++) {
+       if (user.points < tiers[i].points) {
+          return { name: tiers[i].name, points: tiers[i].points };
+       }
+    }
+    return { name: 'Lenda', points: tiers[tiers.length - 1].points * 2 };
   };
 
   const nextLevel = getNextLevel();
   const progress = user ? Math.min(100, (user.points / nextLevel.points) * 100) : 0;
 
   const getCashbackPercent = () => {
-    if (user?.plan === 'negocios') return '25%';
-    if (user?.plan === 'profissionais') return '10%';
-    return '5%';
+    if (!user) return '0%';
+    let currentTier = tiers[0];
+    for (let i = tiers.length - 1; i >= 0; i--) {
+      if (user.points >= tiers[i].points) {
+        currentTier = tiers[i];
+        break;
+      }
+    }
+    const benefit = currentTier.benefits.find(b => b.includes('Menu Cash'));
+    return benefit ? benefit.split(' ')[0] : '0%';
   };
 
   const planNames: Record<string, string> = {
     profissionais: 'Básico',
-    freelancers: 'Premium',
-    negocios: 'Pro'
+    freelancers: 'PRO',
+    negocios: 'PRO'
   };
 
   if (!user) return null;
@@ -192,7 +201,7 @@ export const Dashboard: React.FC = () => {
                   <UserPlus className="w-6 h-6" />
                 </div>
                 <h4 className="text-xl font-black uppercase italic tracking-tight">Indicar Amigos</h4>
-                <p className="text-indigo-100 text-xs font-medium leading-relaxed mb-6">Ganhe +200 pontos por cada indicação validada.</p>
+                <p className="text-indigo-100 text-xs font-medium leading-relaxed mb-6">Ganhe até +{pointsRules.indicacaoPro} pontos por cada indicação validada.</p>
                 <button 
                   onClick={copyReferral}
                   className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all active:scale-95"
@@ -210,7 +219,7 @@ export const Dashboard: React.FC = () => {
                   <Handshake className="w-6 h-6" />
                 </div>
                 <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Negócio B2B</h4>
-                <p className="text-slate-500 dark:text-zinc-400 text-xs font-medium leading-relaxed mb-6">Ganhe +100 pontos ao fechar negócios na rede.</p>
+                <p className="text-slate-500 dark:text-zinc-400 text-xs font-medium leading-relaxed mb-6">Ganhe +{pointsRules.fecharNegocio} pontos ao fechar negócios na rede.</p>
                 <Link 
                   to="/marketplace-b2b"
                   className="w-full py-4 bg-gray-900 dark:bg-brand-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95"

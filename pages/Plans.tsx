@@ -5,6 +5,7 @@ import { mockBackend } from '../services/mockBackend';
 // Added ArrowRight to the imports from lucide-react to fix the reference error
 import { Check, User, Briefcase, Store, Zap, Shield, Crown, CreditCard, Award, Mic, Video, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { plans, pointsRules } from '../config/gamificationConfig';
 
 export const Plans: React.FC = () => {
   const { user, refreshProfile } = useAuth();
@@ -150,8 +151,8 @@ export const Plans: React.FC = () => {
           title="Plano Básico" 
           planKey="profissionais" 
           oldPrice={billingCycle === 'semestral' ? "697" : "897"} 
-          pixPrice={billingCycle === 'semestral' ? "297" : "397"} 
-          installments={billingCycle === 'semestral' ? "12x R$ 29,90" : "12x R$ 39,90"} 
+          pixPrice={billingCycle === 'semestral' ? plans.basico.semestral.toString() : plans.basico.anual.toString()} 
+          installments={billingCycle === 'semestral' ? "12x R$ 29,90" : "12x R$ 49,90"} 
           icon={User} 
           color="text-indigo-500" 
           btnText="ATIVAR BÁSICO"
@@ -164,15 +165,15 @@ export const Plans: React.FC = () => {
           title="Plano PRO" 
           planKey="freelancers" 
           oldPrice={billingCycle === 'semestral' ? "897" : "1.297"} 
-          pixPrice={billingCycle === 'semestral' ? "497" : "697"} 
-          installments={billingCycle === 'semestral' ? "12x R$ 49,90" : "12x R$ 69,90"} 
+          pixPrice={billingCycle === 'semestral' ? plans.pro.semestral.toString() : plans.pro.anual.toString()} 
+          installments={billingCycle === 'semestral' ? "12x R$ 59,90" : "12x R$ 89,90"} 
           icon={Briefcase} 
           color="text-brand-primary" 
           btnText="QUERO SER PRO" 
           recommended={true}
           period={billingCycle}
           subtitle="Acelere suas vendas com catálogo completo, CRM de gestão e destaque prioritário nas buscas regionais."
-          features={['Tudo do Plano Básico incluso', 'Catálogo e loja virtual completa', 'CRM e gestão de vendas profissional', 'Marketplace B2B (anunciar e comprar)', 'Menu Academy PRO (estratégias)', 'Desconto de 50% em eventos']}
+          features={['Tudo do Plano Básico incluso', 'Catálogo e loja virtual completa', 'CRM e gestão de vendas profissional', 'Marketplace B2B (anunciar e comprar)', 'Menu Academy PRO (estratégias)', 'Desconto de 50% em eventos', `Gera +${pointsRules.indicacaoPro} pontos por indicação`]}
         />
       </div>
 

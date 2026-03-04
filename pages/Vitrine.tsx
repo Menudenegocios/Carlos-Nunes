@@ -6,7 +6,8 @@ import { Profile } from '../types';
 import { 
   Search, MapPin, Star, ArrowRight, Sparkles, 
   LayoutGrid, List, Globe, MessageCircle, Instagram,
-  ShieldCheck, Award, Zap, Crown, User, Store
+  ShieldCheck, Award, Zap, Crown, User, Store,
+  Package, Wrench, Handshake
 } from 'lucide-react';
 
 export const Vitrine: React.FC = () => {
@@ -14,6 +15,8 @@ export const Vitrine: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const [selectedCategory, setSelectedCategory] = useState('Produtos');
 
   useEffect(() => {
     loadProfiles();
@@ -29,11 +32,17 @@ export const Vitrine: React.FC = () => {
     }
   };
 
-  const filteredProfiles = profiles.filter(p => 
-    p.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProfiles = profiles.filter(p => {
+    const matchesSearch = p.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.city?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === 'Todos' || 
+                            p.vitrineCategory === selectedCategory || 
+                            (!p.vitrineCategory && selectedCategory === 'Produtos');
+    
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#020617] pb-20">
@@ -48,7 +57,7 @@ export const Vitrine: React.FC = () => {
             <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Vitrine Global de Especialistas</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black text-white uppercase italic tracking-tighter leading-[0.85]">
+          <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter leading-[0.85]">
             Encontre os Melhores <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-orange-400 to-amber-300">Negócios & Profissionais</span>
           </h1>
           
@@ -83,9 +92,17 @@ export const Vitrine: React.FC = () => {
       <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-20">
         <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide px-2">
-            {['Todos', 'Serviços', 'Saúde', 'Tecnologia', 'Gastronomia', 'Consultoria'].map(cat => (
-              <button key={cat} className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all whitespace-nowrap">
-                {cat}
+            {[
+              { id: 'Produtos', label: 'Produtos', icon: Package },
+              { id: 'Serviços', label: 'Serviços', icon: Wrench },
+              { id: 'Oportunidades', label: 'Oportunidades', icon: Handshake }
+            ].map(cat => (
+              <button 
+                key={cat.id} 
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+              >
+                <cat.icon className="w-4 h-4" /> {cat.label}
               </button>
             ))}
           </div>

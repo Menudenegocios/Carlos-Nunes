@@ -35,6 +35,18 @@ export interface B2BOffer {
   createdAt: number;
 }
 
+export interface B2BTransaction {
+  id: string;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  createdAt: number;
+}
+
 export interface PointsTransaction {
   id: string;
   userId: string;
@@ -174,6 +186,7 @@ export interface Profile {
   neighborhood?: string;
   bio?: string;
   logoUrl?: string;
+  vitrineCategory?: 'Produtos' | 'Serviços' | 'Oportunidades';
   socialLinks?: {
     instagram?: string;
     whatsapp?: string;
