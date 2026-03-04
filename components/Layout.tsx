@@ -39,7 +39,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <Link 
                 key={item.label}
                 to={item.path} 
-                className={`text-base font-bold tracking-tight transition-all px-2 py-1 rounded-lg hover:text-brand-primary ${
+                className={`text-sm font-bold tracking-tight transition-all px-2 py-1 rounded-lg hover:text-brand-primary ${
                   isActive(item.path) 
                     ? 'text-brand-primary' 
                     : 'text-brand-contrast/70 dark:text-brand-surface/60'

@@ -90,8 +90,8 @@ export const Vitrine: React.FC = () => {
 
       {/* FILTERS & VIEW MODE */}
       <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-20">
-        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide px-2">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row items-center justify-center gap-6 relative">
+          <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide px-2 w-full">
             {[
               { id: 'Produtos', label: 'Produtos', icon: Package },
               { id: 'Serviços', label: 'Serviços', icon: Wrench },
@@ -107,7 +107,7 @@ export const Vitrine: React.FC = () => {
             ))}
           </div>
           
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-zinc-800 p-1.5 rounded-2xl">
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-zinc-800 p-1.5 rounded-2xl md:absolute md:right-4">
             <button 
               onClick={() => setViewMode('grid')}
               className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-brand-dark shadow-md' : 'text-slate-400'}`}
