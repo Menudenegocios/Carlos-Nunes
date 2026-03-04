@@ -90,8 +90,8 @@ export const Vitrine: React.FC = () => {
 
       {/* FILTERS & VIEW MODE */}
       <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-20">
-        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row items-center justify-center gap-6 relative">
-          <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide px-2 w-full">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center gap-6 relative">
+          <div className="flex flex-wrap justify-center gap-3 w-full">
             {[
               { id: 'Produtos', label: 'Produtos', icon: Package },
               { id: 'Serviços', label: 'Serviços', icon: Wrench },
@@ -100,7 +100,7 @@ export const Vitrine: React.FC = () => {
               <button 
                 key={cat.id} 
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap ${selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
               >
                 <cat.icon className="w-4 h-4" /> {cat.label}
               </button>

@@ -138,9 +138,23 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      await mockBackend.updateProfile(user.id, profile);
+      // Se for redirecionar (clicou em Salvar & Publicar), força a publicação
+      const profileToSave = redirect ? { ...profile, isPublished: true } : profile;
+      
+      await mockBackend.updateProfile(user.id, profileToSave);
+      
+      // Atualiza o estado local para refletir a mudança
       if (redirect) {
-        navigate(`/store/${user.id}`);
+        setProfile(profileToSave);
+      }
+
+      if (redirect) {
+        // Redireciona para o slug se existir, senão para o ID
+        if (profileToSave.slug) {
+          navigate(`/${profileToSave.slug}`);
+        } else {
+          navigate(`/store/${user.id}`);
+        }
       } else {
         alert('Configurações salvas com sucesso!');
       }
