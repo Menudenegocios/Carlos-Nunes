@@ -46,9 +46,9 @@ export const AdminCentral: React.FC = () => {
   });
 
   const planNames: Record<string, string> = {
-    profissionais: 'Básico',
-    freelancers: 'Premium',
-    negocios: 'Pro'
+    profissionais: 'Plano Básico',
+    freelancers: 'Plano PRO',
+    negocios: 'Plano Business'
   };
 
   const plansConfig = [
@@ -126,7 +126,10 @@ export const AdminCentral: React.FC = () => {
       setIsModalOpen(false);
       loadAdminData();
       alert(editingProfile ? 'Membro atualizado!' : 'Membro criado com sucesso!');
-    } catch (e) { alert('Erro ao processar operação.'); }
+    } catch (err: any) { 
+      console.error("Erro ao salvar membro:", err);
+      alert(`Erro ao processar operação: ${err.message || 'Erro desconhecido'}`); 
+    }
   };
 
   const handleImpersonate = (profile: Profile) => {
@@ -376,7 +379,7 @@ export const AdminCentral: React.FC = () => {
       )}
       {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic">{editingProfile ? 'Configurações do Membro' : 'Novo Cadastro Manual'}</h3>

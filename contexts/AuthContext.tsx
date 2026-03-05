@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, pass: string) => Promise<void>;
   loginAsDemo: () => void;
-  register: (name: string, email: string, pass: string) => Promise<void>;
+  register: (name: string, email: string, pass: string) => Promise<any>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   impersonate: (targetUser: User) => void;

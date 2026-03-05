@@ -73,8 +73,11 @@ export const mockBackend = {
     const newProfile: Profile = {
       id: Math.random().toString(36).substr(2, 9),
       userId: newUserId,
-      ...profileData
-    };
+      ...profileData,
+      role: userData.role || 'user',
+      plan: userData.plan || 'profissionais',
+      points: userData.points || 0
+    } as any;
     
     const allProfiles = localStore.getGlobal('all_profiles') || [];
     localStore.saveGlobal('all_profiles', [...allProfiles, newProfile]);
@@ -91,6 +94,14 @@ export const mockBackend = {
         mockUsers[idx] = { ...mockUsers[idx], ...data };
         localStore.saveGlobal('mock_users', mockUsers);
       }
+      
+      // Also update all_profiles for consistency in the admin list
+      const allProfiles = localStore.getGlobal('all_profiles') || [];
+      const pIdx = allProfiles.findIndex((p: any) => p.userId === userId);
+      if (pIdx > -1) {
+        allProfiles[pIdx] = { ...allProfiles[pIdx], ...data };
+        localStore.saveGlobal('all_profiles', allProfiles);
+      }
       return mockUsers[idx];
     }
 
@@ -106,14 +117,13 @@ export const mockBackend = {
       .from('profiles')
       .update(updateData)
       .eq('user_id', userId)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error("Error updating user in Supabase:", error);
       throw error;
     }
-    return updated;
+    return updated?.[0];
   },
 
   deleteMember: async (userId: string) => {
@@ -355,14 +365,13 @@ export const mockBackend = {
       .from('profiles')
       .update(supabaseData)
       .eq('user_id', userId)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error("Error updating profile in Supabase:", error);
       throw error;
     }
-    return updated;
+    return updated?.[0];
   },
 
   getPublishedProfiles: async (): Promise<Profile[]> => {
