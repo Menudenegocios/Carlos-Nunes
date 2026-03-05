@@ -13,7 +13,7 @@ import {
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
   Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
   Share2, Link as LinkIcon, Tag, BookOpen, FileText, Send, AlignLeft, Type,
-  Calendar, Ticket, Search, BarChart
+  Calendar, Ticket, Search, BarChart, MessageSquare
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -89,6 +89,7 @@ export const MyCatalog: React.FC = () => {
   const fileInputProductRef = useRef<HTMLInputElement>(null);
   const fileInputBlogRef = useRef<HTMLInputElement>(null);
   const ogImageInputRef = useRef<HTMLInputElement>(null);
+  const botAvatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   const isAdmin = user?.role === 'admin' || realAdmin?.role === 'admin';
@@ -168,7 +169,7 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2' | 'ogImage') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2' | 'ogImage' | 'botAvatar') => {
     const file = e.target.files?.[0];
     if (file && field) {
       const reader = new FileReader();
@@ -182,6 +183,7 @@ export const MyCatalog: React.FC = () => {
         else if (field === 'productUrl') setProductForm(prev => ({ ...prev, imageUrl: compressed }));
         else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, imageUrl: compressed }));
         else if (field === 'ogImage') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, seo: { ...prev.storeConfig?.seo, ogImage: compressed } } }));
+        else if (field === 'botAvatar') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, whatsappBot: { ...prev.storeConfig?.whatsappBot, avatarUrl: compressed, enabled: prev.storeConfig?.whatsappBot?.enabled ?? false } } }));
         else if (field && field.startsWith('banner')) {
             const index = parseInt(field.replace('banner', ''));
             const currentBanners = [...(profile.storeConfig?.bannerImages || [])];
@@ -358,6 +360,20 @@ export const MyCatalog: React.FC = () => {
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Slogan / Categoria</label>
                             <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={profile.category || ''} onChange={e => setProfile({...profile, category: e.target.value})} placeholder="Ex: Advogado Criminalista" />
                          </div>
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Endereço Completo</label>
+                            <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={profile.storeConfig?.address || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, address: e.target.value}})} placeholder="Rua, Número, Bairro" />
+                         </div>
+                         <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
+                                <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={profile.storeConfig?.city || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, city: e.target.value}})} placeholder="São Paulo" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Link Google Maps</label>
+                                <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={profile.storeConfig?.googleMapsLink || ''} onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, googleMapsLink: e.target.value}})} placeholder="https://maps.app.goo.gl/..." />
+                            </div>
+                         </div>
                       </div>
                       <div className="space-y-6">
                          <div className="p-6 bg-gray-50 dark:bg-zinc-800 rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center">
@@ -367,6 +383,124 @@ export const MyCatalog: React.FC = () => {
                             </div>
                             <span className="text-[10px] font-black uppercase text-slate-400">Trocar {profile.storeConfig?.businessType === 'professional' ? 'Foto de Perfil' : 'Logotipo'}</span>
                          </div>
+                      </div>
+                   </div>
+
+                   {/* SEÇÃO BOT WHATSAPP */}
+                   <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl mt-12">
+                      <div className="flex items-center gap-4 mb-8">
+                          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600">
+                              <MessageSquare className="w-8 h-8" />
+                          </div>
+                          <div>
+                              <h3 className="text-2xl font-black uppercase italic tracking-tight text-gray-900 dark:text-white">
+                                  Atendente Virtual (Bot)
+                              </h3>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                  Capture leads antes de iniciar a conversa no WhatsApp.
+                              </p>
+                          </div>
+                      </div>
+
+                      <div className="grid lg:grid-cols-2 gap-12">
+                          {/* Configurações */}
+                          <div className="space-y-6">
+                              <div className="flex items-center justify-between bg-gray-50 dark:bg-zinc-800 p-6 rounded-2xl">
+                                  <span className="font-black text-sm uppercase text-gray-700 dark:text-gray-300">Ativar Bot Vendedor?</span>
+                                  <button 
+                                      onClick={() => setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, whatsappBot: { ...prev.storeConfig?.whatsappBot, enabled: !prev.storeConfig?.whatsappBot?.enabled } } }))}
+                                      className={`w-14 h-8 rounded-full transition-all relative ${profile.storeConfig?.whatsappBot?.enabled ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                  >
+                                      <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${profile.storeConfig?.whatsappBot?.enabled ? 'left-7' : 'left-1'}`} />
+                                  </button>
+                              </div>
+
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome do Atendente</label>
+                                  <input 
+                                      type="text" 
+                                      className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                      placeholder="Ex: Assistente Virtual" 
+                                      value={profile.storeConfig?.whatsappBot?.name || ''}
+                                      onChange={e => setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, whatsappBot: { ...prev.storeConfig?.whatsappBot, enabled: prev.storeConfig?.whatsappBot?.enabled ?? false, name: e.target.value } } }))}
+                                  />
+                              </div>
+
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Foto do Atendente</label>
+                                  <div className="flex items-center gap-4">
+                                      <div 
+                                          className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-700 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border-2 border-dashed border-gray-300 dark:border-zinc-600"
+                                          onClick={() => botAvatarInputRef.current?.click()}
+                                      >
+                                          {profile.storeConfig?.whatsappBot?.avatarUrl ? (
+                                              <img src={profile.storeConfig.whatsappBot.avatarUrl} className="w-full h-full object-cover" />
+                                          ) : (
+                                              <Camera className="w-6 h-6 text-gray-400" />
+                                          )}
+                                      </div>
+                                      <div className="flex-1">
+                                          <button 
+                                              onClick={() => botAvatarInputRef.current?.click()}
+                                              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                          >
+                                              Carregar foto
+                                          </button>
+                                          <p className="text-[10px] text-slate-400">Recomendado: 200x200px (Rosto)</p>
+                                      </div>
+                                      <input type="file" ref={botAvatarInputRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'botAvatar')} />
+                                  </div>
+                              </div>
+
+                              <div>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mensagem de Boas-vindas</label>
+                                  <textarea 
+                                      className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white h-24 resize-none" 
+                                      placeholder="Ex: Olá! Bem-vindo à nossa loja. Como posso ajudar você hoje?" 
+                                      value={profile.storeConfig?.whatsappBot?.welcomeMessage || ''}
+                                      onChange={e => setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, whatsappBot: { ...prev.storeConfig?.whatsappBot, enabled: prev.storeConfig?.whatsappBot?.enabled ?? false, welcomeMessage: e.target.value } } }))}
+                                  />
+                              </div>
+                          </div>
+
+                          {/* Preview */}
+                          <div className="relative h-[400px] bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] border-4 border-gray-200 dark:border-zinc-700 overflow-hidden flex items-end justify-end p-6">
+                              <div className="absolute top-4 left-0 right-0 text-center opacity-40 pointer-events-none">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Preview na Vitrine</p>
+                              </div>
+
+                              {/* Widget Flutuante */}
+                              {profile.storeConfig?.whatsappBot?.enabled && (
+                                  <div className="animate-bounce-in flex flex-col items-end gap-4">
+                                      {/* Balão de Mensagem */}
+                                      <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl rounded-br-none shadow-xl max-w-[250px] border border-gray-100 dark:border-zinc-800">
+                                          <div className="flex items-center gap-3 mb-2 border-b border-gray-100 dark:border-zinc-800 pb-2">
+                                              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden">
+                                                  {profile.storeConfig?.whatsappBot?.avatarUrl ? (
+                                                      <img src={profile.storeConfig.whatsappBot.avatarUrl} className="w-full h-full object-cover" />
+                                                  ) : profile.logoUrl ? (
+                                                      <img src={profile.logoUrl} className="w-full h-full object-cover" />
+                                                  ) : (
+                                                      <Store className="w-4 h-4 text-emerald-600" />
+                                                  )}
+                                              </div>
+                                              <div>
+                                                  <p className="text-[10px] font-black uppercase text-gray-900 dark:text-white">{profile.storeConfig?.whatsappBot?.name || 'Atendente Virtual'}</p>
+                                                  <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider">Online Agora</p>
+                                              </div>
+                                          </div>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                              {profile.storeConfig?.whatsappBot?.welcomeMessage || 'Olá! Bem-vindo à nossa loja. Como posso ajudar você hoje?'}
+                                          </p>
+                                      </div>
+
+                                      {/* Botão WhatsApp */}
+                                      <div className="w-14 h-14 bg-[#25D366] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer">
+                                          <MessageSquare className="w-7 h-7" />
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
                       </div>
                    </div>
                 </div>

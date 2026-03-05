@@ -1,12 +1,14 @@
 
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { mockBackend } from '../services/mockBackend';
 import { BlogPost } from '../types';
 import { Calendar, User, BookOpen, Search, ArrowRight, Store, ChevronLeft, Share2, Clock } from 'lucide-react';
 
 export const Blog: React.FC = () => {
   const location = useLocation();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -16,6 +18,13 @@ export const Blog: React.FC = () => {
     const loadPosts = async () => {
       const data = await mockBackend.getBlogPosts();
       setPosts(data.sort((a, b) => Number(b.id) - Number(a.id)));
+      
+      if (id) {
+        const post = data.find(p => p.id === id);
+        if (post) setSelectedPost(post);
+      } else {
+        setSelectedPost(null);
+      }
       
       // Checa se há filtro de categoria na URL
       const params = new URLSearchParams(location.search);
@@ -27,7 +36,7 @@ export const Blog: React.FC = () => {
       setLoading(false);
     };
     loadPosts();
-  }, [location.search]);
+  }, [location.search, id]);
 
   const filteredPosts = posts.filter(post => {
     const term = searchTerm.toLowerCase();
@@ -42,7 +51,10 @@ export const Blog: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto pb-32 pt-8 px-6 animate-fade-in">
           <button 
-            onClick={() => setSelectedPost(null)}
+            onClick={() => {
+              setSelectedPost(null);
+              navigate('/blog');
+            }}
             className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary font-black text-[10px] uppercase tracking-widest mb-12 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 w-fit px-6 py-3 rounded-2xl transition-all border border-indigo-100 dark:border-zinc-700 shadow-sm"
           >
             <ChevronLeft className="w-4 h-4" /> VOLTAR PARA O BLOG

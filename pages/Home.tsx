@@ -5,13 +5,17 @@ import { Profile, BlogPost } from '../types';
 import { 
   ArrowRight, Globe, Settings, TrendingUp, 
   CheckCircle, Star, ArrowUpRight, BookOpen,
-  Search, MapPin, Store, Users, Calendar, Briefcase, Award
+  Search, MapPin, Store, Users, Calendar, Briefcase, Award,
+  HelpCircle, ChevronDown
 } from 'lucide-react';
+
+import { AIChatAgent } from '../components/AIChatAgent';
 
 export const Home: React.FC = () => {
   const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
   const [filters, setFilters] = useState({ search: '', city: '', category: '' });
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -247,7 +251,46 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. CHAMADA FINAL */}
+      {/* 6. FAQ */}
+      <section className="py-24 bg-gray-50 dark:bg-zinc-800/30 border-y border-gray-100 dark:border-zinc-800">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <HelpCircle className="w-4 h-4" /> Dúvidas Comuns
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">
+              Perguntas <span className="text-brand-primary">Frequentes</span>
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              { q: "O que é o Menu de Negócios?", a: "É uma plataforma completa que une vitrine digital, CRM, agendamento e marketplace B2B para impulsionar seu negócio." },
+              { q: "Quanto custa para usar?", a: "Temos planos gratuitos para começar e opções premium com recursos avançados como domínio personalizado e taxas menores." },
+              { q: "Preciso ter CNPJ?", a: "Não! Você pode começar como autônomo ou freelancer e profissionalizar sua gestão conosco." },
+              { q: "Como funciona o Programa de Recompensas?", a: "Você ganha pontos (Menu Cash) ao completar tarefas, indicar amigos e fechar negócios, trocando por benefícios exclusivos." },
+              { q: "Posso cancelar quando quiser?", a: "Sim, não temos fidelidade. Você tem total liberdade sobre sua assinatura." }
+            ].map((faq, idx) => (
+              <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 overflow-hidden transition-all hover:shadow-lg">
+                <button 
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-6 text-left"
+                >
+                  <span className="font-black text-gray-900 dark:text-white text-lg">{faq.q}</span>
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${openFaq === idx ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-300 ${openFaq === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <p className="px-6 pb-6 text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    {faq.a}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. CHAMADA FINAL */}
       <section className="py-32 relative overflow-hidden bg-brand-surface dark:bg-brand-dark">
         <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000" alt="Equipe trabalhando" className="w-full h-full object-cover opacity-10 dark:opacity-20" />
@@ -271,6 +314,9 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Assistente de IA Global (Apenas na Home) */}
+      <AIChatAgent />
 
     </div>
   );

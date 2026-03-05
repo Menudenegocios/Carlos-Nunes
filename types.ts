@@ -140,12 +140,22 @@ export interface SeoConfig {
   ogImage?: string;
 }
 
+export interface WhatsappBotConfig {
+  enabled: boolean;
+  name?: string;
+  welcomeMessage?: string;
+  avatarUrl?: string;
+}
+
 export interface StoreConfig {
   coverUrl?: string;
   bannerImages?: string[]; // Suporte para até 3 fotos no banner
   themeColor?: string;
   videoUrl?: string;
   openingHours?: string;
+  address?: string;
+  city?: string;
+  googleMapsLink?: string;
   businessType?: 'local_business' | 'professional';
   salesType?: 'product' | 'service' | 'both';
   aiChatEnabled?: boolean;
@@ -153,6 +163,7 @@ export interface StoreConfig {
   gaId?: string;
   pixelId?: string;
   seo?: SeoConfig;
+  whatsappBot?: WhatsappBotConfig;
   vitrineTheme?: 'modern' | 'classic' | 'minimal';
   whatsappFormEnabled?: boolean;
   whatsappFormTitle?: string;
@@ -339,7 +350,7 @@ export interface Lead {
   userId: string;
   name: string;
   phone: string;
-  source: 'maps' | 'instagram' | 'cnpj' | 'manual' | 'vitrine_publica';
+  source: 'maps' | 'instagram' | 'cnpj' | 'manual' | 'vitrine_publica' | 'bot_whatsapp';
   stage: PipelineStage;
   notes?: string;
   lastContact?: number;

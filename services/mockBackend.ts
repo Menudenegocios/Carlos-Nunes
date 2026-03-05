@@ -449,6 +449,17 @@ export const mockBackend = {
       console.error("Error updating profile in Supabase:", { error, supabaseData, userId });
       throw error;
     }
+
+    // CRITICAL FIX: Update local cache (all_profiles) even for non-demo users
+    // This ensures getProfile returns the latest data immediately without stale cache issues
+    const allProfiles = localStore.getGlobal('all_profiles') || [];
+    const idx = allProfiles.findIndex((p: any) => p.userId === userId);
+    if (idx > -1) {
+      // Merge the updated data into the local cache
+      allProfiles[idx] = { ...allProfiles[idx], ...data };
+      localStore.saveGlobal('all_profiles', allProfiles);
+    }
+
     return updated?.[0];
   },
 

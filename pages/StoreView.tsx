@@ -7,8 +7,143 @@ import {
   MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight, ArrowUpRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
-  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare
+  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store
 } from 'lucide-react';
+
+// Componente do Bot de WhatsApp
+const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [step, setStep] = useState<'welcome' | 'form'>('welcome');
+    const [formData, setFormData] = useState({ name: '', phone: '' });
+    const config = profile.storeConfig?.whatsappBot;
+
+    if (!config?.enabled) return null;
+
+    const handleStart = () => {
+        setStep('form');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // 1. Salvar Lead no CRM (Simulado)
+        try {
+            await mockBackend.addLeads([{
+                userId: profile.userId,
+                name: formData.name,
+                phone: formData.phone,
+                source: 'bot_whatsapp',
+                notes: 'Lead capturado pelo Atendente Virtual',
+                stage: 'new',
+                value: 0
+            }]);
+        } catch (err) {
+            console.error('Erro ao salvar lead do bot:', err);
+        }
+
+        // 2. Redirecionar para WhatsApp
+        const message = `Olá! Sou ${formData.name}. Vim pelo site e gostaria de falar com um atendente.`;
+        const whatsappUrl = `https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        setIsOpen(false);
+        setStep('welcome');
+        setFormData({ name: '', phone: '' });
+    };
+
+    return (
+        <div className="fixed bottom-6 right-6 z-[200] flex flex-col items-end gap-4 font-sans">
+            {/* Janela do Chat */}
+            {isOpen && (
+                <div className="bg-white dark:bg-zinc-900 w-[320px] rounded-[2rem] rounded-br-none shadow-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
+                    {/* Cabeçalho */}
+                    <div className="bg-[#0F172A] p-6 flex items-center gap-4 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-transparent"></div>
+                        <div className="w-12 h-12 rounded-full bg-white border-2 border-emerald-500 flex items-center justify-center overflow-hidden relative z-10">
+                            {config.avatarUrl ? (
+                                <img src={config.avatarUrl} className="w-full h-full object-cover" />
+                            ) : profile.logoUrl ? (
+                                <img src={profile.logoUrl} className="w-full h-full object-cover" />
+                            ) : (
+                                <Store className="w-6 h-6 text-emerald-600" />
+                            )}
+                        </div>
+                        <div className="relative z-10">
+                            <h4 className="font-black text-white text-sm uppercase tracking-wide">{config.name || 'Atendente Virtual'}</h4>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Online Agora</span>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div className="p-6 bg-gray-50 dark:bg-zinc-950/50 min-h-[250px] flex flex-col">
+                        {step === 'welcome' ? (
+                            <div className="space-y-6 flex-1">
+                                <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 dark:border-zinc-700">
+                                    <p className="text-sm text-gray-600 dark:text-zinc-300 leading-relaxed">
+                                        {config.welcomeMessage || 'Olá! Bem-vindo à nossa loja. Como posso ajudar você hoje?'}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={handleStart}
+                                    className="w-full py-4 bg-[#00A884] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-[#008f6f] transition-all flex items-center justify-center gap-2 group"
+                                >
+                                    Falar com Atendente <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4 flex-1 flex flex-col">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-2">Preencha para iniciar</p>
+                                <input 
+                                    required
+                                    autoFocus
+                                    type="text" 
+                                    placeholder="Seu Nome"
+                                    className="w-full p-4 bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                    value={formData.name}
+                                    onChange={e => setFormData({...formData, name: e.target.value})}
+                                />
+                                <input 
+                                    required
+                                    type="tel" 
+                                    placeholder="Seu WhatsApp"
+                                    className="w-full p-4 bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                    value={formData.phone}
+                                    onChange={e => setFormData({...formData, phone: e.target.value})}
+                                />
+                                <button 
+                                    type="submit"
+                                    className="mt-auto w-full py-4 bg-[#00A884] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-[#008f6f] transition-all flex items-center justify-center gap-2"
+                                >
+                                    Iniciar Conversa <MessageCircle className="w-4 h-4" />
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Botão Flutuante (Trigger) */}
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-16 h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.3)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
+            >
+                {isOpen ? <X className="w-8 h-8" /> : <MessageSquare className="w-8 h-8" />}
+                
+                {/* Notification Badge */}
+                {!isOpen && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
+                    </span>
+                )}
+            </button>
+        </div>
+    );
+};
 
 export const StoreView: React.FC = () => {
   const { userId, slug } = useParams<{ userId?: string, slug?: string }>();
@@ -556,6 +691,9 @@ export const StoreView: React.FC = () => {
                 </div>
             </section>
         </div>
+
+        {/* 5. WHATSAPP BOT WIDGET */}
+        <WhatsappBotWidget profile={profile} />
     </div>
   );
 };

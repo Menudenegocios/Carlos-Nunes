@@ -20,7 +20,6 @@ import { Quotes } from './pages/Quotes';
 import { Reviews } from './pages/Reviews';
 import { Categories } from './pages/Categories';
 import { MyCatalog } from './pages/MyCatalog';
-import { MyVitrine } from './pages/MyVitrine';
 import { StoreView } from './pages/StoreView';
 import { Vitrine } from './pages/Vitrine';
 import { BioBuilder } from './pages/BioBuilder';
@@ -60,6 +59,7 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Login />} />} path="/login" />
       <Route element={<Layout children={<Register />} />} path="/register" />
       <Route element={<Layout children={<Blog />} />} path="/blog" />
+      <Route element={<Layout children={<Blog />} />} path="/blog/:id" />
       <Route element={<Layout children={<Marketplace />} />} path="/marketplace" />
       <Route element={<Layout children={<Plans />} />} path="/plans" />
       <Route element={<Layout children={<AboutUs />} />} path="/quem-somos" />
@@ -74,7 +74,7 @@ const AppRoutes = () => {
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
-      <Route path="/catalog" element={<PrivateRoute><MyVitrine /></PrivateRoute>} />
+      <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
