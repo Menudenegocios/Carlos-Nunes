@@ -28,7 +28,7 @@ export const Profile: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await mockBackend.updateProfile(user.id, profile);
+      await mockBackend.updateProfile(user.id, { ...profile, isPublished: true });
       alert('Perfil atualizado com sucesso!');
     } finally { setSaving(false); }
   };

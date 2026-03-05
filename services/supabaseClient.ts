@@ -16,4 +16,6 @@ const supabaseUrl = getEnv('SUPABASE_URL', 'https://hfvfetwhurrhexvawody.supabas
 const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY', 'sb_publishable_8e-0o7GXlI9xftMW2s2Wdg_7e7os09G');
 
 // Se a URL não for válida, o createClient pode falhar silenciosamente ou lançar erro
+console.log("Supabase URL:", supabaseUrl);
+console.log("Supabase Anon Key (início):", supabaseAnonKey.substring(0, 10) + "...");
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

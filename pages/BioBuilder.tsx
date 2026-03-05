@@ -148,6 +148,7 @@ export const BioBuilder: React.FC = () => {
     try {
       const updatedProfile = { 
         ...profile,
+        isPublished: true,
         bioConfig: { 
           themeId: selectedCategory, 
           fontFamily: fontFamily as any, 
@@ -170,6 +171,7 @@ export const BioBuilder: React.FC = () => {
           }
         } 
       };
+      console.log("Enviando para updateProfile:", updatedProfile);
       await mockBackend.updateProfile(user.id, updatedProfile);
       setShowSuccess(true);
     } catch (err) {

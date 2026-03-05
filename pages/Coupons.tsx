@@ -85,7 +85,7 @@ export const Coupons: React.FC = () => {
       await mockBackend.redeemCoupon(
         user.id, 
         selectedCoupon.id, 
-        selectedCoupon.pointsReward
+        selectedCoupon.pointsReward || 0
       );
       /* Fix: Incorrect login call replaced with refreshProfile */
       await refreshProfile();
@@ -118,8 +118,8 @@ export const Coupons: React.FC = () => {
       code: coupon.code,
       title: coupon.title,
       discount: coupon.discount,
-      pointsReward: coupon.pointsReward,
-      description: coupon.description
+      pointsReward: coupon.pointsReward || 0,
+      description: coupon.description || ''
     });
     setIsEditing(true);
     setEditingCouponId(coupon.id);
@@ -130,7 +130,7 @@ export const Coupons: React.FC = () => {
      if (!user || !window.confirm('Tem certeza que deseja excluir este cupom?')) return;
      try {
        /* Fix: mockBackend.deleteCoupon now defined */
-       await mockBackend.deleteCoupon(user.id, coupon.offer.id, coupon.id);
+       await mockBackend.deleteCoupon(coupon.id, user.id);
        setCoupons(prev => prev.filter(c => c.id !== coupon.id));
      } catch (error) {
        alert('Erro ao excluir cupom.');
@@ -156,10 +156,10 @@ export const Coupons: React.FC = () => {
 
       if (isEditing && editingCouponId) {
         /* Fix: updateCoupon now defined */
-        await mockBackend.updateCoupon(user.id, newCouponData.offerId, editingCouponId, commonData);
+        await mockBackend.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
       } else {
         /* Fix: addCoupon now defined */
-        await mockBackend.addCoupon(user.id, newCouponData.offerId, commonData);
+        await mockBackend.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
       }
       
       setIsCreateModalOpen(false);

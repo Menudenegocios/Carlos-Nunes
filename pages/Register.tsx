@@ -18,11 +18,11 @@ export const Register: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const result = await register(name, email, password);
-      console.log("Registro concluído:", result);
+      await register(name, email, password);
+      console.log("Registro e login concluídos.");
       
-      alert('Conta criada com sucesso! Você já pode fazer login.');
-      navigate('/login');
+      alert('Conta criada e logada com sucesso!');
+      navigate('/dashboard');
     } catch (err: any) {
       console.error("Erro capturado no componente:", err);
       if (err.message.includes("User already registered")) {

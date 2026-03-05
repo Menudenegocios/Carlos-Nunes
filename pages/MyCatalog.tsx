@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockBackend } from '../services/mockBackend';
-import { Product, Profile, StoreCategory, BlogPost } from '../types';
+import { Product, Profile, StoreCategory, BlogPost, Coupon } from '../types';
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
   Plus, Trash2, Edit2, 
@@ -13,7 +13,7 @@ import {
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
   Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
   Share2, Link as LinkIcon, Tag, BookOpen, FileText, Send, AlignLeft, Type,
-  Calendar
+  Calendar, Ticket
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -56,10 +56,12 @@ export const MyCatalog: React.FC = () => {
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -68,6 +70,10 @@ export const MyCatalog: React.FC = () => {
   });
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
+
+  const [couponForm, setCouponForm] = useState<Partial<Coupon>>({
+    code: '', title: '', discount: '', type: 'percentage', pointsReward: 0, description: '', expiryDate: '', active: true
+  });
 
   // Blog Form State
   const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
@@ -93,11 +99,12 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-        const [prof, cats, prods, allPosts] = await Promise.all([
+        const [prof, cats, prods, allPosts, allCoupons] = await Promise.all([
             mockBackend.getProfile(user.id),
             mockBackend.getStoreCategories(user.id),
             mockBackend.getProducts(user.id),
-            mockBackend.getBlogPosts()
+            mockBackend.getBlogPosts(),
+            mockBackend.getCoupons(user.id)
         ]);
         
         setProfile(prof || { 
@@ -114,6 +121,7 @@ export const MyCatalog: React.FC = () => {
         setStoreCategories(cats);
         setProducts(prods || []);
         setBlogPosts(allPosts.filter(p => p.userId === user.id));
+        setCoupons(allCoupons || []);
     } finally { setIsLoading(false); }
   };
 
@@ -135,29 +143,27 @@ export const MyCatalog: React.FC = () => {
   }
 
   const handleProfileSave = async (redirect = false) => {
+    console.log('handleProfileSave called', { redirect, profile });
     if (!user) return;
     setIsSaving(true);
     try {
       // Se for redirecionar (clicou em Salvar & Publicar), força a publicação
       const profileToSave = redirect ? { ...profile, isPublished: true } : profile;
+      console.log('Saving profile:', profileToSave);
       
       await mockBackend.updateProfile(user.id, profileToSave);
+      console.log('Profile updated successfully');
       
       // Atualiza o estado local para refletir a mudança
       if (redirect) {
         setProfile(profileToSave);
-      }
-
-      if (redirect) {
-        // Redireciona para o slug se existir, senão para o ID
-        if (profileToSave.slug) {
-          navigate(`/${profileToSave.slug}`);
-        } else {
-          navigate(`/store/${user.id}`);
-        }
+        console.log('Redirecting to vitrine...');
+        navigate('/vitrine');
       } else {
         alert('Configurações salvas com sucesso!');
       }
+    } catch (error) {
+      console.error('Error saving profile:', error);
     } finally { setIsSaving(false); }
   };
 
@@ -243,6 +249,27 @@ export const MyCatalog: React.FC = () => {
     loadData();
   };
 
+  const handleCouponSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSaving(true);
+    try {
+        await mockBackend.createCoupon({
+            ...couponForm,
+            userId: user.id
+        } as any);
+        setIsCouponModalOpen(false);
+        setCouponForm({ code: '', title: '', discount: '', type: 'percentage', pointsReward: 0, description: '', expiryDate: '', active: true });
+        loadData();
+    } finally { setIsSaving(false); }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if(!user || !window.confirm('Excluir este cupom?')) return;
+    await mockBackend.deleteCoupon(id, user.id);
+    loadData();
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
       <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
@@ -270,7 +297,7 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'blog', label: 'Blog', desc: 'Gerar Autoridade', icon: BookOpen },
+            { id: 'blog', label: 'Marketing & Conteúdo', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
@@ -448,6 +475,57 @@ export const MyCatalog: React.FC = () => {
                             </div>
                          ))}
                       </div>
+                   </section>
+
+                   {/* CUPONS */}
+                   <section className="space-y-8 bg-gray-50 dark:bg-zinc-800/30 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                         <div>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight flex items-center gap-2">
+                               <Ticket className="w-6 h-6 text-emerald-600" /> Cupons de Desconto
+                            </h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Crie promoções para atrair mais clientes.</p>
+                         </div>
+                         <button onClick={() => setIsCouponModalOpen(true)} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
+                            <Plus className="w-4 h-4" /> NOVO CUPOM
+                         </button>
+                      </div>
+                      
+                      {coupons.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {coupons.map(coupon => (
+                                <div key={coupon.id} className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-gray-200 dark:border-zinc-700 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
+                                        {coupon.active ? 'Ativo' : 'Inativo'}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-600">
+                                                <Ticket className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-gray-900 dark:text-white text-lg uppercase italic">{coupon.code}</h4>
+                                                <p className="text-xs text-slate-500 font-bold">{coupon.title}</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 mb-6">
+                                            <p className="text-2xl font-black text-emerald-600">{coupon.type === 'percentage' ? `${coupon.discount}% OFF` : `R$ ${coupon.discount} OFF`}</p>
+                                            {coupon.description && <p className="text-xs text-slate-400">{coupon.description}</p>}
+                                            {coupon.expiryDate && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Validade: {new Date(coupon.expiryDate).toLocaleDateString('pt-BR')}</p>}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleDeleteCoupon(coupon.id)} className="w-full py-3 bg-gray-50 dark:bg-zinc-800 rounded-xl text-rose-500 font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors flex items-center justify-center gap-2">
+                                        <Trash2 className="w-3 h-3" /> Excluir Cupom
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 opacity-40">
+                            <Ticket className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">Nenhum cupom ativo no momento.</p>
+                        </div>
+                      )}
                    </section>
                 </div>
             )}
@@ -736,6 +814,51 @@ export const MyCatalog: React.FC = () => {
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR ITEM NO CATÁLOGO'}
+                    </button>
+                </form>
+            </div>
+         </div>
+      )}
+
+      {/* MODAL: CUPOM */}
+      {isCouponModalOpen && (
+         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
+                    <div>
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Novo Cupom</h3>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Ofereça descontos exclusivos.</p>
+                    </div>
+                    <button onClick={() => setIsCouponModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+                <form onSubmit={handleCouponSubmit} className="p-10 space-y-6 overflow-y-auto scrollbar-hide flex-1">
+                    <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Código do Cupom</label>
+                       <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white uppercase" value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} placeholder="Ex: BEMVINDO10" />
+                    </div>
+                    <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Promoção</label>
+                       <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.title} onChange={e => setCouponForm({...couponForm, title: e.target.value})} placeholder="Ex: 10% OFF na primeira compra" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo de Desconto</label>
+                           <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.type} onChange={e => setCouponForm({...couponForm, type: e.target.value as any})}>
+                              <option value="percentage">Porcentagem (%)</option>
+                              <option value="fixed">Valor Fixo (R$)</option>
+                           </select>
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Desconto</label>
+                           <input required type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.discount} onChange={e => setCouponForm({...couponForm, discount: e.target.value})} placeholder="Ex: 10 ou 50" />
+                        </div>
+                    </div>
+                    <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Validade (Opcional)</label>
+                       <input type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={couponForm.expiryDate} onChange={e => setCouponForm({...couponForm, expiryDate: e.target.value})} />
+                    </div>
+                    <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CRIAR CUPOM'}
                     </button>
                 </form>
             </div>

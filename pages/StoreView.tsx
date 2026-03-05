@@ -47,9 +47,11 @@ export const StoreView: React.FC = () => {
 
   const loadStoreData = async () => {
     const identifier = userId || slug;
+    console.log("StoreView: Carregando dados para o identificador:", identifier);
     if (!identifier) return;
     try {
       const prof = await mockBackend.getProfile(identifier);
+      console.log("StoreView: Resultado do getProfile:", prof);
       if (!prof) {
         setLoading(false);
         return;
@@ -108,7 +110,16 @@ export const StoreView: React.FC = () => {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-xs tracking-widest text-slate-400">Carregando vitrine de elite...</div>;
-  if (!profile) return <div className="min-h-screen flex items-center justify-center">Especialista não encontrado.</div>;
+  if (!profile) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-24 h-24 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-6">
+        <User className="w-10 h-10 text-gray-400" />
+      </div>
+      <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter mb-2">Especialista não encontrado</h2>
+      <p className="text-gray-500 dark:text-zinc-400 max-w-sm">Não conseguimos localizar o perfil solicitado. Verifique o link ou tente novamente mais tarde.</p>
+      <Link to="/" className="mt-8 bg-brand-primary text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Voltar para o Início</Link>
+    </div>
+  );
 
   const bannerImages = profile.storeConfig?.bannerImages?.length ? profile.storeConfig.bannerImages : [profile.storeConfig?.coverUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200'];
 

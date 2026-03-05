@@ -137,6 +137,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = pass.trim();
 
+    console.log("Tentando login com:", cleanEmail);
+
     // 1. Verificar Admin Hardcoded
     if (cleanEmail === 'nunesempreendedor@gmail.com' && (cleanPass === 'C1n9m9g7$.' || cleanPass === 'C1n9m9g7$')) {
       const admin: User = {
@@ -185,10 +187,15 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
     // 3. Login via Supabase (Real)
     try {
+      console.log("Chamando supabase.auth.signInWithPassword para:", cleanEmail);
       const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPass });
-      if (error) throw error;
+      if (error) {
+        console.error("Erro no signInWithPassword:", error);
+        throw error;
+      }
       localStorage.removeItem('menu_demo_user');
     } catch (error: any) {
+      console.error("Erro capturado no login:", error);
       throw error;
     }
   };
@@ -215,7 +222,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     try {
       const { data, error } = await supabase.auth.signUp({ 
         email: email.trim(), 
-        password: pass, 
+        password: pass.trim(), 
         options: { 
           data: { 
             full_name: name.trim() 
@@ -229,6 +236,15 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       }
       
       console.log("Usuário registrado com sucesso:", data.user?.id);
+      
+      // Se o Supabase já criou uma sessão, não precisamos logar novamente
+      if (!data.session) {
+        // Login automático após registro, caso não tenha criado sessão
+        await login(email, pass);
+      } else {
+        localStorage.removeItem('menu_demo_user');
+      }
+      
       return data;
     } catch (error: any) {
       console.error("Erro detalhado no registro:", error);

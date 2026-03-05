@@ -198,12 +198,16 @@ export interface Profile {
 
 export interface Coupon {
   id: string;
+  userId: string;
   code: string;
   title: string;
-  discount: string;
-  pointsReward: number;
-  description: string;
+  discount: string; // Ex: "10%" ou "R$ 50,00"
+  type: 'percentage' | 'fixed';
+  pointsReward?: number;
+  description?: string;
   expiryDate?: string;
+  createdAt: number;
+  active: boolean;
 }
 
 export interface SchedulingConfig {
@@ -284,6 +288,17 @@ export interface BlogPost {
   created_at?: string;
   // added for consistency with other backend objects
   createdAt?: string | number;
+  // SEO fields
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  slug?: string;
+  altText?: string;
+  googleMyBusinessSync?: boolean;
+  // Social fields
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
 }
 
 export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lost';
@@ -293,6 +308,20 @@ export interface LeadTimelineEvent {
   type: 'creation' | 'stage_change' | 'contact' | 'note';
   content: string;
   createdAt: number;
+}
+
+export interface Client {
+  id: string;
+  userId: string;
+  name: string;
+  phone: string;
+  email?: string;
+  company?: string;
+  notes?: string;
+  createdAt: number;
+  lastContact?: number;
+  tags?: string[];
+  totalValue?: number;
 }
 
 export interface Lead {
@@ -307,6 +336,7 @@ export interface Lead {
   value?: number;
   createdAt?: number;
   timeline?: LeadTimelineEvent[];
+  clientId?: string; // Link opcional para um cliente convertido
 }
 
 export interface FinancialEntry {
@@ -317,6 +347,7 @@ export interface FinancialEntry {
   type: 'income' | 'expense';
   date: string;
   category: string;
+  entityType: 'personal' | 'business';
 }
 
 export interface ScheduleItem {

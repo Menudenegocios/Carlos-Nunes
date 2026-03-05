@@ -20,6 +20,7 @@ import { Quotes } from './pages/Quotes';
 import { Reviews } from './pages/Reviews';
 import { Categories } from './pages/Categories';
 import { MyCatalog } from './pages/MyCatalog';
+import { MyVitrine } from './pages/MyVitrine';
 import { StoreView } from './pages/StoreView';
 import { Vitrine } from './pages/Vitrine';
 import { BioBuilder } from './pages/BioBuilder';
@@ -73,7 +74,7 @@ const AppRoutes = () => {
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
-      <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
+      <Route path="/catalog" element={<PrivateRoute><MyVitrine /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
       <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
