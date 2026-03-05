@@ -18,13 +18,20 @@ export const Register: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      await register(name, email, password);
-      // O Supabase por padrão exige confirmação de e-mail. 
-      // Se estiver desabilitado no painel, ele loga direto ou permite o login.
-      alert('Conta criada com sucesso! Verifique seu e-mail (se necessário) e faça login.');
+      const result = await register(name, email, password);
+      console.log("Registro concluído:", result);
+      
+      alert('Conta criada com sucesso! Você já pode fazer login.');
       navigate('/login');
     } catch (err: any) {
-      setError(err.message || 'Erro ao registrar nova conta.');
+      console.error("Erro capturado no componente:", err);
+      if (err.message.includes("User already registered")) {
+        setError("Este e-mail já está cadastrado. Tente fazer login.");
+      } else if (err.message.includes("Password should be at least 6 characters")) {
+        setError("A senha deve ter pelo menos 6 caracteres.");
+      } else {
+        setError(err.message || 'Erro ao registrar nova conta. Verifique os dados e tente novamente.');
+      }
     } finally {
       setLoading(false);
     }

@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       if (data) {
         setUser({
           id: userId,
-          name: data.full_name || 'Usuário',
+          name: data.business_name || data.full_name || 'Usuário',
           email: data.email || '',
           plan: data.plan || 'profissionais',
           points: data.points || 0,
@@ -212,8 +212,28 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   const register = async (name: string, email: string, pass: string) => {
-    const { error } = await supabase.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-    if (error) throw error;
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email: email.trim(), 
+        password: pass, 
+        options: { 
+          data: { 
+            full_name: name.trim() 
+          } 
+        } 
+      });
+      
+      if (error) {
+        console.error("Erro no Supabase SignUp:", error);
+        throw error;
+      }
+      
+      console.log("Usuário registrado com sucesso:", data.user?.id);
+      return data;
+    } catch (error: any) {
+      console.error("Erro detalhado no registro:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {

@@ -30,7 +30,19 @@ export const AdminCentral: React.FC = () => {
     email: '',
     password: '',
     plan: 'profissionais' as any,
-    points: 0
+    points: 0,
+    role: 'user' as any
+  });
+
+  // Event Modal State
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<PlatformEvent | null>(null);
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    date: '',
+    location: '',
+    description: '',
+    type: 'Online' as 'Online' | 'Presencial'
   });
 
   const planNames: Record<string, string> = {
@@ -52,12 +64,12 @@ export const AdminCentral: React.FC = () => {
   const loadAdminData = async () => {
     setIsLoading(true);
     try {
-      const allProfiles = await mockBackend.getAllProfiles();
-      setProfiles(allProfiles);
-      setEvents([
-        { id: 'e1', title: 'Workshop de Vendas local', date: '2024-10-25', location: 'Google Meet', description: 'Como vender mais no bairro.', type: 'Online' },
-        { id: 'e2', title: 'Networking Curitiba', date: '2024-11-05', location: 'Av. Batel, 100', description: 'Encontro presencial.', type: 'Presencial' },
+      const [allProfiles, allEvents] = await Promise.all([
+        mockBackend.getAllProfiles(),
+        mockBackend.getEvents()
       ]);
+      setProfiles(allProfiles);
+      setEvents(allEvents);
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +82,8 @@ export const AdminCentral: React.FC = () => {
         email: '',
         password: '',
         plan: 'profissionais',
-        points: 0
+        points: 0,
+        role: 'user'
     });
     setIsModalOpen(true);
   };
@@ -82,7 +95,8 @@ export const AdminCentral: React.FC = () => {
       email: (profile as any).email || '',
       password: '', // Senha em branco para segurança no modo edit
       plan: (profile as any).plan || 'profissionais',
-      points: (profile as any).points || 0
+      points: (profile as any).points || 0,
+      role: (profile as any).role || 'user'
     });
     setIsModalOpen(true);
   };
@@ -91,15 +105,21 @@ export const AdminCentral: React.FC = () => {
     e.preventDefault();
     try {
       if (editingProfile) {
-        await mockBackend.updateProfile(editingProfile.userId, {
-          businessName: memberForm.businessName,
-          plan: memberForm.plan,
-          points: memberForm.points
-        } as any);
-        // Em um sistema real, aqui chamaria uma função de updateAuth no supabase
+        await Promise.all([
+          mockBackend.updateProfile(editingProfile.userId, {
+            businessName: memberForm.businessName,
+            plan: memberForm.plan,
+            points: memberForm.points
+          } as any),
+          mockBackend.updateUser(editingProfile.userId, {
+            role: memberForm.role,
+            plan: memberForm.plan,
+            points: memberForm.points
+          })
+        ]);
       } else {
         await mockBackend.createMember(
-            { email: memberForm.email, plan: memberForm.plan, points: memberForm.points, password: memberForm.password } as any,
+            { email: memberForm.email, plan: memberForm.plan, points: memberForm.points, password: memberForm.password, role: memberForm.role } as any,
             { businessName: memberForm.businessName }
         );
       }
@@ -126,9 +146,66 @@ export const AdminCentral: React.FC = () => {
     navigate('/dashboard');
   };
 
-  const deleteMember = (id: string) => {
+  const deleteMember = async (userId: string) => {
     if (window.confirm('Excluir este membro permanentemente?')) {
-      setProfiles(profiles.filter(p => p.id !== id));
+      try {
+        await mockBackend.deleteMember(userId);
+        loadAdminData();
+        alert('Membro excluído com sucesso.');
+      } catch (e) {
+        alert('Erro ao excluir membro.');
+      }
+    }
+  };
+
+  // Event Management Handlers
+  const handleOpenEventModal = (event?: PlatformEvent) => {
+    if (event) {
+      setEditingEvent(event);
+      setEventForm({
+        title: event.title,
+        date: event.date,
+        location: event.location,
+        description: event.description,
+        type: event.type
+      });
+    } else {
+      setEditingEvent(null);
+      setEventForm({
+        title: '',
+        date: '',
+        location: '',
+        description: '',
+        type: 'Online'
+      });
+    }
+    setIsEventModalOpen(true);
+  };
+
+  const handleSaveEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingEvent) {
+        await mockBackend.updateEvent(editingEvent.id, eventForm);
+      } else {
+        await mockBackend.createEvent(eventForm);
+      }
+      setIsEventModalOpen(false);
+      loadAdminData();
+      alert(editingEvent ? 'Evento atualizado!' : 'Evento criado!');
+    } catch (e) {
+      alert('Erro ao salvar evento.');
+    }
+  };
+
+  const deleteEvent = async (id: string) => {
+    if (window.confirm('Excluir este evento?')) {
+      try {
+        await mockBackend.deleteEvent(id);
+        loadAdminData();
+      } catch (e) {
+        alert('Erro ao excluir evento.');
+      }
     }
   };
 
@@ -197,20 +274,106 @@ export const AdminCentral: React.FC = () => {
                                         <div className="flex gap-2">
                                             <button onClick={() => handleImpersonate(profile)} title="Entrar na conta" className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><UserCheck className="w-5 h-5" /></button>
                                             <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteMember(profile.id)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteMember(profile.userId)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
-                    {/* Outras tabs mantidas */}
+                    {activeTab === 'eventos' && (
+                        <div className="space-y-8">
+                            <div className="flex justify-between items-center px-4">
+                                <h3 className="text-2xl font-black italic uppercase">Gestão de Eventos</h3>
+                                <button onClick={() => handleOpenEventModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
+                                    <Plus className="w-4 h-4" /> NOVO EVENTO
+                                </button>
+                            </div>
+                            
+                            <div className="grid gap-4">
+                                {events.map(event => (
+                                    <div key={event.id} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 flex items-center justify-center shadow-sm">
+                                                <Calendar className="w-7 h-7" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-gray-900 dark:text-white text-lg">{event.title}</h4>
+                                                <div className="flex items-center gap-3">
+                                                  <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{event.type}</span>
+                                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{event.date}</span>
+                                                  <span className="text-[10px] font-medium text-slate-400 italic">{event.location}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleOpenEventModal(event)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteEvent(event.id)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'paginas' && (
+                        <div className="text-center py-20">
+                            <Settings2 className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                            <h3 className="text-xl font-black uppercase italic text-slate-400">Configurações de Páginas & Planos</h3>
+                            <p className="text-slate-400 text-sm mt-2">Módulo em desenvolvimento para gestão de conteúdo dinâmico.</p>
+                        </div>
+                    )}
                 </div>
             )}
          </div>
       </div>
 
-      {/* MODAL CRIAR/EDITAR MEMBRO */}
+      {/* MODAL CRIAR/EDITAR EVENTO */}
+      {isEventModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-2xl font-black uppercase italic">{editingEvent ? 'Editar Evento' : 'Novo Evento'}</h3>
+                        <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Divulgue workshops e networking</p>
+                    </div>
+                    <button onClick={() => setIsEventModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+                <form onSubmit={handleSaveEvent} className="p-10 space-y-6">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título do Evento</label>
+                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Data</label>
+                                <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.date} onChange={e => setEventForm({...eventForm, date: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
+                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.type} onChange={e => setEventForm({...eventForm, type: e.target.value as any})}>
+                                    <option value="Online">Online</option>
+                                    <option value="Presencial">Presencial</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Local / Link</label>
+                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição Curta</label>
+                            <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white resize-none" value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} />
+                        </div>
+                    </div>
+
+                    <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+                        <Save className="w-5 h-5" /> {editingEvent ? 'SALVAR ALTERAÇÕES' : 'CRIAR EVENTO'}
+                    </button>
+                </form>
+             </div>
+          </div>
+      )}
       {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
@@ -250,6 +413,29 @@ export const AdminCentral: React.FC = () => {
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Saldo de Pontos</label>
                             <input type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
+                        </div>
+
+                        <div className="col-span-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Categoria / Permissão</label>
+                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                                {['user', 'partner', 'member', 'client', 'admin'].map(role => (
+                                    <button
+                                        key={role}
+                                        type="button"
+                                        onClick={() => setMemberForm({...memberForm, role: role as any})}
+                                        className={`py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all border ${
+                                            memberForm.role === role 
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' 
+                                            : 'bg-gray-50 dark:bg-zinc-800 text-slate-400 border-transparent hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {role === 'user' ? 'Usuário' : 
+                                         role === 'partner' ? 'Parceiro' : 
+                                         role === 'member' ? 'Membro' : 
+                                         role === 'client' ? 'Cliente' : 'Admin'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

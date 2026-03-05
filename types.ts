@@ -9,7 +9,7 @@ export interface User {
   menuCash: number;
   referralCode: string;
   referralsCount: number;
-  role?: 'user' | 'admin';
+  role?: 'user' | 'partner' | 'member' | 'client' | 'admin';
 }
 
 export interface PortfolioItem {

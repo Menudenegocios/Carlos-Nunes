@@ -29,13 +29,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     social_links JSONB DEFAULT '{}'::jsonb,
     store_config JSONB DEFAULT '{}'::jsonb,
     bio_config JSONB DEFAULT '{}'::jsonb,
-    plan TEXT DEFAULT 'basico',
+    plan TEXT DEFAULT 'profissionais',
     points INTEGER DEFAULT 0,
     level TEXT DEFAULT 'bronze',
     menu_cash NUMERIC DEFAULT 0,
     referral_code TEXT UNIQUE,
     referrals_count INTEGER DEFAULT 0,
     role TEXT DEFAULT 'user',
+    email TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -170,6 +171,17 @@ CREATE TABLE IF NOT EXISTS public.b2b_offers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Tabela: platform_events (Eventos da Plataforma)
+CREATE TABLE IF NOT EXISTS public.platform_events (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    title TEXT NOT NULL,
+    date TEXT NOT NULL,
+    location TEXT NOT NULL,
+    description TEXT,
+    type TEXT NOT NULL CHECK (type IN ('Online', 'Presencial')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 
 -- ==========================================
 -- POLÍTICAS DE SEGURANÇA (RLS - ROW LEVEL SECURITY)
@@ -186,6 +198,7 @@ ALTER TABLE public.schedule_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.b2b_offers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.platform_events ENABLE ROW LEVEL SECURITY;
 
 -- ------------------------------------------
 -- Regras para PROFILES
@@ -196,6 +209,17 @@ CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles FOR
 CREATE POLICY "Users can insert their own profile." ON public.profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
 -- Usuários podem atualizar seus próprios perfis
 CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- ------------------------------------------
+-- Regras para PLATFORM EVENTS
+-- ------------------------------------------
+CREATE POLICY "Events are viewable by everyone." ON public.platform_events FOR SELECT USING (true);
+CREATE POLICY "Only admins can modify events." ON public.platform_events FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  )
+);
 
 -- ------------------------------------------
 -- Regras para STORE CATEGORIES
@@ -277,8 +301,8 @@ CREATE POLICY "Users can delete own B2B offers." ON public.b2b_offers FOR DELETE
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, business_name, plan)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'basico');
+  INSERT INTO public.profiles (user_id, business_name, plan, email)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'profissionais', new.email);
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

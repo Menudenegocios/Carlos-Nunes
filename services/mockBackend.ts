@@ -1,5 +1,5 @@
 
-import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment } from '../types';
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment, PlatformEvent } from '../types';
 import { supabase } from './supabaseClient';
 
 const isDemoUser = (userId: string) => 
@@ -80,6 +80,136 @@ export const mockBackend = {
     localStore.saveGlobal('all_profiles', [...allProfiles, newProfile]);
     
     return { user: newUser, profile: newProfile };
+  },
+
+  updateUser: async (userId: string, data: Partial<User>) => {
+    // Update local store for demo users
+    if (isDemoUser(userId)) {
+      const mockUsers = localStore.getGlobal('mock_users') || [];
+      const idx = mockUsers.findIndex((u: any) => u.id === userId);
+      if (idx > -1) {
+        mockUsers[idx] = { ...mockUsers[idx], ...data };
+        localStore.saveGlobal('mock_users', mockUsers);
+      }
+      return mockUsers[idx];
+    }
+
+    // Update Supabase profiles table which stores role, plan, points
+    const updateData: any = {};
+    if (data.role) updateData.role = data.role;
+    if (data.plan) updateData.plan = data.plan;
+    if (data.points !== undefined) updateData.points = data.points;
+    if (data.level) updateData.level = data.level;
+    if (data.menuCash !== undefined) updateData.menu_cash = data.menuCash;
+
+    const { data: updated, error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating user in Supabase:", error);
+      throw error;
+    }
+    return updated;
+  },
+
+  deleteMember: async (userId: string) => {
+    if (isDemoUser(userId)) {
+      const mockUsers = localStore.getGlobal('mock_users') || [];
+      localStore.saveGlobal('mock_users', mockUsers.filter((u: any) => u.id !== userId));
+      
+      const allProfiles = localStore.getGlobal('all_profiles') || [];
+      localStore.saveGlobal('all_profiles', allProfiles.filter((p: any) => p.userId !== userId));
+      return;
+    }
+
+    // Delete from profiles table
+    const { error } = await supabase.from('profiles').delete().eq('user_id', userId);
+    if (error) {
+      console.error("Error deleting member in Supabase:", error);
+      throw error;
+    }
+  },
+
+  // --- EVENTOS ---
+  getEvents: async (): Promise<PlatformEvent[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('platform_events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+      if (!data) return [];
+
+      return data.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        date: e.date,
+        location: e.location,
+        description: e.description,
+        type: e.type
+      }));
+    } catch (e) {
+      console.warn("Falling back to local events:", e);
+      return localStore.getGlobal('platform_events') || [
+        { id: 'e1', title: 'Workshop de Vendas local', date: '2024-10-25', location: 'Google Meet', description: 'Como vender mais no bairro.', type: 'Online' },
+        { id: 'e2', title: 'Networking Curitiba', date: '2024-11-05', location: 'Av. Batel, 100', description: 'Encontro presencial.', type: 'Presencial' },
+      ];
+    }
+  },
+
+  createEvent: async (event: Omit<PlatformEvent, 'id'>): Promise<PlatformEvent> => {
+    try {
+      const { data, error } = await supabase
+        .from('platform_events')
+        .insert([event])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.warn("Creating event locally:", e);
+      const newEvent = { ...event, id: Math.random().toString(36).substr(2, 9) };
+      const local = localStore.getGlobal('platform_events') || [];
+      localStore.saveGlobal('platform_events', [...local, newEvent]);
+      return newEvent;
+    }
+  },
+
+  updateEvent: async (id: string, event: Partial<PlatformEvent>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('platform_events')
+        .update(event)
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Updating event locally:", e);
+      const local = localStore.getGlobal('platform_events') || [];
+      const updated = local.map((e: any) => e.id === id ? { ...e, ...event } : e);
+      localStore.saveGlobal('platform_events', updated);
+    }
+  },
+
+  deleteEvent: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('platform_events')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Deleting event locally:", e);
+      const local = localStore.getGlobal('platform_events') || [];
+      localStore.saveGlobal('platform_events', local.filter((e: any) => e.id !== id));
+    }
   },
 
   // --- CRM / LEADS ---
@@ -192,17 +322,47 @@ export const mockBackend = {
   },
 
   updateProfile: async (userId: string, data: Partial<Profile>) => {
-    const allProfiles = localStore.getGlobal('all_profiles') || [];
-    const idx = allProfiles.findIndex((p: any) => p.userId === userId);
-    if (idx > -1) {
-      allProfiles[idx] = { ...allProfiles[idx], ...data };
-      localStore.saveGlobal('all_profiles', allProfiles);
+    if (isDemoUser(userId)) {
+      const allProfiles = localStore.getGlobal('all_profiles') || [];
+      const idx = allProfiles.findIndex((p: any) => p.userId === userId);
+      if (idx > -1) {
+        allProfiles[idx] = { ...allProfiles[idx], ...data };
+        localStore.saveGlobal('all_profiles', allProfiles);
+      }
+      return allProfiles[idx];
     }
-    
-    localStore.save('profile', userId, { ...data, userId });
-    if (!isDemoUser(userId)) {
-        await supabase.from('profiles').update({ slug: data.slug, business_name: data.businessName, category: data.category, phone: data.phone, address: data.address, city: data.city, neighborhood: data.neighborhood, bio: data.bio, logo_url: data.logoUrl, vitrine_category: data.vitrineCategory, is_published: data.isPublished, social_links: data.socialLinks, store_config: (data as any).storeConfig, bio_config: (data as any).bioConfig }).eq('user_id', userId);
+
+    // Map camelCase to snake_case for Supabase
+    const supabaseData: any = {};
+    if (data.businessName) supabaseData.business_name = data.businessName;
+    if (data.category) supabaseData.category = data.category;
+    if (data.phone) supabaseData.phone = data.phone;
+    if (data.address) supabaseData.address = data.address;
+    if (data.city) supabaseData.city = data.city;
+    if (data.neighborhood) supabaseData.neighborhood = data.neighborhood;
+    if (data.bio) supabaseData.bio = data.bio;
+    if (data.logoUrl) supabaseData.logo_url = data.logoUrl;
+    if (data.vitrineCategory) supabaseData.vitrine_category = data.vitrineCategory;
+    if (data.isPublished !== undefined) supabaseData.is_published = data.isPublished;
+    if (data.socialLinks) supabaseData.social_links = data.socialLinks;
+    if (data.storeConfig) supabaseData.store_config = data.storeConfig;
+    if (data.bioConfig) supabaseData.bio_config = data.bioConfig;
+    if ((data as any).plan) supabaseData.plan = (data as any).plan;
+    if ((data as any).points !== undefined) supabaseData.points = (data as any).points;
+    if ((data as any).role) supabaseData.role = (data as any).role;
+
+    const { data: updated, error } = await supabase
+      .from('profiles')
+      .update(supabaseData)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating profile in Supabase:", error);
+      throw error;
     }
+    return updated;
   },
 
   getPublishedProfiles: async (): Promise<Profile[]> => {
@@ -229,7 +389,25 @@ export const mockBackend = {
 
   getAllProfiles: async () => {
     const sbData = await safeQuery(supabase.from('profiles').select('*'), []);
-    const mappedSb = sbData.map((p: any) => ({ id: p.id, userId: p.user_id, slug: p.slug, businessName: p.business_name, category: p.category, city: p.city, bio: p.bio, logoUrl: p.logo_url, vitrineCategory: p.vitrine_category, plan: p.plan, points: p.points }));
+    const mappedSb = sbData.map((p: any) => ({ 
+      id: p.id, 
+      userId: p.user_id, 
+      slug: p.slug, 
+      businessName: p.business_name, 
+      category: p.category, 
+      city: p.city, 
+      bio: p.bio, 
+      logoUrl: p.logo_url, 
+      vitrineCategory: p.vitrine_category, 
+      plan: p.plan, 
+      points: p.points,
+      role: p.role,
+      level: p.level,
+      menuCash: p.menu_cash,
+      referralCode: p.referral_code,
+      referralsCount: p.referrals_count,
+      email: p.email // Note: email might need to be fetched separately or stored in profiles if allowed
+    }));
     const local = localStore.getGlobal('all_profiles') || [];
     return [...mappedSb, ...local];
   },

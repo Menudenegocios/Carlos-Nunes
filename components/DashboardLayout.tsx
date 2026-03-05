@@ -28,6 +28,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard' },
+    ...(isAdmin ? [{ label: 'Central', icon: Settings2, to: '/admin-central' }] : []),
     // Recursos Restritos
     ...(hasAdvancedAccess ? [
       { label: 'Minha Vitrine', icon: Globe, to: '/catalog' },
@@ -37,10 +38,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans' },
   ];
-
-  if (isAdmin) {
-    menuItems.push({ label: 'Central', icon: Settings2, to: '/admin-central' });
-  }
 
   const isActive = (path: string) => location.pathname === path;
 
