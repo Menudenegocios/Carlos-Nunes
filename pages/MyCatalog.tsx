@@ -13,7 +13,7 @@ import {
   Youtube, Globe, CreditCard, DollarSign, Wallet, Zap, ShieldCheck,
   Lock, Crown, User, Info, ListChecks, Target, Heart, Instagram,
   Share2, Link as LinkIcon, Tag, BookOpen, FileText, Send, AlignLeft, Type,
-  Calendar, Ticket
+  Calendar, Ticket, Search, BarChart
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate } from 'react-router-dom';
@@ -88,6 +88,7 @@ export const MyCatalog: React.FC = () => {
   const fileInputLogoRef = useRef<HTMLInputElement>(null);
   const fileInputProductRef = useRef<HTMLInputElement>(null);
   const fileInputBlogRef = useRef<HTMLInputElement>(null);
+  const ogImageInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
   const isAdmin = user?.role === 'admin' || realAdmin?.role === 'admin';
@@ -167,19 +168,20 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'coverUrl' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2' | 'ogImage') => {
     const file = e.target.files?.[0];
     if (file && field) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const result = reader.result as string;
-        const isWide = field === 'coverUrl' || (field && field.startsWith('banner')) || field === 'blogUrl';
+        const isWide = field === 'coverUrl' || (field && field.startsWith('banner')) || field === 'blogUrl' || field === 'ogImage';
         const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
 
         if (field === 'logoUrl') setProfile(prev => ({ ...prev, logoUrl: compressed }));
         else if (field === 'coverUrl') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, coverUrl: compressed } }));
         else if (field === 'productUrl') setProductForm(prev => ({ ...prev, imageUrl: compressed }));
         else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, imageUrl: compressed }));
+        else if (field === 'ogImage') setProfile(prev => ({ ...prev, storeConfig: { ...prev.storeConfig, seo: { ...prev.storeConfig?.seo, ogImage: compressed } } }));
         else if (field && field.startsWith('banner')) {
             const index = parseInt(field.replace('banner', ''));
             const currentBanners = [...(profile.storeConfig?.bannerImages || [])];
@@ -417,6 +419,183 @@ export const MyCatalog: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* SEÇÃO SEO & SOCIAL */}
+                    <section className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-xl mt-16">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600">
+                                <Share2 className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black uppercase italic tracking-tight text-gray-900 dark:text-white">
+                                    SEO Inteligente & Social
+                                </h3>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                    Otimize para o Google e personalize o compartilhamento.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid lg:grid-cols-2 gap-12">
+                            {/* LADO ESQUERDO: Configurações */}
+                            <div className="space-y-8">
+                                {/* SEO Básico */}
+                                <div className="space-y-4">
+                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Search className="w-4 h-4" /> Meta Dados (Google)</h4>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título da Página (Meta Title)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                            placeholder="Ex: Pizzaria Bella Napoli - A Melhor de SP" 
+                                            value={profile.storeConfig?.seo?.metaTitle || ''}
+                                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, seo: {...profile.storeConfig?.seo, metaTitle: e.target.value}}})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição (Meta Description)</label>
+                                        <textarea 
+                                            className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white h-24 resize-none" 
+                                            placeholder="Breve descrição que aparece nos resultados de busca..." 
+                                            value={profile.storeConfig?.seo?.metaDescription || ''}
+                                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, seo: {...profile.storeConfig?.seo, metaDescription: e.target.value}}})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Palavra-chave Principal</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                            placeholder="Ex: pizza artesanal, delivery" 
+                                            value={profile.storeConfig?.seo?.keywords?.join(', ') || ''}
+                                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, seo: {...profile.storeConfig?.seo, keywords: e.target.value.split(',').map(k => k.trim())}}})}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-100 dark:border-zinc-800 my-6"></div>
+
+                                {/* Social / Open Graph */}
+                                <div className="space-y-4">
+                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Share2 className="w-4 h-4" /> Compartilhamento (WhatsApp/Facebook)</h4>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título Social (OG Title)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                            placeholder="Título que aparece no card do WhatsApp" 
+                                            value={profile.storeConfig?.seo?.ogTitle || ''}
+                                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, seo: {...profile.storeConfig?.seo, ogTitle: e.target.value}}})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição Social</label>
+                                        <textarea 
+                                            className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white h-20 resize-none" 
+                                            placeholder="Descrição curta e atrativa para redes sociais..." 
+                                            value={profile.storeConfig?.seo?.ogDescription || ''}
+                                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, seo: {...profile.storeConfig?.seo, ogDescription: e.target.value}}})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagem de Capa (OG Image)</label>
+                                        <div 
+                                            className="h-32 bg-gray-50 dark:bg-zinc-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-zinc-700 flex items-center justify-center cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-700/50 transition-colors relative overflow-hidden group"
+                                            onClick={() => ogImageInputRef.current?.click()}
+                                        >
+                                            {profile.storeConfig?.seo?.ogImage ? (
+                                                <img src={profile.storeConfig.seo.ogImage} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-xs font-black text-slate-400 uppercase flex items-center gap-2">
+                                                    <ImageIcon className="w-4 h-4"/> Upload Imagem (1200x630)
+                                                </span>
+                                            )}
+                                            <input type="file" ref={ogImageInputRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'ogImage')} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-100 dark:border-zinc-800 my-6"></div>
+
+                                {/* Analytics & Pixel */}
+                                <div className="space-y-4">
+                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><BarChart className="w-4 h-4" /> Rastreamento & Analytics</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Facebook Pixel ID</label>
+                                            <input 
+                                                type="text" 
+                                                className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                                placeholder="Ex: 123456789" 
+                                                value={profile.storeConfig?.pixelId || ''}
+                                                onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, pixelId: e.target.value}})}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Google Analytics ID</label>
+                                            <input 
+                                                type="text" 
+                                                className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 font-bold dark:text-white" 
+                                                placeholder="Ex: G-XXXXXXXXXX" 
+                                                value={profile.storeConfig?.gaId || ''}
+                                                onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, gaId: e.target.value}})}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* LADO DIREITO: Preview */}
+                            <div className="space-y-8">
+                                <div className="bg-[#E5DDD5] dark:bg-[#0b141a] p-8 rounded-[2.5rem] relative overflow-hidden border-4 border-gray-200 dark:border-zinc-800 shadow-inner min-h-[400px]">
+                                    <div className="absolute top-4 left-0 right-0 text-center opacity-40 pointer-events-none">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Simulação WhatsApp</p>
+                                    </div>
+
+                                    {/* O Card do WhatsApp */}
+                                    <div className="bg-white dark:bg-[#1f2c34] rounded-lg overflow-hidden shadow-sm max-w-sm mx-auto mt-10">
+                                        {/* Imagem */}
+                                        <div className="h-48 bg-gray-200 dark:bg-zinc-800 w-full relative group">
+                                            {profile.storeConfig?.seo?.ogImage ? (
+                                                <img src={profile.storeConfig.seo.ogImage} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs uppercase font-bold">Sem Imagem</div>
+                                            )}
+                                        </div>
+                                        {/* Texto do Card */}
+                                        <div className="p-3 bg-[#F0F2F5] dark:bg-[#1f2c34] border-l-4 border-indigo-500">
+                                            <h4 className="font-bold text-gray-900 dark:text-white leading-tight text-sm mb-1 line-clamp-2">
+                                                {profile.storeConfig?.seo?.ogTitle || profile.storeConfig?.seo?.metaTitle || 'Título do Seu Site'}
+                                            </h4>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                                {profile.storeConfig?.seo?.ogDescription || profile.storeConfig?.seo?.metaDescription || 'A descrição que você digitou vai aparecer aqui para quem receber o link.'}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 mt-1 lowercase">menudenegocios.com/{profile.slug || 'seu-link'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
+                                    <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Search className="w-3 h-3" /> Preview Google</h5>
+                                    <div className="space-y-1">
+                                        <p className="text-sm text-[#1a0dab] dark:text-[#8ab4f8] font-medium hover:underline cursor-pointer truncate">
+                                            {profile.storeConfig?.seo?.metaTitle || 'Título da Página nos Resultados de Busca'}
+                                        </p>
+                                        <p className="text-xs text-[#006621] dark:text-[#34a853] truncate">
+                                            https://menudenegocios.com/{profile.slug || 'seu-link'}
+                                        </p>
+                                        <p className="text-xs text-[#545454] dark:text-[#bdc1c6] line-clamp-2">
+                                            {profile.storeConfig?.seo?.metaDescription || 'Esta é a descrição que aparecerá nos resultados do Google. É importante que ela contenha suas palavras-chave principais.'}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <button onClick={() => handleProfileSave(true)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-xs hover:scale-105 transition-all flex items-center justify-center gap-2">
+                                    <Save className="w-4 h-4" /> Salvar Configurações
+                                </button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             )}
 

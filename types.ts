@@ -131,6 +131,15 @@ export interface BioConfig {
   };
 }
 
+export interface SeoConfig {
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string[];
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+}
+
 export interface StoreConfig {
   coverUrl?: string;
   bannerImages?: string[]; // Suporte para até 3 fotos no banner
@@ -143,6 +152,7 @@ export interface StoreConfig {
   schedulingEnabled?: boolean;
   gaId?: string;
   pixelId?: string;
+  seo?: SeoConfig;
   vitrineTheme?: 'modern' | 'classic' | 'minimal';
   whatsappFormEnabled?: boolean;
   whatsappFormTitle?: string;
