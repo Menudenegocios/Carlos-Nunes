@@ -120,8 +120,17 @@ export const mockBackend = {
       .select();
 
     if (error) {
-      console.error("Error updating user in Supabase:", error);
-      throw error;
+      console.error("Error updating user in Supabase, falling back to localStore:", error);
+      // Fallback to localStore
+      const allProfiles = localStore.getGlobal('all_profiles') || [];
+      const pIdx = allProfiles.findIndex((p: any) => p.userId === userId);
+      if (pIdx > -1) {
+        allProfiles[pIdx] = { ...allProfiles[pIdx], ...data };
+      } else {
+        allProfiles.push({ userId, ...data });
+      }
+      localStore.saveGlobal('all_profiles', allProfiles);
+      return { id: userId, ...data };
     }
     return updated?.[0];
   },
@@ -139,9 +148,15 @@ export const mockBackend = {
     // Delete from profiles table
     const { error } = await supabase.from('profiles').delete().eq('user_id', userId);
     if (error) {
-      console.error("Error deleting member in Supabase:", error);
-      throw error;
+      console.error("Error deleting member in Supabase, falling back to localStore:", error);
     }
+    
+    // Always remove from local cache just in case
+    const mockUsers = localStore.getGlobal('mock_users') || [];
+    localStore.saveGlobal('mock_users', mockUsers.filter((u: any) => u.id !== userId));
+    
+    const allProfiles = localStore.getGlobal('all_profiles') || [];
+    localStore.saveGlobal('all_profiles', allProfiles.filter((p: any) => p.userId !== userId));
   },
 
   // --- EVENTOS ---
@@ -579,8 +594,7 @@ export const mockBackend = {
       .select();
 
     if (error) {
-      console.error("Error updating profile in Supabase:", { error, supabaseData, userId });
-      throw error;
+      console.error("Error updating profile in Supabase, falling back to localStore:", { error, supabaseData, userId });
     }
 
     // CRITICAL FIX: Update local cache (all_profiles) even for non-demo users
@@ -590,10 +604,12 @@ export const mockBackend = {
     if (idx > -1) {
       // Merge the updated data into the local cache
       allProfiles[idx] = { ...allProfiles[idx], ...data };
-      localStore.saveGlobal('all_profiles', allProfiles);
+    } else {
+      allProfiles.push({ userId, ...data });
     }
+    localStore.saveGlobal('all_profiles', allProfiles);
 
-    return updated?.[0];
+    return updated?.[0] || { userId, ...data };
   },
 
   getPublishedProfiles: async (): Promise<Profile[]> => {
@@ -643,7 +659,13 @@ export const mockBackend = {
       email: p.email // Note: email might need to be fetched separately or stored in profiles if allowed
     }));
     const local = localStore.getGlobal('all_profiles') || [];
-    return [...mappedSb, ...local];
+    
+    // Merge local and mappedSb by userId, local overwrites mappedSb
+    const mergedMap = new Map();
+    mappedSb.forEach((p: any) => mergedMap.set(p.userId, p));
+    local.forEach((p: any) => mergedMap.set(p.userId, { ...mergedMap.get(p.userId), ...p }));
+    
+    return Array.from(mergedMap.values());
   },
 
   // --- PRODUTOS ---

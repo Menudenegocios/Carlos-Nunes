@@ -48,7 +48,7 @@ export const AdminCentral: React.FC = () => {
   const planNames: Record<string, string> = {
     profissionais: 'Plano Básico',
     freelancers: 'Plano PRO',
-    negocios: 'Plano Business'
+    negocios: 'Plano FULL'
   };
 
   const plansConfig = [
@@ -407,9 +407,9 @@ export const AdminCentral: React.FC = () => {
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Plano Ativo</label>
                             <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
-                                <option value="profissionais">Plano Básico (Gratuito)</option>
+                                <option value="profissionais">Plano Básico</option>
                                 <option value="freelancers">Plano PRO</option>
-                                <option value="negocios">Plano Business</option>
+                                <option value="negocios">Plano FULL</option>
                             </select>
                         </div>
                         
