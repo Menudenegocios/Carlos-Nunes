@@ -301,7 +301,7 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'blog', label: 'Marketing & Conteúdo', desc: 'Gerar Autoridade', icon: BookOpen },
+            { id: 'blog', label: 'Blog & SEO', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
@@ -562,7 +562,7 @@ export const MyCatalog: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-2xl font-black uppercase italic tracking-tight text-gray-900 dark:text-white">
-                                    SEO Inteligente & Social
+                                    SEO & Social
                                 </h3>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                                     Otimize para o Google e personalize o compartilhamento.

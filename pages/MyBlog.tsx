@@ -181,7 +181,7 @@ export const MyBlog: React.FC = () => {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter leading-none">
-                MARKETING & CONTEÚDO <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
+                BLOG & SEO <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">PRO</span>
               </h2>
               <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em] mt-2">
                 {isAdmin ? 'ADMINISTRAÇÃO GLOBAL DE CONTEÚDO' : 'DOMINE AS BUSCAS E GERE AUTORIDADE.'}

@@ -1,5 +1,5 @@
 
-import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment, PlatformEvent, Client, Coupon } from '../types';
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment, PlatformEvent, Client, Coupon, CRMTask, QuickMessageTemplate } from '../types';
 import { supabase } from './supabaseClient';
 
 const isDemoUser = (userId: string) => 
@@ -320,6 +320,139 @@ export const mockBackend = {
 
   deleteLead: async (id: string): Promise<void> => {
     await supabase.from('leads').delete().eq('id', id);
+  },
+
+  // --- CRM TASKS ---
+  getCRMTasks: async (userId: string): Promise<CRMTask[]> => {
+    if (isDemoUser(userId)) return localStore.get('crm_tasks', userId) || [];
+    const data = await safeQuery(supabase.from('crm_tasks').select('*').eq('user_id', userId).order('due_date', { ascending: true }), []);
+    return data.map((t: any) => ({
+      id: t.id,
+      userId: t.user_id,
+      title: t.title,
+      description: t.description,
+      dueDate: t.due_date,
+      status: t.status,
+      type: t.type,
+      relatedTo: t.related_to,
+      createdAt: t.created_at
+    }));
+  },
+
+  addCRMTask: async (task: Omit<CRMTask, 'id' | 'createdAt'>): Promise<CRMTask> => {
+    if (isDemoUser(task.userId)) {
+      const current = localStore.get('crm_tasks', task.userId) || [];
+      const newTask = { ...task, id: Math.random().toString(), createdAt: Date.now() };
+      localStore.save('crm_tasks', task.userId, [...current, newTask]);
+      return newTask as CRMTask;
+    }
+    const { data } = await supabase.from('crm_tasks').insert({
+      user_id: task.userId,
+      title: task.title,
+      description: task.description,
+      due_date: task.dueDate,
+      status: task.status,
+      type: task.type,
+      related_to: task.relatedTo,
+      created_at: Date.now()
+    }).select().single();
+    return data ? {
+      id: data.id,
+      userId: data.user_id,
+      title: data.title,
+      description: data.description,
+      dueDate: data.due_date,
+      status: data.status,
+      type: data.type,
+      relatedTo: data.related_to,
+      createdAt: data.created_at
+    } : { ...task, id: Math.random().toString(), createdAt: Date.now() } as CRMTask;
+  },
+
+  updateCRMTask: async (id: string, data: Partial<CRMTask>): Promise<void> => {
+    const userId = data.userId || '';
+    if (userId && isDemoUser(userId)) {
+      const current = localStore.get('crm_tasks', userId) || [];
+      localStore.save('crm_tasks', userId, current.map((t: any) => t.id === id ? { ...t, ...data } : t));
+      return;
+    }
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.relatedTo !== undefined) updateData.related_to = data.relatedTo;
+
+    await supabase.from('crm_tasks').update(updateData).eq('id', id);
+  },
+
+  deleteCRMTask: async (id: string, userId: string): Promise<void> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('crm_tasks', userId) || [];
+      localStore.save('crm_tasks', userId, current.filter((t: any) => t.id !== id));
+      return;
+    }
+    await supabase.from('crm_tasks').delete().eq('id', id).eq('user_id', userId);
+  },
+
+  // --- QUICK MESSAGES ---
+  getQuickMessages: async (userId: string): Promise<QuickMessageTemplate[]> => {
+    if (isDemoUser(userId)) return localStore.get('quick_messages', userId) || [];
+    const data = await safeQuery(supabase.from('quick_messages').select('*').eq('user_id', userId), []);
+    return data.map((m: any) => ({
+      id: m.id,
+      userId: m.user_id,
+      category: m.category,
+      title: m.title,
+      content: m.content
+    }));
+  },
+
+  addQuickMessage: async (msg: Omit<QuickMessageTemplate, 'id'>): Promise<QuickMessageTemplate> => {
+    if (isDemoUser(msg.userId)) {
+      const current = localStore.get('quick_messages', msg.userId) || [];
+      const newMsg = { ...msg, id: Math.random().toString() };
+      localStore.save('quick_messages', msg.userId, [...current, newMsg]);
+      return newMsg as QuickMessageTemplate;
+    }
+    const { data } = await supabase.from('quick_messages').insert({
+      user_id: msg.userId,
+      category: msg.category,
+      title: msg.title,
+      content: msg.content
+    }).select().single();
+    return data ? {
+      id: data.id,
+      userId: data.user_id,
+      category: data.category,
+      title: data.title,
+      content: data.content
+    } : { ...msg, id: Math.random().toString() } as QuickMessageTemplate;
+  },
+
+  updateQuickMessage: async (id: string, data: Partial<QuickMessageTemplate>): Promise<void> => {
+    const userId = data.userId || '';
+    if (userId && isDemoUser(userId)) {
+      const current = localStore.get('quick_messages', userId) || [];
+      localStore.save('quick_messages', userId, current.map((m: any) => m.id === id ? { ...m, ...data } : m));
+      return;
+    }
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.category !== undefined) updateData.category = data.category;
+
+    await supabase.from('quick_messages').update(updateData).eq('id', id);
+  },
+
+  deleteQuickMessage: async (id: string, userId: string): Promise<void> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('quick_messages', userId) || [];
+      localStore.save('quick_messages', userId, current.filter((m: any) => m.id !== id));
+      return;
+    }
+    await supabase.from('quick_messages').delete().eq('id', id).eq('user_id', userId);
   },
 
   // --- FINANCEIRO ---

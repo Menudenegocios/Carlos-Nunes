@@ -66,7 +66,7 @@ export const MyVitrine: React.FC = () => {
           {[
             { id: 'bio', label: 'BIO DIGITAL', desc: 'Links e Estilo', icon: Smartphone },
             { id: 'catalog', label: 'CATÁLOGO & LOJA', desc: 'Produtos/Vendas', icon: Package },
-            { id: 'blog', label: 'MARKETING & CONTEÚDO', desc: 'Autoridade e SEO', icon: BookOpen },
+            { id: 'blog', label: 'BLOG & SEO', desc: 'Autoridade e SEO', icon: BookOpen },
             { id: 'scheduling', label: 'AGENDAMENTOS', desc: 'Gestão de Agenda', icon: Calendar },
           ].map(tab => (
             <button 
@@ -196,7 +196,7 @@ export const MyVitrine: React.FC = () => {
 
         {activeTab === 'blog' && (
           <ToolLayout 
-            title="MARKETING & CONTEÚDO" 
+            title="BLOG & SEO" 
             icon={BookOpen} 
             subTabs={[
               { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },

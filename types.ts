@@ -343,6 +343,7 @@ export interface Client {
   lastContact?: number;
   tags?: string[];
   totalValue?: number;
+  birthDate?: string;
 }
 
 export interface Lead {
@@ -445,4 +446,28 @@ export interface PlatformEvent {
   location: string;
   description: string;
   type: 'Online' | 'Presencial';
+}
+
+export interface CRMTask {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  dueDate: number;
+  status: 'pending' | 'completed';
+  type: 'call' | 'meeting' | 'email' | 'whatsapp' | 'other';
+  relatedTo?: {
+    type: 'lead' | 'client';
+    id: string;
+    name: string;
+  };
+  createdAt: number;
+}
+
+export interface QuickMessageTemplate {
+  id: string;
+  userId: string;
+  category: 'primeiro_contato' | 'apos_proposta' | 'lembrete_decisao' | 'pos_venda' | 'reativacao' | 'outros';
+  title: string;
+  content: string;
 }
