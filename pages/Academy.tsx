@@ -81,7 +81,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'agentes' | 'biblioteca'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'biblioteca'>('home');
   const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
@@ -118,8 +118,7 @@ export const Academy: React.FC = () => {
                   { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                   { id: 'treinamentos', label: 'CURSOS', desc: 'Vídeo aulas', icon: Video },
                   { id: 'trilha', label: 'TRILHA', desc: 'Passo a passo', icon: Map },
-                  { id: 'agentes', label: 'AGENTES IA', desc: 'Consultoria 24h', icon: Bot },
-                  { id: 'biblioteca', label: 'BIBLIOTECA', desc: 'Materiais PDF', icon: BookOpen },
+                  { id: 'biblioteca', label: 'BIBLIOTECA DE PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -233,7 +232,7 @@ export const Academy: React.FC = () => {
            </div>
         )}
 
-         {activeTab === 'agentes' && (
+         {activeTab === 'biblioteca' && (
            <div className="space-y-12 px-4">
               <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl">
                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
@@ -242,7 +241,7 @@ export const Academy: React.FC = () => {
                           <Bot className="w-10 h-10 text-brand-primary" />
                        </div>
                        <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">Consultoria 24h com Especialistas</h2>
-                       <p className="text-indigo-100 text-lg font-medium leading-relaxed">Nossos agentes de IA foram treinados com as melhores estratégias de vendas, marketing e gestão local do mundo.</p>
+                       <p className="text-indigo-100 text-lg font-medium leading-relaxed">Nossos agentes de IA foram treinados com as melhores estratégias de vendas, marketing e gestão local do mundo. Além disso, acesse nossa biblioteca de prompts de alta conversão.</p>
                     </div>
                     <div className="hidden lg:block relative">
                        <div className="w-64 h-64 bg-white/5 rounded-full blur-[80px] absolute inset-0"></div>
@@ -252,83 +251,32 @@ export const Academy: React.FC = () => {
                  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {AI_AGENTS.map(agent => (
-                    <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
-                       <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                          <agent.icon className="w-10 h-10" />
+              <div className="space-y-4">
+                 <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Agentes de IA</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {AI_AGENTS.map(agent => (
+                       <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
+                          <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                             <agent.icon className="w-10 h-10" />
+                          </div>
+                          <div>
+                             <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{agent.role}</p>
+                             <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{agent.name}</h3>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
+                             {agent.description}
+                          </p>
+                          <a 
+                           href={agent.url} 
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
+                          >
+                             ABRIR AGENTE <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
                        </div>
-                       <div>
-                          <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{agent.role}</p>
-                          <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{agent.name}</h3>
-                       </div>
-                       <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
-                          {agent.description}
-                       </p>
-                       <a 
-                        href={agent.url} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
-                       >
-                          ABRIR AGENTE <ExternalLink className="w-3.5 h-3.5" />
-                       </a>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        )}
-
-        {activeTab === 'biblioteca' && (
-           <div className="space-y-12 px-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                 {[
-                    { 
-                      title: 'Scripts de Alta Conversão', 
-                      role: 'Copywriting Comercial',
-                      icon: ListChecks, 
-                      desc: 'Modelos validados para WhatsApp, ligações e reuniões presenciais para fechar mais negócios.',
-                      url: 'https://www.notion.so/16c055f18fde8002b658ea22e1bbf29a?v=16c055f18fde81eca778000ce9f09c73',
-                      color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
-                    },
-                    { 
-                      title: 'Prompts para Imagem', 
-                      role: 'Design com IA',
-                      icon: Image, 
-                      desc: 'Comandos otimizados para criar artes e fotos profissionais para seus anúncios e redes sociais.',
-                      url: '#',
-                      color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30'
-                    },
-                    { 
-                      title: 'Prompts para Vídeo', 
-                      role: 'Produção Audiovisual',
-                      icon: Video, 
-                      desc: 'Roteiros e comandos para gerar vídeos impactantes que prendem a atenção do seu cliente.',
-                      url: '#',
-                      color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/30'
-                    }
-                 ].map((item, i) => (
-                    <div key={i} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
-                       <div className={`w-20 h-20 rounded-[2rem] ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                          <item.icon className="w-10 h-10" />
-                       </div>
-                       <div>
-                          <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{item.role}</p>
-                          <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{item.title}</h3>
-                       </div>
-                       <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
-                          {item.desc}
-                       </p>
-                       <a 
-                        href={item.url} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
-                       >
-                          ACESSAR AGORA <ExternalLink className="w-3.5 h-3.5" />
-                       </a>
-                    </div>
-                 ))}
+                    ))}
+                 </div>
               </div>
            </div>
         )}
