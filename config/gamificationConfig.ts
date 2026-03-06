@@ -53,15 +53,15 @@ export const tiers = [
 export const plans = {
   basico: {
     semestral: 358.80,
-    anual: 598.80,
+    anual: 497.80,
   },
   pro: {
     semestral: 597.00,
-    anual: 1078.80,
+    anual: 899.80,
   },
   full: {
     semestral: 1500.00,
-    anual: 2399.64,
+    anual: 1997.00,
   }
 };
 
