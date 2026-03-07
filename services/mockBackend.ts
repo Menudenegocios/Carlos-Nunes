@@ -1,6 +1,6 @@
 
-import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment, PlatformEvent, Client, Coupon, CRMTask, QuickMessageTemplate } from '../types';
-import { supabase } from './supabaseClient';
+import { User, Profile, Offer, Lead, ExtractorResult, BlogPost, NetworkingProfile, LoyaltyCard, Quote, ScheduleItem, Review, Product, StoreCategory, FinancialEntry, CommunityPost, CommunityComment, PointsTransaction, PipelineStage, B2BOffer, PortfolioItem, VitrineComment, PlatformEvent, Client, Coupon, CRMTask, QuickMessageTemplate, Project, SWOTAnalysis, SMARTGoal, BusinessCanva } from '../types';
+import { supabase, supabaseAdmin } from './supabaseClient';
 
 const isDemoUser = (userId: string) => 
   userId && (
@@ -51,7 +51,42 @@ const safeQuery = async <T>(query: any, fallback: T): Promise<T> => {
 export const mockBackend = {
   // --- ADMIN: GESTÃO DE MEMBROS ---
   createMember: async (userData: Partial<User>, profileData: Partial<Profile>) => {
-    const newUserId = `mock_${Math.random().toString(36).substr(2, 9)}`;
+    // 1. Create user in Supabase Auth using the secondary client (so it doesn't log the admin out)
+    const { data: authData, error: authError } = await supabaseAdmin.auth.signUp({
+      email: userData.email!,
+      password: (userData as any).password,
+      options: {
+        data: {
+          full_name: profileData.businessName || 'Novo Membro'
+        }
+      }
+    });
+
+    if (authError) {
+      console.error("Error creating user in Supabase Auth:", authError);
+      throw new Error(`Erro ao criar usuário: ${authError.message}`);
+    }
+
+    const newUserId = authData.user?.id;
+    if (!newUserId) {
+      throw new Error("Erro desconhecido ao criar usuário (ID não retornado).");
+    }
+
+    // 2. Insert profile into the profiles table
+    const { error: profileError } = await supabase.from('profiles').insert({
+      user_id: newUserId,
+      business_name: profileData.businessName,
+      role: userData.role || 'user',
+      plan: userData.plan || 'profissionais',
+      points: userData.points || 0,
+      email: userData.email
+    });
+
+    if (profileError) {
+      console.error("Error creating profile in Supabase:", profileError);
+      // We don't throw here because the user was created, but we should log it
+    }
+
     const newUser: User = {
       id: newUserId,
       name: profileData.businessName || 'Novo Membro',
@@ -62,14 +97,9 @@ export const mockBackend = {
       menuCash: 0,
       referralCode: `REF_${newUserId.toUpperCase()}`,
       referralsCount: 0,
-      role: 'user'
+      role: userData.role || 'user'
     };
 
-    // Salva o usuário para permitir login simulado
-    const mockUsers = localStore.getGlobal('mock_users') || [];
-    localStore.saveGlobal('mock_users', [...mockUsers, { ...newUser, password: (userData as any).password }]);
-    
-    // Salva o perfil
     const newProfile: Profile = {
       id: Math.random().toString(36).substr(2, 9),
       userId: newUserId,
@@ -78,9 +108,6 @@ export const mockBackend = {
       plan: userData.plan || 'profissionais',
       points: userData.points || 0
     } as any;
-    
-    const allProfiles = localStore.getGlobal('all_profiles') || [];
-    localStore.saveGlobal('all_profiles', [...allProfiles, newProfile]);
     
     return { user: newUser, profile: newProfile };
   },
@@ -270,8 +297,7 @@ export const mockBackend = {
       email: client.email,
       company: client.company,
       notes: client.notes,
-      tags: client.tags,
-      created_at: Date.now()
+      tags: client.tags
     }).select().single();
     return data ? { ...data, userId: data.user_id, createdAt: data.created_at, lastContact: data.last_contact, totalValue: data.total_value } : { ...client, id: Math.random().toString(), createdAt: Date.now() } as Client;
   },
@@ -316,7 +342,11 @@ export const mockBackend = {
       localStore.save('leads', userId, [...leads.map(l => ({ ...l, id: Math.random().toString(), createdAt: Date.now() })), ...current]);
       return;
     }
-    await supabase.from('leads').insert(leads.map(l => ({ user_id: l.userId, name: l.name, phone: l.phone, source: l.source || 'manual', stage: l.stage || 'new', notes: l.notes, value: l.value || 0, created_at: Date.now() })));
+    const { error } = await supabase.from('leads').insert(leads.map(l => ({ user_id: l.userId, name: l.name, phone: l.phone, source: l.source || 'manual', stage: l.stage || 'new', notes: l.notes, value: l.value || 0 })));
+    if (error) {
+      console.error("Erro ao inserir lead no Supabase:", error);
+      throw new Error(error.message);
+    }
   },
 
   updateLead: async (id: string, data: Partial<Lead>): Promise<void> => {
@@ -368,8 +398,7 @@ export const mockBackend = {
       due_date: task.dueDate,
       status: task.status,
       type: task.type,
-      related_to: task.relatedTo,
-      created_at: Date.now()
+      related_to: task.relatedTo
     }).select().single();
     return data ? {
       id: data.id,
@@ -717,6 +746,14 @@ export const mockBackend = {
     await supabase.from('store_categories').delete().eq('id', id).eq('user_id', userId);
   },
 
+  updateProduct: async (id: string, product: Partial<Product>) => {
+    await supabase.from('products').update({ name: product.name, description: product.description, price: product.price, category: product.category }).eq('id', id);
+  },
+
+  deleteProduct: async (id: string) => {
+    await supabase.from('products').delete().eq('id', id);
+  },
+
   // --- BLOG POSTS ---
   getBlogPosts: async (): Promise<BlogPost[]> => {
     const sbData = await safeQuery(supabase.from('blog_posts').select('*'), []);
@@ -813,23 +850,23 @@ export const mockBackend = {
   createOffer: async (userId: string, offer: any): Promise<Offer> => {
     if (isDemoUser(userId)) {
         const current = localStore.get('offers', userId) || [];
-        const next = [...current, { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() }];
+        const next = [...current, { ...offer, title: offer.title || offer.name, id: Math.random().toString(), userId, createdAt: Date.now() }];
         localStore.save('offers', userId, next);
-        return { ...offer, id: Math.random().toString(), userId, createdAt: Date.now() };
+        return { ...offer, title: offer.title || offer.name, id: Math.random().toString(), userId, createdAt: Date.now() };
     }
-    const { data } = await supabase.from('offers').insert({ user_id: userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling, created_at: Date.now() }).select().single();
-    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: Math.random().toString(), userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
+    const { data } = await supabase.from('offers').insert({ user_id: userId, title: offer.title || offer.name, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling }).select().single();
+    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: Math.random().toString(), userId, title: offer.title || offer.name, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
   },
 
   updateOffer: async (userId: string, offerId: string, offer: any): Promise<Offer> => {
     if (isDemoUser(userId)) {
         const current = localStore.get('offers', userId) || [];
-        const next = current.map((o: any) => o.id === offerId ? { ...o, ...offer } : o);
+        const next = current.map((o: any) => o.id === offerId ? { ...o, ...offer, title: offer.title || offer.name || o.title } : o);
         localStore.save('offers', userId, next);
-        return { ...offer, id: offerId, userId };
+        return { ...offer, title: offer.title || offer.name, id: offerId, userId };
     }
-    const { data } = await supabase.from('offers').update({ title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling }).eq('id', offerId).eq('user_id', userId).select().single();
-    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: offerId, userId, title: offer.title, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
+    const { data } = await supabase.from('offers').update({ title: offer.title || offer.name, description: offer.description, category: offer.category, city: offer.city, price: offer.price, image_url: offer.image_url, video_url: offer.video_url, logo_url: offer.logoUrl, social_links: offer.socialLinks, scheduling: offer.scheduling }).eq('id', offerId).eq('user_id', userId).select().single();
+    return data ? { id: data.id, userId: data.user_id, title: data.title, description: data.description, category: data.category, city: data.city, price: data.price, createdAt: data.created_at, imageUrl: data.image_url, videoUrl: data.video_url, logoUrl: data.logo_url, socialLinks: data.social_links, coupons: data.coupons, scheduling: data.scheduling } : { id: offerId, userId, title: offer.title || offer.name, description: offer.description, category: offer.category, city: offer.city, price: offer.price, createdAt: Date.now(), imageUrl: offer.image_url, videoUrl: offer.video_url, logoUrl: offer.logo_url, socialLinks: offer.social_links, coupons: offer.coupons, scheduling: offer.scheduling };
   },
 
   deleteOffer: async (id: string, userId: string): Promise<void> => {
@@ -920,8 +957,7 @@ export const mockBackend = {
       points_reward: coupon.pointsReward,
       description: coupon.description,
       expiry_date: coupon.expiryDate,
-      active: coupon.active,
-      created_at: Date.now()
+      active: coupon.active
     }).select().single();
     return data ? { ...data, userId: data.user_id, pointsReward: data.points_reward, expiryDate: data.expiry_date, createdAt: data.created_at } : { ...coupon, id: Math.random().toString(), createdAt: Date.now() } as Coupon;
   },
@@ -998,5 +1034,168 @@ export const mockBackend = {
     const local = localStore.getGlobal('b2b_transactions') || [];
     const updated = local.map((t: any) => t.id === transactionId ? { ...t, status } : t);
     localStore.saveGlobal('b2b_transactions', updated);
+  },
+
+  // --- GESTÃO DE PROJETOS ---
+  getProjects: async (userId: string): Promise<Project[]> => {
+    if (isDemoUser(userId)) return localStore.get('projects', userId) || [];
+    const { data } = await supabase.from('projects').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+    return (data || []).map(p => ({ id: p.id, userId: p.user_id, name: p.name, description: p.description, createdAt: p.created_at }));
+  },
+
+  createProject: async (userId: string, name: string, description?: string): Promise<Project> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('projects', userId) || [];
+      const newProject = { id: Math.random().toString(), userId, name, description, createdAt: new Date().toISOString() };
+      localStore.save('projects', userId, [newProject, ...current]);
+      return newProject;
+    }
+    const { data } = await supabase.from('projects').insert({ user_id: userId, name, description }).select().single();
+    return { id: data.id, userId: data.user_id, name: data.name, description: data.description, createdAt: data.created_at };
+  },
+
+  deleteProject: async (id: string, userId: string): Promise<void> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('projects', userId) || [];
+      localStore.save('projects', userId, current.filter((p: any) => p.id !== id));
+      return;
+    }
+    await supabase.from('projects').delete().eq('id', id).eq('user_id', userId);
+  },
+
+  getSWOT: async (projectId: string, userId: string): Promise<SWOTAnalysis | null> => {
+    if (isDemoUser(userId)) {
+      const all = localStore.get('swot_analyses', userId) || [];
+      return all.find((s: any) => s.projectId === projectId) || null;
+    }
+    const { data } = await supabase.from('swot_analyses').select('*').eq('project_id', projectId).eq('user_id', userId).single();
+    if (!data) return null;
+    return { id: data.id, projectId: data.project_id, userId: data.user_id, strengths: data.strengths, weaknesses: data.weaknesses, opportunities: data.opportunities, threats: data.threats, createdAt: data.created_at };
+  },
+
+  saveSWOT: async (swot: Omit<SWOTAnalysis, 'id' | 'createdAt'>): Promise<SWOTAnalysis> => {
+    if (isDemoUser(swot.userId)) {
+      const all = localStore.get('swot_analyses', swot.userId) || [];
+      const existingIdx = all.findIndex((s: any) => s.projectId === swot.projectId);
+      const newSwot = { ...swot, id: Math.random().toString(), createdAt: new Date().toISOString() };
+      if (existingIdx > -1) {
+        all[existingIdx] = newSwot;
+      } else {
+        all.push(newSwot);
+      }
+      localStore.save('swot_analyses', swot.userId, all);
+      return newSwot;
+    }
+    const { data } = await supabase.from('swot_analyses').upsert({ 
+      project_id: swot.projectId, 
+      user_id: swot.userId,
+      strengths: swot.strengths,
+      weaknesses: swot.weaknesses,
+      opportunities: swot.opportunities,
+      threats: swot.threats
+    }, { onConflict: 'project_id,user_id' }).select().single();
+    return { id: data.id, projectId: data.project_id, userId: data.user_id, strengths: data.strengths, weaknesses: data.weaknesses, opportunities: data.opportunities, threats: data.threats, createdAt: data.created_at };
+  },
+
+  getSMARTGoal: async (projectId: string, userId: string): Promise<SMARTGoal | null> => {
+    if (isDemoUser(userId)) {
+      const all = localStore.get('smart_goals', userId) || [];
+      return all.find((s: any) => s.projectId === projectId) || null;
+    }
+    const { data } = await supabase.from('smart_goals').select('*').eq('project_id', projectId).eq('user_id', userId).single();
+    if (!data) return null;
+    return { id: data.id, projectId: data.project_id, userId: data.user_id, specific: data.specific, measurable: data.measurable, attainable: data.attainable, relevant: data.relevant, timeBound: data.time_bound, createdAt: data.created_at };
+  },
+
+  saveSMARTGoal: async (goal: Omit<SMARTGoal, 'id' | 'createdAt'>): Promise<SMARTGoal> => {
+    if (isDemoUser(goal.userId)) {
+      const all = localStore.get('smart_goals', goal.userId) || [];
+      const existingIdx = all.findIndex((s: any) => s.projectId === goal.projectId);
+      const newGoal = { ...goal, id: Math.random().toString(), createdAt: new Date().toISOString() };
+      if (existingIdx > -1) {
+        all[existingIdx] = newGoal;
+      } else {
+        all.push(newGoal);
+      }
+      localStore.save('smart_goals', goal.userId, all);
+      return newGoal;
+    }
+    const { data } = await supabase.from('smart_goals').upsert({
+      project_id: goal.projectId,
+      user_id: goal.userId,
+      specific: goal.specific,
+      measurable: goal.measurable,
+      attainable: goal.attainable,
+      relevant: goal.relevant,
+      time_bound: goal.timeBound
+    }, { onConflict: 'project_id,user_id' }).select().single();
+    return { id: data.id, projectId: data.project_id, userId: data.user_id, specific: data.specific, measurable: data.measurable, attainable: data.attainable, relevant: data.relevant, timeBound: data.time_bound, createdAt: data.created_at };
+  },
+
+  getBusinessCanva: async (projectId: string, userId: string): Promise<BusinessCanva | null> => {
+    if (isDemoUser(userId)) {
+      const all = localStore.get('business_canva', userId) || [];
+      return all.find((s: any) => s.projectId === projectId) || null;
+    }
+    const { data } = await supabase.from('business_canva').select('*').eq('project_id', projectId).eq('user_id', userId).single();
+    if (!data) return null;
+    return { 
+      id: data.id, 
+      projectId: data.project_id, 
+      userId: data.user_id, 
+      keyPartners: data.key_partners,
+      keyActivities: data.key_activities,
+      valuePropositions: data.value_propositions,
+      customerRelationships: data.customer_relationships,
+      customerSegments: data.customer_segments,
+      keyResources: data.key_resources,
+      channels: data.channels,
+      costStructure: data.cost_structure,
+      revenueStreams: data.revenue_streams,
+      createdAt: data.created_at 
+    };
+  },
+
+  saveBusinessCanva: async (canva: Omit<BusinessCanva, 'id' | 'createdAt'>): Promise<BusinessCanva> => {
+    if (isDemoUser(canva.userId)) {
+      const all = localStore.get('business_canva', canva.userId) || [];
+      const existingIdx = all.findIndex((s: any) => s.projectId === canva.projectId);
+      const newCanva = { ...canva, id: Math.random().toString(), createdAt: new Date().toISOString() };
+      if (existingIdx > -1) {
+        all[existingIdx] = newCanva;
+      } else {
+        all.push(newCanva);
+      }
+      localStore.save('business_canva', canva.userId, all);
+      return newCanva;
+    }
+    const { data } = await supabase.from('business_canva').upsert({
+      project_id: canva.projectId,
+      user_id: canva.userId,
+      key_partners: canva.keyPartners,
+      key_activities: canva.keyActivities,
+      value_propositions: canva.valuePropositions,
+      customer_relationships: canva.customerRelationships,
+      customer_segments: canva.customerSegments,
+      key_resources: canva.keyResources,
+      channels: canva.channels,
+      cost_structure: canva.costStructure,
+      revenue_streams: canva.revenueStreams
+    }, { onConflict: 'project_id,user_id' }).select().single();
+    return { 
+      id: data.id, 
+      projectId: data.project_id, 
+      userId: data.user_id, 
+      keyPartners: data.key_partners,
+      keyActivities: data.key_activities,
+      valuePropositions: data.value_propositions,
+      customerRelationships: data.customer_relationships,
+      customerSegments: data.customer_segments,
+      keyResources: data.key_resources,
+      channels: data.channels,
+      costStructure: data.cost_structure,
+      revenueStreams: data.revenue_streams,
+      createdAt: data.created_at 
+    };
   }
 };

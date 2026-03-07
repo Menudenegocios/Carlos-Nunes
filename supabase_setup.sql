@@ -236,6 +236,12 @@ CREATE POLICY "Products are viewable by everyone." ON public.products FOR SELECT
 CREATE POLICY "Users can insert their own products." ON public.products FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own products." ON public.products FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own products." ON public.products FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage all products." ON public.products FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  )
+);
 
 -- ------------------------------------------
 -- Regras para OFFERS (Marketplace)
@@ -244,12 +250,18 @@ CREATE POLICY "Offers are viewable by everyone." ON public.offers FOR SELECT USI
 CREATE POLICY "Users can insert their own offers." ON public.offers FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own offers." ON public.offers FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own offers." ON public.offers FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage all offers." ON public.offers FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  )
+);
 
 -- ------------------------------------------
 -- Regras para LEADS (CRM - Privado)
 -- ------------------------------------------
 CREATE POLICY "Users can view own leads." ON public.leads FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own leads." ON public.leads FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Anyone can insert leads." ON public.leads FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can update own leads." ON public.leads FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own leads." ON public.leads FOR DELETE USING (auth.uid() = user_id);
 

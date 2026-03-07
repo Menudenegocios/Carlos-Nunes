@@ -51,7 +51,7 @@ export const BusinessSuite: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">CRM & Vendas</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">Funil de Vendas</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">O PAINEL DE CONTROLE DO SEU SUCESSO COMERCIAL.</p>
               </div>
@@ -67,7 +67,7 @@ export const BusinessSuite: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
-                { id: 'crm', label: 'CRM', desc: 'Funil de leads', icon: Briefcase },
+                { id: 'crm', label: 'FUNIL DE VENDAS', desc: 'Gestão de leads', icon: Briefcase },
                 { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
                 { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
@@ -92,7 +92,7 @@ export const BusinessSuite: React.FC = () => {
         {activeTab === 'home' && (
             <SectionLanding 
                 title="Sua central de operações do dia a dia."
-                subtitle="CRM & Vendas"
+                subtitle="Funil de Vendas"
                 description="Organize leads, controle as finanças e gerencie sua agenda em um só lugar. A produtividade que seu negócio precisa para crescer sem perder o controle."
                 benefits={[
                 "Funil de vendas Kanban: visualize sua receita futura.",
@@ -102,7 +102,7 @@ export const BusinessSuite: React.FC = () => {
                 "Relatórios simplificados de performance comercial."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
-                ctaLabel="ABRIR MEU CRM"
+                ctaLabel="ABRIR MEU FUNIL DE VENDAS"
                 onStart={() => setActiveTab('crm')}
                 icon={Briefcase}
                 accentColor="brand"
@@ -281,7 +281,7 @@ const CRMView = ({ userId }: { userId: string }) => {
     <div className="space-y-8 animate-fade-in">
       {/* Sub-abas do CRM */}
       <div className="flex p-1.5 bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 w-fit gap-1 overflow-x-auto scrollbar-hide max-w-full">
-          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Funil de Vendas</button>
+          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>CRM</button>
           <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Carteira (Clientes)</button>
           <button onClick={() => setActiveSubTab('followup')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'followup' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Follow-up</button>
           <button onClick={() => setActiveSubTab('quick_messages')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'quick_messages' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Mensagens Rápidas</button>

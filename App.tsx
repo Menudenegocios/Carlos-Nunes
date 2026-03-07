@@ -33,6 +33,7 @@ import { Events } from './pages/Events';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
+import { ProjectManagement } from './pages/ProjectManagement';
 import { AdminCentral } from './pages/AdminCentral';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -71,6 +72,7 @@ const AppRoutes = () => {
       {/* Dashboard Routes */}
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
+      <Route path="/project-management" element={<PrivateRoute><ProjectManagement /></PrivateRoute>} />
       <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
       <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
       <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />

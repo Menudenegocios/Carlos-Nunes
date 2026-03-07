@@ -471,3 +471,50 @@ export interface QuickMessageTemplate {
   title: string;
   content: string;
 }
+
+export interface Project {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface SWOTAnalysis {
+  id: string;
+  projectId?: string;
+  userId: string;
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  threats: string[];
+  createdAt: string;
+}
+
+export interface SMARTGoal {
+  id: string;
+  projectId?: string;
+  userId: string;
+  specific: string;
+  measurable: string;
+  attainable: string;
+  relevant: string;
+  timeBound: string;
+  createdAt: string;
+}
+
+export interface BusinessCanva {
+  id: string;
+  projectId?: string;
+  userId: string;
+  keyPartners: string;
+  keyActivities: string;
+  valuePropositions: string;
+  customerRelationships: string;
+  customerSegments: string;
+  keyResources: string;
+  channels: string;
+  costStructure: string;
+  revenueStreams: string;
+  createdAt: string;
+}

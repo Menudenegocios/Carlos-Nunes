@@ -59,11 +59,41 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referralsCount: data.referrals_count || 0,
           role: data.role || 'user'
         });
+      } else {
+        // Se o perfil não existir, ainda assim precisamos setar o usuário para que ele consiga logar
+        const { data: authData } = await supabase.auth.getUser();
+        setUser({
+          id: userId,
+          name: authData.user?.user_metadata?.full_name || 'Usuário',
+          email: authData.user?.email || '',
+          plan: 'profissionais',
+          points: 0,
+          level: 'elite',
+          menuCash: 0,
+          referralCode: '',
+          referralsCount: 0,
+          role: 'user'
+        });
       }
     } catch (error: any) {
       console.error('Error fetching user profile:', error);
       if (error.message === 'Failed to fetch') {
         setNetworkError(true);
+      } else {
+        // Se o perfil não existir (erro do single()), ainda assim precisamos setar o usuário
+        const { data: authData } = await supabase.auth.getUser();
+        setUser({
+          id: userId,
+          name: authData.user?.user_metadata?.full_name || 'Usuário',
+          email: authData.user?.email || '',
+          plan: 'profissionais',
+          points: 0,
+          level: 'elite',
+          menuCash: 0,
+          referralCode: '',
+          referralsCount: 0,
+          role: 'user'
+        });
       }
     } finally {
       setIsLoading(false);
@@ -188,12 +218,18 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     // 3. Login via Supabase (Real)
     try {
       console.log("Chamando supabase.auth.signInWithPassword para:", cleanEmail);
-      const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPass });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPass });
       if (error) {
         console.error("Erro no signInWithPassword:", error);
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('E-mail ou senha incorretos. Por favor, verifique seus dados.');
+        }
         throw error;
       }
       localStorage.removeItem('menu_demo_user');
+      if (data.user) {
+        await fetchUserProfile(data.user.id);
+      }
     } catch (error: any) {
       console.error("Erro capturado no login:", error);
       throw error;
