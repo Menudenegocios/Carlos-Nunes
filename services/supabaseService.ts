@@ -130,10 +130,16 @@ export const supabaseService = {
   },
 
   async addProject(project: any) {
+    console.log("Supabase insert project:", project);
     const { data, error } = await supabase
       .from('projects')
-      .insert([project]);
-    if (error) throw error;
+      .insert([project])
+      .select();
+    if (error) {
+      console.error("Error inserting project in Supabase:", error);
+      throw error;
+    }
+    console.log("Project inserted successfully in Supabase:", data);
     return data;
   },
 

@@ -875,6 +875,31 @@ export const MyCatalog: React.FC = () => {
                           </button>
                         ))}
                       </div>
+
+                      <div className="grid md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Subcategoria / Nicho (Tags)</label>
+                          <input 
+                            type="text" 
+                            className="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-2xl p-4 font-bold text-sm dark:text-white outline-none focus:border-indigo-500 dark:focus:border-brand-primary transition-all" 
+                            value={profile.storeConfig?.vitrineNiche || ''} 
+                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, vitrineNiche: e.target.value}})} 
+                            placeholder="Ex: Advocacia, Beleza, Manutenção..." 
+                          />
+                          <p className="text-[10px] text-slate-400 mt-2 px-1">Ajuda os clientes a encontrarem seu negócio mais rápido.</p>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade / Região</label>
+                          <input 
+                            type="text" 
+                            className="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-2xl p-4 font-bold text-sm dark:text-white outline-none focus:border-indigo-500 dark:focus:border-brand-primary transition-all" 
+                            value={profile.storeConfig?.vitrineCity || ''} 
+                            onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, vitrineCity: e.target.value}})} 
+                            placeholder="Ex: São Paulo - SP" 
+                          />
+                          <p className="text-[10px] text-slate-400 mt-2 px-1">Para clientes que buscam negócios locais.</p>
+                        </div>
+                      </div>
                    </div>
 
                    <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">

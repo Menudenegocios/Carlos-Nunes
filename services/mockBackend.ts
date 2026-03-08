@@ -513,7 +513,14 @@ export const mockBackend = {
       localStore.save('finance', entry.userId, [newEntry, ...current]);
       return newEntry as FinancialEntry;
     }
-    const { data } = await supabase.from('financial_entries').insert({ user_id: entry.userId, description: entry.description, value: entry.value, type: entry.type, date: entry.date, category: entry.category, entity_type: entry.entityType }).select().single();
+    const insertData = { user_id: entry.userId, description: entry.description, value: entry.value, type: entry.type, date: entry.date, category: entry.category, entity_type: entry.entityType };
+    console.log("Supabase insert data:", insertData);
+    const { data, error } = await supabase.from('financial_entries').insert(insertData).select().single();
+    if (error) {
+      console.error("Error inserting finance entry in Supabase:", error);
+    } else {
+      console.log("Finance entry inserted successfully in Supabase:", data);
+    }
     return data ? { ...data, userId: data.user_id, entityType: data.entity_type } : { ...entry, id: Math.random().toString() } as FinancialEntry;
   },
 
@@ -616,6 +623,7 @@ export const mockBackend = {
     if ((data as any).points !== undefined) supabaseData.points = (data as any).points;
     if ((data as any).role) supabaseData.role = (data as any).role;
 
+    console.log("Supabase update data:", supabaseData);
     const { data: updated, error } = await supabase
       .from('profiles')
       .update(supabaseData)
@@ -623,7 +631,9 @@ export const mockBackend = {
       .select();
 
     if (error) {
-      console.error("Error updating profile in Supabase, falling back to localStore:", { error, supabaseData, userId });
+      console.error("Error updating profile in Supabase:", error);
+    } else {
+      console.log("Profile updated successfully in Supabase:", updated);
     }
 
     // CRITICAL FIX: Update local cache (all_profiles) even for non-demo users
@@ -948,7 +958,7 @@ export const mockBackend = {
       localStore.save('coupons', coupon.userId, [newCoupon, ...current]);
       return newCoupon as Coupon;
     }
-    const { data } = await supabase.from('coupons').insert({
+    const insertData = {
       user_id: coupon.userId,
       code: coupon.code,
       title: coupon.title,
@@ -958,7 +968,14 @@ export const mockBackend = {
       description: coupon.description,
       expiry_date: coupon.expiryDate,
       active: coupon.active
-    }).select().single();
+    };
+    console.log("Supabase insert coupon:", insertData);
+    const { data, error } = await supabase.from('coupons').insert(insertData).select().single();
+    if (error) {
+      console.error("Error inserting coupon in Supabase:", error);
+    } else {
+      console.log("Coupon inserted successfully in Supabase:", data);
+    }
     return data ? { ...data, userId: data.user_id, pointsReward: data.points_reward, expiryDate: data.expiry_date, createdAt: data.created_at } : { ...coupon, id: Math.random().toString(), createdAt: Date.now() } as Coupon;
   },
 

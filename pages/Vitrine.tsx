@@ -33,9 +33,12 @@ export const Vitrine: React.FC = () => {
   };
 
   const filteredProfiles = profiles.filter(p => {
-    const matchesSearch = p.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          p.city?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = p.businessName?.toLowerCase().includes(searchLower) ||
+                          p.category?.toLowerCase().includes(searchLower) ||
+                          p.city?.toLowerCase().includes(searchLower) ||
+                          p.storeConfig?.vitrineNiche?.toLowerCase().includes(searchLower) ||
+                          p.storeConfig?.vitrineCity?.toLowerCase().includes(searchLower);
     
     const matchesCategory = selectedCategory === 'Todos' || 
                             p.vitrineCategory === selectedCategory || 
@@ -173,10 +176,10 @@ const ProfileCard: React.FC<{ profile: Profile, viewMode: 'grid' | 'list' }> = (
             </div>
           </div>
           <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter group-hover:text-brand-primary transition-colors">{profile.businessName}</h3>
-          <p className="text-sm font-bold text-slate-500 uppercase italic tracking-tight">{profile.category || 'Membro Elite'}</p>
+          <p className="text-sm font-bold text-slate-500 uppercase italic tracking-tight">{profile.storeConfig?.vitrineNiche || profile.category || 'Membro Elite'}</p>
           <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400">
             <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
-              <MapPin className="w-3 h-3" /> {profile.city || 'Brasil'}
+              <MapPin className="w-3 h-3" /> {profile.storeConfig?.vitrineCity || profile.city || 'Brasil'}
             </div>
           </div>
         </div>
@@ -230,15 +233,15 @@ const ProfileCard: React.FC<{ profile: Profile, viewMode: 'grid' | 'list' }> = (
             <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none group-hover:text-brand-primary transition-colors">
               {profile.businessName}
             </h3>
-            {profile.category && (
+            {(profile.storeConfig?.vitrineNiche || profile.category) && (
               <span className="hidden md:block text-[8px] font-black uppercase px-3 py-1 bg-orange-50 text-orange-500 rounded-full tracking-widest">
-                {profile.category}
+                {profile.storeConfig?.vitrineNiche || profile.category}
               </span>
             )}
           </div>
           
           <div className="flex items-center justify-center md:justify-start gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-brand-primary">
-            <MapPin className="w-3 h-3" /> {profile.city || 'LOCALIZAÇÃO SOB CONSULTA'}
+            <MapPin className="w-3 h-3" /> {profile.storeConfig?.vitrineCity || profile.city || 'LOCALIZAÇÃO SOB CONSULTA'}
           </div>
 
           <p className="text-sm font-bold text-slate-400 uppercase italic tracking-tight line-clamp-2">

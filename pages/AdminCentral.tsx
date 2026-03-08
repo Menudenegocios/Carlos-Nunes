@@ -377,8 +377,8 @@ export const AdminCentral: React.FC = () => {
                             </div>
                             
                             <div className="grid gap-4">
-                                {[...products, ...offers].map(item => (
-                                    <div key={item.id} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                {[...products.map(p => ({...p, _key: `product-${p.id}`})), ...offers.map(o => ({...o, _key: `offer-${o.id}`}))].map(item => (
+                                    <div key={item._key} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
                                             <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 flex items-center justify-center shadow-sm">
                                                 <Package className="w-7 h-7" />

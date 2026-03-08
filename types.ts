@@ -167,6 +167,8 @@ export interface StoreConfig {
   vitrineTheme?: 'modern' | 'classic' | 'minimal';
   whatsappFormEnabled?: boolean;
   whatsappFormTitle?: string;
+  vitrineNiche?: string;
+  vitrineCity?: string;
   // Campos para Landing Page de Especialista
   aboutMe?: string;
   solutions?: string;
