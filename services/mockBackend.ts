@@ -764,7 +764,58 @@ export const mockBackend = {
     await supabase.from('products').delete().eq('id', id);
   },
 
-  // --- BLOG POSTS ---
+  // --- PROJETOS ---
+  getProjects: async (userId: string): Promise<Project[]> => {
+    if (isDemoUser(userId)) return localStore.get('projects', userId) || [];
+    const data = await safeQuery(supabase.from('projects').select('*').eq('user_id', userId), []);
+    return data.map((p: any) => ({ id: p.id, userId: p.user_id, name: p.name, description: p.description, createdAt: p.created_at }));
+  },
+
+  createProject: async (project: Omit<Project, 'id' | 'createdAt'>): Promise<Project> => {
+    if (isDemoUser(project.userId)) {
+        const current = localStore.get('projects', project.userId) || [];
+        const newProject = { ...project, id: Math.random().toString(), createdAt: new Date().toISOString() };
+        localStore.save('projects', project.userId, [...current, newProject]);
+        return newProject as Project;
+    }
+    const { data } = await supabase.from('projects').insert({ user_id: project.userId, name: project.name, description: project.description }).select().single();
+    return data ? { ...data, userId: data.user_id, createdAt: data.created_at } : { ...project, id: Math.random().toString(), createdAt: new Date().toISOString() } as Project;
+  },
+
+  updateProject: async (id: string, project: Partial<Project>): Promise<void> => {
+    await supabase.from('projects').update({ name: project.name, description: project.description }).eq('id', id);
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    await supabase.from('projects').delete().eq('id', id);
+  },
+
+  // --- CUPONS ---
+  getCoupons: async (userId: string): Promise<Coupon[]> => {
+    if (isDemoUser(userId)) return localStore.get('coupons', userId) || [];
+    const data = await safeQuery(supabase.from('coupons').select('*').eq('user_id', userId), []);
+    return data.map((c: any) => ({ id: c.id, userId: c.user_id, code: c.code, title: c.title, discount: c.discount, type: c.type, pointsReward: c.points_reward, description: c.description, expiryDate: c.expiry_date, createdAt: c.created_at, active: c.active }));
+  },
+
+  createCoupon: async (coupon: Omit<Coupon, 'id' | 'createdAt'>): Promise<Coupon> => {
+    if (isDemoUser(coupon.userId)) {
+        const current = localStore.get('coupons', coupon.userId) || [];
+        const newCoupon = { ...coupon, id: Math.random().toString(), createdAt: Date.now() };
+        localStore.save('coupons', coupon.userId, [...current, newCoupon]);
+        return newCoupon as Coupon;
+    }
+    const { data } = await supabase.from('coupons').insert({ user_id: coupon.userId, code: coupon.code, title: coupon.title, discount: coupon.discount, type: coupon.type, points_reward: coupon.pointsReward, description: coupon.description, expiry_date: coupon.expiryDate, active: coupon.active }).select().single();
+    return data ? { ...data, userId: data.user_id, pointsReward: data.points_reward, expiryDate: data.expiry_date, createdAt: data.created_at } : { ...coupon, id: Math.random().toString(), createdAt: Date.now() } as Coupon;
+  },
+
+  updateCoupon: async (id: string, coupon: Partial<Coupon>): Promise<void> => {
+    await supabase.from('coupons').update({ code: coupon.code, title: coupon.title, discount: coupon.discount, type: coupon.type, points_reward: coupon.pointsReward, description: coupon.description, expiry_date: coupon.expiryDate, active: coupon.active }).eq('id', id);
+  },
+
+  deleteCoupon: async (id: string): Promise<void> => {
+    await supabase.from('coupons').delete().eq('id', id);
+  },
+
   getBlogPosts: async (): Promise<BlogPost[]> => {
     const sbData = await safeQuery(supabase.from('blog_posts').select('*'), []);
     const localData = localStore.getGlobal('blog_posts') || [];
