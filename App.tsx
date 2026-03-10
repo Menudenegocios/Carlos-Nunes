@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { isSupabaseConfigured } from './services/supabaseClient';
 import { initUser } from './initUser';
 import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
@@ -98,6 +99,12 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
+      {!isSupabaseConfigured && (
+        <div className="bg-red-600 text-white p-4 text-center sticky top-0 z-[9999]">
+          <p className="font-bold">Supabase não configurado!</p>
+          <p className="text-sm">Por favor, configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no menu de Configurações.</p>
+        </div>
+      )}
       <AuthProvider>
         <Router>
           <AppRoutes />

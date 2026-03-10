@@ -1210,7 +1210,7 @@ export const supabaseService = {
         .limit(limitCount);
       
       if (error) throw error;
-      return (data || []).map(p => ({
+      return (data || []).map((p: any) => ({
         id: p.id,
         name: p.business_name || 'Membro',
         business: p.business_name || 'Negócio',

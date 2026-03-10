@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
         const currentUser = session?.user;
         const impersonated = localStorage.getItem('menu_impersonating');
         
