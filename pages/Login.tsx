@@ -7,24 +7,48 @@ import { AlertCircle, Lock, Mail, Sparkles, WifiOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginAsDemo, networkError } = useAuth();
+  const { login, loginAsDemo, networkError, forgotPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Por favor, insira seu e-mail acima para redefinir a senha.');
+      return;
+    }
+    setIsResetting(true);
+    setError('');
+    setSuccess('');
+    try {
+      await forgotPassword(email);
+      setSuccess('E-mail de redefinição de senha enviado com sucesso! Verifique sua caixa de entrada.');
+    } catch (err: any) {
+      setError(err.message || 'Erro ao enviar e-mail de redefinição.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      navigate('/dashboard');
+      const role = await login(email.trim(), password);
+      if (role === 'admin' || email.trim().toLowerCase() === 'nunesempreendedor@gmail.com') {
+        navigate('/admin-central');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       console.error("Erro detalhado de login:", err);
-      if (err.message === 'Failed to fetch') {
-        setError("Não foi possível conectar ao servidor. Verifique sua internet ou utilize o Acesso Rápido (Demo).");
-      } else if (err.message.includes("Invalid login credentials")) {
+      if (err.message === 'Failed to fetch' || err.code === 'auth/network-request-failed') {
+        setError("Erro de conexão. Verifique sua internet ou utilize o Acesso Rápido (Demo).");
+      } else if (err.code === 'auth/invalid-credential' || err.message.includes("Invalid login credentials")) {
         setError("E-mail ou senha incorretos. Tente novamente.");
       } else if (err.message.includes("Email not confirmed")) {
         setError("Seu e-mail ainda não foi verificado.");
@@ -37,8 +61,12 @@ export const Login: React.FC = () => {
   };
 
   const handleDemoLogin = () => {
-    loginAsDemo();
-    navigate('/dashboard');
+    const role = loginAsDemo();
+    if (role === 'admin') {
+      navigate('/admin-central');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -109,12 +137,29 @@ export const Login: React.FC = () => {
                   className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
                 />
               </div>
+              <div className="text-right mt-2">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isResetting}
+                  className="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline disabled:opacity-50"
+                >
+                  {isResetting ? 'Enviando...' : 'Esqueci minha senha'}
+                </button>
+              </div>
             </div>
 
             {error && (
               <div className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/30 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
                 <AlertCircle className="w-6 h-6 flex-shrink-0" />
                 <span className="leading-tight">{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/30 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
+                <Sparkles className="w-6 h-6 flex-shrink-0" />
+                <span className="leading-tight">{success}</span>
               </div>
             )}
 

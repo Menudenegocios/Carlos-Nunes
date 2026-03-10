@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Profile } from '../types';
 import { 
   Search, MapPin, Star, ArrowRight, Sparkles, 
@@ -25,7 +25,7 @@ export const Vitrine: React.FC = () => {
   const loadProfiles = async () => {
     setIsLoading(true);
     try {
-      const data = await mockBackend.getPublishedProfiles();
+      const data = await firebaseService.getPublishedProfiles();
       setProfiles(data);
     } finally {
       setIsLoading(false);
@@ -50,29 +50,23 @@ export const Vitrine: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#020617] pb-20">
       {/* HERO SECTION */}
-      <div className="bg-[#0F172A] pt-32 pb-20 px-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full -mr-40 -mt-40 blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-600/10 rounded-full -ml-20 -mb-20 blur-[80px]" />
+      <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000 pt-32 pb-20 px-8">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
+           <Sparkles className="w-3 h-3" /> Vitrine Global de Especialistas
+        </div>
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
+          Encontre os Melhores <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Negócios & Profissionais</span>
+        </h1>
         
-        <div className="max-w-7xl mx-auto relative z-10 text-center space-y-8">
-          <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-brand-primary" />
-            <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Vitrine Global de Especialistas</span>
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter leading-[0.85]">
-            Encontre os Melhores <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-orange-400 to-amber-300">Negócios & Profissionais</span>
-          </h1>
-          
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg font-medium italic">
-            Conecte-se com especialistas verificados pelo Menu de Negócios. <br/>
-            Qualidade, autoridade e confiança em um só lugar.
-          </p>
+        <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg font-medium italic">
+          Conecte-se com especialistas verificados pelo Menu de Negócios. <br/>
+          Qualidade, autoridade e confiança em um só lugar.
+        </p>
 
-          {/* SEARCH BAR */}
-          <div className="max-w-3xl mx-auto mt-12 relative group">
-            <div className="absolute inset-0 bg-brand-primary/20 blur-2xl group-hover:bg-brand-primary/30 transition-all rounded-[2.5rem]" />
-            <div className="relative bg-white dark:bg-zinc-900 rounded-[2.5rem] p-2 flex items-center shadow-2xl border border-white/10">
+        {/* SEARCH BAR */}
+        <div className="max-w-3xl mx-auto mt-12 relative group">
+            <div className="absolute inset-0 bg-indigo-500/20 blur-2xl group-hover:bg-indigo-500/30 transition-all rounded-[2.5rem]" />
+            <div className="relative bg-white dark:bg-zinc-900 rounded-[2.5rem] p-2 flex items-center shadow-xl border border-gray-100 dark:border-zinc-800">
               <div className="pl-6 text-slate-400">
                 <Search className="w-6 h-6" />
               </div>
@@ -83,49 +77,30 @@ export const Vitrine: React.FC = () => {
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
-              <button className="bg-brand-dark text-white px-10 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
+              <button className="bg-[#F67C01] text-white px-10 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
                 PESQUISAR
               </button>
             </div>
-          </div>
         </div>
-      </div>
 
-      {/* FILTERS & VIEW MODE */}
-      <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-20">
-        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 shadow-xl border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center gap-6 relative">
-          <div className="flex flex-wrap justify-center gap-3 w-full">
+        {/* Abas Principais */}
+        <div className="flex flex-wrap justify-center gap-3 mt-10">
             {[
-              { id: 'Produtos', label: 'Produtos', icon: Package },
-              { id: 'Serviços', label: 'Serviços', icon: Wrench },
-              { id: 'Oportunidades', label: 'Oportunidades', icon: Handshake }
-            ].map(cat => (
-              <button 
-                key={cat.id} 
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${selectedCategory === cat.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
-              >
-                <cat.icon className="w-4 h-4" /> {cat.label}
-              </button>
+                { id: 'Todos', label: 'Todos', icon: Sparkles },
+                { id: 'Produtos', label: 'Produtos', icon: Package },
+                { id: 'Serviços', label: 'Serviços', icon: Wrench },
+                { id: 'Oportunidades', label: 'Oportunidades', icon: Handshake },
+            ].map((tab) => (
+                <button 
+                    key={tab.id}
+                    onClick={() => setSelectedCategory(tab.id)} 
+                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${selectedCategory === tab.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                >
+                    <tab.icon className="w-4 h-4" /> {tab.label}
+                </button>
             ))}
-          </div>
-          
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-zinc-800 p-1.5 rounded-2xl md:absolute md:right-4">
-            <button 
-              onClick={() => setViewMode('grid')}
-              className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-brand-dark shadow-md' : 'text-slate-400'}`}
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => setViewMode('list')}
-              className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-zinc-700 text-brand-dark shadow-md' : 'text-slate-400'}`}
-            >
-              <List className="w-5 h-5" />
-            </button>
-          </div>
         </div>
-      </div>
+      </section>
 
       {/* RESULTS */}
       <div className="max-w-7xl mx-auto px-8 mt-16">

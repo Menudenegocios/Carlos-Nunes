@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Quote } from '../types';
 import { MessageSquare, Clock, CheckCircle, XCircle } from 'lucide-react';
 
@@ -10,9 +10,14 @@ export const Quotes: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await mockBackend.getQuotes();
-      setQuotes(data);
-      setLoading(false);
+      try {
+        const data = await firebaseService.getQuotes();
+        setQuotes(data);
+      } catch (error) {
+        console.error('Error loading quotes:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     loadData();
   }, []);

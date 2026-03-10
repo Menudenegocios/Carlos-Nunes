@@ -21,6 +21,7 @@ interface Course {
   students: number;
   image: string;
   description: string;
+  youtubeEmbed?: string;
 }
 
 interface AIAgent {
@@ -38,6 +39,8 @@ const MOCK_COURSES: Course[] = [
   { id: 2, title: 'Dominação de Instagram Local', instructor: 'Ana Silva', category: 'Marketing', duration: '2h 30m', rating: 4.8, students: 1240, image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800', description: 'Transforme seu perfil social em uma vitrine magnética que atrai moradores da sua região todos os dias.' },
   { id: 3, title: 'Fechamento de Vendas High Ticket', instructor: 'Juliana Paes', category: 'Vendas', duration: '1h 45m', rating: 4.7, students: 2100, image: 'https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=800', description: 'Domine scripts e gatilhos mentais avançados para vender serviços de alto valor com facilidade.' },
   { id: 4, title: 'Finanças Lucrativas', instructor: 'Carlos Eduardo', category: 'Finanças', duration: '4h 15m', rating: 4.9, students: 850, image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800', description: 'Organize seu fluxo de caixa e entenda a margem real de lucro do seu negócio regional.' },
+  { id: 5, title: "Treinamento: 8 P'S do Marketing - 1 Produto", instructor: 'Menu Academy', category: 'Vendas', duration: '1h 20m', rating: 5.0, students: 150, image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=800', description: 'Aprenda a aplicar os 8 P\'s do marketing focados em um único produto para maximizar suas vendas.', youtubeEmbed: 'https://www.youtube.com/embed/g5j95hnnWOc?list=PLZ9PlCqw0n_1cu9qXfjj5-bWBzY42rfrX' },
+  { id: 6, title: '10 formas de Fechamentos em Vendas', instructor: 'Menu Academy', category: 'Vendas', duration: '45m', rating: 4.9, students: 320, image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800', description: 'Conheça 10 técnicas infalíveis para contornar objeções e fechar mais vendas todos os dias.', youtubeEmbed: 'https://www.youtube.com/embed/fP3SujZ2olQ?list=PLZ9PlCqw0n_2oqrwT3nwbNz3yFxVHrZUr' },
 ];
 
 const AI_AGENTS: AIAgent[] = [
@@ -158,7 +161,7 @@ export const Academy: React.FC = () => {
             />
         )}
 
-        {activeTab === 'treinamentos' && (
+        {activeTab === 'treinamentos' && !selectedCourse && (
            <div className="space-y-10">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4">
                  {categories.map(cat => (
@@ -172,12 +175,17 @@ export const Academy: React.FC = () => {
                  ))}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
                  {filteredCourses.map(course => (
-                    <div key={course.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
-                       <div className="h-48 overflow-hidden relative">
-                          <img src={course.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={course.title} />
-                          <div className="absolute top-4 left-4">
+                    <div key={course.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer" onClick={() => setSelectedCourse(course)}>
+                       <div className="h-48 overflow-hidden relative bg-black">
+                          <img src={course.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" alt={course.title} />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                             <div className="w-16 h-16 bg-indigo-600/90 rounded-full flex items-center justify-center backdrop-blur-sm shadow-[0_0_30px_rgba(79,70,229,0.5)]">
+                                <Play className="w-8 h-8 text-white fill-current ml-1" />
+                             </div>
+                          </div>
+                          <div className="absolute top-4 left-4 pointer-events-none">
                              <span className="bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase text-indigo-600 dark:text-brand-primary tracking-widest">{course.category}</span>
                           </div>
                        </div>
@@ -185,20 +193,85 @@ export const Academy: React.FC = () => {
                           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
                              <Clock className="w-3.5 h-3.5" /> {course.duration} • <Users className="w-3.5 h-3.5" /> {course.students} alunos
                           </div>
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-2">{course.title}</h3>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-brand-primary transition-colors">{course.title}</h3>
                           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">{course.description}</p>
                           <div className="pt-4 flex items-center justify-between">
                              <div className="flex items-center gap-1 text-yellow-400">
                                 <Star className="w-4 h-4 fill-current" />
                                 <span className="text-xs font-black text-gray-900 dark:text-white">{course.rating}</span>
                              </div>
-                             <button className="p-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-brand-primary rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                                <Play className="w-4 h-4 fill-current" />
+                             <button className="px-5 py-2.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-brand-primary rounded-xl font-black text-[10px] uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                Acessar Aula
                              </button>
                           </div>
                        </div>
                     </div>
                  ))}
+              </div>
+           </div>
+        )}
+
+        {activeTab === 'treinamentos' && selectedCourse && (
+           <div className="space-y-8 animate-[fade-in_0.4s_ease-out]">
+              <button 
+                onClick={() => setSelectedCourse(null)}
+                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:hover:text-brand-primary transition-colors font-black text-[10px] uppercase tracking-widest px-4"
+              >
+                 <ChevronRight className="w-4 h-4 rotate-180" /> VOLTAR PARA CURSOS
+              </button>
+
+              <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-6 md:p-10 border border-gray-100 dark:border-zinc-800 shadow-xl">
+                 <div className="aspect-video w-full rounded-[2rem] overflow-hidden bg-black shadow-2xl mb-10 border border-gray-200 dark:border-zinc-800">
+                    {selectedCourse.youtubeEmbed ? (
+                      <iframe 
+                        className="w-full h-full" 
+                        src={selectedCourse.youtubeEmbed} 
+                        title={selectedCourse.title} 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerPolicy="strict-origin-when-cross-origin" 
+                        allowFullScreen
+                      ></iframe>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
+                         <Video className="w-16 h-16 opacity-50" />
+                         <p className="font-medium">Vídeo indisponível no momento.</p>
+                      </div>
+                    )}
+                 </div>
+
+                 <div className="max-w-4xl mx-auto space-y-6">
+                    <div className="flex flex-wrap items-center gap-4 mb-2">
+                       <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-brand-primary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-800/30">
+                          {selectedCourse.category}
+                       </span>
+                       <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                          <Clock className="w-4 h-4" /> {selectedCourse.duration}
+                       </div>
+                       <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                          <Users className="w-4 h-4" /> {selectedCourse.students} alunos
+                       </div>
+                    </div>
+                    
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">{selectedCourse.title}</h2>
+                    
+                    <div className="flex items-center gap-4 py-4 border-y border-gray-100 dark:border-zinc-800">
+                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-brand-primary flex items-center justify-center text-white font-black text-lg shadow-lg">
+                          {selectedCourse.instructor.charAt(0)}
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Instrutor</p>
+                          <p className="font-bold text-gray-900 dark:text-white">{selectedCourse.instructor}</p>
+                       </div>
+                    </div>
+
+                    <div className="prose dark:prose-invert max-w-none">
+                       <h3 className="text-lg font-black uppercase italic tracking-tight text-gray-900 dark:text-white mb-4">Sobre este treinamento</h3>
+                       <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                          {selectedCourse.description}
+                       </p>
+                    </div>
+                 </div>
               </div>
            </div>
         )}

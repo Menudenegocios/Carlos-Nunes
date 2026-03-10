@@ -1,0 +1,450 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Profile information for a user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "format": "email", "description": "User email" },
+        "businessName": { "type": "string", "description": "Name of the business" },
+        "role": { "type": "string", "enum": ["user", "admin", "partner", "member", "client"], "description": "User role" },
+        "plan": { "type": "string", "enum": ["profissionais", "freelancers", "negocios"], "description": "Subscription plan" },
+        "points": { "type": "number", "description": "Loyalty points" },
+        "level": { "type": "string", "enum": ["elite", "bronze", "ouro", "diamante"], "description": "User level" },
+        "menuCash": { "type": "number", "description": "Cashback balance" },
+        "referralCode": { "type": "string", "description": "Code for referrals" },
+        "referralsCount": { "type": "number", "description": "Number of referrals made" },
+        "slug": { "type": "string", "description": "Unique slug for the business profile" },
+        "category": { "type": "string", "description": "Business category" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "address": { "type": "string", "description": "Business address" },
+        "city": { "type": "string", "description": "City" },
+        "neighborhood": { "type": "string", "description": "Neighborhood" },
+        "bio": { "type": "string", "description": "Business biography" },
+        "logoUrl": { "type": "string", "description": "URL of the logo" },
+        "vitrineCategory": { "type": "string", "enum": ["Produtos", "Serviços", "Oportunidades"], "description": "Category for the showcase" },
+        "isPublished": { "type": "boolean", "description": "Whether the profile is published" },
+        "socialLinks": {
+          "type": "object",
+          "properties": {
+            "instagram": { "type": "string" },
+            "whatsapp": { "type": "string" },
+            "website": { "type": "string" }
+          }
+        },
+        "storeConfig": { "type": "object", "description": "Configuration for the store" },
+        "bioConfig": { "type": "object", "description": "Configuration for the bio link page" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project managed by the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who owns the project" },
+        "name": { "type": "string", "description": "Project name" },
+        "description": { "type": "string", "description": "Project description" },
+        "status": { "type": "string", "enum": ["A Fazer", "Em Progresso", "Concluído"], "description": "Project status" },
+        "priority": { "type": "string", "enum": ["Baixa", "Média", "Alta"], "description": "Project priority" },
+        "smartGoalId": { "type": "string", "description": "ID of the associated SMART goal" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "name", "status", "priority", "createdAt"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "A potential client in the CRM pipeline",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "name": { "type": "string", "description": "Lead name" },
+        "phone": { "type": "string", "description": "Lead phone number" },
+        "source": { "type": "string", "enum": ["maps", "instagram", "cnpj", "manual", "vitrine_publica", "bot_whatsapp"], "description": "Source of the lead" },
+        "stage": { "type": "string", "enum": ["new", "contacted", "negotiation", "closed", "lost"], "description": "Pipeline stage" },
+        "notes": { "type": "string", "description": "Notes about the lead" },
+        "value": { "type": "number", "description": "Potential value of the deal" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "lastContact": { "type": "number", "description": "Timestamp of last contact" },
+        "clientId": { "type": "string", "description": "ID of the converted client" }
+      },
+      "required": ["userId", "name", "stage"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "An existing client",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "name": { "type": "string", "description": "Client name" },
+        "phone": { "type": "string", "description": "Client phone number" },
+        "email": { "type": "string", "description": "Client email" },
+        "company": { "type": "string", "description": "Client company" },
+        "notes": { "type": "string", "description": "Notes about the client" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags for the client" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "lastContact": { "type": "number", "description": "Timestamp of last contact" },
+        "totalValue": { "type": "number", "description": "Total value generated by client" },
+        "birthDate": { "type": "string", "description": "Client birth date" }
+      },
+      "required": ["userId", "name"]
+    },
+    "Task": {
+      "title": "CRM Task",
+      "description": "A task related to CRM or project management",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Task title" },
+        "description": { "type": "string", "description": "Task description" },
+        "dueDate": { "type": "number", "description": "Due date timestamp" },
+        "status": { "type": "string", "enum": ["pending", "completed"], "description": "Task status" },
+        "type": { "type": "string", "enum": ["call", "meeting", "email", "whatsapp", "other"], "description": "Task type" },
+        "relatedTo": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["lead", "client"] },
+            "id": { "type": "string" },
+            "name": { "type": "string" }
+          },
+          "description": "Entity related to the task"
+        },
+        "createdAt": { "type": "number", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "dueDate", "status", "type", "createdAt"]
+    },
+    "QuickMessage": {
+      "title": "Quick Message Template",
+      "description": "Template for quick messages",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Template title" },
+        "content": { "type": "string", "description": "Message content" },
+        "category": { "type": "string", "enum": ["primeiro_contato", "apos_proposta", "lembrete_decisao", "pos_venda", "reativacao", "outros"], "description": "Message category" }
+      },
+      "required": ["userId", "title", "content", "category"]
+    },
+    "FinancialEntry": {
+      "title": "Financial Entry",
+      "description": "Income or expense entry",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "description": { "type": "string", "description": "Entry description" },
+        "value": { "type": "number", "description": "Entry value" },
+        "type": { "type": "string", "enum": ["income", "expense"], "description": "Entry type" },
+        "date": { "type": "string", "description": "Entry date (YYYY-MM-DD)" },
+        "category": { "type": "string", "description": "Entry category" },
+        "entityType": { "type": "string", "enum": ["personal", "business"], "description": "Entity type (personal or business)" }
+      },
+      "required": ["userId", "description", "value", "type", "date", "category", "entityType"]
+    },
+    "SmartGoal": {
+      "title": "SMART Goal",
+      "description": "Specific, Measurable, Attainable, Relevant, Time-bound goal",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "projectId": { "type": "string", "description": "Associated project ID" },
+        "specific": { "type": "string", "description": "Specific component" },
+        "measurable": { "type": "string", "description": "Measurable component" },
+        "attainable": { "type": "string", "description": "Attainable component" },
+        "relevant": { "type": "string", "description": "Relevant component" },
+        "timeBound": { "type": "string", "description": "Time-bound component" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "specific", "measurable", "attainable", "relevant", "timeBound"]
+    },
+    "SwotAnalysis": {
+      "title": "SWOT Analysis",
+      "description": "Strengths, Weaknesses, Opportunities, Threats analysis",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "projectId": { "type": "string", "description": "Associated project ID" },
+        "strengths": { "type": "array", "items": { "type": "string" }, "description": "Strengths" },
+        "weaknesses": { "type": "array", "items": { "type": "string" }, "description": "Weaknesses" },
+        "opportunities": { "type": "array", "items": { "type": "string" }, "description": "Opportunities" },
+        "threats": { "type": "array", "items": { "type": "string" }, "description": "Threats" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["userId"]
+    },
+    "BusinessCanva": {
+      "title": "Business Canva",
+      "description": "Business Model Canvas",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "projectId": { "type": "string", "description": "Associated project ID" },
+        "keyPartners": { "type": "string", "description": "Key Partners" },
+        "keyActivities": { "type": "string", "description": "Key Activities" },
+        "valuePropositions": { "type": "string", "description": "Value Propositions" },
+        "customerRelationships": { "type": "string", "description": "Customer Relationships" },
+        "customerSegments": { "type": "string", "description": "Customer Segments" },
+        "keyResources": { "type": "string", "description": "Key Resources" },
+        "channels": { "type": "string", "description": "Channels" },
+        "costStructure": { "type": "string", "description": "Cost Structure" },
+        "revenueStreams": { "type": "string", "description": "Revenue Streams" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["userId"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product for sale",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "storeCategoryId": { "type": "string", "description": "Store category ID" },
+        "name": { "type": "string", "description": "Product name" },
+        "description": { "type": "string", "description": "Product description" },
+        "price": { "type": "number", "description": "Product price" },
+        "promoPrice": { "type": "number", "description": "Promotional price" },
+        "imageUrl": { "type": "string", "description": "Image URL" },
+        "videoUrl": { "type": "string", "description": "Video URL" },
+        "category": { "type": "string", "description": "Product category" },
+        "available": { "type": "boolean", "description": "Availability status" },
+        "variations": { "type": "array", "items": { "type": "string" }, "description": "Product variations" },
+        "buttonType": { "type": "string", "enum": ["buy", "quote"], "description": "Button type" },
+        "externalLink": { "type": "string", "description": "External link" },
+        "stock": { "type": "number", "description": "Stock quantity" },
+        "pointsReward": { "type": "number", "description": "Points reward" },
+        "isLocal": { "type": "boolean", "description": "Is local product" }
+      },
+      "required": ["userId", "name", "price", "imageUrl"]
+    },
+    "StoreCategory": {
+      "title": "Store Category",
+      "description": "Category for products in the store",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "name": { "type": "string", "description": "Category name" },
+        "order": { "type": "number", "description": "Display order" }
+      },
+      "required": ["userId", "name"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Discount coupon",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "code": { "type": "string", "description": "Coupon code" },
+        "title": { "type": "string", "description": "Coupon title" },
+        "discount": { "type": "string", "description": "Discount value" },
+        "type": { "type": "string", "enum": ["percentage", "fixed"], "description": "Discount type" },
+        "pointsReward": { "type": "number", "description": "Points cost" },
+        "description": { "type": "string", "description": "Description" },
+        "expiryDate": { "type": "string", "description": "Expiry date" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "active": { "type": "boolean", "description": "Active status" }
+      },
+      "required": ["userId", "code", "title", "discount", "type", "createdAt", "active"]
+    },
+    "ScheduleItem": {
+      "title": "Schedule Item",
+      "description": "Item in the schedule",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Event title" },
+        "client": { "type": "string", "description": "Client name" },
+        "date": { "type": "string", "description": "Date (YYYY-MM-DD)" },
+        "time": { "type": "string", "description": "Time (HH:MM)" },
+        "type": { "type": "string", "enum": ["visita", "reuniao", "servico"], "description": "Event type" },
+        "status": { "type": "string", "enum": ["pending", "completed", "cancelled"], "description": "Event status" }
+      },
+      "required": ["userId", "title", "date", "time", "type", "status"]
+    },
+    "PlatformEvent": {
+      "title": "Platform Event",
+      "description": "Event on the platform",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Event title" },
+        "date": { "type": "string", "description": "Event date" },
+        "location": { "type": "string", "description": "Event location" },
+        "description": { "type": "string", "description": "Event description" },
+        "type": { "type": "string", "enum": ["Online", "Presencial"], "description": "Event type" }
+      },
+      "required": ["title", "date", "location", "description", "type"]
+    },
+    "BlogPost": {
+      "title": "Blog Post",
+      "description": "A post in the user's blog",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Post title" },
+        "content": { "type": "string", "description": "Post content" },
+        "excerpt": { "type": "string", "description": "Post excerpt" },
+        "imageUrl": { "type": "string", "description": "Image URL" },
+        "date": { "type": "string", "description": "Post date" },
+        "author": { "type": "string", "description": "Author name" },
+        "category": { "type": "string", "description": "Post category" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Post tags" }
+      },
+      "required": ["userId", "title", "content", "date"]
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "An advertisement or offer created by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Offer title" },
+        "description": { "type": "string", "description": "Offer description" },
+        "price": { "type": "number", "description": "Offer price" },
+        "imageUrl": { "type": "string", "description": "Image URL" },
+        "videoUrl": { "type": "string", "description": "Video URL" },
+        "category": { "type": "string", "description": "Offer category" },
+        "socialLinks": {
+          "type": "object",
+          "properties": {
+            "instagram": { "type": "string" },
+            "whatsapp": { "type": "string" },
+            "website": { "type": "string" }
+          }
+        },
+        "scheduling": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "duration": { "type": "number" },
+            "type": { "type": "string", "enum": ["google_meet", "presencial"] }
+          }
+        },
+        "createdAt": { "type": "number", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "description", "createdAt"]
+    },
+    "B2BOffer": {
+      "title": "B2B Offer",
+      "description": "An offer for B2B marketplace",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "title": { "type": "string", "description": "Offer title" },
+        "description": { "type": "string", "description": "Offer description" },
+        "type": { "type": "string", "enum": ["venda", "parceria", "servico"], "description": "Offer type" },
+        "value": { "type": "number", "description": "Offer value" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "title", "type", "createdAt"]
+    },
+    "B2BTransaction": {
+      "title": "B2B Transaction",
+      "description": "A transaction between businesses",
+      "type": "object",
+      "properties": {
+        "buyerId": { "type": "string", "description": "Buyer user ID" },
+        "sellerId": { "type": "string", "description": "Seller user ID" },
+        "offerId": { "type": "string", "description": "Offer ID" },
+        "value": { "type": "number", "description": "Transaction value" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "rejected"], "description": "Transaction status" },
+        "date": { "type": "string", "description": "Transaction date" }
+      },
+      "required": ["buyerId", "sellerId", "offerId", "value", "status", "date"]
+    },
+    "VitrineComment": {
+      "title": "Vitrine Comment",
+      "description": "A comment on a user's vitrine",
+      "type": "object",
+      "properties": {
+        "vitrineUserId": { "type": "string", "description": "ID of the vitrine owner" },
+        "authorId": { "type": "string", "description": "ID of the comment author" },
+        "authorName": { "type": "string", "description": "Name of the author" },
+        "content": { "type": "string", "description": "Comment content" },
+        "rating": { "type": "number", "description": "Rating (1-5)" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" }
+      },
+      "required": ["vitrineUserId", "authorId", "authorName", "content", "rating", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "projects/{projectId}": {
+      "schema": "Project",
+      "description": "Projects"
+    },
+    "leads/{leadId}": {
+      "schema": "Lead",
+      "description": "CRM Leads"
+    },
+    "clients/{clientId}": {
+      "schema": "Client",
+      "description": "Clients"
+    },
+    "tasks/{taskId}": {
+      "schema": "Task",
+      "description": "CRM Tasks"
+    },
+    "quick_messages/{messageId}": {
+      "schema": "QuickMessage",
+      "description": "Quick message templates"
+    },
+    "financial_entries/{entryId}": {
+      "schema": "FinancialEntry",
+      "description": "Financial entries"
+    },
+    "smart_goals/{goalId}": {
+      "schema": "SmartGoal",
+      "description": "SMART Goals"
+    },
+    "swot_analysis/{analysisId}": {
+      "schema": "SwotAnalysis",
+      "description": "SWOT Analyses"
+    },
+    "business_canva/{canvaId}": {
+      "schema": "BusinessCanva",
+      "description": "Business Canvas"
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Products"
+    },
+    "store_categories/{categoryId}": {
+      "schema": "StoreCategory",
+      "description": "Store Categories"
+    },
+    "coupons/{couponId}": {
+      "schema": "Coupon",
+      "description": "Coupons"
+    },
+    "schedule_items/{itemId}": {
+      "schema": "ScheduleItem",
+      "description": "Schedule Items"
+    },
+    "platform_events/{eventId}": {
+      "schema": "PlatformEvent",
+      "description": "Platform Events"
+    },
+    "blog_posts/{postId}": {
+      "schema": "BlogPost",
+      "description": "Blog Posts"
+    },
+    "offers/{offerId}": {
+      "schema": "Offer",
+      "description": "Offers"
+    },
+    "b2b_offers/{offerId}": {
+      "schema": "B2BOffer",
+      "description": "B2B Offers"
+    },
+    "b2b_transactions/{transactionId}": {
+      "schema": "B2BTransaction",
+      "description": "B2B Transactions"
+    },
+    "vitrine_comments/{commentId}": {
+      "schema": "VitrineComment",
+      "description": "Vitrine Comments"
+    }
+  }
+}

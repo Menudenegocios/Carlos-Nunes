@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { NetworkingProfile } from '../types';
 import { MessageCircle, Briefcase, Search, Plus, Trash2, X, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,8 +27,12 @@ export const Networking: React.FC = () => {
   }, []);
 
   const loadProfiles = async () => {
-    const data = await mockBackend.getNetworkingProfiles();
-    setProfiles(data);
+    try {
+      const data = await firebaseService.getNetworkingProfiles();
+      setProfiles(data);
+    } catch (error) {
+      console.error('Error loading networking profiles:', error);
+    }
   };
 
   const handleOpenModal = () => {
@@ -46,15 +50,19 @@ export const Networking: React.FC = () => {
     if (!user) return;
 
     try {
-      const newProfile = await mockBackend.createNetworkingProfile({
-        ...formData,
-        userId: user.id, // Link to current user
-        avatar: formData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}`
+      const newProfile = await firebaseService.createNetworkingProfile({
+        name: formData.name,
+        businessName: formData.businessName,
+        sector: formData.sector,
+        lookingFor: formData.lookingFor,
+        avatar: formData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}`,
+        userId: user.id
       });
       setProfiles([...profiles, newProfile]);
       setIsModalOpen(false);
       setFormData({ name: '', businessName: '', sector: '', lookingFor: '', avatar: '' });
     } catch (error) {
+      console.error('Error adding partner:', error);
       alert('Erro ao adicionar negócio.');
     }
   };
@@ -66,9 +74,10 @@ export const Networking: React.FC = () => {
     
     if (window.confirm('Tem certeza que deseja remover este negócio da lista?')) {
       try {
-        await mockBackend.deleteNetworkingProfile(id);
+        await firebaseService.deleteNetworkingProfile(id);
         setProfiles(prev => prev.filter(p => p.id !== id));
       } catch (error) {
+        console.error('Error deleting partner:', error);
         alert('Erro ao remover negócio.');
       }
     }

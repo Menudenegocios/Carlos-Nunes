@@ -1,25 +1,34 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../contexts/AuthContext';
 import { LoyaltyCard } from '../types';
 import { Check, Gift } from 'lucide-react';
 
 export const Loyalty: React.FC = () => {
+  const { user } = useAuth();
   const [cards, setCards] = useState<LoyaltyCard[]>([]);
 
   useEffect(() => {
     const loadCards = async () => {
-      // getLoyaltyCards is now implemented in mockBackend
-      const data = await mockBackend.getLoyaltyCards();
-      setCards(data);
+      if (!user) return;
+      try {
+        const data = await firebaseService.getLoyaltyCards(user.id);
+        setCards(data);
+      } catch (error) {
+        console.error('Error loading loyalty cards:', error);
+      }
     };
     loadCards();
-  }, []);
+  }, [user]);
 
   const handleStamp = async (id: string) => {
-    // stampLoyaltyCard is now implemented in mockBackend
-    const updated = await mockBackend.stampLoyaltyCard(id);
-    setCards(prev => prev.map(c => c.id === id ? updated : c));
+    try {
+      const updated = await firebaseService.stampLoyaltyCard(id);
+      setCards(prev => prev.map(c => c.id === id ? updated as any : c));
+    } catch (error) {
+      console.error('Error stamping card:', error);
+    }
   };
 
   return (

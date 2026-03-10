@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate } from '../types';
 import { 
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
@@ -51,7 +51,7 @@ export const BusinessSuite: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">Funil de Vendas</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">CRM & Vendas</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">O PAINEL DE CONTROLE DO SEU SUCESSO COMERCIAL.</p>
               </div>
@@ -67,7 +67,7 @@ export const BusinessSuite: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
-                { id: 'crm', label: 'FUNIL DE VENDAS', desc: 'Gestão de leads', icon: Briefcase },
+                { id: 'crm', label: 'CRM & VENDAS', desc: 'Gestão de leads', icon: Briefcase },
                 { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
                 { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
@@ -92,17 +92,17 @@ export const BusinessSuite: React.FC = () => {
         {activeTab === 'home' && (
             <SectionLanding 
                 title="Sua central de operações do dia a dia."
-                subtitle="Funil de Vendas"
+                subtitle="CRM & Vendas"
                 description="Organize leads, controle as finanças e gerencie sua agenda em um só lugar. A produtividade que seu negócio precisa para crescer sem perder o controle."
                 benefits={[
-                "Funil de vendas Kanban: visualize sua receita futura.",
+                "CRM & Vendas Kanban: visualize sua receita futura.",
                 "Fluxo de caixa: saiba exatamente o lucro do seu mês.",
                 "Biblioteca de Agentes de IA para automatizar tarefas.",
                 "Sincronização com nuvem para acesso em qualquer lugar.",
                 "Relatórios simplificados de performance comercial."
                 ]}
                 youtubeId="dQw4w9WgXcQ"
-                ctaLabel="ABRIR MEU FUNIL DE VENDAS"
+                ctaLabel="ABRIR MEU CRM & VENDAS"
                 onStart={() => setActiveTab('crm')}
                 icon={Briefcase}
                 accentColor="brand"
@@ -147,28 +147,28 @@ const CRMView = ({ userId }: { userId: string }) => {
 
   const loadQuickMessages = async () => {
       try {
-        const data = await mockBackend.getQuickMessages(userId);
+        const data = await firebaseService.getQuickMessages(userId);
         setQuickMessages(data);
       } catch (e) { console.error(e); }
   };
 
   const loadTasks = async () => {
       try {
-        const data = await mockBackend.getCRMTasks(userId);
+        const data = await firebaseService.getTasks(userId);
         setTasks(data);
       } catch (e) { console.error(e); }
   };
 
   const loadLeads = async () => { 
       try {
-        const data = await mockBackend.getLeads(userId); 
+        const data = await firebaseService.getLeads(userId); 
         setLeads(data); 
       } catch (e) { console.error(e); }
   };
 
   const loadClients = async () => {
       try {
-        const data = await mockBackend.getClients(userId);
+        const data = await firebaseService.getClients(userId);
         setClients(data);
       } catch (e) { console.error(e); }
   };
@@ -178,8 +178,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingLead) await mockBackend.updateLead(editingLead.id, { ...formData, userId });
-        else await mockBackend.addLeads([{ ...formData, userId } as Lead]);
+        if (editingLead) await firebaseService.updateLead(editingLead.id, { ...formData });
+        else await firebaseService.addLead({ ...formData, userId } as Lead);
         setIsModalOpen(false);
         await loadLeads();
     } finally { setIsSaving(false); }
@@ -190,8 +190,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingClient) await mockBackend.updateClient(editingClient.id, { ...clientFormData, userId });
-        else await mockBackend.addClient({ ...clientFormData, userId } as Client);
+        if (editingClient) await firebaseService.updateClient(editingClient.id, { ...clientFormData });
+        else await firebaseService.addClient({ ...clientFormData, userId } as Client);
         setIsClientModalOpen(false);
         await loadClients();
         setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [] });
@@ -203,8 +203,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingTask) await mockBackend.updateCRMTask(editingTask.id, { ...taskFormData, userId });
-        else await mockBackend.addCRMTask({ ...taskFormData, userId } as CRMTask);
+        if (editingTask) await firebaseService.updateTask(editingTask.id, { ...taskFormData });
+        else await firebaseService.addTask({ ...taskFormData, userId } as CRMTask);
         setIsTaskModalOpen(false);
         await loadTasks();
         setTaskFormData({ title: '', description: '', dueDate: Date.now() + 86400000, status: 'pending', type: 'call' });
@@ -216,8 +216,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingQuickMessage) await mockBackend.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData, userId });
-        else await mockBackend.addQuickMessage({ ...quickMessageFormData, userId } as QuickMessageTemplate);
+        if (editingQuickMessage) await firebaseService.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData });
+        else await firebaseService.addQuickMessage({ ...quickMessageFormData, userId } as QuickMessageTemplate);
         setIsQuickMessageModalOpen(false);
         await loadQuickMessages();
         setQuickMessageFormData({ title: '', content: '', category: 'primeiro_contato' });
@@ -227,24 +227,24 @@ const CRMView = ({ userId }: { userId: string }) => {
   const handleToggleTaskStatus = async (task: CRMTask) => {
     const newStatus = task.status === 'pending' ? 'completed' : 'pending';
     setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
-    await mockBackend.updateCRMTask(task.id, { status: newStatus, userId });
+    await firebaseService.updateTask(task.id, { status: newStatus });
   };
 
   const handleDeleteTask = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-    await mockBackend.deleteCRMTask(id, userId);
+    await firebaseService.deleteTask(id);
     await loadTasks();
   };
 
   const handleDeleteQuickMessage = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta mensagem?')) return;
-    await mockBackend.deleteQuickMessage(id, userId);
+    await firebaseService.deleteQuickMessage(id);
     await loadQuickMessages();
   };
 
   const handleDeleteClient = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
-    await mockBackend.deleteClient(id, userId);
+    await firebaseService.deleteClient(id);
     await loadClients();
   };
 
@@ -265,7 +265,7 @@ const CRMView = ({ userId }: { userId: string }) => {
     const currentLead = leads.find(l => l.id === leadId);
     if (currentLead && currentLead.stage !== targetStage) {
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: targetStage } : l));
-      await mockBackend.updateLeadStage(leadId, targetStage);
+      await firebaseService.updateLead(leadId, { stage: targetStage });
     }
     setDraggedLeadId(null);
   };
@@ -698,7 +698,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
   useEffect(() => { loadEntries(); }, []);
   const loadEntries = async () => {
     try {
-      const data = await mockBackend.getFinanceEntries(userId);
+      const data = await firebaseService.getFinancialEntries(userId);
       setEntries(data);
     } catch (e) { console.error(e); }
   };
@@ -708,7 +708,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-      await mockBackend.addFinanceEntry({ ...formData, userId } as FinancialEntry);
+      await firebaseService.addFinancialEntry({ ...formData, userId } as FinancialEntry);
       setIsModalOpen(false);
       await loadEntries();
       setFormData({ description: '', value: 0, type: 'income', date: new Date().toISOString().split('T')[0], category: 'Geral', entityType: 'personal' });
@@ -717,7 +717,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
 
   const handleDeleteEntry = async (id: string) => {
     if (!window.confirm('Excluir este lançamento?')) return;
-    await mockBackend.deleteFinanceEntry(id);
+    await firebaseService.deleteFinancialEntry(id);
     await loadEntries();
   };
 
@@ -868,7 +868,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
   useEffect(() => { loadSchedule(); }, []);
   const loadSchedule = async () => {
     try {
-      const data = await mockBackend.getSchedule(userId);
+      const data = await firebaseService.getSchedule(userId);
       setItems(data);
     } catch (e) { console.error(e); }
   };
@@ -878,7 +878,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-      await mockBackend.addScheduleItem({ ...formData, userId } as ScheduleItem);
+      await firebaseService.addScheduleItem({ ...formData, userId } as ScheduleItem);
       setIsModalOpen(false);
       await loadSchedule();
       setFormData({ title: '', client: '', date: new Date().toISOString().split('T')[0], time: '09:00', type: 'servico', status: 'pending' });
@@ -887,7 +887,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
 
   const handleDeleteItem = async (id: string) => {
     if (!window.confirm('Excluir este compromisso?')) return;
-    await mockBackend.deleteScheduleItem(id);
+    await firebaseService.deleteScheduleItem(id);
     await loadSchedule();
   };
 

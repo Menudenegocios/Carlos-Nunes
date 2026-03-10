@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Offer } from '../types';
-import { MapPin, Instagram, MessageCircle, Globe, ExternalLink, Play, Image as ImageIcon, Star, ArrowRight } from 'lucide-react';
+import { MapPin, Instagram, MessageCircle, Globe, ExternalLink, Play, Image as ImageIcon, Star, ArrowRight, Store } from 'lucide-react';
 
 interface OfferCardProps {
   offer: Offer;
@@ -61,12 +61,8 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onClick }) => {
         </div>
 
         {/* Business Logo Overlay */}
-        <div className="absolute -bottom-4 right-8 w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 p-1 border border-gray-100 dark:border-zinc-800 shadow-xl z-20 overflow-hidden transform rotate-3 group-hover:rotate-0 transition-transform">
-           <img 
-            src={offer.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${offer.title}`} 
-            alt="Logo" 
-            className="w-full h-full rounded-xl object-cover"
-          />
+        <div className="absolute -bottom-4 right-8 w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 p-1 border border-gray-100 dark:border-zinc-800 shadow-xl z-20 overflow-hidden transform rotate-3 group-hover:rotate-0 transition-transform flex items-center justify-center">
+           <Store className="w-8 h-8 text-indigo-600 dark:text-brand-primary" />
         </div>
       </div>
 

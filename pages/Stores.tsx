@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Profile } from '../types';
 import { Link } from 'react-router-dom';
 import { 
@@ -21,7 +21,7 @@ export const Stores: React.FC = () => {
 
   const loadProfiles = async () => {
     try {
-      const data = await mockBackend.getAllProfiles();
+      const data = await firebaseService.getAllProfiles();
       // Mostra apenas lojas com nome definido
       setProfiles(data.filter(p => p.businessName));
     } finally {

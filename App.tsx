@@ -1,9 +1,10 @@
 
 // Test comment
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { initUser } from './initUser';
 import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Home } from './pages/Home';
@@ -40,7 +41,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
 
   return isAuthenticated ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" />;
@@ -91,6 +92,10 @@ const AppRoutes = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    initUser();
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>

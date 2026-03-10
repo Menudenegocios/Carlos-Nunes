@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Profile, BlogPost } from '../types';
 import { 
   ArrowRight, Globe, Settings, TrendingUp, 
@@ -24,8 +24,8 @@ export const Home: React.FC = () => {
   const loadData = async () => {
     try {
       const [profiles, posts] = await Promise.all([
-        mockBackend.getPublishedProfiles(),
-        mockBackend.getBlogPosts()
+        firebaseService.getPublishedProfiles(),
+        firebaseService.getBlogPosts()
       ]);
       
       // Get top 4 profiles (e.g., just the first 4 published)
@@ -34,8 +34,8 @@ export const Home: React.FC = () => {
 
       // Get 3 most recent posts
       const sortedPosts = posts.sort((a, b) => {
-        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       }).slice(0, 3);
       setRecentPosts(sortedPosts);

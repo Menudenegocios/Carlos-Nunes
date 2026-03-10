@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Offer, Coupon, Product } from '../types';
 import { Ticket, Clock, CheckCircle, Zap, Plus, X, AlertCircle, Edit2, Trash2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,18 +45,17 @@ export const Coupons: React.FC = () => {
 
   const loadCoupons = async () => {
     try {
-      const offers = await mockBackend.getOffers();
-      const allCoupons: CouponWithOffer[] = [];
+      const [offers, allCoupons] = await Promise.all([
+        firebaseService.getOffers(),
+        firebaseService.getCoupons()
+      ]);
       
-      offers.forEach((offer: Offer) => {
-        if (offer.coupons && offer.coupons.length > 0) {
-          offer.coupons.forEach((coupon: Coupon) => {
-            allCoupons.push({ ...coupon, offer });
-          });
-        }
+      const couponsWithOffers: CouponWithOffer[] = allCoupons.map(coupon => {
+        const offer = offers.find(o => o.id === (coupon as any).offerId);
+        return { ...coupon, offer: offer || { id: 'unknown', title: 'Desconhecido', logoUrl: '' } as Offer };
       });
       
-      setCoupons(allCoupons);
+      setCoupons(couponsWithOffers);
     } finally {
       setLoading(false);
     }
@@ -65,8 +64,8 @@ export const Coupons: React.FC = () => {
   const loadUserData = async () => {
     if (!user) return;
     const [offers, prods] = await Promise.all([
-      mockBackend.getMyOffers(user.id),
-      mockBackend.getProducts(user.id)
+      firebaseService.getMyOffers(user.id),
+      firebaseService.getProducts(user.id)
     ]);
     setMyOffers(offers);
     setMyProducts(prods);
@@ -81,13 +80,11 @@ export const Coupons: React.FC = () => {
 
     setRedeeming(true);
     try {
-      /* Fix: mockBackend.redeemCoupon now correctly defined */
-      await mockBackend.redeemCoupon(
+      await firebaseService.redeemCoupon(
         user.id, 
         selectedCoupon.id, 
         selectedCoupon.pointsReward || 0
       );
-      /* Fix: Incorrect login call replaced with refreshProfile */
       await refreshProfile();
       alert(`Cupom ${selectedCoupon.code} ativado! Você ganhou ${selectedCoupon.pointsReward} pontos.`);
       setSelectedCoupon(null);
@@ -129,8 +126,7 @@ export const Coupons: React.FC = () => {
   const handleDeleteCoupon = async (coupon: CouponWithOffer) => {
      if (!user || !window.confirm('Tem certeza que deseja excluir este cupom?')) return;
      try {
-       /* Fix: mockBackend.deleteCoupon now defined */
-       await mockBackend.deleteCoupon(coupon.id, user.id);
+       await firebaseService.deleteCoupon(coupon.id, user.id);
        setCoupons(prev => prev.filter(c => c.id !== coupon.id));
      } catch (error) {
        alert('Erro ao excluir cupom.');
@@ -151,15 +147,14 @@ export const Coupons: React.FC = () => {
         title: newCouponData.title,
         discount: newCouponData.discount,
         pointsReward: Number(newCouponData.pointsReward),
-        description: newCouponData.description
+        description: newCouponData.description,
+        offerId: newCouponData.offerId
       };
 
       if (isEditing && editingCouponId) {
-        /* Fix: updateCoupon now defined */
-        await mockBackend.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
+        await firebaseService.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
       } else {
-        /* Fix: addCoupon now defined */
-        await mockBackend.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
+        await firebaseService.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
       }
       
       setIsCreateModalOpen(false);

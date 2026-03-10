@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Product, Profile, StoreCategory, BlogPost, VitrineComment } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -26,9 +26,9 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // 1. Salvar Lead no CRM (Simulado)
+        // 1. Salvar Lead no CRM
         try {
-            await mockBackend.addLeads([{
+            await firebaseService.addLeads([{
                 userId: profile.userId,
                 name: formData.name,
                 phone: formData.phone,
@@ -157,7 +157,7 @@ export const StoreView: React.FC = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'blog' | 'agenda'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'produtos' | 'blog' | 'agenda' | 'video'>('inicio');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState<string>('');
   
@@ -185,7 +185,7 @@ export const StoreView: React.FC = () => {
     console.log("StoreView: Carregando dados para o identificador:", identifier);
     if (!identifier) return;
     try {
-      const prof = await mockBackend.getProfile(identifier);
+      const prof = await firebaseService.getProfile(identifier);
       console.log("StoreView: Resultado do getProfile:", prof);
       if (!prof) {
         setLoading(false);
@@ -196,10 +196,10 @@ export const StoreView: React.FC = () => {
       const targetUserId = prof.userId;
 
       const [prods, cats, allPosts, vitrineComments] = await Promise.all([
-        mockBackend.getProducts(targetUserId),
-        mockBackend.getStoreCategories(targetUserId),
-        mockBackend.getBlogPosts(),
-        mockBackend.getVitrineComments(targetUserId)
+        firebaseService.getProducts(targetUserId),
+        firebaseService.getStoreCategories(targetUserId),
+        firebaseService.getBlogPosts(),
+        firebaseService.getVitrineComments(targetUserId)
       ]);
       setProducts(prods);
       setCategories(cats);
@@ -209,7 +209,6 @@ export const StoreView: React.FC = () => {
       const userPosts = allPosts
         .filter(p => p.userId === targetUserId)
         .sort((a, b) => {
-            // Fix: accessing created_at which is now defined in BlogPost interface
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
             const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
             return dateB - dateA;
@@ -227,7 +226,7 @@ export const StoreView: React.FC = () => {
 
     setIsSubmittingComment(true);
     try {
-        await mockBackend.addVitrineComment({
+        await firebaseService.addVitrineComment({
             vitrineUserId: profile.userId,
             userId: user.id,
             userName: user.name,
@@ -235,7 +234,7 @@ export const StoreView: React.FC = () => {
             content: commentText
         });
         setCommentText('');
-        const updatedComments = await mockBackend.getVitrineComments(profile.userId);
+        const updatedComments = await firebaseService.getVitrineComments(profile.userId);
         setComments(updatedComments);
     } catch (err) {
         alert('Erro ao enviar comentário.');
@@ -299,6 +298,7 @@ export const StoreView: React.FC = () => {
                     { id: 'produtos', label: 'Produtos', icon: Package },
                     { id: 'blog', label: 'Blog', icon: BookOpen },
                     { id: 'agenda', label: 'Agenda', icon: Clock },
+                    { id: 'video', label: 'Portfólio de vídeos', icon: Play },
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -542,14 +542,52 @@ export const StoreView: React.FC = () => {
                             {profile?.storeConfig?.calendarLink ? (
                                 <iframe 
                                     src={profile.storeConfig.calendarLink}
-                                    className="w-full h-[800px] rounded-3xl"
-                                    frameBorder="0"
+                                    className="w-full h-[800px] rounded-3xl border-none"
                                     title="Agenda"
                                 />
                             ) : (
                                 <div className="h-[400px] flex flex-col items-center justify-center text-center space-y-4">
                                     <Calendar className="w-16 h-16 text-slate-200" />
                                     <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Agenda externa não configurada.</p>
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                    {activeTab === 'video' && (
+                        <section className="space-y-10 animate-fade-in">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-brand-dark"><Play className="w-6 h-6" /></div>
+                                <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Portfólio de vídeos</h2>
+                            </div>
+                            
+                            {profile?.storeConfig?.videoPortfolio && profile.storeConfig.videoPortfolio.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {profile.storeConfig.videoPortfolio.map((url, index) => {
+                                        // Extrair ID do Reel do Instagram
+                                        let embedUrl = url;
+                                        if (url.includes('instagram.com/reels/') || url.includes('instagram.com/reel/')) {
+                                            const reelId = url.split('/reel/')[1]?.split('/')[0] || url.split('/reels/')[1]?.split('/')[0];
+                                            if (reelId) {
+                                                embedUrl = `https://www.instagram.com/reel/${reelId}/embed`;
+                                            }
+                                        }
+
+                                        return (
+                                            <div key={index} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100 dark:border-zinc-800 aspect-[9/16]">
+                                                <iframe
+                                                    src={embedUrl}
+                                                    className="w-full h-full border-none"
+                                                    scrolling="no"
+                                                    allow="encrypted-media"
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="p-12 text-center bg-gray-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-zinc-700">
+                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Nenhum vídeo no portfólio ainda.</p>
                                 </div>
                             )}
                         </section>
@@ -625,8 +663,8 @@ export const StoreView: React.FC = () => {
                             const targetUserId = profile.userId;
                             setIsSubmittingLead(true);
                             try {
-                                // 1. Envia para o CRM (mockBackend)
-                                await mockBackend.addLeads([{
+                                // 1. Envia para o CRM
+                                await firebaseService.addLeads([{
                                     userId: targetUserId,
                                     name: leadForm.name,
                                     phone: leadForm.whatsapp,

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Profile as ProfileType } from '../types';
 import { 
   Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon
@@ -18,8 +18,10 @@ export const Profile: React.FC = () => {
   const loadProfile = async () => {
     if (!user) return;
     try {
-      const data = await mockBackend.getProfile(user.id);
+      const data = await firebaseService.getProfile(user.id);
       setProfile(data || { logoUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}` });
+    } catch (error) {
+      console.error('Error loading profile:', error);
     } finally { setLoading(false); }
   };
 
@@ -28,8 +30,11 @@ export const Profile: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await mockBackend.updateProfile(user.id, { ...profile, isPublished: true });
+      await firebaseService.updateProfile(user.id, { ...profile, isPublished: true });
       alert('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Erro ao salvar perfil.');
     } finally { setSaving(false); }
   };
 

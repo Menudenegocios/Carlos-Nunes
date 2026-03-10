@@ -808,12 +808,68 @@ export const mockBackend = {
     return data ? { ...data, userId: data.user_id, pointsReward: data.points_reward, expiryDate: data.expiry_date, createdAt: data.created_at } : { ...coupon, id: Math.random().toString(), createdAt: Date.now() } as Coupon;
   },
 
-  updateCoupon: async (id: string, coupon: Partial<Coupon>): Promise<void> => {
-    await supabase.from('coupons').update({ code: coupon.code, title: coupon.title, discount: coupon.discount, type: coupon.type, points_reward: coupon.pointsReward, description: coupon.description, expiry_date: coupon.expiryDate, active: coupon.active }).eq('id', id);
+  updateCoupon: async (id: string, userId: string, coupon: Partial<Coupon>): Promise<void> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('coupons', userId) || [];
+      const updated = current.map((c: any) => c.id === id ? { ...c, ...coupon } : c);
+      localStore.save('coupons', userId, updated);
+      return;
+    }
+    await supabase.from('coupons').update({ 
+      code: coupon.code, 
+      title: coupon.title, 
+      discount: coupon.discount, 
+      type: coupon.type, 
+      points_reward: coupon.pointsReward, 
+      description: coupon.description, 
+      expiry_date: coupon.expiryDate, 
+      active: coupon.active 
+    }).eq('id', id);
   },
 
-  deleteCoupon: async (id: string): Promise<void> => {
+  deleteCoupon: async (id: string, userId: string): Promise<void> => {
+    if (isDemoUser(userId)) {
+      const current = localStore.get('coupons', userId) || [];
+      const updated = current.filter((c: any) => c.id !== id);
+      localStore.save('coupons', userId, updated);
+      return;
+    }
     await supabase.from('coupons').delete().eq('id', id);
+  },
+
+  redeemCoupon: async (userId: string, couponId: string, points: number): Promise<void> => {
+    // Add points to user history
+    const history = localStore.getGlobal('points_history') || [];
+    const newEntry = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId,
+      points,
+      type: 'earned',
+      description: 'Resgate de Cupom',
+      date: new Date().toISOString()
+    };
+    localStore.saveGlobal('points_history', [newEntry, ...history]);
+    
+    // Update user points (mock)
+    // In a real app, this would update the user record in DB
+  },
+
+  addCoupon: async (userId: string, offerId: string, data: any): Promise<void> => {
+     // This seems redundant with createCoupon, but keeping for compatibility if needed
+     await mockBackend.createCoupon({ ...data, userId, offerId });
+  },
+
+  getPointsHistory: async (userId: string): Promise<any[]> => {
+    const history = localStore.getGlobal('points_history') || [];
+    return history.filter((h: any) => h.userId === userId);
+  },
+
+  likePost: async (postId: string, userId: string): Promise<void> => {
+    // Mock implementation for liking a post
+    const likes = localStore.getGlobal('post_likes') || [];
+    if (!likes.find((l: any) => l.postId === postId && l.userId === userId)) {
+      localStore.saveGlobal('post_likes', [...likes, { postId, userId, date: new Date().toISOString() }]);
+    }
   },
 
   getBlogPosts: async (): Promise<BlogPost[]> => {
@@ -995,74 +1051,8 @@ export const mockBackend = {
   getNetworkingProfiles: async () => [],
   createNetworkingProfile: async (data: any) => data,
   deleteNetworkingProfile: async (id: string) => {},
-  // --- CUPONS ---
-  getCoupons: async (userId: string): Promise<Coupon[]> => {
-    if (isDemoUser(userId)) return localStore.get('coupons', userId) || [];
-    const data = await safeQuery(supabase.from('coupons').select('*').eq('user_id', userId).order('created_at', { ascending: false }), []);
-    return data.map((c: any) => ({ ...c, userId: c.user_id, pointsReward: c.points_reward, expiryDate: c.expiry_date, createdAt: c.created_at }));
-  },
 
-  createCoupon: async (coupon: Omit<Coupon, 'id' | 'createdAt'>): Promise<Coupon> => {
-    if (isDemoUser(coupon.userId)) {
-      const current = localStore.get('coupons', coupon.userId) || [];
-      const newCoupon = { ...coupon, id: Math.random().toString(), createdAt: Date.now() };
-      localStore.save('coupons', coupon.userId, [newCoupon, ...current]);
-      return newCoupon as Coupon;
-    }
-    const insertData = {
-      user_id: coupon.userId,
-      code: coupon.code,
-      title: coupon.title,
-      discount: coupon.discount,
-      type: coupon.type,
-      points_reward: coupon.pointsReward,
-      description: coupon.description,
-      expiry_date: coupon.expiryDate,
-      active: coupon.active
-    };
-    console.log("Supabase insert coupon:", insertData);
-    const { data, error } = await supabase.from('coupons').insert(insertData).select().single();
-    if (error) {
-      console.error("Error inserting coupon in Supabase:", error);
-    } else {
-      console.log("Coupon inserted successfully in Supabase:", data);
-    }
-    return data ? { ...data, userId: data.user_id, pointsReward: data.points_reward, expiryDate: data.expiry_date, createdAt: data.created_at } : { ...coupon, id: Math.random().toString(), createdAt: Date.now() } as Coupon;
-  },
 
-  deleteCoupon: async (id: string, userId: string): Promise<void> => {
-    if (isDemoUser(userId)) {
-      const current = localStore.get('coupons', userId) || [];
-      localStore.save('coupons', userId, current.filter((c: any) => c.id !== id));
-      return;
-    }
-    await supabase.from('coupons').delete().eq('id', id).eq('user_id', userId);
-  },
-
-  updateCoupon: async (id: string, userId: string, data: Partial<Coupon>): Promise<void> => {
-    if (isDemoUser(userId)) {
-      const current = localStore.get('coupons', userId) || [];
-      const updated = current.map((c: any) => c.id === id ? { ...c, ...data } : c);
-      localStore.save('coupons', userId, updated);
-      return;
-    }
-    await supabase.from('coupons').update({
-      code: data.code,
-      title: data.title,
-      discount: data.discount,
-      type: data.type,
-      points_reward: data.pointsReward,
-      description: data.description,
-      expiry_date: data.expiryDate,
-      active: data.active
-    }).eq('id', id).eq('user_id', userId);
-  },
-  
-  redeemCoupon: async (userId: string, couponId: string, points: number) => {},
-  addCoupon: async (userId: string, offerId: string, data: any) => {},
-  getPointsHistory: async (userId: string) => [],
-  likePost: async (postId: string, userId: string) => ({} as any),
-  
   // --- VITRINE COMMENTS ---
   getVitrineComments: async (vitrineUserId: string): Promise<VitrineComment[]> => {
     const local = localStore.getGlobal('vitrine_comments') || [];
@@ -1105,32 +1095,6 @@ export const mockBackend = {
   },
 
   // --- GESTÃO DE PROJETOS ---
-  getProjects: async (userId: string): Promise<Project[]> => {
-    if (isDemoUser(userId)) return localStore.get('projects', userId) || [];
-    const { data } = await supabase.from('projects').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-    return (data || []).map(p => ({ id: p.id, userId: p.user_id, name: p.name, description: p.description, createdAt: p.created_at }));
-  },
-
-  createProject: async (userId: string, name: string, description?: string): Promise<Project> => {
-    if (isDemoUser(userId)) {
-      const current = localStore.get('projects', userId) || [];
-      const newProject = { id: Math.random().toString(), userId, name, description, createdAt: new Date().toISOString() };
-      localStore.save('projects', userId, [newProject, ...current]);
-      return newProject;
-    }
-    const { data } = await supabase.from('projects').insert({ user_id: userId, name, description }).select().single();
-    return { id: data.id, userId: data.user_id, name: data.name, description: data.description, createdAt: data.created_at };
-  },
-
-  deleteProject: async (id: string, userId: string): Promise<void> => {
-    if (isDemoUser(userId)) {
-      const current = localStore.get('projects', userId) || [];
-      localStore.save('projects', userId, current.filter((p: any) => p.id !== id));
-      return;
-    }
-    await supabase.from('projects').delete().eq('id', id).eq('user_id', userId);
-  },
-
   getSWOT: async (projectId: string, userId: string): Promise<SWOTAnalysis | null> => {
     if (isDemoUser(userId)) {
       const all = localStore.get('swot_analyses', userId) || [];

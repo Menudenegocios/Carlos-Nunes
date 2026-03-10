@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { B2BOffer } from '../types';
 import { 
   Handshake, Plus, ShieldCheck, Zap, 
@@ -15,6 +15,7 @@ export const MarketplaceB2B: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'browse' | 'my-deals'>('home');
   const [offers, setOffers] = useState<B2BOffer[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,12 +30,17 @@ export const MarketplaceB2B: React.FC = () => {
     terms: ''
   });
 
-  useEffect(() => { loadOffers(); }, []);
+  useEffect(() => { 
+    loadOffers(); 
+    if (user) {
+      firebaseService.getProfile(user.id).then(setProfile);
+    }
+  }, [user]);
 
   const loadOffers = async () => {
     setIsLoading(true);
     try {
-      const data = await mockBackend.getB2BOffers();
+      const data = await firebaseService.getB2BOffers();
       setOffers(data);
     } finally { setIsLoading(false); }
   };
@@ -44,12 +50,13 @@ export const MarketplaceB2B: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      const newOffer = await mockBackend.createB2BOffer({
+      const newOffer = await firebaseService.createB2BOffer({
         ...formData,
         userId: user.id,
-        businessName: user.name,
-        businessLogo: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`
-      });
+        businessName: profile?.businessName || user.name,
+        businessLogo: profile?.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
+        createdAt: new Date().toISOString()
+      } as any);
       setOffers([newOffer, ...offers]);
       setIsModalOpen(false);
       setFormData({ title: '', description: '', discount: '', category: 'Serviços', terms: '' });

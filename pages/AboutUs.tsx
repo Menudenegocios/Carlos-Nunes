@@ -13,7 +13,7 @@ export const AboutUs: React.FC = () => {
            <Sparkles className="w-3 h-3" /> Propósito & Tecnologia
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          A Plataforma <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">All-in-One</span> do Empreendedor.
+          Menu de Negócios <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Plataforma All-in-One.</span>
         </h1>
         <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
           Nascemos para simplificar a gestão e potencializar o crescimento de quem faz a economia girar. Conectar, gerenciar e escalar em um único ecossistema.

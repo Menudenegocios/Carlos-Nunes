@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { 
   Smartphone, Plus, Trash2, Layout, 
   Palette, Save, MessageCircle, Globe, Mail, 
@@ -103,9 +103,8 @@ export const BioBuilder: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
     try {
-        const data = await mockBackend.getProfile(user.id);
-        
-        if (data) {
+        const data = await firebaseService.getProfile(user.id);
+                if (data) {
           setProfile(data);
           setLinks(data.bioConfig?.links || [
             { id: '1', type: 'whatsapp', label: 'WhatsApp Comercial', url: '', active: true },
@@ -119,6 +118,7 @@ export const BioBuilder: React.FC = () => {
             setBtnColor(data.bioConfig.customColors.button || '#059669');
             setTextColor(data.bioConfig.customColors.text || '#ffffff');
           }
+
           if (data.bioConfig?.fontFamily) setFontFamily(data.bioConfig.fontFamily);
           if (data.bioConfig?.themeId) setSelectedCategory(data.bioConfig.themeId);
           if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
@@ -146,15 +146,17 @@ export const BioBuilder: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      const updatedProfile = { 
-        ...profile,
-        isPublished: true,
-        bioConfig: { 
+      // Construct the bioConfig object
+      const bioConfig = { 
           themeId: selectedCategory, 
           fontFamily: fontFamily as any, 
           links,
           socialProof,
           meshGradient: useMeshGradient,
+          floatingCTA: {
+              enabled: ctaEnabled,
+              label: ctaLabel
+          },
           showcase: {
               enabled: showcaseEnabled,
               title: showcaseTitle,
@@ -169,12 +171,23 @@ export const BioBuilder: React.FC = () => {
             button: btnColor,
             text: textColor
           }
-        } 
       };
-      console.log("Enviando para updateProfile:", updatedProfile);
-      await mockBackend.updateProfile(user.id, updatedProfile);
+
+      const profileData: any = {
+        businessName: profile.businessName,
+        logoUrl: profile.logoUrl,
+        bioConfig: bioConfig,
+        storeConfig: profile.storeConfig,
+        isPublished: true,
+        slug: profile.slug
+      };
+
+      console.log("Enviando para saveProfile:", profileData);
+      await firebaseService.saveProfile(user.id, profileData);
       setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
+      console.error(err);
       alert("Houve um erro ao publicar. Verifique sua conexão e tente novamente.");
     } finally { 
       setIsSaving(false); 

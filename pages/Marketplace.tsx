@@ -1,12 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Product, Offer, OfferCategory } from '../types';
 import { 
   Search, ShoppingBag, Store, Image as ImageIcon, 
   MessageCircle, Briefcase, ArrowRight, Calendar, 
   Award, MapPin, X, Star, Zap, ShieldCheck, Package, Wrench, Handshake,
-  ChevronRight, Filter, Utensils, Shirt, Monitor, Home, Sparkles as Beauty,
+  ChevronRight, Filter, Utensils, Shirt, Monitor, Home, Sparkles as Beauty, Sparkles,
   Stethoscope, Car, GraduationCap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom';
 import { OfferCard } from '../components/OfferCard';
 
 type MarketplaceProduct = Product & { businessName?: string, businessLogo?: string, businessPhone?: string };
-type TabType = 'produtos' | 'servicos' | 'oportunidades';
+type TabType = 'todos' | 'produtos' | 'servicos' | 'oportunidades';
 
 const PRODUCT_CATEGORIES = [
     { id: 'Todas', label: 'Todas', icon: Package },
@@ -42,7 +42,7 @@ const OPPORTUNITY_CATEGORIES = [
 
 export const Marketplace: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('produtos');
+  const [activeTab, setActiveTab] = useState<TabType>('todos');
   const [activeSubCategory, setActiveSubCategory] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -61,11 +61,13 @@ export const Marketplace: React.FC = () => {
     setIsLoading(true);
     try {
       const [prods, offers] = await Promise.all([
-        mockBackend.getAllProducts(),
-        mockBackend.getOffers()
+        firebaseService.getAllProducts(),
+        firebaseService.getOffers()
       ]);
       setProducts(prods);
       setAllOffers(offers);
+    } catch (error) {
+      console.error('Error loading marketplace data:', error);
     } finally { setIsLoading(false); }
   };
 
@@ -79,8 +81,8 @@ export const Marketplace: React.FC = () => {
     const term = searchTerm.toLowerCase();
     const subCat = activeSubCategory;
     
-    switch (activeTab) {
-      case 'produtos':
+    let items: any[] = [];
+    if (activeTab === 'todos' || activeTab === 'produtos') {
         let filteredProds = products.filter(p => 
             p.name.toLowerCase().includes(term) || 
             (p.businessName && p.businessName.toLowerCase().includes(term))
@@ -95,9 +97,10 @@ export const Marketplace: React.FC = () => {
           (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term)) &&
           (subCat === 'Todas' || o.title.toLowerCase().includes(subCat.toLowerCase()))
         );
-        return [...filteredProds, ...localBios];
-
-      case 'servicos':
+        items = [...items, ...filteredProds, ...localBios];
+    }
+    
+    if (activeTab === 'todos' || activeTab === 'servicos') {
         let filteredServs = allOffers.filter(o => 
             (o.category === OfferCategory.SERVICOS_PROFISSIONAIS || 
              o.category === OfferCategory.SAUDE_BEM_ESTAR || 
@@ -109,9 +112,10 @@ export const Marketplace: React.FC = () => {
         if (subCat !== 'Todas') {
             filteredServs = filteredServs.filter(o => o.category === subCat || o.title.toLowerCase().includes(subCat.toLowerCase()));
         }
-        return filteredServs;
+        items = [...items, ...filteredServs];
+    }
 
-      case 'oportunidades':
+    if (activeTab === 'todos' || activeTab === 'oportunidades') {
         let filteredOpps = allOffers.filter(o => 
             (o.title.toLowerCase().includes('mentoria') || 
              o.description.includes("[MENTORIA]") || 
@@ -127,18 +131,18 @@ export const Marketplace: React.FC = () => {
                 filteredOpps = filteredOpps.filter(o => o.category === subCat);
             }
         }
-        return filteredOpps;
-
-      default:
-        return [];
+        items = [...items, ...filteredOpps];
     }
+    return items;
   };
 
   const currentSubCategories = activeTab === 'produtos' 
     ? PRODUCT_CATEGORIES 
     : activeTab === 'servicos' 
     ? SERVICE_CATEGORIES 
-    : OPPORTUNITY_CATEGORIES;
+    : activeTab === 'oportunidades'
+    ? OPPORTUNITY_CATEGORIES
+    : [{ id: 'Todas', label: 'Todas', icon: Sparkles }];
 
   const filteredItems = getFilteredItems();
 
@@ -158,7 +162,7 @@ export const Marketplace: React.FC = () => {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
             <input 
                type="text" 
-               placeholder="O que você busca em sua cidade hoje?" 
+               placeholder="O que você busca no O Shopping de Oportunidades?" 
                className="w-full pl-16 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-[2.5rem] font-bold text-gray-900 dark:text-white focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none shadow-xl transition-all"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
@@ -168,6 +172,7 @@ export const Marketplace: React.FC = () => {
         {/* Abas Principais Estilizadas */}
         <div className="flex flex-wrap justify-center gap-3 mt-10">
             {[
+                { id: 'todos', label: 'Todos', icon: Sparkles },
                 { id: 'produtos', label: 'Produtos', icon: Package },
                 { id: 'servicos', label: 'Serviços', icon: Wrench },
                 { id: 'oportunidades', label: 'Oportunidades', icon: Handshake },
@@ -183,20 +188,22 @@ export const Marketplace: React.FC = () => {
         </div>
 
         {/* Subfiltros de Categoria Dinâmicos */}
-        <div className="flex justify-center pt-4">
-            <div className="bg-gray-50 dark:bg-zinc-900/50 p-1.5 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex gap-1 overflow-x-auto scrollbar-hide max-w-full">
-                {currentSubCategories.map((cat) => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setActiveSubCategory(cat.id)}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all whitespace-nowrap ${activeSubCategory === cat.id ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-brand-primary shadow-sm font-black' : 'text-slate-400 font-bold hover:text-slate-600 dark:hover:text-slate-200'}`}
-                    >
-                        <cat.icon className={`w-3.5 h-3.5 ${activeSubCategory === cat.id ? 'opacity-100' : 'opacity-40'}`} />
-                        <span className="text-[10px] uppercase tracking-wider italic">{cat.label}</span>
-                    </button>
-                ))}
+        {activeTab !== 'todos' && (
+            <div className="flex justify-center pt-4">
+                <div className="bg-gray-50 dark:bg-zinc-900/50 p-1.5 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex gap-1 overflow-x-auto scrollbar-hide max-w-full">
+                    {currentSubCategories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setActiveSubCategory(cat.id)}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all whitespace-nowrap ${activeSubCategory === cat.id ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-brand-primary shadow-sm font-black' : 'text-slate-400 font-bold hover:text-slate-600 dark:hover:text-slate-200'}`}
+                        >
+                            <cat.icon className={`w-3.5 h-3.5 ${activeSubCategory === cat.id ? 'opacity-100' : 'opacity-40'}`} />
+                            <span className="text-[10px] uppercase tracking-wider italic">{cat.label}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
-        </div>
+        )}
       </section>
 
       {/* 2. CONTENT GRID */}
@@ -245,10 +252,10 @@ export const Marketplace: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-lg">
-                                        <img src={item.businessLogo || `https://api.dicebear.com/7.x/initials/svg?seed=${item.businessName}`} className="w-full h-full object-cover" />
+                                    <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white flex items-center justify-center">
+                                        <Store className="w-4 h-4 text-indigo-600" />
                                     </div>
-                                    <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg uppercase">{item.businessName}</span>
+                                    <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg uppercase">O Shopping de Oportunidades</span>
                                 </div>
                             </div>
                             <div className="p-8 flex-1 flex flex-col">
@@ -315,12 +322,12 @@ export const Marketplace: React.FC = () => {
 
               <div className="flex-1 p-10 md:p-16 overflow-y-auto flex flex-col">
                  <div className="flex items-center gap-4 mb-10 pb-8 border-b border-gray-100 dark:border-zinc-800">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-                       <img src={selectedItem.businessLogo || selectedItem.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedItem.businessName || 'Admin'}`} className="w-full h-full object-cover" />
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-indigo-100 dark:border-zinc-700 overflow-hidden">
+                       <Store className="w-6 h-6 text-indigo-600 dark:text-brand-primary" />
                     </div>
                     <div>
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Publicado por</p>
-                       <h4 className="font-black text-gray-900 dark:text-white text-lg uppercase tracking-tight">{selectedItem.businessName || 'Empreendedor Menu'}</h4>
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ecossistema Local</p>
+                       <h4 className="font-black text-gray-900 dark:text-white text-lg uppercase tracking-tight">O Shopping de Oportunidades</h4>
                     </div>
                  </div>
 
@@ -355,21 +362,13 @@ export const Marketplace: React.FC = () => {
                     </div>
                  </div>
 
-                 <div className="mt-12 pt-8 border-t border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row gap-4">
+                  <div className="mt-12 pt-8 border-t border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row gap-4">
                     <button 
                       onClick={() => handleContact(selectedItem)}
                       className="flex-1 bg-gray-900 dark:bg-brand-primary text-white py-5 rounded-[1.8rem] font-black text-xs uppercase tracking-widest hover:bg-emerald-600 dark:hover:bg-brand-accent transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"
                     >
                        <MessageCircle className="w-4 h-4" /> FALAR NO WHATSAPP
                     </button>
-                    {selectedItem.userId && (
-                       <Link 
-                         to={`/store/${selectedItem.userId}`}
-                         className="flex-1 bg-indigo-50 dark:bg-zinc-800 text-indigo-600 dark:text-white py-5 rounded-[1.8rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white transition-all border border-indigo-100 dark:border-zinc-700 flex items-center justify-center gap-3"
-                       >
-                          <Store className="w-4 h-4" /> VISITAR VITRINE
-                       </Link>
-                    )}
                  </div>
               </div>
            </div>

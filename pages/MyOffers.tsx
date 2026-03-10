@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Offer, OfferCategory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Plus, Trash2, X, Image as ImageIcon, Link as LinkIcon, Edit2, Youtube, Calendar, Video, CheckCircle, MapPin, Clock, AlertCircle, ShoppingBag, Lock, Crown } from 'lucide-react';
@@ -46,7 +46,7 @@ export const MyOffers: React.FC = () => {
   const loadMyOffers = async () => {
     if (!user) return;
     try {
-      const data = await mockBackend.getMyOffers(user.id);
+      const data = await firebaseService.getMyOffers(user.id);
       setOffers(data);
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export const MyOffers: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!user || !window.confirm('Tem certeza que deseja excluir esta oferta?')) return;
     try {
-      await mockBackend.deleteOffer(id, user.id);
+      await firebaseService.deleteOffer(id);
       setOffers(prev => prev.filter(o => o.id !== id));
     } catch (error) {
       alert('Erro ao excluir oferta.');
@@ -133,11 +133,11 @@ export const MyOffers: React.FC = () => {
 
       if (isEditing && editingId) {
         // Update
-        const updatedOffer = await mockBackend.updateOffer(user.id, editingId, commonData);
-        setOffers(prev => prev.map(o => o.id === editingId ? updatedOffer : o));
+        const updatedOffer = await firebaseService.updateOffer(editingId, commonData);
+        setOffers(prev => prev.map(o => o.id === editingId ? { ...o, ...commonData } as Offer : o));
       } else {
         // Create
-        const newOffer = await mockBackend.createOffer(user.id, commonData);
+        const newOffer = await firebaseService.createOffer({ ...commonData, userId: user.id } as any);
         setOffers(prev => [newOffer, ...prev]);
       }
       

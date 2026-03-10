@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { Product, Profile, StoreCategory, BlogPost, Coupon } from '../types';
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
@@ -91,6 +91,36 @@ export const MyCatalog: React.FC = () => {
   const ogImageInputRef = useRef<HTMLInputElement>(null);
   const botAvatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+
+  const addVideo = () => {
+    if (!videoUrlInput) return;
+    const currentVideos = profile.storeConfig?.videoPortfolio || [];
+    if (currentVideos.length >= 9) {
+      alert('Máximo de 9 vídeos permitido.');
+      return;
+    }
+    setProfile(prev => ({
+      ...prev,
+      storeConfig: {
+        ...prev.storeConfig,
+        videoPortfolio: [...currentVideos, videoUrlInput]
+      }
+    }));
+    setVideoUrlInput('');
+  };
+
+  const removeVideo = (index: number) => {
+    const currentVideos = [...(profile.storeConfig?.videoPortfolio || [])];
+    currentVideos.splice(index, 1);
+    setProfile(prev => ({
+      ...prev,
+      storeConfig: {
+        ...prev.storeConfig,
+        videoPortfolio: currentVideos
+      }
+    }));
+  };
 
   const isAdmin = user?.role === 'admin' || realAdmin?.role === 'admin';
   const hasAccess = isAdmin || (user?.plan !== 'profissionais');
@@ -102,11 +132,11 @@ export const MyCatalog: React.FC = () => {
     setIsLoading(true);
     try {
         const [prof, cats, prods, allPosts, allCoupons] = await Promise.all([
-            mockBackend.getProfile(user.id),
-            mockBackend.getStoreCategories(user.id),
-            mockBackend.getProducts(user.id),
-            mockBackend.getBlogPosts(),
-            mockBackend.getCoupons(user.id)
+            firebaseService.getProfile(user.id),
+            firebaseService.getStoreCategories(user.id),
+            firebaseService.getProducts(user.id),
+            firebaseService.getBlogPosts(),
+            firebaseService.getCoupons()
         ]);
         
         setProfile(prof || { 
@@ -123,7 +153,7 @@ export const MyCatalog: React.FC = () => {
         setStoreCategories(cats);
         setProducts(prods || []);
         setBlogPosts(allPosts.filter(p => p.userId === user.id));
-        setCoupons(allCoupons || []);
+        setCoupons(allCoupons.filter(c => c.userId === user.id));
     } finally { setIsLoading(false); }
   };
 
@@ -153,7 +183,7 @@ export const MyCatalog: React.FC = () => {
       const profileToSave = redirect ? { ...profile, isPublished: true } : profile;
       console.log('Saving profile:', profileToSave);
       
-      await mockBackend.updateProfile(user.id, profileToSave);
+      await firebaseService.updateProfile(user.id, profileToSave);
       console.log('Profile updated successfully');
       
       // Atualiza o estado local para refletir a mudança
@@ -201,9 +231,9 @@ export const MyCatalog: React.FC = () => {
     setIsSaving(true);
     try {
       if (editingProduct) {
-        await mockBackend.createProduct({ ...editingProduct, ...productForm } as Product);
+        await firebaseService.updateProduct(editingProduct.id, { ...editingProduct, ...productForm });
       } else {
-        await mockBackend.createProduct({ ...productForm, userId: user.id } as Product);
+        await firebaseService.createProduct({ ...productForm, userId: user.id });
       }
       setIsProductModalOpen(false);
       loadData();
@@ -216,14 +246,15 @@ export const MyCatalog: React.FC = () => {
     setIsSaving(true);
     try {
         if (editingBlogPost) {
-            await mockBackend.deleteBlogPost(editingBlogPost.id);
+            await firebaseService.updateBlogPost(editingBlogPost.id, blogForm);
+        } else {
+            await firebaseService.addBlogPost({
+                ...blogForm,
+                userId: user.id,
+                author: profile.businessName || user.name,
+                date: new Date().toLocaleDateString('pt-BR')
+            } as any);
         }
-        await mockBackend.createBlogPost({
-            ...blogForm,
-            userId: user.id,
-            author: profile.businessName || user.name,
-            date: new Date().toLocaleDateString('pt-BR')
-        });
         setIsBlogModalOpen(false);
         loadData();
     } finally { setIsSaving(false); }
@@ -231,7 +262,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteBlog = async (id: string) => {
     if(!window.confirm('Excluir este artigo permanentemente?')) return;
-    await mockBackend.deleteBlogPost(id);
+    await firebaseService.deleteBlogPost(id);
     loadData();
   };
 
@@ -240,7 +271,11 @@ export const MyCatalog: React.FC = () => {
     if (!user || !categoryForm.name) return;
     setIsSaving(true);
     try {
-        await mockBackend.createStoreCategory(user.id, categoryForm.name);
+        await firebaseService.addStoreCategory({
+            userId: user.id,
+            name: categoryForm.name,
+            order: storeCategories.length
+        });
         setCategoryForm({ name: '' });
         setIsCategoryModalOpen(false);
         loadData();
@@ -249,7 +284,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteCategory = async (id: string) => {
     if(!user || !window.confirm('Excluir esta categoria? Os itens vinculados a ela ficarão como "Sem Categoria".')) return;
-    await mockBackend.deleteStoreCategory(id, user.id);
+    await firebaseService.deleteStoreCategory(id);
     loadData();
   };
 
@@ -258,9 +293,10 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-        await mockBackend.createCoupon({
+        await firebaseService.createCoupon({
             ...couponForm,
-            userId: user.id
+            userId: user.id,
+            offerId: '' // Default or link to specific offer if needed
         } as any);
         setIsCouponModalOpen(false);
         setCouponForm({ code: '', title: '', discount: '', type: 'percentage', pointsReward: 0, description: '', expiryDate: '', active: true });
@@ -270,7 +306,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteCoupon = async (id: string) => {
     if(!user || !window.confirm('Excluir este cupom?')) return;
-    await mockBackend.deleteCoupon(id, user.id);
+    await firebaseService.deleteCoupon(id, user.id);
     loadData();
   };
 
@@ -978,17 +1014,54 @@ export const MyCatalog: React.FC = () => {
                                placeholder="https://calendly.com/seu-link" 
                             />
                          </div>
-                         <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Youtube className="w-3 h-3" /> Link de Vídeo (YouTube)</label>
-                            <input 
-                               type="url" 
-                               className="w-full bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" 
-                               value={profile.storeConfig?.videoUrl || ''} 
-                               onChange={e => setProfile({...profile, storeConfig: {...profile.storeConfig, videoUrl: e.target.value}})} 
-                               placeholder="https://www.youtube.com/watch?v=..." 
-                            />
-                         </div>
                       </div>
+                   </div>
+
+                   {/* PORTFÓLIO DE VÍDEOS */}
+                   <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-8">
+                      <div className="flex justify-between items-center">
+                         <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 dark:text-brand-primary uppercase"><Youtube className="w-5 h-5" /> Portfólio de vídeos</h4>
+                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{(profile.storeConfig?.videoPortfolio?.length || 0)} / 9 vídeos</span>
+                      </div>
+                      
+                      <div className="flex gap-4">
+                         <input 
+                            type="url" 
+                            className="flex-1 bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500" 
+                            value={videoUrlInput} 
+                            onChange={e => setVideoUrlInput(e.target.value)} 
+                            placeholder="Link do Reel do Instagram (ex: https://www.instagram.com/reels/...)" 
+                         />
+                         <button 
+                            onClick={addVideo}
+                            className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all disabled:opacity-50"
+                            disabled={(profile.storeConfig?.videoPortfolio?.length || 0) >= 9}
+                         >
+                            <Plus className="w-4 h-4" /> ADICIONAR VÍDEO
+                         </button>
+                      </div>
+
+                      {profile.storeConfig?.videoPortfolio && profile.storeConfig.videoPortfolio.length > 0 && (
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {profile.storeConfig.videoPortfolio.map((url, idx) => (
+                               <div key={idx} className="relative aspect-[9/16] bg-black rounded-3xl overflow-hidden group border border-gray-200 dark:border-zinc-700 shadow-xl">
+                                  <iframe 
+                                     src={`${url.split('?')[0]}embed`}
+                                     className="w-full h-full border-none"
+                                     allowFullScreen
+                                  />
+                                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                     <button 
+                                        onClick={() => removeVideo(idx)}
+                                        className="p-2 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-colors"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                     </button>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      )}
                    </div>
 
                    <div className="grid md:grid-cols-2 gap-8">

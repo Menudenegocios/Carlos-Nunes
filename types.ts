@@ -1,4 +1,16 @@
 
+export interface Media {
+  id: string;
+  title: string;
+  description: string;
+  category: 'MenuCast' | 'Treinamentos' | 'Ferramentas' | 'Eventos';
+  image: string;
+  youtubeEmbed?: string;
+  link?: string;
+  duration?: string;
+  createdAt: number;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -169,6 +181,7 @@ export interface StoreConfig {
   whatsappFormTitle?: string;
   vitrineNiche?: string;
   vitrineCity?: string;
+  videoPortfolio?: string[]; // Suporte para até 9 vídeos (Reels)
   // Campos para Landing Page de Especialista
   aboutMe?: string;
   solutions?: string;
@@ -448,6 +461,7 @@ export interface PlatformEvent {
   location: string;
   description: string;
   type: 'Online' | 'Presencial';
+  image?: string;
 }
 
 export interface CRMTask {
@@ -479,6 +493,9 @@ export interface Project {
   userId: string;
   name: string;
   description?: string;
+  status?: string;
+  priority?: string;
+  smartGoalId?: string;
   createdAt: string;
 }
 

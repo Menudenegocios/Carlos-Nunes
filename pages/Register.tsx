@@ -11,18 +11,22 @@ export const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
     try {
       await register(name, email, password);
       console.log("Registro e login concluídos.");
       
-      alert('Conta criada e logada com sucesso!');
-      navigate('/dashboard');
+      setSuccess('Conta criada e logada com sucesso! Redirecionando...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
     } catch (err: any) {
       console.error("Erro capturado no componente:", err);
       if (err.message.includes("User already registered")) {
@@ -112,6 +116,12 @@ export const Register: React.FC = () => {
             {error && (
               <div className="text-sm text-red-600 bg-red-50 border border-red-200 p-3 rounded-md font-bold">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded-md font-bold">
+                {success}
               </div>
             )}
 

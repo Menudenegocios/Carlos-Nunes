@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { CommunityPost, Profile } from '../types';
 import { 
   Users, 
@@ -33,8 +33,8 @@ export const Community: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const fetchedPosts = await mockBackend.getCommunityPosts();
-      const profile = await mockBackend.getProfile(user!.id);
+      const fetchedPosts = await firebaseService.getCommunityPosts();
+      const profile = await firebaseService.getProfile(user!.id);
       setPosts(fetchedPosts);
       setUserProfile(profile || null);
     } finally {
@@ -48,7 +48,7 @@ export const Community: React.FC = () => {
 
     setIsPosting(true);
     try {
-      const newPost = await mockBackend.createCommunityPost({
+      const newPost = await firebaseService.createCommunityPost({
         userId: user.id,
         userName: user.name,
         businessName: userProfile?.businessName || 'Empreendedor',
@@ -65,8 +65,8 @@ export const Community: React.FC = () => {
   const handleLike = async (postId: string) => {
     if (!user) return;
     try {
-      const updatedPost = await mockBackend.likePost(postId, user.id);
-      setPosts(posts.map(p => p.id === postId ? updatedPost : p));
+      await firebaseService.likePost(postId, user.id);
+      setPosts(posts.map(p => p.id === postId ? { ...p, likes: p.likes + 1, likedBy: [...(p.likedBy || []), user.id] } : p));
     } catch (e) {
       console.error(e);
     }

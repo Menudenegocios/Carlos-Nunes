@@ -1,0 +1,361 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource (for user-owned documents)
+    // Assumes the document has a 'userId' field
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if the user is the owner of the document being requested
+    function isDocOwner() {
+      return isAuthenticated() && (resource == null || request.auth.uid == resource.data.userId);
+    }
+    
+    // Check if the user is the owner of the document being created/updated
+    function isRequestOwner() {
+        return isAuthenticated() && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Verify UID hasn't been tampered with on create
+    function uidUnchanged() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+
+    // Ensure userId field is not modified on update
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate string length
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+    
+    // Validate optional string length
+    function validOptionalStringLength(field, minLen, maxLen) {
+      return !(field in request.resource.data) || (request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate number range
+    function validNumber(field, min, max) {
+      return request.resource.data[field] is number &&
+        request.resource.data[field] >= min &&
+        request.resource.data[field] <= max;
+    }
+
+    // Validate enum
+    function isValidEnum(field, allowedValues) {
+      return request.resource.data[field] in allowedValues;
+    }
+
+    function isAdmin() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return isAuthenticated() && (userDoc.data != null && (userDoc.data.email == "nunesempreendedor@gmail.com" || userDoc.data.role == 'admin'));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Points History Collection
+    match /points_history/{historyId} {
+      allow read: if true;
+      allow create: if isRequestOwner();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && uidNotModified();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Projects Collection
+    match /projects/{projectId} {
+      function isValidProject() {
+        return hasRequiredFields(['userId', 'name', 'status', 'priority', 'createdAt']) &&
+               validStringLength('name', 1, 100) &&
+               validOptionalStringLength('description', 0, 1000) &&
+               isValidEnum('status', ['A Fazer', 'Em Progresso', 'Concluído']) &&
+               isValidEnum('priority', ['Baixa', 'Média', 'Alta']);
+      }
+      
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidProject();
+      allow update: if isDocOwner() && uidNotModified() && isValidProject();
+      allow delete: if isDocOwner();
+    }
+
+    // Leads Collection
+    match /leads/{leadId} {
+      function isValidLead() {
+        return hasRequiredFields(['userId', 'name', 'stage']) &&
+               validStringLength('name', 1, 100) &&
+               validOptionalStringLength('phone', 0, 20) &&
+               isValidEnum('stage', ['new', 'contacted', 'negotiation', 'closed', 'lost']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidLead();
+      allow update: if isDocOwner() && uidNotModified() && isValidLead();
+      allow delete: if isDocOwner();
+    }
+
+    // Clients Collection
+    match /clients/{clientId} {
+      function isValidClient() {
+        return hasRequiredFields(['userId', 'name']) &&
+               validStringLength('name', 1, 100) &&
+               validOptionalStringLength('phone', 0, 20) &&
+               validOptionalStringLength('email', 0, 100) &&
+               validOptionalStringLength('company', 0, 100);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidClient();
+      allow update: if isDocOwner() && uidNotModified() && isValidClient();
+      allow delete: if isDocOwner();
+    }
+
+    // Tasks Collection
+    match /tasks/{taskId} {
+      function isValidTask() {
+        return hasRequiredFields(['userId', 'title', 'dueDate', 'status', 'type', 'createdAt']) &&
+               validStringLength('title', 1, 200) &&
+               isValidEnum('status', ['pending', 'completed']) &&
+               isValidEnum('type', ['call', 'meeting', 'email', 'whatsapp', 'other']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidTask();
+      allow update: if isDocOwner() && uidNotModified() && isValidTask();
+      allow delete: if isDocOwner();
+    }
+
+    // Quick Messages Collection
+    match /quick_messages/{messageId} {
+      function isValidQuickMessage() {
+        return hasRequiredFields(['userId', 'title', 'content', 'category']) &&
+               validStringLength('title', 1, 100) &&
+               validStringLength('content', 1, 2000) &&
+               isValidEnum('category', ['primeiro_contato', 'apos_proposta', 'lembrete_decisao', 'pos_venda', 'reativacao', 'outros']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidQuickMessage();
+      allow update: if isDocOwner() && uidNotModified() && isValidQuickMessage();
+      allow delete: if isDocOwner();
+    }
+
+    // Financial Entries Collection
+    match /financial_entries/{entryId} {
+      function isValidFinancialEntry() {
+        return hasRequiredFields(['userId', 'description', 'value', 'type', 'date', 'category', 'entityType']) &&
+               validStringLength('description', 1, 200) &&
+               isValidEnum('type', ['income', 'expense']) &&
+               isValidEnum('entityType', ['personal', 'business']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidFinancialEntry();
+      allow update: if isDocOwner() && uidNotModified() && isValidFinancialEntry();
+      allow delete: if isDocOwner();
+    }
+
+    // SMART Goals Collection
+    match /smart_goals/{goalId} {
+      function isValidSmartGoal() {
+        return hasRequiredFields(['userId', 'specific', 'measurable', 'attainable', 'relevant', 'timeBound']) &&
+               validStringLength('specific', 1, 500) &&
+               validStringLength('measurable', 1, 500) &&
+               validStringLength('attainable', 1, 500) &&
+               validStringLength('relevant', 1, 500) &&
+               validStringLength('timeBound', 1, 500);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidSmartGoal();
+      allow update: if isDocOwner() && uidNotModified() && isValidSmartGoal();
+      allow delete: if isDocOwner();
+    }
+
+    // SWOT Analysis Collection
+    match /swot_analysis/{analysisId} {
+      function isValidSwot() {
+        return hasRequiredFields(['userId']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidSwot();
+      allow update: if isDocOwner() && uidNotModified() && isValidSwot();
+      allow delete: if isDocOwner();
+    }
+
+    // Business Canva Collection
+    match /business_canva/{canvaId} {
+      function isValidCanva() {
+        return hasRequiredFields(['userId']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidCanva();
+      allow update: if isDocOwner() && uidNotModified() && isValidCanva();
+      allow delete: if isDocOwner();
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      function isValidProduct() {
+        return hasRequiredFields(['userId', 'name', 'price', 'imageUrl']) &&
+               validStringLength('name', 1, 100) &&
+               validNumber('price', 0, 1000000);
+      }
+
+      allow read: if true; // Products are public
+      allow create: if (isRequestOwner() && isValidProduct()) || isAdmin();
+      allow update: if (isAuthenticated() && request.auth.uid == resource.data.userId && uidNotModified() && isValidProduct()) || isAdmin();
+      allow delete: if (isAuthenticated() && request.auth.uid == resource.data.userId) || isAdmin();
+    }
+
+    // Store Categories Collection
+    match /store_categories/{categoryId} {
+      function isValidStoreCategory() {
+        return hasRequiredFields(['userId', 'name']) &&
+               validStringLength('name', 1, 100);
+      }
+
+      allow read: if true;
+      allow create: if isRequestOwner() && isValidStoreCategory();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && uidNotModified() && isValidStoreCategory();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Coupons Collection
+    match /coupons/{couponId} {
+      function isValidCoupon() {
+        return hasRequiredFields(['userId', 'code', 'title', 'discount', 'type', 'createdAt', 'active']) &&
+               validStringLength('code', 1, 50) &&
+               validStringLength('title', 1, 100) &&
+               isValidEnum('type', ['percentage', 'fixed']);
+      }
+
+      allow read: if true;
+      allow create: if isRequestOwner() && isValidCoupon();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && uidNotModified() && isValidCoupon();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Schedule Items Collection
+    match /schedule_items/{itemId} {
+      function isValidScheduleItem() {
+        return hasRequiredFields(['userId', 'title', 'date', 'time', 'type', 'status']) &&
+               validStringLength('title', 1, 100) &&
+               isValidEnum('type', ['visita', 'reuniao', 'servico']) &&
+               isValidEnum('status', ['pending', 'completed', 'cancelled']);
+      }
+
+      allow read: if isDocOwner();
+      allow create: if isRequestOwner() && isValidScheduleItem();
+      allow update: if isDocOwner() && uidNotModified() && isValidScheduleItem();
+      allow delete: if isDocOwner();
+    }
+    
+    // Events Collection
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Platform Events Collection
+    match /platform_events/{eventId} {
+       allow read: if isAuthenticated();
+       allow write: if isAdmin();
+    }
+
+    // Blog Posts Collection
+    match /blog_posts/{postId} {
+      function isValidBlogPost() {
+        return hasRequiredFields(['userId', 'title', 'content', 'date']) &&
+               validStringLength('title', 1, 200);
+      }
+      allow read: if true; // Blog posts are public
+      allow create: if isRequestOwner() && isValidBlogPost();
+      allow update: if isDocOwner() && uidNotModified() && isValidBlogPost();
+      allow delete: if isDocOwner();
+    }
+
+    // Offers Collection
+    match /offers/{offerId} {
+      function isValidOffer() {
+        return hasRequiredFields(['userId', 'title', 'description', 'createdAt']) &&
+               validStringLength('title', 1, 200);
+      }
+      allow read: if true; // Offers are public
+      allow create: if (isRequestOwner() && isValidOffer()) || isAdmin();
+      allow update: if (isDocOwner() && uidNotModified() && isValidOffer()) || isAdmin();
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    // B2B Offers Collection
+    match /b2b_offers/{offerId} {
+      function isValidB2BOffer() {
+        return hasRequiredFields(['userId', 'title', 'type', 'createdAt']) &&
+               validStringLength('title', 1, 200);
+      }
+      allow read: if isAuthenticated();
+      allow create: if isRequestOwner() && isValidB2BOffer();
+      allow update: if isDocOwner() && uidNotModified() && isValidB2BOffer();
+      allow delete: if isDocOwner();
+    }
+
+    // B2B Transactions Collection
+    match /b2b_transactions/{transactionId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.buyerId || request.auth.uid == resource.data.sellerId);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.buyerId;
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.buyerId || request.auth.uid == resource.data.sellerId);
+      allow delete: if false;
+    }
+
+    // Vitrine Comments Collection
+    match /vitrine_comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.authorId;
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.authorId || request.auth.uid == resource.data.vitrineUserId);
+    }
+
+    // Media Collection
+    match /media/{mediaId} {
+      function isValidMedia() {
+        return hasRequiredFields(['title', 'description', 'category', 'image', 'createdAt']) &&
+               validStringLength('title', 1, 200) &&
+               validOptionalStringLength('description', 0, 2000) &&
+               isValidEnum('category', ['MenuCast', 'Treinamentos', 'Ferramentas', 'Eventos']);
+      }
+      allow read: if true;
+      allow create: if isAdmin() && isValidMedia();
+      allow update: if isAdmin() && isValidMedia();
+      allow delete: if isAdmin();
+    }
+  }
+}

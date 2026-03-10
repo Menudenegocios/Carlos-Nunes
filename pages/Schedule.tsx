@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { ScheduleItem } from '../types';
 import { Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react';
 
@@ -16,10 +16,14 @@ export const Schedule: React.FC = () => {
 
   const loadData = async () => {
     if (!user) return;
-    // Added userId argument to getSchedule call as required by mockBackend
-    const data = await mockBackend.getSchedule(user.id);
-    setItems(data);
-    setLoading(false);
+    try {
+      const data = await firebaseService.getSchedule(user.id);
+      setItems(data || []);
+    } catch (error) {
+      console.error('Error loading schedule:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -234,6 +234,20 @@ async function startServer() {
     res.json({ status: 'success', message: 'Agendamento salvo na agenda' });
   });
 
+  // --- PAYMENT GATEWAYS ---
+  
+  // ASAS
+  app.post("/api/payment/asas", async (req, res) => {
+    // Integration logic
+    res.json({ status: 'success', message: 'ASAS integration placeholder' });
+  });
+
+  // PagSeguro
+  app.post("/api/payment/pagseguro", async (req, res) => {
+    // Integration logic
+    res.json({ status: 'success', message: 'PagSeguro integration placeholder' });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

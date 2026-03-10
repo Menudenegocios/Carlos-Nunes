@@ -1,146 +1,289 @@
 
-import React from 'react';
-import { Calendar, MapPin, Users, Video, Ticket, ArrowRight, Sparkles, Filter, Clock, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, Users, Video, Ticket, ArrowRight, Sparkles, Filter, Clock, ExternalLink, Search, Play, X, Wrench, GraduationCap, Mic, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { firebaseService } from '../services/firebaseService';
+import { Media } from '../types';
 
-const MOCK_EVENTS = [
+type MediaType = 'Todos' | 'Eventos' | 'MenuCast' | 'Ferramentas' | 'Treinamentos';
+
+const MOCK_MEDIA = [
   {
     id: 'mn-conexoes-2024',
     title: "Menu de Negócios – Conexões & Negócios",
     date: "18 Março, 2024",
     time: "19:00",
     location: "Bourbon Teresópolis",
-    type: "Networking",
+    category: "Eventos",
     image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800",
     price: "Inscrição via Sympla",
     attendees: 120,
     link: "https://www.sympla.com.br/evento/menu-de-negocios/3287623",
-    description: "Prepare-se para uma experiência transformadora que vai muito além do networking tradicional. Um evento criado para empreendedores que querem gerar oportunidades reais, fortalecer parcerias estratégicas e acelerar resultados.\n\nVivencie a palestra 'Por Que Eu Vendo?' com Juarez Filho, dinâmicas de conexão estratégica e a oportunidade exclusiva de realizar seu Pitch de 1 minuto para toda a audiência."
+    description: "Prepare-se para uma experiência transformadora que vai muito além do networking tradicional. Um evento criado para empreendedores que querem gerar oportunidades reais, fortalecer parcerias estratégicas e acelerar resultados."
   },
   {
-    id: 1,
-    title: "Workshop: Vendas no WhatsApp Pro",
-    date: "22 Outubro, 2024",
-    time: "19:00",
-    location: "Online (Google Meet)",
-    type: "Webinar",
-    image: "https://images.unsplash.com/photo-1591115765373-520b7a6f7104?auto=format&fit=crop&q=80&w=800",
-    price: "Grátis para Membros",
-    attendees: 156,
-    description: "Aprenda estratégias avançadas de fechamento e automação para o seu WhatsApp Business."
+    id: 'menucast-ep1',
+    title: "MenuCast #01 - Como escalar vendas locais",
+    category: "MenuCast",
+    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800",
+    duration: "45m",
+    youtubeEmbed: "https://www.youtube.com/embed/fP3SujZ2olQ?si=eScDroQosOKRNVm2",
+    description: "Neste episódio de estreia, discutimos as melhores estratégias para dominar o mercado local usando tráfego pago e relacionamento."
   },
   {
-    id: 2,
-    title: "Meetup Empreendedores Locais SP",
-    date: "10 Novembro, 2024",
-    time: "15:00",
-    location: "Avenida Paulista, 1000 - SP",
-    type: "Presencial",
-    image: "https://images.unsplash.com/photo-1540575861501-7c0351a77039?auto=format&fit=crop&q=80&w=800",
-    price: "R$ 49,90",
-    attendees: 45,
-    description: "Encontro presencial para networking e troca de experiências entre lojistas da capital."
+    id: 'treinamento-vendas',
+    title: "10 formas de Fechamentos em Vendas",
+    category: "Treinamentos",
+    image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800",
+    duration: "1h 20m",
+    youtubeEmbed: "https://www.youtube.com/embed/fP3SujZ2olQ?list=PLZ9PlCqw0n_2oqrwT3nwbNz3yFxVHrZUr",
+    description: "Conheça 10 técnicas infalíveis para contornar objeções e fechar mais vendas todos os dias."
+  },
+  {
+    id: 'ferramenta-planilha',
+    title: "Planilha de Precificação Inteligente",
+    category: "Ferramentas",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800",
+    link: "#",
+    description: "Baixe nossa planilha exclusiva para calcular a margem de lucro correta dos seus produtos e serviços."
   }
 ];
 
+const CATEGORIES = [
+    { id: 'Todos', label: 'Todos', icon: Sparkles },
+    { id: 'Eventos', label: 'Eventos', icon: Calendar },
+    { id: 'MenuCast', label: 'MenuCast', icon: Mic },
+    { id: 'Ferramentas', label: 'Ferramentas', icon: Wrench },
+    { id: 'Treinamentos', label: 'Treinamentos', icon: GraduationCap },
+];
+
 export const Events: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<MediaType>('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [mediaItems, setMediaItems] = useState<any[]>(MOCK_MEDIA);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMedia = async () => {
+      setIsLoading(true);
+      try {
+        const items = await firebaseService.getMedia();
+        // Fallback to MOCK_MEDIA if no items are found in Firebase
+        if (items.length > 0) {
+          setMediaItems(items);
+        } else {
+          setMediaItems(MOCK_MEDIA);
+        }
+      } catch (error) {
+        console.error("Error loading media:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadMedia();
+  }, []);
+
+  const filteredMedia = mediaItems.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'Todos' || item.category === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+  const getDisplayMedia = () => {
+    if (activeTab === 'MenuCast') {
+      // Limit to 4 episodes for MenuCast tab
+      return filteredMedia.filter(item => item.category === 'MenuCast').slice(0, 4);
+    }
+    return filteredMedia;
+  };
+
+  const displayMedia = getDisplayMedia();
+
   return (
-    <div className="max-w-7xl mx-auto space-y-24 pb-32 pt-8 px-6">
+    <div className="max-w-7xl mx-auto space-y-12 pb-32 pt-8 px-6">
       
       {/* 1. HERO SECTION */}
       <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
-           <Calendar className="w-3 h-3" /> Agenda de Experiências
+           <Video className="w-3 h-3" /> Central de Conteúdo
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          Conecte-se e <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">Aprenda ao Vivo.</span>
+          Explore nossa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Mídia & Eventos.</span>
         </h1>
-        <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
-          De workshops técnicos a encontros de networking. Participe dos eventos que estão transformando o mercado local.
-        </p>
-      </section>
-
-      {/* 2. FILTERS & GRID */}
-      <section className="space-y-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 dark:border-zinc-800 pb-10">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Próximos Encontros</h2>
-            <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-6 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-brand-primary rounded-xl font-bold text-xs tracking-tight"><Filter className="w-4 h-4" /> Todos</button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 rounded-xl font-bold text-xs tracking-tight hover:bg-gray-50 dark:hover:bg-zinc-700">Online</button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 rounded-xl font-bold text-xs tracking-tight hover:bg-gray-50 dark:hover:bg-zinc-700">Presencial</button>
-            </div>
+        
+        <div className="max-w-2xl mx-auto relative group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+            <input 
+               type="text" 
+               placeholder="Busque por podcasts, treinamentos, eventos..." 
+               className="w-full pl-16 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-[2.5rem] font-bold text-gray-900 dark:text-white focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none shadow-xl transition-all"
+               value={searchTerm}
+               onChange={e => setSearchTerm(e.target.value)}
+            />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {MOCK_EVENTS.map(event => (
-            <div key={event.id} className="group bg-white dark:bg-zinc-900 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
-                <div className="relative h-56 overflow-hidden">
-                    <img src={event.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={event.title} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className="absolute top-6 left-6">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md ${event.type === 'Presencial' || event.type === 'Networking' ? 'bg-orange-500/50' : 'bg-indigo-600/50'}`}>
-                            {event.type}
-                        </span>
-                    </div>
-                </div>
-                <div className="p-10 flex-1 flex flex-col">
-                    <div className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary text-[10px] font-black uppercase tracking-widest mb-4">
-                        <Clock className="w-3.5 h-3.5" /> {event.date} às {event.time}
-                    </div>
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-white leading-tight mb-4 group-hover:text-indigo-600 transition-colors">{event.title}</h3>
-                    
-                    <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium mb-6 line-clamp-3">
-                      {event.description}
-                    </p>
-
-                    <div className="space-y-4 mb-10 text-gray-500 dark:text-zinc-400 text-sm font-medium">
-                        <div className="flex items-center gap-3">
-                            <MapPin className="w-4 h-4 text-gray-400" /> {event.location}
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Users className="w-4 h-4 text-gray-400" /> {event.attendees} inscritos
-                        </div>
-                    </div>
-
-                    <div className="mt-auto pt-8 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase mb-1">Status</p>
-                            <p className="text-xl font-black text-gray-900 dark:text-white">{event.price}</p>
-                        </div>
-                        {(event as any).link ? (
-                          <a 
-                            href={(event as any).link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="bg-[#F67C01] text-white p-4 rounded-2xl hover:bg-orange-600 transition-all shadow-xl flex items-center gap-2"
-                          >
-                            <Ticket className="w-5 h-5" />
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : (
-                          <button className="bg-gray-900 dark:bg-brand-primary text-white p-4 rounded-2xl group-hover:bg-indigo-600 transition-all shadow-xl">
-                              <Ticket className="w-5 h-5" />
-                          </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+        {/* Abas Principais */}
+        <div className="flex flex-wrap justify-center gap-3 mt-10">
+            {CATEGORIES.map((tab) => (
+                <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as MediaType)} 
+                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                >
+                    <tab.icon className="w-4 h-4" /> {tab.label}
+                </button>
             ))}
         </div>
       </section>
 
-      {/* 3. NEWSLETTER BLOCK */}
-      <section className="bg-white dark:bg-zinc-900 rounded-[4rem] p-12 md:p-24 border border-gray-100 dark:border-zinc-800 shadow-2xl relative overflow-hidden text-center">
-         <div className="relative z-10 max-w-2xl mx-auto space-y-8">
-            <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Não perca o próximo meetup.</h2>
-            <p className="text-gray-500 dark:text-zinc-400 font-medium text-lg">Inscreva-se para receber a agenda mensal de eventos e workshops direto no seu WhatsApp.</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto pt-4">
-               <input type="text" placeholder="Seu WhatsApp" className="bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl px-6 py-4 placeholder:text-gray-400 text-gray-900 dark:text-white font-bold focus:ring-2 focus:ring-indigo-100 outline-none flex-1" />
-               <button className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all">ATIVAR ALERTAS</button>
+      {/* 2. CONTENT GRID (Netflix Style) */}
+      <section className="min-h-[500px]">
+        <div className="flex justify-between items-center mb-8 px-2">
+            <div className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase tracking-widest italic">
+                <Filter className="w-3.5 h-3.5" />
+                Mídia <ChevronRight className="w-3 h-3" /> {activeTab}
             </div>
-         </div>
-         <div className="absolute top-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[80px] -mb-40 -ml-40"></div>
+            <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-lg">
+                {displayMedia.length} RESULTADOS
+            </span>
+        </div>
+
+        {displayMedia.length === 0 ? (
+            <div className="text-center py-32 bg-white dark:bg-zinc-900 rounded-[4rem] border-2 border-dashed border-gray-100 dark:border-zinc-800">
+                <Video className="w-16 h-16 text-gray-200 dark:text-zinc-700 mx-auto mb-6" />
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Nenhum conteúdo encontrado</h3>
+                <p className="text-gray-500 dark:text-zinc-400 mt-2 font-medium">Tente buscar por outros termos ou mude a categoria.</p>
+                <button 
+                    onClick={() => {setSearchTerm(''); setActiveTab('Todos');}}
+                    className="mt-6 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all"
+                >
+                    LIMPAR FILTROS
+                </button>
+            </div>
+        ) : (
+            <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {displayMedia.map(item => (
+                    <div 
+                      key={item.id} 
+                      onClick={() => item.category === 'Eventos' || item.category === 'Ferramentas' ? (item.link ? window.open(item.link, '_blank') : null) : setSelectedItem(item)}
+                      className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer"
+                    >
+                    <div className="relative h-48 overflow-hidden bg-black">
+                        <img src={item.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-90 group-hover:opacity-100" alt={item.title} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        
+                        {(item.category === 'MenuCast' || item.category === 'Treinamentos') && (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                             <div className="w-16 h-16 bg-indigo-600/90 rounded-full flex items-center justify-center backdrop-blur-sm shadow-[0_0_30px_rgba(79,70,229,0.5)]">
+                                <Play className="w-8 h-8 text-white fill-current ml-1" />
+                             </div>
+                          </div>
+                        )}
+
+                        <div className="absolute top-4 left-4">
+                            <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md ${item.category === 'Eventos' ? 'bg-orange-500/80' : item.category === 'MenuCast' ? 'bg-purple-600/80' : item.category === 'Treinamentos' ? 'bg-indigo-600/80' : 'bg-emerald-600/80'}`}>
+                                {item.category}
+                            </span>
+                        </div>
+                        
+                        {item.duration && (
+                          <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-bold">
+                            {item.duration}
+                          </div>
+                        )}
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                        {item.category === 'Eventos' && (
+                          <div className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary text-[10px] font-black uppercase tracking-widest mb-3">
+                              <Calendar className="w-3.5 h-3.5" /> {item.date}
+                          </div>
+                        )}
+                        <h3 className="text-lg font-black text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-indigo-600 dark:group-hover:text-brand-primary transition-colors line-clamp-2">{item.title}</h3>
+                        <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium line-clamp-2 mb-4">
+                          {item.description}
+                        </p>
+                        
+                        <div className="mt-auto pt-4 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
+                            {item.category === 'Eventos' ? (
+                                <span className="text-[10px] font-black text-gray-400 uppercase">Ver Detalhes</span>
+                            ) : item.category === 'Ferramentas' ? (
+                                <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1"><ExternalLink className="w-3 h-3"/> Acessar</span>
+                            ) : (
+                                <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase flex items-center gap-1"><Play className="w-3 h-3"/> Assistir</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ))}
+            </div>
+            
+            {activeTab === 'MenuCast' && (
+                <div className="mt-16 text-center">
+                    <a 
+                        href="https://www.youtube.com/watch?v=CkPwk5qwUOc&list=PLZ9PlCqw0n_0Yh35js8vLprsexrdiLTVs" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-3 px-8 py-4 bg-[#F67C01] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl hover:shadow-orange-600/20 hover:-translate-y-1"
+                    >
+                        <Play className="w-5 h-5 fill-current" /> VER MAIS EPISÓDIOS NO YOUTUBE
+                    </a>
+                </div>
+            )}
+            {/* Treinamentos button removed */}
+            </>
+        )}
       </section>
+
+      {/* 3. VIDEO MODAL */}
+      {selectedItem && (selectedItem.category === 'MenuCast' || selectedItem.category === 'Treinamentos') && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+           <div className="bg-zinc-900 w-full max-w-5xl rounded-[2rem] shadow-2xl overflow-hidden relative flex flex-col animate-scale-in border border-white/10">
+              <div className="flex justify-between items-center p-6 border-b border-white/10">
+                 <div>
+                    <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-lg mr-3">
+                       {selectedItem.category}
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-black text-white inline-block align-middle">
+                       {selectedItem.title}
+                    </h2>
+                 </div>
+                 <button 
+                   onClick={() => setSelectedItem(null)}
+                   className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition-all"
+                 >
+                    <X className="w-6 h-6" />
+                 </button>
+              </div>
+
+              <div className="aspect-video w-full bg-black">
+                 {selectedItem.youtubeEmbed ? (
+                   <iframe 
+                     className="w-full h-full" 
+                     src={selectedItem.youtubeEmbed} 
+                     title={selectedItem.title} 
+                     frameBorder="0" 
+                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                     referrerPolicy="strict-origin-when-cross-origin" 
+                     allowFullScreen
+                   ></iframe>
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-zinc-500">
+                      Vídeo indisponível
+                   </div>
+                 )}
+              </div>
+              
+              <div className="p-6 bg-zinc-900">
+                 <p className="text-zinc-300 text-sm leading-relaxed">
+                    {selectedItem.description}
+                 </p>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

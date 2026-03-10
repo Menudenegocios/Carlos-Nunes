@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { firebaseService } from '../services/firebaseService';
 import { 
   Trophy, Gift, TrendingUp, Star,
   Zap, Crown, ChevronRight,
@@ -137,7 +137,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
   const loadOffers = async () => {
     setIsLoading(true);
     try {
-      const data = await mockBackend.getB2BOffers();
+      const data = await firebaseService.getB2BOffers();
       setOffers(data);
     } finally { 
       setIsLoading(false); 
@@ -148,7 +148,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const newOffer = await mockBackend.createB2BOffer({
+      const newOffer = await firebaseService.createB2BOffer({
         ...formData,
         userId: user.id,
         businessName: user.name,
@@ -365,7 +365,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
   const loadTransactions = async () => {
     setIsLoading(true);
     try {
-      const data = await mockBackend.getB2BTransactions(user.id);
+      const data = await firebaseService.getB2BTransactions(user.id);
       setTransactions(data);
     } finally {
       setIsLoading(false);
@@ -376,7 +376,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const newTx = await mockBackend.createB2BTransaction({
+      const newTx = await firebaseService.createB2BTransaction({
         buyerId: user.id,
         buyerName: user.name,
         sellerId: 'mock_seller_id', // Na vida real, selecionaria o usuário
@@ -397,7 +397,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
 
   const handleConfirm = async (id: string, status: 'confirmed' | 'rejected') => {
     try {
-      await mockBackend.updateB2BTransactionStatus(id, status);
+      await firebaseService.updateB2BTransactionStatus(id, status);
       setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
     } catch (err) {
       console.error("Erro ao atualizar:", err);
@@ -588,12 +588,24 @@ const MissionsView = () => {
 };
 
 const RankingView = () => {
-  const ranking = [
-    { name: 'Carlos Batida', business: 'Batida Sound', pts: 4500, avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=CB' },
-    { name: 'Ana Doces', business: 'Gourmet Fit', pts: 3200, avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=AD' },
-    { name: 'Marcos Silva', business: 'Construção Pro', pts: 2800, avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=MS' },
-    { name: 'Julia Paes', business: 'Design Studio', pts: 1500, avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=JP' }
-  ];
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadRanking();
+  }, []);
+
+  const loadRanking = async () => {
+    setIsLoading(true);
+    try {
+      const data = await firebaseService.getRanking(10);
+      setRanking(data);
+    } catch (error) {
+      console.error("Error loading ranking:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-12 animate-fade-in">
@@ -655,22 +667,32 @@ const RankingView = () => {
           </div>
 
           <div className="space-y-4">
-             {ranking.map((user, i) => (
-                <div key={i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
-                   <div className="flex items-center gap-6">
-                      <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
-                      <img src={user.avatar} className="w-12 h-12 rounded-xl shadow-md" alt="Avatar" />
-                      <div>
-                         <h4 className="font-black text-gray-900 leading-none">{user.name}</h4>
-                         <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user.business}</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
-                      <ArrowUp className="w-4 h-4 text-emerald-500" />
-                   </div>
-                </div>
-             ))}
+             {isLoading ? (
+               <div className="space-y-4">
+                 {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 dark:bg-zinc-800 rounded-3xl animate-pulse"></div>)}
+               </div>
+             ) : ranking.length === 0 ? (
+               <div className="py-20 text-center">
+                 <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum dado de ranking disponível.</p>
+               </div>
+             ) : (
+               ranking.map((user, i) => (
+                  <div key={i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
+                     <div className="flex items-center gap-6">
+                        <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
+                        <img src={user.avatar} className="w-12 h-12 rounded-xl shadow-md" alt="Avatar" />
+                        <div>
+                           <h4 className="font-black text-gray-900 leading-none">{user.name}</h4>
+                           <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user.business}</p>
+                        </div>
+                     </div>
+                     <div className="flex items-center gap-3">
+                        <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
+                        <ArrowUp className="w-4 h-4 text-emerald-500" />
+                     </div>
+                  </div>
+               ))
+             )}
           </div>
        </div>
     </div>
