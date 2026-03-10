@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { B2BOffer } from '../types';
 import { 
   Handshake, Plus, ShieldCheck, Zap, 
@@ -33,14 +33,14 @@ export const MarketplaceB2B: React.FC = () => {
   useEffect(() => { 
     loadOffers(); 
     if (user) {
-      firebaseService.getProfile(user.id).then(setProfile);
+      supabaseService.getProfile(user.id).then(setProfile);
     }
   }, [user]);
 
   const loadOffers = async () => {
     setIsLoading(true);
     try {
-      const data = await firebaseService.getB2BOffers();
+      const data = await supabaseService.getB2BOffers();
       setOffers(data);
     } finally { setIsLoading(false); }
   };
@@ -50,7 +50,7 @@ export const MarketplaceB2B: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      const newOffer = await firebaseService.createB2BOffer({
+      const newOffer = await supabaseService.createB2BOffer({
         ...formData,
         userId: user.id,
         businessName: profile?.businessName || user.name,

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 // Added ArrowRight to the imports from lucide-react to fix the reference error
 import { Check, User, Briefcase, Store, Zap, Shield, Crown, CreditCard, Award, Mic, Video, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,7 @@ export const Plans: React.FC = () => {
     if (!user) return;
     setLoading(plan);
     try {
-      await firebaseService.upgradePlan(user.id, plan);
+      await supabaseService.upgradePlan(user.id, plan);
       await refreshProfile();
       alert(`Sua assinatura foi processada com sucesso! Bem-vindo ao nível ${plan.toUpperCase()}.`);
       navigate('/dashboard');

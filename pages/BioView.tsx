@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile, Product, BioLink, BioShowcaseItem } from '../types';
 import { 
   Zap, Calendar, Star, QrCode, Instagram, MessageCircle, 
@@ -19,7 +19,7 @@ export const BioView: React.FC = () => {
 
   const loadBioData = async () => {
     try {
-      const prof = await firebaseService.getProfile(userId!);
+      const prof = await supabaseService.getProfile(userId!);
       setProfile(prof);
     } catch (error) {
       console.error('Error loading bio data:', error);

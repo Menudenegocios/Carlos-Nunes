@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { 
   Trophy, Gift, TrendingUp, Star,
   Zap, Crown, ChevronRight,
@@ -137,7 +137,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
   const loadOffers = async () => {
     setIsLoading(true);
     try {
-      const data = await firebaseService.getB2BOffers();
+      const data = await supabaseService.getB2BOffers();
       setOffers(data);
     } finally { 
       setIsLoading(false); 
@@ -148,7 +148,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const newOffer = await firebaseService.createB2BOffer({
+      const newOffer = await supabaseService.createB2BOffer({
         ...formData,
         userId: user.id,
         businessName: user.name,
@@ -365,7 +365,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
   const loadTransactions = async () => {
     setIsLoading(true);
     try {
-      const data = await firebaseService.getB2BTransactions(user.id);
+      const data = await supabaseService.getB2BTransactions(user.id);
       setTransactions(data);
     } finally {
       setIsLoading(false);
@@ -376,7 +376,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const newTx = await firebaseService.createB2BTransaction({
+      const newTx = await supabaseService.createB2BTransaction({
         buyerId: user.id,
         buyerName: user.name,
         sellerId: 'mock_seller_id', // Na vida real, selecionaria o usuário
@@ -397,7 +397,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
 
   const handleConfirm = async (id: string, status: 'confirmed' | 'rejected') => {
     try {
-      await firebaseService.updateB2BTransactionStatus(id, status);
+      await supabaseService.updateB2BTransactionStatus(id, status);
       setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
     } catch (err) {
       console.error("Erro ao atualizar:", err);
@@ -598,7 +598,7 @@ const RankingView = () => {
   const loadRanking = async () => {
     setIsLoading(true);
     try {
-      const data = await firebaseService.getRanking(10);
+      const data = await supabaseService.getRanking(10);
       setRanking(data);
     } catch (error) {
       console.error("Error loading ranking:", error);

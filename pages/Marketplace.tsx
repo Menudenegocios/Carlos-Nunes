@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Product, Offer, OfferCategory } from '../types';
 import { 
   Search, ShoppingBag, Store, Image as ImageIcon, 
@@ -61,8 +61,8 @@ export const Marketplace: React.FC = () => {
     setIsLoading(true);
     try {
       const [prods, offers] = await Promise.all([
-        firebaseService.getAllProducts(),
-        firebaseService.getOffers()
+        supabaseService.getAllProducts(),
+        supabaseService.getOffers()
       ]);
       setProducts(prods);
       setAllOffers(offers);

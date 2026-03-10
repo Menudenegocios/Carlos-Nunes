@@ -11,7 +11,7 @@ import {
   Handshake, Globe, Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { SectionLanding } from '../components/SectionLanding';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,15 +32,15 @@ export const ProjectManagement: React.FC = () => {
 
   React.useEffect(() => {
     if (!userId) return;
-    firebaseService.getSmartGoals(userId).then(setSmartGoals).catch(console.error);
-    firebaseService.getProjects(userId).then(setProjects).catch(console.error);
+    supabaseService.getSmartGoals(userId).then(setSmartGoals).catch(console.error);
+    supabaseService.getProjects(userId).then(setProjects).catch(console.error);
   }, [userId]);
 
   const handleSaveProject = async () => {
     if (!newProjectName) return;
     try {
       if (editingProject) {
-        await firebaseService.updateProject(editingProject.id, {
+        await supabaseService.updateProject(editingProject.id, {
           name: newProjectName,
           description: newProjectDesc,
           status: newProjectStatus,
@@ -54,7 +54,7 @@ export const ProjectManagement: React.FC = () => {
           priority: newProjectPriority
         } : p));
       } else {
-        const newProject = await firebaseService.addProject({ 
+        const newProject = await supabaseService.addProject({ 
           userId: userId, 
           name: newProjectName, 
           description: newProjectDesc,
@@ -95,7 +95,7 @@ export const ProjectManagement: React.FC = () => {
 
   const deleteProject = async (id: string) => {
     try {
-      await firebaseService.deleteProject(id);
+      await supabaseService.deleteProject(id);
       setProjects(projects.filter(p => p.id !== id));
     } catch (error) {
       console.error(error);
@@ -276,13 +276,13 @@ const BusinessCanvaView = () => {
 
   React.useEffect(() => {
     if (!userId) return;
-    firebaseService.getBusinessCanva(userId).then(d => setData(d || {})).catch(console.error);
+    supabaseService.getBusinessCanva(userId).then(d => setData(d || {})).catch(console.error);
   }, [userId]);
 
   const saveData = async () => {
     setLoading(true);
     try {
-      await firebaseService.saveBusinessCanva(userId, data);
+      await supabaseService.saveBusinessCanva(userId, data);
       alert('Salvo com sucesso!');
     } catch (error) {
       console.error(error);

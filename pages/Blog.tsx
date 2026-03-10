@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import { mockBackend } from '../services/mockBackend';
+import { supabaseService } from '../services/supabaseService';
 import { BlogPost } from '../types';
 import { Calendar, User, BookOpen, Search, ArrowRight, Store, ChevronLeft, Share2, Clock } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export const Blog: React.FC = () => {
 
   useEffect(() => {
     const loadPosts = async () => {
-      const data = await mockBackend.getBlogPosts();
+      const data = await supabaseService.getBlogPosts();
       setPosts(data.sort((a, b) => Number(b.id) - Number(a.id)));
       
       if (id) {

@@ -21,7 +21,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { label: 'Vitrine', path: '/vitrine' },
     { label: 'Marketplace', path: '/marketplace' },
     { label: 'Parceiros', path: '/partners' },
-    { label: 'Mídia', path: '/eventos' },
+    { label: 'Agenda', path: '/eventos' },
     { label: 'Blog', path: '/blog' }
   ];
 
@@ -105,7 +105,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <ul className="space-y-4 text-sm font-bold text-brand-surface/80">
                 <li><Link to="/vitrine" className="hover:text-brand-primary transition-colors">Vitrine de Negócios</Link></li>
                 <li><Link to="/marketplace" className="hover:text-brand-primary transition-colors">Marketplace</Link></li>
-                <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Mídia & Eventos</Link></li>
+                <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Agenda & Eventos</Link></li>
                 <li><Link to="/blog" className="hover:text-brand-primary transition-colors">Insights & Dicas</Link></li>
               </ul>
             </div>

@@ -1,11 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile as ProfileType } from '../types';
 import { 
-  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon
+  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, Download
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ export const Profile: React.FC = () => {
   const loadProfile = async () => {
     if (!user) return;
     try {
-      const data = await firebaseService.getProfile(user.id);
+      const data = await supabaseService.getProfile(user.id);
       setProfile(data || { logoUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}` });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -30,7 +31,7 @@ export const Profile: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await firebaseService.updateProfile(user.id, { ...profile, isPublished: true });
+      await supabaseService.updateProfile(user.id, { ...profile, isPublished: true });
       alert('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -125,7 +126,14 @@ export const Profile: React.FC = () => {
          <div className="lg:col-span-8 bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl">
             <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-10 leading-none tracking-tight">Configurações de Identidade</h3>
             <form onSubmit={handleSave} className="space-y-8">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">URL Personalizada (Slug)</label>
+                    <div className="flex items-center bg-gray-50 dark:bg-zinc-800 rounded-2xl p-2">
+                       <span className="text-gray-400 font-bold px-3">/</span>
+                       <input type="text" className="w-full bg-transparent border-none p-3 font-bold focus:ring-0 transition-all dark:text-white" value={profile.slug || ''} onChange={e => setProfile({...profile, slug: e.target.value})} placeholder="seu-nome" />
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição / Empresa</label>
                     <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-white" value={profile.businessName || ''} onChange={e => setProfile({...profile, businessName: e.target.value})} />
@@ -145,6 +153,36 @@ export const Profile: React.FC = () => {
                   </button>
                </div>
             </form>
+             <div className="mt-12 p-8 bg-gray-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800">
+               <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-6">Seu Link Exclusivo</h3>
+               <div className="flex flex-col md:flex-row items-center gap-8">
+                 <div className="bg-white p-4 rounded-2xl shadow-inner">
+                   <QRCodeSVG value={`${window.location.origin}/${profile.slug || user?.id}`} size={150} />
+                 </div>
+                 <div className="flex-1 space-y-4">
+                   <p className="text-sm text-gray-600 dark:text-zinc-300">
+                     Compartilhe seu link exclusivo: <strong>{window.location.origin}/{profile.slug || user?.id}</strong>
+                   </p>
+                   <button 
+                     onClick={() => {
+                       const canvas = document.querySelector('svg');
+                       if (canvas) {
+                         const data = new XMLSerializer().serializeToString(canvas);
+                         const blob = new Blob([data], {type: 'image/svg+xml'});
+                         const url = URL.createObjectURL(blob);
+                         const link = document.createElement('a');
+                         link.href = url;
+                         link.download = 'qrcode.svg';
+                         link.click();
+                       }
+                     }}
+                     className="bg-indigo-600 text-white font-black px-8 py-3 rounded-2xl hover:bg-indigo-700 transition-all uppercase tracking-widest text-xs flex items-center gap-2"
+                   >
+                     <Download className="w-4 h-4" /> Baixar QR Code
+                   </button>
+                 </div>
+               </div>
+             </div>
          </div>
       </div>
     </div>

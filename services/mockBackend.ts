@@ -51,6 +51,9 @@ const safeQuery = async <T>(query: any, fallback: T): Promise<T> => {
 export const mockBackend = {
   // --- ADMIN: GESTÃO DE MEMBROS ---
   createMember: async (userData: Partial<User>, profileData: Partial<Profile>) => {
+    if (!supabaseAdmin) {
+      throw new Error("Supabase Admin client is not initialized. Please check your environment variables.");
+    }
     // 1. Create user in Supabase Auth using the secondary client (so it doesn't log the admin out)
     const { data: authData, error: authError } = await supabaseAdmin.auth.signUp({
       email: userData.email!,

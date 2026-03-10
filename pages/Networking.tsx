@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { NetworkingProfile } from '../types';
 import { MessageCircle, Briefcase, Search, Plus, Trash2, X, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,7 +28,7 @@ export const Networking: React.FC = () => {
 
   const loadProfiles = async () => {
     try {
-      const data = await firebaseService.getNetworkingProfiles();
+      const data = await supabaseService.getNetworkingProfiles();
       setProfiles(data);
     } catch (error) {
       console.error('Error loading networking profiles:', error);
@@ -50,7 +50,7 @@ export const Networking: React.FC = () => {
     if (!user) return;
 
     try {
-      const newProfile = await firebaseService.createNetworkingProfile({
+      const newProfile = await supabaseService.createNetworkingProfile({
         name: formData.name,
         businessName: formData.businessName,
         sector: formData.sector,
@@ -74,7 +74,7 @@ export const Networking: React.FC = () => {
     
     if (window.confirm('Tem certeza que deseja remover este negócio da lista?')) {
       try {
-        await firebaseService.deleteNetworkingProfile(id);
+        await supabaseService.deleteNetworkingProfile(id);
         setProfiles(prev => prev.filter(p => p.id !== id));
       } catch (error) {
         console.error('Error deleting partner:', error);

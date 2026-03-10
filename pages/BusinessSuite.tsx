@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate } from '../types';
 import { 
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
@@ -147,28 +147,28 @@ const CRMView = ({ userId }: { userId: string }) => {
 
   const loadQuickMessages = async () => {
       try {
-        const data = await firebaseService.getQuickMessages(userId);
+        const data = await supabaseService.getQuickMessages(userId);
         setQuickMessages(data);
       } catch (e) { console.error(e); }
   };
 
   const loadTasks = async () => {
       try {
-        const data = await firebaseService.getTasks(userId);
+        const data = await supabaseService.getTasks(userId);
         setTasks(data);
       } catch (e) { console.error(e); }
   };
 
   const loadLeads = async () => { 
       try {
-        const data = await firebaseService.getLeads(userId); 
+        const data = await supabaseService.getLeads(userId); 
         setLeads(data); 
       } catch (e) { console.error(e); }
   };
 
   const loadClients = async () => {
       try {
-        const data = await firebaseService.getClients(userId);
+        const data = await supabaseService.getClients(userId);
         setClients(data);
       } catch (e) { console.error(e); }
   };
@@ -178,8 +178,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingLead) await firebaseService.updateLead(editingLead.id, { ...formData });
-        else await firebaseService.addLead({ ...formData, userId } as Lead);
+        if (editingLead) await supabaseService.updateLead(editingLead.id, { ...formData });
+        else await supabaseService.addLead({ ...formData, userId } as Lead);
         setIsModalOpen(false);
         await loadLeads();
     } finally { setIsSaving(false); }
@@ -190,8 +190,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingClient) await firebaseService.updateClient(editingClient.id, { ...clientFormData });
-        else await firebaseService.addClient({ ...clientFormData, userId } as Client);
+        if (editingClient) await supabaseService.updateClient(editingClient.id, { ...clientFormData });
+        else await supabaseService.addClient({ ...clientFormData, userId } as Client);
         setIsClientModalOpen(false);
         await loadClients();
         setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [] });
@@ -203,8 +203,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingTask) await firebaseService.updateTask(editingTask.id, { ...taskFormData });
-        else await firebaseService.addTask({ ...taskFormData, userId } as CRMTask);
+        if (editingTask) await supabaseService.updateTask(editingTask.id, { ...taskFormData });
+        else await supabaseService.addTask({ ...taskFormData, userId } as CRMTask);
         setIsTaskModalOpen(false);
         await loadTasks();
         setTaskFormData({ title: '', description: '', dueDate: Date.now() + 86400000, status: 'pending', type: 'call' });
@@ -216,8 +216,8 @@ const CRMView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-        if (editingQuickMessage) await firebaseService.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData });
-        else await firebaseService.addQuickMessage({ ...quickMessageFormData, userId } as QuickMessageTemplate);
+        if (editingQuickMessage) await supabaseService.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData });
+        else await supabaseService.addQuickMessage({ ...quickMessageFormData, userId } as QuickMessageTemplate);
         setIsQuickMessageModalOpen(false);
         await loadQuickMessages();
         setQuickMessageFormData({ title: '', content: '', category: 'primeiro_contato' });
@@ -227,24 +227,24 @@ const CRMView = ({ userId }: { userId: string }) => {
   const handleToggleTaskStatus = async (task: CRMTask) => {
     const newStatus = task.status === 'pending' ? 'completed' : 'pending';
     setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
-    await firebaseService.updateTask(task.id, { status: newStatus });
+    await supabaseService.updateTask(task.id, { status: newStatus });
   };
 
   const handleDeleteTask = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-    await firebaseService.deleteTask(id);
+    await supabaseService.deleteTask(id);
     await loadTasks();
   };
 
   const handleDeleteQuickMessage = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta mensagem?')) return;
-    await firebaseService.deleteQuickMessage(id);
+    await supabaseService.deleteQuickMessage(id);
     await loadQuickMessages();
   };
 
   const handleDeleteClient = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
-    await firebaseService.deleteClient(id);
+    await supabaseService.deleteClient(id);
     await loadClients();
   };
 
@@ -265,7 +265,7 @@ const CRMView = ({ userId }: { userId: string }) => {
     const currentLead = leads.find(l => l.id === leadId);
     if (currentLead && currentLead.stage !== targetStage) {
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: targetStage } : l));
-      await firebaseService.updateLead(leadId, { stage: targetStage });
+      await supabaseService.updateLead(leadId, { stage: targetStage });
     }
     setDraggedLeadId(null);
   };
@@ -698,7 +698,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
   useEffect(() => { loadEntries(); }, []);
   const loadEntries = async () => {
     try {
-      const data = await firebaseService.getFinancialEntries(userId);
+      const data = await supabaseService.getFinancialEntries(userId);
       setEntries(data);
     } catch (e) { console.error(e); }
   };
@@ -708,7 +708,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-      await firebaseService.addFinancialEntry({ ...formData, userId } as FinancialEntry);
+      await supabaseService.addFinancialEntry({ ...formData, userId } as FinancialEntry);
       setIsModalOpen(false);
       await loadEntries();
       setFormData({ description: '', value: 0, type: 'income', date: new Date().toISOString().split('T')[0], category: 'Geral', entityType: 'personal' });
@@ -717,7 +717,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
 
   const handleDeleteEntry = async (id: string) => {
     if (!window.confirm('Excluir este lançamento?')) return;
-    await firebaseService.deleteFinancialEntry(id);
+    await supabaseService.deleteFinancialEntry(id);
     await loadEntries();
   };
 
@@ -868,7 +868,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
   useEffect(() => { loadSchedule(); }, []);
   const loadSchedule = async () => {
     try {
-      const data = await firebaseService.getSchedule(userId);
+      const data = await supabaseService.getSchedule(userId);
       setItems(data);
     } catch (e) { console.error(e); }
   };
@@ -878,7 +878,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
     if (!userId) return;
     setIsSaving(true);
     try {
-      await firebaseService.addScheduleItem({ ...formData, userId } as ScheduleItem);
+      await supabaseService.addScheduleItem({ ...formData, userId } as ScheduleItem);
       setIsModalOpen(false);
       await loadSchedule();
       setFormData({ title: '', client: '', date: new Date().toISOString().split('T')[0], time: '09:00', type: 'servico', status: 'pending' });
@@ -887,7 +887,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
 
   const handleDeleteItem = async (id: string) => {
     if (!window.confirm('Excluir este compromisso?')) return;
-    await firebaseService.deleteScheduleItem(id);
+    await supabaseService.deleteScheduleItem(id);
     await loadSchedule();
   };
 

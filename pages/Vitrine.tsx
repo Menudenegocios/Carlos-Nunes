@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile } from '../types';
 import { 
   Search, MapPin, Star, ArrowRight, Sparkles, 
@@ -25,7 +25,7 @@ export const Vitrine: React.FC = () => {
   const loadProfiles = async () => {
     setIsLoading(true);
     try {
-      const data = await firebaseService.getPublishedProfiles();
+      const data = await supabaseService.getPublishedProfiles();
       setProfiles(data);
     } finally {
       setIsLoading(false);

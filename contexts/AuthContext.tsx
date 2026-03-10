@@ -2,16 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, PropsWithChildren } from 'react';
 import { User } from '../types';
-import { auth, db } from '../firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  updateProfile as updateAuthProfile,
-  sendPasswordResetEmail
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { supabase } from '../services/supabaseClient';
+import { AuthError } from '@supabase/supabase-js';
+
 
 interface AuthContextType {
   user: User | null;
@@ -51,13 +44,16 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     }
 
     try {
-      const userDocRef = doc(db, 'users', userId);
-      console.log("Fetching user profile for path:", userDocRef.path);
-      const userDoc = await getDoc(userDocRef);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-      if (userDoc.exists()) {
+      if (error) throw error;
+
+      if (data) {
         console.log("User profile found");
-        const data = userDoc.data();
         setUser({
           id: userId,
           name: data.businessName || data.name || 'Usuário',
@@ -68,32 +64,38 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           menuCash: data.menuCash || 0,
           referralCode: data.referralCode || '',
           referralsCount: data.referralsCount || 0,
-          role: (auth.currentUser?.email === 'nunesempreendedor@gmail.com' ? 'admin' : (data.role as User['role'] || 'user'))
+          role: (data.email === 'nunesempreendedor@gmail.com' ? 'admin' : (data.role as User['role'] || 'user'))
         });
       } else {
         console.log("User profile does not exist, creating...");
-        // Se o perfil não existir no Firestore, usamos os dados do Auth
-        const currentUser = auth.currentUser;
-        if (currentUser && currentUser.uid === userId) {
+        // Se o perfil não existir no Supabase, usamos os dados do Auth
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser && currentUser.id === userId) {
              const newUserProfile = {
-                id: userId,
-                userId: userId,
-                name: currentUser.displayName || 'Usuário',
+                user_id: userId,
+                name: currentUser.user_metadata.name || 'Usuário',
                 email: currentUser.email || '',
-                plan: 'profissionais' as 'profissionais' | 'freelancers' | 'negocios',
+                plan: 'profissionais',
                 points: 0,
-                level: 'elite' as 'elite' | 'bronze' | 'ouro' | 'diamante',
+                level: 'elite',
                 menuCash: 0,
                 referralCode: '',
                 referralsCount: 0,
-                role: 'user' as User['role'],
-                createdAt: new Date().toISOString()
+                role: 'user',
+                created_at: new Date().toISOString()
             };
             
-            // Create the profile in Firestore if it doesn't exist
-            await setDoc(userDocRef, newUserProfile);
+            // Create the profile in Supabase if it doesn't exist
+            await supabase.from('profiles').insert([newUserProfile]);
             
-            setUser(newUserProfile);
+            setUser({
+              id: userId,
+              ...newUserProfile,
+              name: newUserProfile.name,
+              plan: newUserProfile.plan as any,
+              level: newUserProfile.level as any,
+              role: newUserProfile.role as any
+            });
         }
       }
     } catch (error: any) {
@@ -101,16 +103,16 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       if (error.message && error.message.includes('offline')) {
         setNetworkError(true);
       }
-      // Fallback to auth user if firestore fails
-      const currentUser = auth.currentUser;
-      if (currentUser && currentUser.uid === userId) {
+      // Fallback to auth user if Supabase fails
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser && currentUser.id === userId) {
          setUser({
             id: userId,
-            name: currentUser.displayName || 'Usuário',
+            name: currentUser.user_metadata.name || 'Usuário',
             email: currentUser.email || '',
-            plan: 'profissionais' as 'profissionais' | 'freelancers' | 'negocios',
+            plan: 'profissionais',
             points: 0,
-            level: 'elite' as 'elite' | 'bronze' | 'ouro' | 'diamante',
+            level: 'elite',
             menuCash: 0,
             referralCode: '',
             referralsCount: 0,
@@ -148,11 +150,12 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const currentUser = session?.user;
         const impersonated = localStorage.getItem('menu_impersonating');
         
         if (currentUser) {
-            await fetchUserProfile(currentUser.uid);
+            await fetchUserProfile(currentUser.id);
              if (impersonated) {
                 const adminUser = user || { id: ADMIN_USER_ID, role: 'admin' } as any;
                 setRealAdmin(adminUser);
@@ -165,7 +168,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
                 setIsImpersonating(true);
               }
         } else {
-             // Check for demo/mock user in local storage if not authenticated via Firebase
+             // Check for demo/mock user in local storage if not authenticated via Supabase
              const savedDemo = localStorage.getItem('menu_demo_user');
              if (savedDemo) {
                 const parsed = JSON.parse(savedDemo);
@@ -181,7 +184,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         }
     });
 
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, pass: string): Promise<string | undefined> => {
@@ -216,18 +219,27 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       }
     }
 
-    // 2. Login via Firebase (Real)
+    // 2. Login via Supabase (Real)
     try {
-      console.log("Chamando Firebase signInWithEmailAndPassword para:", cleanEmail);
-      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
+      console.log("Chamando Supabase signInWithPassword para:", cleanEmail);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPass,
+      });
+      
+      if (error) throw error;
+      
       localStorage.removeItem('menu_demo_user');
       
       // Fetch profile to get role
-      const userDocRef = doc(db, 'users', userCredential.user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        if (data.role) return data.role;
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+        
+      if (profile) {
+        if (profile.role) return profile.role;
         if (cleanEmail === 'nunesempreendedor@gmail.com') return 'admin';
       }
       return 'user';
@@ -235,33 +247,37 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       console.error("Erro no signIn:", error);
       
       // Special handling for the main admin email: try to create if not exists
-      if (cleanEmail === 'nunesempreendedor@gmail.com' && (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found')) {
+      if (cleanEmail === 'nunesempreendedor@gmail.com' && (error.message.includes('Invalid login credentials') || error.message.includes('User not found'))) {
         try {
           console.log("Tentando criar usuário admin que não existia ou falhou login...");
-          const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPass);
+          const { data, error: signUpError } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password: cleanPass,
+          });
+          
+          if (signUpError) throw signUpError;
           
           // Create profile
-          const { setDoc } = await import('firebase/firestore');
-          await setDoc(doc(db, 'users', userCredential.user.uid), {
+          await supabase.from('profiles').insert([{
             email: cleanEmail,
-            userId: userCredential.user.uid,
-            createdAt: new Date(),
+            user_id: data.user!.id,
+            created_at: new Date().toISOString(),
             role: 'admin',
             plan: 'negocios',
             businessName: 'Admin Principal'
-          }, { merge: true });
+          }]);
           
           return 'admin';
         } catch (createError: any) {
           console.error("Erro ao tentar criar admin no fallback:", createError);
           // If create fails (e.g. email in use), it means password was definitely wrong for existing user
-          if (createError.code === 'auth/email-already-in-use') {
+          if (createError.message.includes('already registered')) {
              throw new Error('Este e-mail já existe. A senha informada está incorreta.');
           }
         }
       }
 
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      if (error.message.includes('Invalid login credentials')) {
         throw new Error('E-mail ou senha incorretos. Por favor, verifique seus dados.');
       }
       throw error;
@@ -289,17 +305,23 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const register = async (name: string, email: string, pass: string) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      const newUser = userCredential.user;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: {
+          data: { name }
+        }
+      });
       
-      await updateAuthProfile(newUser, { displayName: name });
+      if (error) throw error;
+      
+      const newUser = data.user!;
 
-      console.log("Usuário registrado com sucesso:", newUser.uid);
+      console.log("Usuário registrado com sucesso:", newUser.id);
       
-      // Create user profile in Firestore
-      const userProfile = {
-        id: newUser.uid,
-        userId: newUser.uid,
+      // Create user profile in Supabase
+      const { error: profileError } = await supabase.from('profiles').insert([{
+        user_id: newUser.id,
         name: name,
         email: email,
         plan: 'profissionais',
@@ -309,10 +331,10 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         referralCode: '',
         referralsCount: 0,
         role: 'user',
-        createdAt: new Date().toISOString()
-      };
+        created_at: new Date().toISOString()
+      }]);
 
-      await setDoc(doc(db, 'users', newUser.uid), userProfile);
+      if (profileError) throw profileError;
 
       localStorage.removeItem('menu_demo_user');
       // onAuthStateChanged will handle the rest
@@ -325,7 +347,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   const logout = async () => {
-    try { await signOut(auth); } catch (e) {}
+    try { await supabase.auth.signOut(); } catch (e) {}
     localStorage.removeItem('menu_demo_user');
     localStorage.removeItem('menu_impersonating');
     setUser(null);
@@ -335,7 +357,10 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const forgotPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição de senha:", error);
       throw error;

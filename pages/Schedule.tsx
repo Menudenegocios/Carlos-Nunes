@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { ScheduleItem } from '../types';
 import { Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export const Schedule: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
     try {
-      const data = await firebaseService.getSchedule(user.id);
+      const data = await supabaseService.getSchedule(user.id);
       setItems(data || []);
     } catch (error) {
       console.error('Error loading schedule:', error);

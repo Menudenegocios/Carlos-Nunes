@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Video, Ticket, ArrowRight, Sparkles, Filter, Clock, ExternalLink, Search, Play, X, Wrench, GraduationCap, Mic, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Media } from '../types';
 
 type MediaType = 'Todos' | 'Eventos' | 'MenuCast' | 'Ferramentas' | 'Treinamentos';
@@ -68,7 +68,7 @@ export const Events: React.FC = () => {
     const loadMedia = async () => {
       setIsLoading(true);
       try {
-        const items = await firebaseService.getMedia();
+        const items = await supabaseService.getMedia();
         // Fallback to MOCK_MEDIA if no items are found in Firebase
         if (items.length > 0) {
           setMediaItems(items);
@@ -110,7 +110,7 @@ export const Events: React.FC = () => {
            <Video className="w-3 h-3" /> Central de Conteúdo
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          Explore nossa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Mídia & Eventos.</span>
+          Explore nossa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Agenda & Eventos.</span>
         </h1>
         
         <div className="max-w-2xl mx-auto relative group">
@@ -143,7 +143,7 @@ export const Events: React.FC = () => {
         <div className="flex justify-between items-center mb-8 px-2">
             <div className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase tracking-widest italic">
                 <Filter className="w-3.5 h-3.5" />
-                Mídia <ChevronRight className="w-3 h-3" /> {activeTab}
+                Agenda <ChevronRight className="w-3 h-3" /> {activeTab}
             </div>
             <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-lg">
                 {displayMedia.length} RESULTADOS

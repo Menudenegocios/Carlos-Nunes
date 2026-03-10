@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile, Product, PointsTransaction } from '../types';
 import { 
   Trophy, Zap, Eye, Plus, 
@@ -14,8 +14,7 @@ import {
   Copy, Share2, Sparkles, Lock, Save
 } from 'lucide-react';
 import { pointsRules, tiers } from '../config/gamificationConfig';
-import { auth } from '../firebase';
-import { updateEmail, updatePassword } from 'firebase/auth';
+import { supabase } from '../services/supabaseClient';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -36,8 +35,8 @@ export const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       const [profile, history] = await Promise.all([
-        firebaseService.getProfile(user!.id),
-        firebaseService.getPointsHistory(user!.id)
+        supabaseService.getProfile(user!.id),
+        supabaseService.getPointsHistory(user!.id)
       ]);
       setUserProfile(profile || null);
       // Mocking some activity if history is empty
@@ -95,24 +94,21 @@ export const Dashboard: React.FC = () => {
 
   const handleUpdateAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
     setIsSavingAuth(true);
     setAuthMessage('');
     try {
-      if (newEmail && newEmail !== auth.currentUser.email) {
-        await updateEmail(auth.currentUser, newEmail);
+      if (newEmail && newEmail !== currentUser.email) {
+        await supabase.auth.updateUser({ email: newEmail });
       }
       if (newPassword) {
-        await updatePassword(auth.currentUser, newPassword);
+        await supabase.auth.updateUser({ password: newPassword });
       }
       setAuthMessage('Dados atualizados com sucesso!');
       setNewPassword('');
     } catch (error: any) {
-      if (error.code === 'auth/requires-recent-login') {
-        setAuthMessage('Por segurança, faça login novamente para alterar esses dados.');
-      } else {
-        setAuthMessage('Erro ao atualizar: ' + error.message);
-      }
+      setAuthMessage('Erro ao atualizar: ' + error.message);
     } finally {
       setIsSavingAuth(false);
     }
@@ -375,7 +371,7 @@ export const Dashboard: React.FC = () => {
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Novo E-mail</label>
                   <input 
                     type="email" 
-                    placeholder={auth.currentUser?.email || ''}
+                    placeholder={user?.email || ''}
                     className="w-full bg-white/50 dark:bg-black/20 border border-gray-200/50 dark:border-white/5 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all dark:text-white placeholder-gray-400" 
                     value={newEmail} 
                     onChange={e => setNewEmail(e.target.value)} 

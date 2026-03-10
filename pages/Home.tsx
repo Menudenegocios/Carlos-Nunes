@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile, BlogPost } from '../types';
 import { 
   ArrowRight, Globe, Settings, TrendingUp, 
@@ -24,8 +24,8 @@ export const Home: React.FC = () => {
   const loadData = async () => {
     try {
       const [profiles, posts] = await Promise.all([
-        firebaseService.getPublishedProfiles(),
-        firebaseService.getBlogPosts()
+        supabaseService.getPublishedProfiles(),
+        supabaseService.getBlogPosts()
       ]);
       
       // Get top 4 profiles (e.g., just the first 4 published)

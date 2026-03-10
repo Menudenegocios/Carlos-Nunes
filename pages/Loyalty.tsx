@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { LoyaltyCard } from '../types';
 import { Check, Gift } from 'lucide-react';
@@ -13,7 +13,7 @@ export const Loyalty: React.FC = () => {
     const loadCards = async () => {
       if (!user) return;
       try {
-        const data = await firebaseService.getLoyaltyCards(user.id);
+        const data = await supabaseService.getLoyaltyCards(user.id);
         setCards(data);
       } catch (error) {
         console.error('Error loading loyalty cards:', error);
@@ -24,7 +24,7 @@ export const Loyalty: React.FC = () => {
 
   const handleStamp = async (id: string) => {
     try {
-      const updated = await firebaseService.stampLoyaltyCard(id);
+      const updated = await supabaseService.stampLoyaltyCard(id);
       setCards(prev => prev.map(c => c.id === id ? updated as any : c));
     } catch (error) {
       console.error('Error stamping card:', error);

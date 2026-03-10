@@ -1,63 +1,635 @@
-
-import { db, auth } from '../firebase';
+import { supabase } from './supabaseClient';
 import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy,
-  setDoc
-} from 'firebase/firestore';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut,
-  updateProfile as updateAuthProfile
-} from 'firebase/auth';
-import { firebaseService } from './firebaseService';
-import { Profile } from '../types';
-
-// Helper to map Firestore docs to objects
-const mapDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+  Media,
+} from '../types';
 
 export const supabaseService = {
-  // --- AUTH ---
-  async signUp(email: string, password: string, data?: any) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    if (data?.full_name) {
-      await updateAuthProfile(user, { displayName: data.full_name });
-    }
-    return { user, error: null };
-  },
-
-  async signIn(email: string, password: string) {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return { user: userCredential.user, error: null };
-  },
-
-  async signOut() {
-    await signOut(auth);
-    return { error: null };
-  },
-
-  async getUser() {
-    return auth.currentUser;
-  },
-
-  // --- PROFILES ---
-  async getProfile(userId: string): Promise<Profile | null> {
+  // --- MEDIA ---
+  uploadImage: async (file: File, path: string): Promise<string> => {
     try {
-      const docRef = doc(db, 'users', userId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as Profile;
-      }
+      const { data, error } = await supabase.storage
+        .from('images') // Changed from 'media' to 'images' to match the second implementation which seemed more complete
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('images')
+        .getPublicUrl(path);
+        
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  },
+
+  getMedia: async (): Promise<Media[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('media')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting media:", error);
+      return [];
+    }
+  },
+
+  createMedia: async (mediaData: Omit<Media, 'id' | 'createdAt'>): Promise<Media> => {
+    try {
+      const { data, error } = await supabase
+        .from('media')
+        .insert({
+          ...mediaData,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating media:", error);
+      throw error;
+    }
+  },
+
+  updateMedia: async (id: string, mediaData: Partial<Media>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('media')
+        .update({ ...mediaData, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating media:", error);
+      throw error;
+    }
+  },
+
+  deleteMedia: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      throw error;
+    }
+  },
+
+  // --- LOYALTY ---
+  getLoyaltyCards: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('loyalty_cards')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting loyalty cards:", error);
+      return [];
+    }
+  },
+
+  stampLoyaltyCard: async (id: string): Promise<any> => {
+    try {
+      const { data: card, error: fetchError } = await supabase
+        .from('loyalty_cards')
+        .select('stamps')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const newStamps = (card.stamps || 0) + 1;
+      const { data, error } = await supabase
+        .from('loyalty_cards')
+        .update({ stamps: newStamps, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error stamping loyalty card:", error);
+      throw error;
+    }
+  },
+
+  // --- PLANS ---
+  upgradePlan: async (userId: string, plan: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ plan, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error upgrading plan:", error);
+      throw error;
+    }
+  },
+
+  // --- POINTS ---
+  getPointsHistory: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('points_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting points history:", error);
+      return [];
+    }
+  },
+
+  // --- QUOTES ---
+  getQuotes: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting quotes:", error);
+      return [];
+    }
+  },
+
+  // --- NETWORKING ---
+  getNetworkingProfiles: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('networking_profiles')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting networking profiles:", error);
+      return [];
+    }
+  },
+
+  createNetworkingProfile: async (profile: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('networking_profiles')
+        .insert({ ...profile, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating networking profile:", error);
+      throw error;
+    }
+  },
+
+  deleteNetworkingProfile: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('networking_profiles')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting networking profile:", error);
+      throw error;
+    }
+  },
+
+  // --- EVENTS ---
+  getEvents: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting events:", error);
+      return [];
+    }
+  },
+
+  createEvent: async (event: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .insert({ ...event, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating event:", error);
+      throw error;
+    }
+  },
+
+  updateEvent: async (id: string, event: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ ...event, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating event:", error);
+      throw error;
+    }
+  },
+
+  deleteEvent: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      throw error;
+    }
+  },
+
+  // --- MARKETPLACE ---
+  getAllProducts: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting all products:", error);
+      return [];
+    }
+  },
+
+  getOffers: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting offers:", error);
+      return [];
+    }
+  },
+
+  createProduct: async (product: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert({ ...product, created_at: new Date().toISOString() });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error creating product:", error);
+      throw error;
+    }
+  },
+
+  updateProduct: async (id: string, product: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update(product)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating product:", error);
+      throw error;
+    }
+  },
+
+  deleteProduct: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      throw error;
+    }
+  },
+
+  createOffer: async (offer: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('offers')
+        .insert({ ...offer, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating offer:", error);
+      throw error;
+    }
+  },
+
+  updateOffer: async (id: string, offer: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .update(offer)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating offer:", error);
+      throw error;
+    }
+  },
+
+  deleteOffer: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting offer:", error);
+      throw error;
+    }
+  },
+
+  getMyOffers: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting my offers:", error);
+      return [];
+    }
+  },
+
+  getProducts: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting products:", error);
+      return [];
+    }
+  },
+
+  // --- COUPONS ---
+  getCoupons: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting coupons:", error);
+      return [];
+    }
+  },
+
+  createCoupon: async (coupon: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .insert({ ...coupon, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      throw error;
+    }
+  },
+
+  updateCoupon: async (id: string, userId: string, coupon: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('coupons')
+        .update(coupon)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating coupon:", error);
+      throw error;
+    }
+  },
+
+  deleteCoupon: async (id: string, userId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('coupons')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      throw error;
+    }
+  },
+
+  redeemCoupon: async (userId: string, couponId: string, points: number): Promise<void> => {
+    try {
+      // 1. Register redemption
+      const { error: redemptionError } = await supabase
+        .from('coupon_redemptions')
+        .insert({
+          coupon_id: couponId,
+          user_id: userId,
+          redeemed_at: new Date().toISOString()
+        });
+      
+      if (redemptionError) throw redemptionError;
+
+      // 2. Update user points
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('points')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) throw profileError;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ points: (profile.points || 0) + points })
+        .eq('id', userId);
+      
+      if (updateError) throw updateError;
+    } catch (error) {
+      console.error("Error redeeming coupon:", error);
+      throw error;
+    }
+  },
+
+  // --- BLOG POSTS ---
+  getBlogPosts: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting blog posts:", error);
+      return [];
+    }
+  },
+
+  addBlogPost: async (post: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert(post)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding blog post:", error);
+      throw error;
+    }
+  },
+
+  updateBlogPost: async (id: string, post: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update(post)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating blog post:", error);
+      throw error;
+    }
+  },
+
+  deleteBlogPost: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      throw error;
+    }
+  },
+
+  // --- PROFILE ---
+  getAllProfiles: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting all profiles:", error);
+      return [];
+    }
+  },
+
+  getPublishedProfiles: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_published', true);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting published profiles:", error);
+      return [];
+    }
+  },
+
+  getProfile: async (identifier: string): Promise<any | null> => {
+    try {
+      // Try by ID first
+      const { data: profileById, error: errorById } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', identifier)
+        .single();
+      
+      if (!errorById && profileById) return profileById;
+      
+      // Try by slug
+      const { data: profileBySlug, error: errorBySlug } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('slug', identifier)
+        .single();
+      
+      if (!errorBySlug && profileBySlug) return profileBySlug;
+      
       return null;
     } catch (error) {
       console.error("Error getting profile:", error);
@@ -65,396 +637,798 @@ export const supabaseService = {
     }
   },
 
-  async updateProfile(userId: string, profile: any) {
+  updateProfile: async (userId: string, profile: Partial<any>): Promise<void> => {
     try {
-      const docRef = doc(db, 'users', userId);
-      await updateDoc(docRef, profile);
-      return { data: profile, error: null };
+      const { error } = await supabase
+        .from('profiles')
+        .update({ ...profile, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) throw error;
     } catch (error) {
-      // If document doesn't exist, create it (upsert-like behavior for profile update)
-      try {
-         const docRef = doc(db, 'users', userId);
-         await setDoc(docRef, profile, { merge: true });
-         return { data: profile, error: null };
-      } catch (e) {
-          console.error("Error updating profile:", error);
-          throw error;
-      }
+      console.error("Error updating profile:", error);
+      throw error;
     }
   },
 
-  async upgradePlan(userId: string, plan: string) {
-    return this.updateProfile(userId, { plan });
+  saveProfile: async (userId: string, profile: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({ ...profile, id: userId, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      throw error;
+    }
+  },
+
+  // --- PROJECTS ---
+  getProjects: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting projects:", error);
+      return [];
+    }
+  },
+
+  addProject: async (project: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({ ...project, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding project:", error);
+      throw error;
+    }
+  },
+
+  updateProject: async (id: string, project: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ ...project, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating project:", error);
+      throw error;
+    }
+  },
+
+  deleteProject: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      throw error;
+    }
   },
 
   // --- LEADS ---
-  async getLeads(userId: string) {
-    const leads = await firebaseService.getLeads(userId);
-    return leads;
+  getLeads: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting leads:", error);
+      return [];
+    }
   },
 
-  async addLead(lead: any) {
-    return firebaseService.addLead(lead);
+  addLead: async (lead: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .insert({ ...lead, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding lead:", error);
+      throw error;
+    }
   },
 
-  async updateLead(leadId: string, lead: any) {
-    return firebaseService.updateLead(leadId, lead);
+  addLeads: async (leads: any[]): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .insert(leads.map(lead => ({ ...lead, created_at: new Date().toISOString() })));
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error adding leads:", error);
+      throw error;
+    }
   },
 
-  async updateLeadStage(leadId: string, stage: string) {
-    return firebaseService.updateLead(leadId, { stage } as any);
+  updateLead: async (id: string, lead: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({ ...lead, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      throw error;
+    }
   },
 
-  async deleteLead(leadId: string) {
-    return firebaseService.deleteLead(leadId);
+  deleteLead: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      throw error;
+    }
+  },
+
+  // --- VITRINE ---
+  getStoreCategories: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('store_categories')
+        .select('*')
+        .eq('user_id', userId)
+        .order('order', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting store categories:", error);
+      return [];
+    }
+  },
+
+  addStoreCategory: async (category: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('store_categories')
+        .insert(category)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding store category:", error);
+      throw error;
+    }
+  },
+
+  deleteStoreCategory: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('store_categories')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting store category:", error);
+      throw error;
+    }
+  },
+
+  getVitrineComments: async (vitrineUserId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('vitrine_comments')
+        .select('*')
+        .eq('vitrine_user_id', vitrineUserId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting vitrine comments:", error);
+      return [];
+    }
+  },
+
+  addVitrineComment: async (comment: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('vitrine_comments')
+        .insert({ ...comment, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding vitrine comment:", error);
+      throw error;
+    }
   },
 
   // --- CLIENTS ---
-  async getClients(userId: string) {
-    return firebaseService.getClients(userId);
+  getClients: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', userId)
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting clients:", error);
+      return [];
+    }
   },
 
-  async createClient(client: any) {
-    return firebaseService.addClient(client);
+  addClient: async (client: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({ ...client, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding client:", error);
+      throw error;
+    }
   },
 
-  async updateClient(clientId: string, client: any) {
-    return firebaseService.updateClient(clientId, client);
+  updateClient: async (id: string, client: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update(client)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating client:", error);
+      throw error;
+    }
   },
 
-  async deleteClient(clientId: string) {
-    return firebaseService.deleteClient(clientId);
-  },
-
-  // --- CRM TASKS ---
-  async getCRMTasks(userId: string) {
-    return firebaseService.getTasks(userId);
-  },
-
-  async createCRMTask(task: any) {
-    return firebaseService.addTask(task);
-  },
-
-  async updateCRMTask(taskId: string, task: any) {
-    return firebaseService.updateTask(taskId, task);
-  },
-
-  async deleteCRMTask(taskId: string) {
-    return firebaseService.deleteTask(taskId);
-  },
-
-  // --- QUICK MESSAGES ---
-  async getQuickMessages(userId: string) {
-    return firebaseService.getQuickMessages(userId);
-  },
-
-  async createQuickMessage(message: any) {
-    return firebaseService.addQuickMessage(message);
-  },
-
-  async updateQuickMessage(messageId: string, message: any) {
-    return firebaseService.updateQuickMessage(messageId, message);
-  },
-
-  async deleteQuickMessage(messageId: string) {
-    return firebaseService.deleteQuickMessage(messageId);
+  deleteClient: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      throw error;
+    }
   },
 
   // --- FINANCIAL ENTRIES ---
-  async getFinancialEntries(userId: string) {
-    return firebaseService.getFinancialEntries(userId);
+  getFinancialEntries: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('financial_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting financial entries:", error);
+      return [];
+    }
   },
 
-  async createFinancialEntry(entry: any) {
-    return firebaseService.addFinancialEntry(entry);
+  addFinancialEntry: async (entry: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('financial_entries')
+        .insert({ ...entry, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding financial entry:", error);
+      throw error;
+    }
   },
 
-  async deleteFinancialEntry(entryId: string) {
-    return firebaseService.deleteFinancialEntry(entryId);
+  deleteFinancialEntry: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('financial_entries')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting financial entry:", error);
+      throw error;
+    }
+  },
+
+  // --- SMART GOALS ---
+  getSmartGoals: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('smart_goals')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting SMART goals:", error);
+      return [];
+    }
+  },
+
+  saveSmartGoal: async (userId: string, data: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('smart_goals')
+        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving SMART goal:", error);
+      throw error;
+    }
+  },
+
+  // --- SWOT ANALYSIS ---
+  getSwotAnalysis: async (userId: string): Promise<any | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('swot_analysis')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data || null;
+    } catch (error) {
+      console.error("Error getting SWOT analysis:", error);
+      return null;
+    }
+  },
+
+  saveSwotAnalysis: async (userId: string, data: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('swot_analysis')
+        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving SWOT analysis:", error);
+      throw error;
+    }
+  },
+
+  // --- BUSINESS CANVA ---
+  getBusinessCanva: async (userId: string): Promise<any | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('business_canva')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data || null;
+    } catch (error) {
+      console.error("Error getting Business Canva:", error);
+      return null;
+    }
+  },
+
+  saveBusinessCanva: async (userId: string, data: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('business_canva')
+        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving Business Canva:", error);
+      throw error;
+    }
   },
 
   // --- SCHEDULE ---
-  async getSchedule(userId: string) {
-    return firebaseService.getSchedule(userId);
-  },
-
-  async addScheduleItem(item: any) {
-    return firebaseService.addScheduleItem(item);
-  },
-
-  async updateScheduleItem(itemId: string, item: any) {
-    // firebaseService doesn't have updateScheduleItem yet, implementing here
-    const docRef = doc(db, 'schedule_items', itemId);
-    await updateDoc(docRef, item);
-  },
-
-  async deleteScheduleItem(itemId: string) {
-    return firebaseService.deleteScheduleItem(itemId);
-  },
-
-  // --- PROJETOS ---
-  async getProjects(userId: string) {
-    return firebaseService.getProjects(userId);
-  },
-
-  async createProject(project: any) {
-    return firebaseService.addProject(project);
-  },
-
-  async updateProject(projectId: string, project: any) {
-    return firebaseService.updateProject(projectId, project);
-  },
-
-  async deleteProject(projectId: string) {
-    return firebaseService.deleteProject(projectId);
-  },
-
-  // --- EVENTS ---
-  async getEvents() {
+  getSchedule: async (userId: string): Promise<any[]> => {
     try {
-      const q = query(collection(db, 'platform_events'), orderBy('date', 'asc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('schedule_items')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
     } catch (error) {
-      console.error("Error getting events:", error);
+      console.error("Error getting schedule:", error);
       return [];
     }
   },
 
-  async createEvent(event: any) {
-    const docRef = await addDoc(collection(db, 'platform_events'), event);
-    return { id: docRef.id, ...event };
-  },
-
-  async updateEvent(eventId: string, event: any) {
-    const docRef = doc(db, 'platform_events', eventId);
-    await updateDoc(docRef, event);
-  },
-
-  async deleteEvent(eventId: string) {
-    await deleteDoc(doc(db, 'platform_events', eventId));
-  },
-
-  // --- OFFERS ---
-  async getOffers() {
+  addScheduleItem: async (item: any): Promise<any> => {
     try {
-      const q = query(collection(db, 'offers'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('schedule_items')
+        .insert({ ...item, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error("Error getting offers:", error);
+      console.error("Error adding schedule item:", error);
+      throw error;
+    }
+  },
+
+  deleteScheduleItem: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('schedule_items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting schedule item:", error);
+      throw error;
+    }
+  },
+
+  // --- B2B MATCH ---
+  getB2BOffers: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('b2b_offers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting B2B offers:", error);
       return [];
     }
   },
 
-  async createOffer(offer: any) {
-    const docRef = await addDoc(collection(db, 'offers'), offer);
-    return { id: docRef.id, ...offer };
-  },
-
-  async updateOffer(offerId: string, offer: any) {
-    const docRef = doc(db, 'offers', offerId);
-    await updateDoc(docRef, offer);
-  },
-
-  async deleteOffer(offerId: string) {
-    await deleteDoc(doc(db, 'offers', offerId));
-  },
-
-  // --- PRODUTOS ---
-  async getProducts(userId: string) {
+  createB2BOffer: async (offer: any): Promise<any> => {
     try {
-      const q = query(collection(db, 'products'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('b2b_offers')
+        .insert({ ...offer, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error("Error getting products:", error);
+      console.error("Error creating B2B offer:", error);
+      throw error;
+    }
+  },
+
+  getB2BTransactions: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('b2b_transactions')
+        .select('*')
+        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting B2B transactions:", error);
       return [];
     }
   },
 
-  async getAllProducts() {
+  createB2BTransaction: async (transaction: any): Promise<any> => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('b2b_transactions')
+        .insert({ ...transaction, status: 'pending', created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error("Error getting all products:", error);
+      console.error("Error creating B2B transaction:", error);
+      throw error;
+    }
+  },
+
+  updateB2BTransactionStatus: async (id: string, status: 'confirmed' | 'rejected'): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('b2b_transactions')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating B2B transaction status:", error);
+      throw error;
+    }
+  },
+
+  // --- RANKING ---
+  getRanking: async (limitCount: number = 10): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, business_name, points, logo_url')
+        .order('points', { ascending: false })
+        .limit(limitCount);
+      
+      if (error) throw error;
+      return (data || []).map(p => ({
+        id: p.id,
+        name: p.business_name || 'Membro',
+        business: p.business_name || 'Negócio',
+        pts: p.points || 0,
+        avatar: p.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${p.business_name}`
+      }));
+    } catch (error) {
+      console.error("Error getting ranking:", error);
       return [];
     }
   },
 
-  async createProduct(product: any) {
-    const docRef = await addDoc(collection(db, 'products'), product);
-    return { id: docRef.id, ...product };
-  },
-
-  async updateProduct(productId: string, product: any) {
-    const docRef = doc(db, 'products', productId);
-    await updateDoc(docRef, product);
-  },
-
-  async deleteProduct(productId: string) {
-    await deleteDoc(doc(db, 'products', productId));
-  },
-
-  // --- CUPONS ---
-  async getCoupons(userId: string) {
-    // firebaseService didn't show coupons in the previous view either.
+  // --- COMMUNITY ---
+  getCommunityPosts: async (): Promise<any[]> => {
     try {
-      const q = query(collection(db, 'coupons'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     } catch (error) {
-      console.error("Error getting coupons:", error);
+      console.error("Error getting community posts:", error);
       return [];
     }
   },
 
-  async createCoupon(coupon: any) {
-    const docRef = await addDoc(collection(db, 'coupons'), coupon);
-    return { id: docRef.id, ...coupon };
-  },
-
-  async updateCoupon(couponId: string, coupon: any) {
-    const docRef = doc(db, 'coupons', couponId);
-    await updateDoc(docRef, coupon);
-  },
-
-  async deleteCoupon(couponId: string) {
-    await deleteDoc(doc(db, 'coupons', couponId));
-  },
-
-  // --- PERFIS ---
-  async getAllProfiles() {
-    const querySnapshot = await getDocs(collection(db, 'users'));
-    return querySnapshot.docs.map(mapDoc);
-  },
-
-  async getPublishedProfiles() {
-    const q = query(collection(db, 'users'), where('isPublished', '==', true));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        userId: doc.id, // In Firestore users collection, doc.id IS the userId
-        slug: data.slug,
-        businessName: data.businessName,
-        category: data.category,
-        phone: data.phone,
-        logoUrl: data.logoUrl,
-        vitrineCategory: data.vitrineCategory,
-        isPublished: data.isPublished,
-        storeConfig: data.storeConfig
-      };
-    });
-  },
-
-  // --- BLOG ---
-  async getBlogPosts() {
+  createCommunityPost: async (post: any): Promise<any> => {
     try {
-      const q = query(collection(db, 'blog_posts'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('community_posts')
+        .insert({
+          ...post,
+          likes: 0,
+          liked_by: [],
+          comments: [],
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
-      // If collection doesn't exist or error, return empty
+      console.error("Error creating community post:", error);
+      throw error;
+    }
+  },
+
+  likePost: async (postId: string, userId: string): Promise<void> => {
+    try {
+      const { data: post, error: fetchError } = await supabase
+        .from('community_posts')
+        .select('liked_by, likes')
+        .eq('id', postId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const likedBy = post.liked_by || [];
+      if (!likedBy.includes(userId)) {
+        const { error: updateError } = await supabase
+          .from('community_posts')
+          .update({
+            likes: (post.likes || 0) + 1,
+            liked_by: [...likedBy, userId]
+          })
+          .eq('id', postId);
+        
+        if (updateError) throw updateError;
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+      throw error;
+    }
+  },
+
+  // --- TASKS ---
+  getTasks: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .order('due_date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting tasks:", error);
       return [];
     }
   },
 
-  // --- SWOT, SMART, CANVA ---
-  async saveData(table: string, userId: string, data: any) {
-    // This generic method is used by some components.
-    // I'll implement generic logic here.
-    const q = query(collection(db, table), where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-      const docId = querySnapshot.docs[0].id;
-      await updateDoc(doc(db, table, docId), { data });
-    } else {
-      await addDoc(collection(db, table), { userId, data, createdAt: new Date().toISOString() });
-    }
-  },
-
-  async getData(table: string, userId: string) {
-    const q = query(collection(db, table), where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs[0].data().data;
-    }
-    return null;
-  },
-
-  // --- LOYALTY ---
-  async getLoyaltyCards(userId: string) {
+  addTask: async (task: any): Promise<any> => {
     try {
-      const q = query(collection(db, 'loyalty_cards'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({ ...task, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
+      console.error("Error adding task:", error);
+      throw error;
+    }
+  },
+
+  updateTask: async (id: string, task: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ ...task, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating task:", error);
+      throw error;
+    }
+  },
+
+  deleteTask: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      throw error;
+    }
+  },
+
+  // --- QUICK MESSAGES ---
+  getQuickMessages: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('quick_messages')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting quick messages:", error);
       return [];
     }
   },
 
-  async stampLoyaltyCard(cardId: string) {
-    const docRef = doc(db, 'loyalty_cards', cardId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      const currentStamps = data.currentStamps || data.current_stamps || 0;
-      const updatedData = { ...data, currentStamps: currentStamps + 1 };
-      await updateDoc(docRef, { currentStamps: currentStamps + 1 });
-      return { id: docSnap.id, ...updatedData } as any;
-    }
-    throw new Error('Card not found');
-  },
-
-  // --- QUOTES ---
-  async getQuotes() {
+  addQuickMessage: async (message: any): Promise<any> => {
     try {
-      const q = query(collection(db, 'quotes'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { data, error } = await supabase
+        .from('quick_messages')
+        .insert({ ...message, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     } catch (error) {
-      return [];
+      console.error("Error adding quick message:", error);
+      throw error;
     }
   },
 
-  // --- NETWORKING ---
-  async getNetworkingProfiles() {
+  updateQuickMessage: async (id: string, message: any): Promise<void> => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'networking_profiles'));
-      return querySnapshot.docs.map(mapDoc);
+      const { error } = await supabase
+        .from('quick_messages')
+        .update({ ...message, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
     } catch (error) {
-      return [];
+      console.error("Error updating quick message:", error);
+      throw error;
     }
   },
 
-  async createNetworkingProfile(profile: any) {
-    const docRef = await addDoc(collection(db, 'networking_profiles'), profile);
-    return { id: docRef.id, ...profile };
-  },
-
-  async deleteNetworkingProfile(id: string) {
-    await deleteDoc(doc(db, 'networking_profiles', id));
-  },
-
-  // --- POINTS HISTORY ---
-  async getPointsHistory(userId: string) {
+  deleteQuickMessage: async (id: string): Promise<void> => {
     try {
-      const q = query(collection(db, 'points_history'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(mapDoc);
+      const { error } = await supabase
+        .from('quick_messages')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
     } catch (error) {
-      return [];
+      console.error("Error deleting quick message:", error);
+      throw error;
     }
   },
 
-  // --- STORAGE ---
-  async uploadImage(file: File, bucket: string = 'images') {
-    // Mock implementation for now to avoid errors
-    console.warn("Upload de imagem simulado (Firebase Storage não configurado)");
-    return `https://picsum.photos/seed/${file.name}/300/300`;
+  // --- ADMIN ---
+  createMemberAsAdmin: async (memberData: any, _password?: string): Promise<string> => {
+    try {
+      // In a real app, we would use supabase.auth.admin.createUser if we had service role
+      // For this refactor, we'll just upsert the profile.
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert({
+          ...memberData,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data.id;
+    } catch (error) {
+      console.error("Error creating member as admin:", error);
+      throw error;
+    }
   }
 };

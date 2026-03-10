@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile } from '../types';
 import { Link } from 'react-router-dom';
 import { 
@@ -21,7 +21,7 @@ export const Stores: React.FC = () => {
 
   const loadProfiles = async () => {
     try {
-      const data = await firebaseService.getAllProfiles();
+      const data = await supabaseService.getAllProfiles();
       // Mostra apenas lojas com nome definido
       setProfiles(data.filter(p => p.businessName));
     } finally {

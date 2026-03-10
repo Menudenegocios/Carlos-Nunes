@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { 
   Smartphone, Plus, Trash2, Layout, 
   Palette, Save, MessageCircle, Globe, Mail, 
@@ -103,7 +103,7 @@ export const BioBuilder: React.FC = () => {
   const loadData = async () => {
     if (!user) return;
     try {
-        const data = await firebaseService.getProfile(user.id);
+        const data = await supabaseService.getProfile(user.id);
                 if (data) {
           setProfile(data);
           setLinks(data.bioConfig?.links || [
@@ -183,7 +183,7 @@ export const BioBuilder: React.FC = () => {
       };
 
       console.log("Enviando para saveProfile:", profileData);
-      await firebaseService.saveProfile(user.id, profileData);
+      await supabaseService.saveProfile(user.id, profileData);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {

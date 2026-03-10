@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Profile, PlatformEvent, User as UserType } from '../types';
 import { 
   Users, Calendar, Settings2, Plus, Edit2, Trash2, 
@@ -97,11 +97,11 @@ export const AdminCentral: React.FC = () => {
     setIsLoading(true);
     try {
       const [allProfiles, allEvents, allProducts, allOffers, allMedia] = await Promise.all([
-        firebaseService.getAllProfiles(),
-        firebaseService.getEvents(),
-        firebaseService.getAllProducts(),
-        firebaseService.getOffers(),
-        firebaseService.getMedia()
+        supabaseService.getAllProfiles(),
+        supabaseService.getEvents(),
+        supabaseService.getAllProducts(),
+        supabaseService.getOffers(),
+        supabaseService.getMedia()
       ]);
       setProfiles(allProfiles);
       setEvents(allEvents);
@@ -148,7 +148,7 @@ export const AdminCentral: React.FC = () => {
     setLoading(true);
     try {
       if (editingProfile) {
-        await firebaseService.updateProfile(editingProfile.userId, {
+        await supabaseService.updateProfile(editingProfile.userId, {
           businessName: memberForm.businessName,
           plan: memberForm.plan,
           points: memberForm.points,
@@ -160,13 +160,13 @@ export const AdminCentral: React.FC = () => {
           setLoading(false);
           return;
         }
-        await firebaseService.createMemberAsAdmin({
+        await supabaseService.createMemberAsAdmin({
           businessName: memberForm.businessName,
           email: memberForm.email,
           plan: memberForm.plan,
           points: memberForm.points,
           role: memberForm.role
-        }, memberForm.password);
+        });
       }
       setIsModalOpen(false);
       loadAdminData();
@@ -270,15 +270,15 @@ export const AdminCentral: React.FC = () => {
     try {
       let imageUrl = eventForm.image;
       if (file) {
-        imageUrl = await firebaseService.uploadImage(file, `events/${Date.now()}_${file.name}`);
+        imageUrl = await supabaseService.uploadImage(file, `events/${Date.now()}_${file.name}`);
       }
       
       const eventData = { ...eventForm, image: imageUrl };
 
       if (editingEvent) {
-        await firebaseService.updateEvent(editingEvent.id, eventData);
+        await supabaseService.updateEvent(editingEvent.id, eventData);
       } else {
-        await firebaseService.createEvent(eventData);
+        await supabaseService.createEvent(eventData);
       }
       setIsEventModalOpen(false);
       loadAdminData();
@@ -294,29 +294,29 @@ export const AdminCentral: React.FC = () => {
     try {
       let imageUrl = mediaForm.image;
       if (file) {
-        imageUrl = await firebaseService.uploadImage(file, `media/${Date.now()}_${file.name}`);
+        imageUrl = await supabaseService.uploadImage(file, `media/${Date.now()}_${file.name}`);
       }
       
       const mediaData = { ...mediaForm, image: imageUrl };
 
       if (editingMedia) {
-        await firebaseService.updateMedia(editingMedia.id, mediaData);
+        await supabaseService.updateMedia(editingMedia.id, mediaData);
       } else {
-        await firebaseService.createMedia(mediaData);
+        await supabaseService.createMedia(mediaData);
       }
       setIsMediaModalOpen(false);
       loadAdminData();
-      alert(editingMedia ? 'Mídia atualizada!' : 'Mídia criada!');
+      alert(editingMedia ? 'Agenda atualizada!' : 'Agenda criada!');
     } catch (e) {
       console.error(e);
-      alert('Erro ao salvar mídia.');
+      alert('Erro ao salvar agenda.');
     }
   };
 
   const deleteEvent = async (id: string) => {
     if (window.confirm('Excluir este evento?')) {
       try {
-        await firebaseService.deleteEvent(id);
+        await supabaseService.deleteEvent(id);
         loadAdminData();
       } catch (e) {
         console.error(e);
@@ -328,7 +328,7 @@ export const AdminCentral: React.FC = () => {
   const deleteMedia = async (id: string) => {
     if(window.confirm('Tem certeza que deseja excluir esta mídia?')) {
       try {
-        await firebaseService.deleteMedia(id);
+        await supabaseService.deleteMedia(id);
         loadAdminData();
       } catch (e) {
         console.error(e);
@@ -370,22 +370,22 @@ export const AdminCentral: React.FC = () => {
     try {
       let imageUrl = itemForm.image;
       if (file) {
-        imageUrl = await firebaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
+        imageUrl = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
       }
       
       const itemData = { ...itemForm, image: imageUrl };
 
       if (editingItem) {
         if (itemData.type === 'product') {
-            await firebaseService.updateProduct(editingItem.id, itemData);
+            await supabaseService.updateProduct(editingItem.id, itemData);
         } else {
-            await firebaseService.updateOffer(editingItem.id, itemData);
+            await supabaseService.updateOffer(editingItem.id, itemData);
         }
       } else {
         if (itemData.type === 'product') {
-            await firebaseService.createProduct({ ...itemData, userId: user.id } as any);
+            await supabaseService.createProduct({ ...itemData, userId: user.id } as any);
         } else {
-            await firebaseService.createOffer({ ...itemData, userId: user.id });
+            await supabaseService.createOffer({ ...itemData, userId: user.id });
         }
       }
       setIsMarketplaceModalOpen(false);
@@ -401,9 +401,9 @@ export const AdminCentral: React.FC = () => {
     if (window.confirm('Excluir este item?')) {
       try {
         if (type === 'product') {
-            await firebaseService.deleteProduct(id);
+            await supabaseService.deleteProduct(id);
         } else {
-            await firebaseService.deleteOffer(id);
+            await supabaseService.deleteOffer(id);
         }
         loadAdminData();
       } catch (e) {
@@ -439,7 +439,7 @@ export const AdminCentral: React.FC = () => {
 
       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] shadow-xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
          <div className="flex bg-gray-50 dark:bg-zinc-800/50 p-2 gap-2 overflow-x-auto scrollbar-hide">
-            {[{ id: 'membros', label: 'Gestão de Membros', icon: Users }, { id: 'eventos', label: 'Gestão de Eventos', icon: Calendar }, { id: 'marketplace', label: 'Marketplace', icon: Package }, { id: 'midia', label: 'Mídia & Conteúdo', icon: BookOpen }, { id: 'paginas', label: 'Páginas & Planos', icon: Settings2 }].map(tab => (
+            {[{ id: 'membros', label: 'Gestão de Membros', icon: Users }, { id: 'eventos', label: 'Gestão de Eventos', icon: Calendar }, { id: 'marketplace', label: 'Marketplace', icon: Package }, { id: 'midia', label: 'Agenda & Conteúdo', icon: BookOpen }, { id: 'paginas', label: 'Páginas & Planos', icon: Settings2 }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex-1 min-w-[150px] flex items-center justify-center gap-3 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>
                     <tab.icon className="w-4 h-4" /> {tab.label}
                 </button>
@@ -562,7 +562,7 @@ export const AdminCentral: React.FC = () => {
                     {activeTab === 'midia' && (
                         <div className="space-y-8">
                             <div className="flex justify-between items-center px-4">
-                                <h3 className="text-2xl font-black italic uppercase">Gestão de Mídia</h3>
+                                <h3 className="text-2xl font-black italic uppercase">Gestão de Agenda</h3>
                                 <button onClick={() => handleOpenMediaModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
                                     <Plus className="w-4 h-4" /> NOVA MÍDIA
                                 </button>
@@ -571,8 +571,8 @@ export const AdminCentral: React.FC = () => {
                             {mediaItems.length === 0 ? (
                                 <div className="text-center py-20 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800">
                                     <BookOpen className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                                    <h3 className="text-xl font-black uppercase italic text-slate-400">Nenhuma Mídia Cadastrada</h3>
-                                    <p className="text-slate-400 text-sm mt-2">Clique em "Nova Mídia" para adicionar conteúdo.</p>
+                                    <h3 className="text-xl font-black uppercase italic text-slate-400">Nenhuma Agenda Cadastrada</h3>
+                                    <p className="text-slate-400 text-sm mt-2">Clique em "Nova Agenda" para adicionar conteúdo.</p>
                                 </div>
                             ) : (
                                 <div className="grid gap-4">
@@ -621,7 +621,7 @@ export const AdminCentral: React.FC = () => {
              <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-2xl font-black uppercase italic">{editingMedia ? 'Editar Mídia' : 'Nova Mídia'}</h3>
+                        <h3 className="text-2xl font-black uppercase italic">{editingMedia ? 'Editar Agenda' : 'Nova Agenda'}</h3>
                         <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Gerencie vídeos, podcasts e ferramentas</p>
                     </div>
                     <button onClick={() => setIsMediaModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -674,7 +674,7 @@ export const AdminCentral: React.FC = () => {
                     </div>
 
                     <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                        <Save className="w-5 h-5" /> {editingMedia ? 'SALVAR ALTERAÇÕES' : 'CRIAR MÍDIA'}
+                        <Save className="w-5 h-5" /> {editingMedia ? 'SALVAR ALTERAÇÕES' : 'CRIAR AGENDA'}
                     </button>
                 </form>
              </div>

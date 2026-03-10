@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Offer, OfferCategory } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Plus, Trash2, X, Image as ImageIcon, Link as LinkIcon, Edit2, Youtube, Calendar, Video, CheckCircle, MapPin, Clock, AlertCircle, ShoppingBag, Lock, Crown } from 'lucide-react';
@@ -46,7 +46,7 @@ export const MyOffers: React.FC = () => {
   const loadMyOffers = async () => {
     if (!user) return;
     try {
-      const data = await firebaseService.getMyOffers(user.id);
+      const data = await supabaseService.getMyOffers(user.id);
       setOffers(data);
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export const MyOffers: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!user || !window.confirm('Tem certeza que deseja excluir esta oferta?')) return;
     try {
-      await firebaseService.deleteOffer(id);
+      await supabaseService.deleteOffer(id);
       setOffers(prev => prev.filter(o => o.id !== id));
     } catch (error) {
       alert('Erro ao excluir oferta.');
@@ -133,11 +133,11 @@ export const MyOffers: React.FC = () => {
 
       if (isEditing && editingId) {
         // Update
-        const updatedOffer = await firebaseService.updateOffer(editingId, commonData);
+        const updatedOffer = await supabaseService.updateOffer(editingId, commonData);
         setOffers(prev => prev.map(o => o.id === editingId ? { ...o, ...commonData } as Offer : o));
       } else {
         // Create
-        const newOffer = await firebaseService.createOffer({ ...commonData, userId: user.id } as any);
+        const newOffer = await supabaseService.createOffer({ ...commonData, userId: user.id } as any);
         setOffers(prev => [newOffer, ...prev]);
       }
       
@@ -510,12 +510,12 @@ export const MyOffers: React.FC = () => {
 
                   {/* SECTION 3: MIDIA E DETALHES */}
                   <div className="space-y-4">
-                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2">Mídia & Detalhes</h4>
+                     <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide border-b pb-2">Agenda & Detalhes</h4>
                      
                      {/* Visuals */}
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4" /> Mídia
+                        <ImageIcon className="h-4 w-4" /> Agenda
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         

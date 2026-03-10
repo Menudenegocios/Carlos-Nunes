@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Quote } from '../types';
 import { MessageSquare, Clock, CheckCircle, XCircle } from 'lucide-react';
 
@@ -11,7 +11,7 @@ export const Quotes: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await firebaseService.getQuotes();
+        const data = await supabaseService.getQuotes();
         setQuotes(data);
       } catch (error) {
         console.error('Error loading quotes:', error);

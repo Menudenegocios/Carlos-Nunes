@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Product, Profile, StoreCategory, BlogPost, VitrineComment } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -28,7 +28,7 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
         
         // 1. Salvar Lead no CRM
         try {
-            await firebaseService.addLeads([{
+            await supabaseService.addLeads([{
                 userId: profile.userId,
                 name: formData.name,
                 phone: formData.phone,
@@ -185,7 +185,7 @@ export const StoreView: React.FC = () => {
     console.log("StoreView: Carregando dados para o identificador:", identifier);
     if (!identifier) return;
     try {
-      const prof = await firebaseService.getProfile(identifier);
+      const prof = await supabaseService.getProfile(identifier);
       console.log("StoreView: Resultado do getProfile:", prof);
       if (!prof) {
         setLoading(false);
@@ -196,10 +196,10 @@ export const StoreView: React.FC = () => {
       const targetUserId = prof.userId;
 
       const [prods, cats, allPosts, vitrineComments] = await Promise.all([
-        firebaseService.getProducts(targetUserId),
-        firebaseService.getStoreCategories(targetUserId),
-        firebaseService.getBlogPosts(),
-        firebaseService.getVitrineComments(targetUserId)
+        supabaseService.getProducts(targetUserId),
+        supabaseService.getStoreCategories(targetUserId),
+        supabaseService.getBlogPosts(),
+        supabaseService.getVitrineComments(targetUserId)
       ]);
       setProducts(prods);
       setCategories(cats);
@@ -226,7 +226,7 @@ export const StoreView: React.FC = () => {
 
     setIsSubmittingComment(true);
     try {
-        await firebaseService.addVitrineComment({
+        await supabaseService.addVitrineComment({
             vitrineUserId: profile.userId,
             userId: user.id,
             userName: user.name,
@@ -234,7 +234,7 @@ export const StoreView: React.FC = () => {
             content: commentText
         });
         setCommentText('');
-        const updatedComments = await firebaseService.getVitrineComments(profile.userId);
+        const updatedComments = await supabaseService.getVitrineComments(profile.userId);
         setComments(updatedComments);
     } catch (err) {
         alert('Erro ao enviar comentário.');
@@ -664,7 +664,7 @@ export const StoreView: React.FC = () => {
                             setIsSubmittingLead(true);
                             try {
                                 // 1. Envia para o CRM
-                                await firebaseService.addLeads([{
+                                await supabaseService.addLeads([{
                                     userId: targetUserId,
                                     name: leadForm.name,
                                     phone: leadForm.whatsapp,

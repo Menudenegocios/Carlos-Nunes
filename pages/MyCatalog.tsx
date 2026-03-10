@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Product, Profile, StoreCategory, BlogPost, Coupon } from '../types';
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
@@ -132,11 +132,11 @@ export const MyCatalog: React.FC = () => {
     setIsLoading(true);
     try {
         const [prof, cats, prods, allPosts, allCoupons] = await Promise.all([
-            firebaseService.getProfile(user.id),
-            firebaseService.getStoreCategories(user.id),
-            firebaseService.getProducts(user.id),
-            firebaseService.getBlogPosts(),
-            firebaseService.getCoupons()
+            supabaseService.getProfile(user.id),
+            supabaseService.getStoreCategories(user.id),
+            supabaseService.getProducts(user.id),
+            supabaseService.getBlogPosts(),
+            supabaseService.getCoupons()
         ]);
         
         setProfile(prof || { 
@@ -183,7 +183,7 @@ export const MyCatalog: React.FC = () => {
       const profileToSave = redirect ? { ...profile, isPublished: true } : profile;
       console.log('Saving profile:', profileToSave);
       
-      await firebaseService.updateProfile(user.id, profileToSave);
+      await supabaseService.updateProfile(user.id, profileToSave);
       console.log('Profile updated successfully');
       
       // Atualiza o estado local para refletir a mudança
@@ -231,9 +231,9 @@ export const MyCatalog: React.FC = () => {
     setIsSaving(true);
     try {
       if (editingProduct) {
-        await firebaseService.updateProduct(editingProduct.id, { ...editingProduct, ...productForm });
+        await supabaseService.updateProduct(editingProduct.id, { ...editingProduct, ...productForm });
       } else {
-        await firebaseService.createProduct({ ...productForm, userId: user.id });
+        await supabaseService.createProduct({ ...productForm, userId: user.id });
       }
       setIsProductModalOpen(false);
       loadData();
@@ -246,9 +246,9 @@ export const MyCatalog: React.FC = () => {
     setIsSaving(true);
     try {
         if (editingBlogPost) {
-            await firebaseService.updateBlogPost(editingBlogPost.id, blogForm);
+            await supabaseService.updateBlogPost(editingBlogPost.id, blogForm);
         } else {
-            await firebaseService.addBlogPost({
+            await supabaseService.addBlogPost({
                 ...blogForm,
                 userId: user.id,
                 author: profile.businessName || user.name,
@@ -262,7 +262,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteBlog = async (id: string) => {
     if(!window.confirm('Excluir este artigo permanentemente?')) return;
-    await firebaseService.deleteBlogPost(id);
+    await supabaseService.deleteBlogPost(id);
     loadData();
   };
 
@@ -271,7 +271,7 @@ export const MyCatalog: React.FC = () => {
     if (!user || !categoryForm.name) return;
     setIsSaving(true);
     try {
-        await firebaseService.addStoreCategory({
+        await supabaseService.addStoreCategory({
             userId: user.id,
             name: categoryForm.name,
             order: storeCategories.length
@@ -284,7 +284,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteCategory = async (id: string) => {
     if(!user || !window.confirm('Excluir esta categoria? Os itens vinculados a ela ficarão como "Sem Categoria".')) return;
-    await firebaseService.deleteStoreCategory(id);
+    await supabaseService.deleteStoreCategory(id);
     loadData();
   };
 
@@ -293,7 +293,7 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-        await firebaseService.createCoupon({
+        await supabaseService.createCoupon({
             ...couponForm,
             userId: user.id,
             offerId: '' // Default or link to specific offer if needed
@@ -306,7 +306,7 @@ export const MyCatalog: React.FC = () => {
 
   const handleDeleteCoupon = async (id: string) => {
     if(!user || !window.confirm('Excluir este cupom?')) return;
-    await firebaseService.deleteCoupon(id, user.id);
+    await supabaseService.deleteCoupon(id, user.id);
     loadData();
   };
 

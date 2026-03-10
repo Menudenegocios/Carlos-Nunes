@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { firebaseService } from '../services/firebaseService';
+import { supabaseService } from '../services/supabaseService';
 import { Offer, Coupon, Product } from '../types';
 import { Ticket, Clock, CheckCircle, Zap, Plus, X, AlertCircle, Edit2, Trash2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,8 +46,8 @@ export const Coupons: React.FC = () => {
   const loadCoupons = async () => {
     try {
       const [offers, allCoupons] = await Promise.all([
-        firebaseService.getOffers(),
-        firebaseService.getCoupons()
+        supabaseService.getOffers(),
+        supabaseService.getCoupons()
       ]);
       
       const couponsWithOffers: CouponWithOffer[] = allCoupons.map(coupon => {
@@ -64,8 +64,8 @@ export const Coupons: React.FC = () => {
   const loadUserData = async () => {
     if (!user) return;
     const [offers, prods] = await Promise.all([
-      firebaseService.getMyOffers(user.id),
-      firebaseService.getProducts(user.id)
+      supabaseService.getMyOffers(user.id),
+      supabaseService.getProducts(user.id)
     ]);
     setMyOffers(offers);
     setMyProducts(prods);
@@ -80,7 +80,7 @@ export const Coupons: React.FC = () => {
 
     setRedeeming(true);
     try {
-      await firebaseService.redeemCoupon(
+      await supabaseService.redeemCoupon(
         user.id, 
         selectedCoupon.id, 
         selectedCoupon.pointsReward || 0
@@ -126,7 +126,7 @@ export const Coupons: React.FC = () => {
   const handleDeleteCoupon = async (coupon: CouponWithOffer) => {
      if (!user || !window.confirm('Tem certeza que deseja excluir este cupom?')) return;
      try {
-       await firebaseService.deleteCoupon(coupon.id, user.id);
+       await supabaseService.deleteCoupon(coupon.id, user.id);
        setCoupons(prev => prev.filter(c => c.id !== coupon.id));
      } catch (error) {
        alert('Erro ao excluir cupom.');
@@ -152,9 +152,9 @@ export const Coupons: React.FC = () => {
       };
 
       if (isEditing && editingCouponId) {
-        await firebaseService.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
+        await supabaseService.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
       } else {
-        await firebaseService.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
+        await supabaseService.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
       }
       
       setIsCreateModalOpen(false);
