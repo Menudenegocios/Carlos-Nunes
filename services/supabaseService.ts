@@ -19,8 +19,15 @@ export const supabaseService = {
       const { data: urlData } = supabase.storage
         .from('images')
         .getPublicUrl(path);
+      
+      let publicUrl = urlData.publicUrl;
+      
+      // Garantir que a URL inclua o segmento /public/ para buckets públicos
+      if (publicUrl && !publicUrl.includes('/public/')) {
+        publicUrl = publicUrl.replace(/\/object\/images\//, '/object/public/images/');
+      }
         
-      return urlData.publicUrl;
+      return publicUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
       throw error;
