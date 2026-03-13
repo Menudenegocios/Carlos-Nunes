@@ -203,11 +203,18 @@ export const BioBuilder: React.FC = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && user) {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const compressed = await resizeImage(reader.result as string, 400, 400);
-        setProfile(prev => ({ ...prev, logo_url: compressed }));
+        try {
+          const fileName = `${Date.now()}_${file.name}`;
+          const path = `uploads/${user.id}/${fileName}`;
+          const publicUrl = await supabaseService.uploadImage(file, path);
+          setProfile(prev => ({ ...prev, logo_url: publicUrl }));
+        } catch (error) {
+          console.error("Error uploading logo:", error);
+          alert("Erro ao carregar a imagem.");
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -215,11 +222,18 @@ export const BioBuilder: React.FC = () => {
 
   const handleBioItemImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && user) {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const compressed = await resizeImage(reader.result as string, 600, 600);
-        setBioItemForm(prev => ({ ...prev, image_url: compressed }));
+        try {
+          const fileName = `${Date.now()}_${file.name}`;
+          const path = `uploads/${user.id}/${fileName}`;
+          const publicUrl = await supabaseService.uploadImage(file, path);
+          setBioItemForm(prev => ({ ...prev, image_url: publicUrl }));
+        } catch (error) {
+          console.error("Error uploading item image:", error);
+          alert("Erro ao carregar a imagem.");
+        }
       };
       reader.readAsDataURL(file);
     }

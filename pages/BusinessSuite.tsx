@@ -8,7 +8,7 @@ import {
   X, Trash2, CheckCircle, Clock, Briefcase, 
   Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical,
   Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle,
-  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink
+  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link } from 'react-router-dom';

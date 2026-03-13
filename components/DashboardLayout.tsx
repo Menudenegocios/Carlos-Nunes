@@ -8,7 +8,7 @@ import {
   Store, ChevronLeft, Briefcase, GraduationCap,
   Handshake, CreditCard, Sparkles, BookOpen, Settings2,
   AlertCircle, ChevronRight, Globe, LayoutGrid, Lock,
-  Rocket
+  Rocket, ArrowRight
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
@@ -19,6 +19,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradePlanInfo, setUpgradePlanInfo] = useState<{ plan: string; to: string }>({ plan: '', to: '' });
 
   if (!user) return null;
 
@@ -28,16 +30,27 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   const isPreRegistration = user.plan === 'pre-cadastro';
 
   const menuItems = [
-    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false },
-    ...(isAdmin ? [{ label: 'Central', icon: Settings2, to: '/admin-central', locked: false }] : []),
-    { label: 'Minha Vitrine', icon: Globe, to: '/catalog', locked: isPreRegistration && !isAdmin },
-    { label: 'Menu Club', icon: Trophy, to: '/rewards', locked: isPreRegistration && !isAdmin },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin },
-    { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin },
-    { label: 'Mentoria de Aceleração', icon: Rocket, to: '/mentoria', locked: user.plan !== 'full' && !isAdmin },
-    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false },
-    { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false },
+    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
+    ...(isAdmin ? [{ label: 'Central', icon: Settings2, to: '/admin-central', locked: false, minPlan: 'admin' }] : []),
+    { label: 'Minha Vitrine', icon: Globe, to: '/catalog', locked: isPreRegistration && !isAdmin, minPlan: 'basic' },
+    { label: 'Menu Club', icon: Trophy, to: '/rewards', locked: isPreRegistration && !isAdmin, minPlan: 'basic' },
+    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
+    { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
+    { label: 'Mentoria Full', icon: Rocket, to: '/mentoria', locked: user.plan !== 'full' && !isAdmin, minPlan: 'full' },
+    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false, minPlan: 'pre-cadastro' },
+    { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false, minPlan: 'pre-cadastro' },
   ];
+
+  const handleItemClick = (e: React.MouseEvent, item: typeof menuItems[0]) => {
+    if (item.locked && item.to !== '/plans') {
+      e.preventDefault();
+      setUpgradePlanInfo({ plan: planNames[item.minPlan] || 'Próximo Plano', to: item.to });
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    if (item.to === '#') e.preventDefault();
+    setIsMobileMenuOpen(false);
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -78,23 +91,21 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
             {menuItems.map((item) => (
               <Link
                 key={item.to}
-                to={item.locked ? '#' : item.to}
-                onClick={(e) => item.locked && e.preventDefault()}
+                to={item.to}
+                onClick={(e) => handleItemClick(e, item)}
                 className={`flex items-center rounded-xl transition-all group overflow-hidden relative ${
-                  item.locked ? 'opacity-50 cursor-not-allowed grayscale' : ''
-                } ${
                   isActive(item.to) 
                     ? 'bg-indigo-50 text-indigo-600' 
                     : 'text-slate-500 hover:bg-brand-surface hover:text-brand-dark'
                 } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
               >
-                {isActive(item.to) && !item.locked && (
+                {isActive(item.to) && (
                   <motion.div 
                     layoutId="activeSideTab"
                     className="absolute inset-0 bg-indigo-50 rounded-xl" 
                   />
                 )}
-                {isActive(item.to) && !item.locked && (
+                {isActive(item.to) && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#F67C01] rounded-r-full shadow-[0_0_15px_rgba(246,124,1,0.6)]"></div>
                 )}
                 
@@ -102,7 +113,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 {isExpanded && (
                   <div className="flex items-center justify-between flex-1 overflow-hidden relative z-10">
                     <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic">{item.label}</span>
-                    {item.locked && <Lock className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 ml-2" />}
                   </div>
                 )}
               </Link>
@@ -222,6 +232,58 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       )}
 
       <AIChatAgent />
+
+      {/* Modal de Upgrade Necessário */}
+      {isUpgradeModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in text-sans">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[3rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/20"
+          >
+            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 text-white relative">
+              <div className="absolute top-4 right-4 text-white/50">
+                <Lock className="w-12 h-12 rotate-12 opacity-20" />
+              </div>
+              <button 
+                onClick={() => setIsUpgradeModalOpen(false)}
+                className="absolute top-6 right-6 p-2 h-10 w-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
+                <Sparkles className="w-8 h-8 text-brand-primary" />
+              </div>
+              
+              <h3 className="text-2xl font-black uppercase italic leading-tight">Acesso <span className="text-brand-primary">Limitado</span></h3>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/70 mt-2">Este recurso pertence ao {upgradePlanInfo.plan}</p>
+            </div>
+            
+            <div className="p-10 space-y-8">
+              <p className="text-slate-500 font-medium leading-relaxed">
+                Você está tentando acessar uma área exclusiva. Para desbloquear este e outros recursos premium, você precisa fazer o upgrade do seu plano atual.
+              </p>
+              
+              <div className="space-y-3">
+                <Link 
+                  to="/plans" 
+                  onClick={() => setIsUpgradeModalOpen(false)}
+                  className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
+                >
+                  VER PLANOS DISPONÍVEIS <ArrowRight className="w-4 h-4" />
+                </Link>
+                <button 
+                  onClick={() => setIsUpgradeModalOpen(false)}
+                  className="w-full bg-slate-50 text-slate-400 font-black py-5 rounded-2xl uppercase tracking-widest text-xs hover:bg-slate-100 transition-all"
+                >
+                  VOLTAR AO PAINEL
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

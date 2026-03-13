@@ -174,6 +174,63 @@ async function handleInvoicePaid(invoice) {
         .eq('stripe_subscription_id', invoice.subscription);
 }
 
+// Admin: Update User (Password, Email, Profile)
+app.post('/api/admin/update-user', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const token = authHeader.split(' ')[1];
+    const { data: { user: adminUser }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !adminUser) return res.status(401).json({ error: 'Invalid token' });
+
+    // Check if requester is admin
+    const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', adminUser.id)
+        .single();
+
+    if (adminProfile?.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+
+    const { userId, business_name, email, password, plan, level, points, role } = req.body;
+
+    try {
+        const updateData = {};
+        if (password) updateData.password = password;
+        if (email) updateData.email = email;
+
+        // 1. Update Auth if needed
+        if (Object.keys(updateData).length > 0) {
+            const { error: updateAuthError } = await supabase.auth.admin.updateUserById(userId, updateData);
+            if (updateAuthError) throw updateAuthError;
+        }
+
+        // 2. Update Profile
+        const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({
+                business_name,
+                email,
+                plan,
+                level,
+                points,
+                role,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+
+        if (updateProfileError) throw updateProfileError;
+
+        res.json({ success: true, message: 'User updated successfully' });
+    } catch (err) {
+        console.error("Admin update error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 async function handleSubscriptionDeleted(subscription) {
     await supabase.from('subscriptions')
         .update({ status: 'canceled' })

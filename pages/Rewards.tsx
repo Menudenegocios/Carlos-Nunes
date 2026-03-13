@@ -661,7 +661,7 @@ const RankingView = () => {
                 <Medal className="w-8 h-8" />
              </div>
              <div>
-               <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">Ranking Regional</h3>
+               <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">Ranking</h3>
                <p className="text-slate-500 font-medium">Os empreendedores mais influentes da rede.</p>
              </div>
           </div>
@@ -676,22 +676,22 @@ const RankingView = () => {
                  <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum dado de ranking disponível.</p>
                </div>
              ) : (
-               ranking.map((user, i) => (
-                  <div key={i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
-                     <div className="flex items-center gap-6">
-                        <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
-                        <img src={user.avatar} className="w-12 h-12 rounded-xl shadow-md" alt="Avatar" />
-                        <div>
-                           <h4 className="font-black text-gray-900 leading-none">{user.name}</h4>
-                           <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user.business}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <span className="font-black text-gray-900">{user.pts} <span className="text-[10px] text-slate-400">PTS</span></span>
-                        <ArrowUp className="w-4 h-4 text-emerald-500" />
-                     </div>
-                  </div>
-               ))
+               ranking.map((member, i) => (
+                   <div key={member.user_id || i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
+                      <div className="flex items-center gap-6">
+                         <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
+                         <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-12 h-12 rounded-xl shadow-md object-cover" alt="Avatar" />
+                         <div>
+                            <h4 className="font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</h4>
+                            <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{member.city || member.level || ''}</p>
+                         </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                         <span className="font-black text-gray-900">{member.points || 0} <span className="text-[10px] text-slate-400">PTS</span></span>
+                         {i < 3 && <Crown className="w-4 h-4 text-yellow-500 fill-current" />}
+                      </div>
+                   </div>
+                ))
              )}
           </div>
        </div>

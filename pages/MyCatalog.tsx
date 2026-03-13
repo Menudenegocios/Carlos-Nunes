@@ -139,17 +139,37 @@ export const MyCatalog: React.FC = () => {
             supabaseService.getCoupons()
         ]);
         
-        setProfile(prof || { 
-            user_id: user.id, 
-            vitrine_category: 'Produtos',
-            social_links: { instagram: '', whatsapp: '', website: '' }, 
-            store_config: { 
-                payment_methods: { pix: true, card: true, cash: true, credit: true },
-                social_links: { instagram: '', whatsapp: '', website: '' },
-                business_type: 'local_business',
-                banner_images: []
-            } 
-        } as any);
+        if (prof) {
+            // Garante que a estrutura do bot do WhatsApp existe
+            if (!prof.store_config) prof.store_config = {};
+            if (!prof.store_config.whatsapp_bot) {
+                prof.store_config.whatsapp_bot = {
+                    enabled: false,
+                    name: '',
+                    avatar_url: '',
+                    welcome_message: ''
+                };
+            }
+            setProfile(prof);
+        } else {
+            setProfile({ 
+                user_id: user.id, 
+                vitrine_category: 'Produtos',
+                social_links: { instagram: '', whatsapp: '', website: '' }, 
+                store_config: { 
+                    payment_methods: { pix: true, card: true, cash: true, credit: true },
+                    social_links: { instagram: '', whatsapp: '', website: '' },
+                    business_type: 'local_business',
+                    banner_images: [],
+                    whatsapp_bot: {
+                        enabled: false,
+                        name: '',
+                        avatar_url: '',
+                        welcome_message: ''
+                    }
+                } 
+            } as any);
+        }
         setStoreCategories(cats);
         setProducts(prods || []);
         setBlogPosts(allPosts.filter(p => p.user_id === user.id));
@@ -179,16 +199,16 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      // Se for redirecionar (clicou em Salvar & Publicar), força a publicação
-      const profileToSave = profile;
+      // Limpa dados que não pertencem à tabela profiles (dados de joins por exemplo)
+      const { subscriptions, id, created_at, ...profileToSave } = profile as any;
       console.log('Saving profile:', profileToSave);
       
-      await supabaseService.updateProfile(user.id, profileToSave);
+      await supabaseService.saveProfile(user.id, profileToSave);
       console.log('Profile updated successfully');
       
       // Atualiza o estado local para refletir a mudança
       if (redirect) {
-        setProfile(profileToSave);
+        setProfile({ ...profile, ...profileToSave });
         console.log('Redirecting to vitrine...');
         navigate('/vitrine');
       } else {
@@ -196,6 +216,7 @@ export const MyCatalog: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
+      alert('Erro ao salvar configurações. Por favor, tente novamente.');
     } finally { setIsSaving(false); }
   };
 
@@ -205,20 +226,35 @@ export const MyCatalog: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const result = reader.result as string;
-        const isWide = field === 'cover_url' || (field && field.startsWith('banner')) || field === 'blogUrl' || field === 'og_image';
-        const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
+        
+        try {
+          // Para logos e avatares, vamos fazer upload direto pro Supabase
+          if (field === 'logo_url' || field === 'botAvatar' || field === 'productUrl' || field === 'blogUrl') {
+            const fileName = `${Date.now()}_${file.name}`;
+            const path = `uploads/${user?.id}/${fileName}`;
+            const publicUrl = await supabaseService.uploadImage(file, path);
+            
+            if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: publicUrl }));
+            else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: publicUrl, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
+            else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: publicUrl }));
+            else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: publicUrl }));
+          } else {
+            // Para outros, ainda usamos o resize (pode ser otimizado futuramente)
+            const isWide = field === 'cover_url' || (field && field.startsWith('banner')) || field === 'og_image';
+            const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
 
-        if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: compressed }));
-        else if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: compressed } }));
-        else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: compressed }));
-        else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: compressed }));
-        else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: compressed } } }));
-        else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: compressed, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
-        else if (field && field.startsWith('banner')) {
-            const index = parseInt(field.replace('banner', ''));
-            const currentBanners = [...(profile.store_config?.banner_images || [])];
-            currentBanners[index] = compressed;
-            setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
+            if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: compressed } }));
+            else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: compressed } } }));
+            else if (field && field.startsWith('banner')) {
+                const index = parseInt(field.replace('banner', ''));
+                const currentBanners = [...(profile.store_config?.banner_images || [])];
+                currentBanners[index] = compressed;
+                setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
+            }
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          alert('Erro ao carregar a imagem. Tente novamente.');
         }
       };
       reader.readAsDataURL(file);
@@ -365,27 +401,6 @@ export const MyCatalog: React.FC = () => {
                       <button onClick={() => handleProfileSave(false)} disabled={isSaving} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
                    </div>
                    
-                   <div className="grid grid-cols-2 gap-4">
-                      <button 
-                         onClick={() => setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, business_type: 'local_business' } }))}
-                         className={`p-6 rounded-[2rem] border-2 flex flex-col items-center gap-4 transition-all ${profile.store_config?.business_type === 'local_business' ? 'border-brand-primary bg-white shadow-xl' : 'border-transparent text-slate-400'}`}
-                      >
-                         <Store className={`w-10 h-10 ${profile.store_config?.business_type === 'local_business' ? 'text-brand-primary' : ''}`} />
-                         <div className="text-center">
-                            <p className="font-black text-[10px] uppercase">Estabelecimento / Loja</p>
-                         </div>
-                      </button>
-                      <button 
-                         onClick={() => setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, business_type: 'professional' } }))}
-                         className={`p-6 rounded-[2rem] border-2 flex flex-col items-center gap-4 transition-all ${profile.store_config?.business_type === 'professional' ? 'border-indigo-600 bg-white shadow-xl' : 'border-transparent text-slate-400'}`}
-                      >
-                         <User className={`w-10 h-10 ${profile.store_config?.business_type === 'professional' ? 'text-indigo-600' : ''}`} />
-                         <div className="text-center">
-                            <p className="font-black text-[10px] uppercase">Profissional Especialista</p>
-                         </div>
-                      </button>
-                   </div>
-
                    <div className="grid md:grid-cols-2 gap-10">
                       <div className="space-y-6">
                          <div>
@@ -396,20 +411,6 @@ export const MyCatalog: React.FC = () => {
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Slogan / Categoria</label>
                             <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={profile.category || ''} onChange={e => setProfile({...profile, category: e.target.value})} placeholder="Ex: Advogado Criminalista" />
                          </div>
-                         <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Endereço Completo</label>
-                            <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={profile.store_config?.address || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, address: e.target.value}})} placeholder="Rua, Número, Bairro" />
-                         </div>
-                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
-                                <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={profile.store_config?.city || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, city: e.target.value}})} placeholder="São Paulo" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Link Google Maps</label>
-                                <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={profile.store_config?.google_maps_link || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, google_maps_link: e.target.value}})} placeholder="https://maps.app.goo.gl/..." />
-                            </div>
-                         </div>
                       </div>
                       <div className="space-y-6">
                          <div className="p-6 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center">
@@ -417,7 +418,7 @@ export const MyCatalog: React.FC = () => {
                                {profile.logo_url ? <img src={profile.logo_url} className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-gray-300 m-7" />}
                                <input type="file" ref={fileInputLogoRef} hidden onChange={e => handleImageUpload(e, 'logo_url')} />
                             </div>
-                            <span className="text-[10px] font-black uppercase text-slate-400">Trocar {profile.store_config?.business_type === 'professional' ? 'Foto de Perfil' : 'Logotipo'}</span>
+                             <span className="text-[10px] font-black uppercase text-slate-400">Trocar Foto de Perfil</span>
                          </div>
                       </div>
                    </div>
@@ -589,183 +590,6 @@ export const MyCatalog: React.FC = () => {
                             </div>
                         )}
                     </div>
-
-                    {/* SEÇÃO SEO & SOCIAL */}
-                    <section className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl mt-16">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
-                                <Share2 className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-black uppercase italic tracking-tight text-gray-900">
-                                    SEO & Social
-                                </h3>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    Otimize para o Google e personalize o compartilhamento.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid lg:grid-cols-2 gap-12">
-                            {/* LADO ESQUERDO: Configurações */}
-                            <div className="space-y-8">
-                                {/* SEO Básico */}
-                                <div className="space-y-4">
-                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Search className="w-4 h-4" /> Meta Dados (Google)</h4>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título da Página (Meta Title)</label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full p-4 rounded-2xl bg-gray-50 font-bold" 
-                                            placeholder="Ex: Pizzaria Bella Napoli - A Melhor de SP" 
-                                            value={profile.store_config?.seo?.meta_title || ''}
-                                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, seo: {...profile.store_config?.seo, meta_title: e.target.value}}})}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição (Meta Description)</label>
-                                        <textarea 
-                                            className="w-full p-4 rounded-2xl bg-gray-50 font-bold h-24 resize-none" 
-                                            placeholder="Breve descrição que aparece nos resultados de busca..." 
-                                            value={profile.store_config?.seo?.meta_description || ''}
-                                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, seo: {...profile.store_config?.seo, meta_description: e.target.value}}})}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Palavra-chave Principal</label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full p-4 rounded-2xl bg-gray-50 font-bold" 
-                                            placeholder="Ex: pizza artesanal, delivery" 
-                                            value={profile.store_config?.seo?.keywords?.join(', ') || ''}
-                                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, seo: {...profile.store_config?.seo, keywords: e.target.value.split(',').map(k => k.trim())}}})}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-gray-100 my-6"></div>
-
-                                {/* Social / Open Graph */}
-                                <div className="space-y-4">
-                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Share2 className="w-4 h-4" /> Compartilhamento (WhatsApp/Facebook)</h4>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título Social (OG Title)</label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full p-4 rounded-2xl bg-gray-50 font-bold" 
-                                            placeholder="Título que aparece no card do WhatsApp" 
-                                            value={profile.store_config?.seo?.og_title || ''}
-                                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, seo: {...profile.store_config?.seo, og_title: e.target.value}}})}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição Social</label>
-                                        <textarea 
-                                            className="w-full p-4 rounded-2xl bg-gray-50 font-bold h-20 resize-none" 
-                                            placeholder="Descrição curta e atrativa para redes sociais..." 
-                                            value={profile.store_config?.seo?.og_description || ''}
-                                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, seo: {...profile.store_config?.seo, og_description: e.target.value}}})}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagem de Capa (OG Image)</label>
-                                        <div 
-                                            className="h-32 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors relative overflow-hidden group"
-                                            onClick={() => ogImageInputRef.current?.click()}
-                                        >
-                                            {profile.store_config?.seo?.og_image ? (
-                                                <img src={profile.store_config.seo.og_image} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="text-xs font-black text-slate-400 uppercase flex items-center gap-2">
-                                                    <ImageIcon className="w-4 h-4"/> Upload Imagem (1200x630)
-                                                </span>
-                                            )}
-                                            <input type="file" ref={ogImageInputRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'og_image')} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-gray-100 my-6"></div>
-
-                                {/* Analytics & Pixel */}
-                                <div className="space-y-4">
-                                    <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><BarChart className="w-4 h-4" /> Rastreamento & Analytics</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Facebook Pixel ID</label>
-                                            <input 
-                                                type="text" 
-                                                className="w-full p-4 rounded-2xl bg-gray-50 font-bold" 
-                                                placeholder="Ex: 123456789" 
-                                                value={profile.store_config?.pixel_id || ''}
-                                                onChange={e => setProfile({...profile, store_config: {...profile.store_config, pixel_id: e.target.value}})}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Google Analytics ID</label>
-                                            <input 
-                                                type="text" 
-                                                className="w-full p-4 rounded-2xl bg-gray-50 font-bold" 
-                                                placeholder="Ex: G-XXXXXXXXXX" 
-                                                value={profile.store_config?.ga_id || ''}
-                                                onChange={e => setProfile({...profile, store_config: {...profile.store_config, ga_id: e.target.value}})}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* LADO DIREITO: Preview */}
-                            <div className="space-y-8">
-                                <div className="bg-[#E5DDD5] p-8 rounded-[2.5rem] relative overflow-hidden border-4 border-gray-200 shadow-inner min-h-[400px]">
-                                    <div className="absolute top-4 left-0 right-0 text-center opacity-40 pointer-events-none">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Simulação WhatsApp</p>
-                                    </div>
-
-                                    {/* O Card do WhatsApp */}
-                                    <div className="bg-white rounded-lg overflow-hidden shadow-sm max-w-sm mx-auto mt-10">
-                                        {/* Imagem */}
-                                        <div className="h-48 bg-gray-200 w-full relative group">
-                                            {profile.store_config?.seo?.og_image ? (
-                                                <img src={profile.store_config.seo.og_image} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs uppercase font-bold">Sem Imagem</div>
-                                            )}
-                                        </div>
-                                        {/* Texto do Card */}
-                                        <div className="p-3 bg-[#F0F2F5] border-l-4 border-indigo-500">
-                                            <h4 className="font-bold text-gray-900 leading-tight text-sm mb-1 line-clamp-2">
-                                                {profile.store_config?.seo?.og_title || profile.store_config?.seo?.meta_title || 'Título do Seu Site'}
-                                            </h4>
-                                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                                                {profile.store_config?.seo?.og_description || profile.store_config?.seo?.meta_description || 'A descrição que você digitou vai aparecer aqui para quem receber o link.'}
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 mt-1 lowercase">menudenegocios.com/{profile.slug || 'seu-link'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                                    <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Search className="w-3 h-3" /> Preview Google</h5>
-                                    <div className="space-y-1">
-                                        <p className="text-sm text-[#1a0dab] font-medium hover:underline cursor-pointer truncate">
-                                            {profile.store_config?.seo?.meta_title || 'Título da Página nos Resultados de Busca'}
-                                        </p>
-                                        <p className="text-xs text-[#006621] truncate">
-                                            https://menudenegocios.com/{profile.slug || 'seu-link'}
-                                        </p>
-                                        <p className="text-xs text-[#545454] line-clamp-2">
-                                            {profile.store_config?.seo?.meta_description || 'Esta é a descrição que aparecerá nos resultados do Google. É importante que ela contenha suas palavras-chave principais.'}
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <button onClick={() => handleProfileSave(true)} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-xs hover:scale-105 transition-all flex items-center justify-center gap-2">
-                                    <Save className="w-4 h-4" /> Salvar Configurações
-                                </button>
-                            </div>
-                        </div>
-                    </section>
                 </div>
             )}
 
@@ -898,20 +722,6 @@ export const MyCatalog: React.FC = () => {
                    </div>
 
                    <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
-                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><LayoutGrid className="w-5 h-5" /> Categoria na Vitrine Global</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Escolha onde seu negócio será exibido na Vitrine do site principal.</p>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {['Produtos', 'Serviços', 'Oportunidades'].map(cat => (
-                          <button
-                            key={cat}
-                            onClick={() => setProfile({ ...profile, vitrine_category: cat as any })}
-                            className={`p-4 rounded-2xl border-2 font-black text-xs uppercase tracking-widest transition-all ${profile.vitrine_category === cat ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-gray-200 text-slate-400 hover:border-indigo-300'}`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-
                       <div className="grid md:grid-cols-2 gap-6 mt-6">
                         <div>
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Subcategoria / Nicho (Tags)</label>

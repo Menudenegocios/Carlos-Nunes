@@ -24,12 +24,19 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         return;
     }
 
+    // Timeout de 10s para evitar travamento infinito no loading
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('TIMEOUT')), 10000)
+    );
+
     try {
-      const { data, error } = await supabase
+      const fetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user_id)
-        .maybeSingle(); // maybeSingle evita erro PGRST116 se não existir
+        .maybeSingle();
+
+      const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
 
       if (error) throw error;
 
@@ -62,28 +69,77 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         });
       }
     } catch (error: any) {
-      console.error("fetchUserProfile auth error:", error?.message || error);
+      if (error?.message === 'TIMEOUT') {
+        console.warn("[Auth] Timeout ao carregar perfil. Finalizando loading.");
+      } else {
+        console.error("fetchUserProfile auth error:", error?.message || error);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  // useRef para saber se já temos um user sem causar re-subscrição do listener
+  const userRef = React.useRef<User | null>(null);
+  
+  // Manter o ref sincronizado com o state
   useEffect(() => {
-    // onAuthStateChange handles both initial session and subsequent changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: Session | null) => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: Session | null) => {
+      if (!isMounted) return;
+
       const eventName = _event === 'INITIAL_SESSION' ? 'Sessão Inicial' : _event;
       console.log(`[Auth] Mudança de Estado: ${eventName}`, session?.user?.email || 'Nenhum usuário logado');
-      
-      setIsLoading(true);
+
       if (session?.user) {
-        await fetchUserProfile(session.user.id, session.user.email, session.user.user_metadata?.name);
+        // PRIORIDADE: Só ativar loading se não tivermos usuário carregado.
+        // Se já tivermos usuário, qualquer re-autenticação ou refresh de aba deve ser silencioso.
+        const shouldShowSpinner = userRef.current === null;
+
+        if (shouldShowSpinner) {
+          setIsLoading(true);
+        }
+
+        // IMPORTANTE: Usar setTimeout(0) para quebrar o contexto do Web Lock.
+        // onAuthStateChange roda dentro de um lock — se fizermos await aqui,
+        // a query do Supabase entra em deadlock esperando o mesmo lock liberar.
+        setTimeout(async () => {
+          if (!isMounted) return;
+          try {
+            await fetchUserProfile(session.user.id, session.user.email, session.user.user_metadata?.name);
+          } catch (err) {
+            console.error('[Auth] Erro ao carregar perfil:', err);
+            setIsLoading(false);
+          }
+        }, 0);
       } else {
         setUser(null);
         setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Timeout defensivo global de 15s — se o loading inicial não finalizar, forçar fim
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(prev => {
+          if (prev) {
+            console.warn('[Auth] Safety timeout: finalizando loading após 15s.');
+          }
+          return false;
+        });
+      }
+    }, 15000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const logout = async () => {

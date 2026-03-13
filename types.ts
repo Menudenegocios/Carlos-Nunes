@@ -233,7 +233,14 @@ export interface Profile {
   name?: string;
   email?: string;
   plan?: string;
+  points?: number;
+  level?: string;
+  role?: string;
+  menu_cash?: number;
+  referral_code?: string;
+  referrals_count?: number;
   subscriptions?: Subscription[] | Subscription;
+  isPublished?: boolean;
 }
 
 export interface Subscription {

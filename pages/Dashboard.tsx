@@ -27,6 +27,7 @@ export const Dashboard: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [isSavingAuth, setIsSavingAuth] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
+  const [ranking, setRanking] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) loadDashboardData();
@@ -34,11 +35,13 @@ export const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [profile, history] = await Promise.all([
+      const [profile, history, rankingData] = await Promise.all([
         supabaseService.getProfile(user!.id),
-        supabaseService.getPointsHistory(user!.id)
+        supabaseService.getPointsHistory(user!.id),
+        supabaseService.getRanking(3)
       ]);
       setUserProfile(profile || null);
+      setRanking(rankingData || []);
       setActivity(history && history.length > 0 ? history.slice(0, 4) : [
         { id: '1', user_id: user!.id, action: 'Indicação Validada', points: 200, created_at: Date.now() - 86400000, category: 'indicacao' },
         { id: '2', user_id: user!.id, action: 'Cashback Compra Store', points: 15, created_at: Date.now() - 172800000, category: 'engajamento' },
@@ -238,29 +241,31 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden">
              <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 italic">
-                  <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> RANKING COMUNIDADE
+                  <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> RANKING
                 </h3>
                 <Link to="/rewards" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2">VER RANKING COMPLETO <ChevronRight className="w-4 h-4" /></Link>
              </div>
              
              <div className="space-y-4">
-                {[
-                  { pos: 1, name: 'Carlos Nunes', biz: 'Marketing Digital', pts: 4500, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos' },
-                  { pos: 2, name: 'Ana Silva', biz: 'Design & Branding', pts: 4200, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana' },
-                  { pos: 3, name: 'Rafael Costa', biz: 'Software Dev', pts: 3800, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rafael' },
-                ].map((r, i) => (
-                  <div key={i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
-                     <div className="flex items-center gap-5">
-                        <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{r.pos}</span>
-                        <img src={r.avatar} className="w-10 h-10 rounded-xl shadow-md" alt={r.name} />
-                        <div>
-                           <p className="text-sm font-black text-gray-900 leading-none">{r.name}</p>
-                           <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{r.biz}</p>
-                        </div>
-                     </div>
-                     <span className="font-black text-gray-900 italic text-sm">{r.pts} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
+                {ranking.length === 0 ? (
+                  <div className="py-10 text-center bg-white/40 rounded-2xl border border-dashed border-gray-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum dado disponível</p>
                   </div>
-                ))}
+                ) : (
+                  ranking.map((member, i) => (
+                    <div key={member.user_id || i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
+                       <div className="flex items-center gap-5">
+                          <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{i+1}</span>
+                          <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-10 h-10 rounded-xl shadow-md object-cover" alt="Avatar" />
+                          <div>
+                             <p className="text-sm font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</p>
+                             <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{member.city || member.level || ''}</p>
+                          </div>
+                       </div>
+                       <span className="font-black text-gray-900 italic text-sm">{member.points || 0} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
+                    </div>
+                  ))
+                )}
              </div>
           </div>
 

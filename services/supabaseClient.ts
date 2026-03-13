@@ -35,11 +35,6 @@ const createSupabaseClient = () => {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      // Disable Web Locks API to prevent "Lock broken by steal" errors in Vite dev mode
-      lock: async (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
-        // Simple fallback that just executes the function directly
-        return await fn();
-      },
     }
   });
 };

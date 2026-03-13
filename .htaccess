@@ -4,10 +4,9 @@ RewriteEngine On
 # Impede que o Apache tente servir os arquivos diretamente
 # e força tudo a passar pelo Node.js na porta configurada
 # Permite que requisições de API passem
-RewriteCond %{REQUEST_URI} ^/api [OR]
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# RewriteCond %{REQUEST_FILENAME} -f
+# RewriteCond %{REQUEST_FILENAME} -d
+# RewriteRule ^ - [L]
 
 RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
 

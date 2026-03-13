@@ -65,23 +65,38 @@ export const Events: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadMedia = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       try {
-        const items = await supabaseService.getMedia();
-        // Fallback to MOCK_MEDIA if no items are found
-        if (items.length > 0) {
-          setMediaItems(items);
+        const [mediaItemsData, eventsData] = await Promise.all([
+          supabaseService.getMedia(),
+          supabaseService.getEvents()
+        ]);
+        
+        // Normalize events from the 'events' table to match the media format
+        const normalizedEvents = eventsData.map(event => ({
+          ...event,
+          category: 'Eventos',
+          // Ensure image exists or use fallback
+          image: event.image || "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800"
+        }));
+
+        const allItems = [...mediaItemsData, ...normalizedEvents];
+
+        // Fallback to MOCK_MEDIA if no items are found at all
+        if (allItems.length > 0) {
+          setMediaItems(allItems);
         } else {
           setMediaItems(MOCK_MEDIA);
         }
       } catch (error) {
-        console.error("Error loading media:", error);
+        console.error("Error loading events and media:", error);
+        setMediaItems(MOCK_MEDIA);
       } finally {
         setIsLoading(false);
       }
     };
-    loadMedia();
+    loadData();
   }, []);
 
   const filteredMedia = mediaItems.filter(item => {

@@ -14,6 +14,7 @@ import { AIChatAgent } from '../components/AIChatAgent';
 export const Home: React.FC = () => {
   const [featuredProfiles, setFeaturedProfiles] = useState<Profile[]>([]);
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
   const [filters, setFilters] = useState({ search: '', city: '', category: '' });
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -23,9 +24,10 @@ export const Home: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [profiles, posts] = await Promise.all([
+      const [profiles, posts, partnersData] = await Promise.all([
         supabaseService.getPublishedProfiles(),
-        supabaseService.getBlogPosts()
+        supabaseService.getBlogPosts(),
+        supabaseService.getPartners()
       ]);
       
       // Get top 4 profiles (e.g., just the first 4 published)
@@ -39,6 +41,8 @@ export const Home: React.FC = () => {
         return dateB - dateA;
       }).slice(0, 3);
       setRecentPosts(sortedPosts);
+
+      setPartners(partnersData);
     } catch (error) {
       console.error("Error loading home data:", error);
     }
@@ -182,7 +186,45 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. COMO FUNCIONA */}
+      {/* 4. PARCEIROS */}
+      {partners.length > 0 && (
+        <section className="py-16 bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter uppercase italic">
+                Nossos <span className="text-brand-primary">Parceiros</span>
+              </h2>
+            </div>
+            
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70">
+              {partners.map((partner) => (
+                <a 
+                  key={partner.id} 
+                  href={partner.link || '#'} 
+                  target={partner.link ? "_blank" : "_self"}
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-2 hover:opacity-100 transition-all transform hover:scale-110"
+                >
+                  <div className="h-16 w-32 flex items-center justify-center grayscale group-hover:grayscale-0 transition-all">
+                    {partner.logo_url ? (
+                      <img src={partner.logo_url} alt={partner.title} className="max-h-full max-w-full object-contain" />
+                    ) : (
+                      <div className="font-bold text-gray-400">{partner.title}</div>
+                    )}
+                  </div>
+                  {partner.logo_url && (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-brand-primary transition-colors">
+                      {partner.title}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 5. COMO FUNCIONA */}
       <section className="py-24 bg-white text-brand-dark relative overflow-hidden transition-colors border-y border-gray-100">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-primary via-transparent to-transparent"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">

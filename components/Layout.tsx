@@ -15,7 +15,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { label: 'Início', path: '/' },
     { label: 'Quem Somos', path: '/quem-somos' },
-    { label: 'Vitrine', path: '/vitrine' },
     { label: 'Marketplace', path: '/marketplace' },
     { label: 'Parceiros', path: '/partners' },
     { label: 'Agenda', path: '/eventos' },
@@ -89,7 +88,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div>
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-primary mb-8">Navegação</h4>
               <ul className="space-y-4 text-sm font-bold text-slate-600">
-                <li><Link to="/vitrine" className="hover:text-brand-primary transition-colors">Vitrine de Negócios</Link></li>
                 <li><Link to="/marketplace" className="hover:text-brand-primary transition-colors">Marketplace</Link></li>
                 <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Agenda & Eventos</Link></li>
                 <li><Link to="/blog" className="hover:text-brand-primary transition-colors">Insights & Dicas</Link></li>

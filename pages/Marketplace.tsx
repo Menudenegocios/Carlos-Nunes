@@ -4,50 +4,35 @@ import { supabaseService } from '../services/supabaseService';
 import { Product, Offer, OfferCategory } from '../types';
 import { 
   Search, ShoppingBag, Store, Image as ImageIcon, 
-  MessageCircle, Briefcase, ArrowRight, Calendar, 
+  MessageCircle, Briefcase, ArrowRight, ArrowUpRight, Calendar, 
   Award, MapPin, X, Star, Zap, ShieldCheck, Package, Wrench, Handshake,
   ChevronRight, Filter, Utensils, Shirt, Monitor, Home, Sparkles as Beauty, Sparkles,
-  Stethoscope, Car, GraduationCap
+  Stethoscope, Car, GraduationCap, UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { OfferCard } from '../components/OfferCard';
 
-type MarketplaceProduct = Product & { business_name?: string, businessLogo?: string, businessPhone?: string };
-type TabType = 'todos' | 'produtos' | 'servicos' | 'oportunidades';
+type MarketplaceProduct = Product & { business_name?: string, businessLogo?: string, businessPhone?: string, user_role?: string };
+type TabType = 'vitrines' | 'menu_store' | 'parceiros';
 
-const PRODUCT_CATEGORIES = [
+const MARKETPLACE_SUBCATEGORIES = [
     { id: 'Todas', label: 'Todas', icon: Package },
-    { id: 'Alimentos', label: 'Alimentos', icon: Utensils },
-    { id: 'Moda', label: 'Moda', icon: Shirt },
-    { id: 'Tecnologia', label: 'Tecnologia', icon: Monitor },
-    { id: 'Casa', label: 'Casa', icon: Home },
-    { id: 'Beleza', label: 'Beleza', icon: Beauty },
-];
-
-const SERVICE_CATEGORIES = [
-    { id: 'Todas', label: 'Todas', icon: Wrench },
-    { id: OfferCategory.SERVICOS_PROFISSIONAIS, label: 'Profissionais', icon: Briefcase },
-    { id: OfferCategory.SAUDE_BEM_ESTAR, label: 'Saúde', icon: Stethoscope },
-    { id: OfferCategory.IMOVEIS_SERVICOS, label: 'Imóveis', icon: Home },
-    { id: 'Automotivo', label: 'Automotivo', icon: Car },
-];
-
-const OPPORTUNITY_CATEGORIES = [
-    { id: 'Todas', label: 'Todas', icon: Handshake },
-    { id: 'Mentoria', label: 'Mentorias', icon: GraduationCap },
-    { id: 'B2B', label: 'Match B2B', icon: Zap },
-    { id: OfferCategory.OPORTUNIDADES, label: 'Parcerias', icon: Award },
+    { id: 'Produtos', label: 'Produtos', icon: ShoppingBag },
+    { id: 'Serviços', label: 'Serviços', icon: Wrench },
+    { id: 'Oportunidades', label: 'Oportunidades', icon: Handshake },
 ];
 
 export const Marketplace: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('todos');
+  const [activeTab, setActiveTab] = useState<TabType>('vitrines');
   const [activeSubCategory, setActiveSubCategory] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [allOffers, setAllOffers] = useState<Offer[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   useEffect(() => { loadData(); }, []);
@@ -60,12 +45,23 @@ export const Marketplace: React.FC = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [prods, offers] = await Promise.all([
+      const [prods, offers, profileData, partnerData] = await Promise.all([
         supabaseService.getAllProducts(),
-        supabaseService.getOffers()
+        supabaseService.getOffers(),
+        supabaseService.getMarketplaceProfiles(),
+        supabaseService.getPartners()
       ]);
-      setProducts(prods);
+      
+      // Fetch user roles for products to identify admin products
+      const productsWithRoles = prods.map(p => {
+        const profile = profileData.find(pr => pr.user_id === p.user_id);
+        return { ...p, user_role: profile?.role || 'user' };
+      });
+
+      setProducts(productsWithRoles);
       setAllOffers(offers);
+      setProfiles(profileData);
+      setPartners(partnerData);
     } catch (error) {
       console.error('Error loading marketplace data:', error);
     } finally { setIsLoading(false); }
@@ -81,68 +77,48 @@ export const Marketplace: React.FC = () => {
     const term = searchTerm.toLowerCase();
     const subCat = activeSubCategory;
     
-    let items: any[] = [];
-    if (activeTab === 'todos' || activeTab === 'produtos') {
-        let filteredProds = products.filter(p => 
-            p.name.toLowerCase().includes(term) || 
-            (p.business_name && p.business_name.toLowerCase().includes(term))
+    if (activeTab === 'vitrines') {
+        let filteredProfiles = profiles.filter(p => 
+            p.business_name?.toLowerCase().includes(term) || 
+            p.category?.toLowerCase().includes(term) ||
+            p.store_config?.vitrine_niche?.toLowerCase().includes(term)
         );
-        if (subCat !== 'Todas') {
-            filteredProds = filteredProds.filter(p => p.category === subCat);
-        }
         
-        const localBios = allOffers.filter(o => 
-          o.category === OfferCategory.NEGOCIOS_LOCAIS && 
-          o.description.includes("[BIO_MARKER]") &&
-          (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term)) &&
-          (subCat === 'Todas' || o.title.toLowerCase().includes(subCat.toLowerCase()))
-        );
-        items = [...items, ...filteredProds, ...localBios];
-    }
-    
-    if (activeTab === 'todos' || activeTab === 'servicos') {
-        let filteredServs = allOffers.filter(o => 
-            (o.category === OfferCategory.SERVICOS_PROFISSIONAIS || 
-             o.category === OfferCategory.SAUDE_BEM_ESTAR || 
-             o.category === OfferCategory.IMOVEIS_SERVICOS) && 
-            !o.description.includes("[MENTORIA]") &&
-            o.description.includes("[BIO_MARKER]") &&
-            (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
-        );
         if (subCat !== 'Todas') {
-            filteredServs = filteredServs.filter(o => o.category === subCat || o.title.toLowerCase().includes(subCat.toLowerCase()));
+            filteredProfiles = filteredProfiles.filter(p => p.vitrine_category === subCat || p.category === subCat);
         }
-        items = [...items, ...filteredServs];
+
+        return filteredProfiles.map(p => ({ ...p, type: 'vitrine' }));
     }
 
-    if (activeTab === 'todos' || activeTab === 'oportunidades') {
-        let filteredOpps = allOffers.filter(o => 
-            (o.title.toLowerCase().includes('mentoria') || 
-             o.description.includes("[MENTORIA]") || 
-             o.category === OfferCategory.OPORTUNIDADES) && 
-            (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+    if (activeTab === 'menu_store') {
+        let items = products.filter(p => 
+            p.user_role === 'admin' &&
+            (p.name.toLowerCase().includes(term) || (p.category && p.category.toLowerCase().includes(term)))
         );
+        
         if (subCat !== 'Todas') {
-            if (subCat === 'Mentoria') {
-                filteredOpps = filteredOpps.filter(o => o.title.toLowerCase().includes('mentoria') || o.description.includes("[MENTORIA]"));
-            } else if (subCat === 'B2B') {
-                filteredOpps = filteredOpps.filter(o => o.description.includes("[B2B]") || o.category === OfferCategory.OPORTUNIDADES);
-            } else {
-                filteredOpps = filteredOpps.filter(o => o.category === subCat);
-            }
+            items = items.filter(p => p.category === subCat);
         }
-        items = [...items, ...filteredOpps];
+        return items;
     }
-    return items;
+
+    if (activeTab === 'parceiros') {
+        let filteredPartners = partners.filter(p => 
+            p.title?.toLowerCase().includes(term) || 
+            p.subtitle?.toLowerCase().includes(term) ||
+            p.category?.toLowerCase().includes(term)
+        );
+
+        if (subCat !== 'Todas') {
+            filteredPartners = filteredPartners.filter(p => p.category === subCat);
+        }
+        return filteredPartners.map(p => ({ ...p, type: 'partner' }));
+    }
+    return [];
   };
 
-  const currentSubCategories = activeTab === 'produtos' 
-    ? PRODUCT_CATEGORIES 
-    : activeTab === 'servicos' 
-    ? SERVICE_CATEGORIES 
-    : activeTab === 'oportunidades'
-    ? OPPORTUNITY_CATEGORIES
-    : [{ id: 'Todas', label: 'Todas', icon: Sparkles }];
+  const currentSubCategories = MARKETPLACE_SUBCATEGORIES;
 
   const filteredItems = getFilteredItems();
 
@@ -172,10 +148,9 @@ export const Marketplace: React.FC = () => {
         {/* Abas Principais Estilizadas */}
         <div className="flex flex-wrap justify-center gap-3 mt-10">
             {[
-                { id: 'todos', label: 'Todos', icon: Sparkles },
-                { id: 'produtos', label: 'Produtos', icon: Package },
-                { id: 'servicos', label: 'Serviços', icon: Wrench },
-                { id: 'oportunidades', label: 'Oportunidades', icon: Handshake },
+                { id: 'vitrines', label: 'Vitrines', icon: Store },
+                { id: 'menu_store', label: 'Menu Store', icon: ShoppingBag },
+                { id: 'parceiros', label: 'Parceiros', icon: UserPlus },
             ].map((tab) => (
                 <button 
                     key={tab.id}
@@ -188,22 +163,20 @@ export const Marketplace: React.FC = () => {
         </div>
 
         {/* Subfiltros de Categoria Dinâmicos */}
-        {activeTab !== 'todos' && (
-            <div className="flex justify-center pt-4">
-                <div className="bg-gray-50 p-1.5 rounded-[2rem] border border-gray-100 flex gap-1 overflow-x-auto scrollbar-hide max-w-full">
-                    {currentSubCategories.map((cat) => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setActiveSubCategory(cat.id)}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all whitespace-nowrap ${activeSubCategory === cat.id ? 'bg-white text-indigo-600 shadow-sm font-black' : 'text-slate-400 font-bold hover:text-slate-600'}`}
-                        >
-                            <cat.icon className={`w-3.5 h-3.5 ${activeSubCategory === cat.id ? 'opacity-100' : 'opacity-40'}`} />
-                            <span className="text-[10px] uppercase tracking-wider italic">{cat.label}</span>
-                        </button>
-                    ))}
-                </div>
+        <div className="flex justify-center pt-4">
+            <div className="bg-gray-50 p-1.5 rounded-[2rem] border border-gray-100 flex gap-1 overflow-x-auto scrollbar-hide max-w-full">
+                {currentSubCategories.map((cat: any) => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveSubCategory(cat.id)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full transition-all whitespace-nowrap ${activeSubCategory === cat.id ? 'bg-white text-indigo-600 shadow-sm font-black' : 'text-slate-400 font-bold hover:text-slate-600'}`}
+                    >
+                        <cat.icon className={`w-3.5 h-3.5 ${activeSubCategory === cat.id ? 'opacity-100' : 'opacity-40'}`} />
+                        <span className="text-[10px] uppercase tracking-wider italic">{cat.label}</span>
+                    </button>
+                ))}
             </div>
-        )}
+        </div>
       </section>
 
       {/* 2. CONTENT GRID */}
@@ -235,11 +208,59 @@ export const Marketplace: React.FC = () => {
                 </button>
             </div>
         ) : (
-            <div className={`grid gap-10 ${activeTab === 'produtos' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+            <div className={`grid gap-10 ${activeTab === 'menu_store' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
             
             {filteredItems.map((item: any) => {
-                const isOffer = !!item.category;
-                const isProduct = !isOffer;
+                const isOffer = !!item.category && item.type !== 'vitrine' && !item.price;
+                const isProduct = item.price && item.type !== 'vitrine';
+                const isVitrine = item.type === 'vitrine';
+
+                if (isVitrine) {
+                    return (
+                        <Link 
+                            key={item.id}
+                            to={item.slug ? `/${item.slug}` : `/store/${item.user_id}`}
+                            className="bg-white rounded-[2rem] p-8 border border-gray-100 hover:shadow-xl transition-all group flex flex-col items-center text-center animate-fade-in"
+                        >
+                            <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-gray-50 group-hover:scale-110 transition-transform duration-500 shadow-lg relative">
+                                <img src={item.logo_url || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400'} alt={item.business_name} className="w-full h-full object-cover" />
+                                {item.role === 'admin' && (
+                                   <div className="absolute inset-0 bg-indigo-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <ShieldCheck className="w-8 h-8 text-indigo-600" />
+                                   </div>
+                                )}
+                            </div>
+                            <h3 className="font-black text-gray-900 text-xl mb-2 line-clamp-1">{item.business_name}</h3>
+                            <p className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-6 bg-brand-primary/5 px-4 py-1.5 rounded-full">{item.store_config?.vitrine_niche || item.category || 'Negócio Local'}</p>
+                            <div className="mt-auto w-full pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-slate-400 group-hover:text-brand-primary transition-colors">
+                                <span className="text-[10px] font-black uppercase tracking-widest">Acessar Vitrine</span>
+                                <ArrowUpRight className="w-4 h-4" />
+                            </div>
+                        </Link>
+                    );
+                }
+
+                if (item.type === 'partner') {
+                    return (
+                        <a 
+                            key={item.id}
+                            href={item.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-white rounded-[2rem] p-8 border border-gray-100 hover:shadow-xl transition-all group flex flex-col items-center text-center animate-fade-in cursor-pointer"
+                        >
+                            <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-gray-50 group-hover:scale-105 transition-transform duration-500">
+                                <img src={item.logo_url || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400'} alt={item.title} className="w-full h-full object-contain p-4" />
+                            </div>
+                            <h3 className="font-black text-gray-900 text-xl mb-2 line-clamp-1">{item.title}</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 line-clamp-2">{item.subtitle}</p>
+                            <div className="mt-auto w-full pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                <span className="text-[10px] font-black uppercase tracking-widest">Ver Detalhes</span>
+                                <ArrowUpRight className="w-4 h-4" />
+                            </div>
+                        </a>
+                    );
+                }
 
                 if (isProduct) {
                     return (

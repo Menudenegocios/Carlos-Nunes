@@ -645,6 +645,21 @@ export const supabaseService = {
     }
   },
 
+  getMarketplaceProfiles: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or('is_published.eq.true,role.eq.admin');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error: any) {
+      console.error("Error getting marketplace profiles:", error?.message || error);
+      return [];
+    }
+  },
+
   getProfile: async (identifier: string): Promise<any | null> => {
     try {
       // Try by ID first
@@ -686,6 +701,38 @@ export const supabaseService = {
     }
   },
 
+  getProfileByUserId: async (userId: string): Promise<any | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error getting profile by user_id:", error);
+      return null;
+    }
+  },
+
+  getRanking: async (limit: number = 10): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, business_name, name, logo_url, points, level, city')
+        .order('points', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting ranking:", error);
+      return [];
+    }
+  },
+
   updateProfile: async (user_id: string, profile: Partial<any>): Promise<void> => {
     try {
       const { error } = await supabase
@@ -696,6 +743,39 @@ export const supabaseService = {
       if (error) throw error;
     } catch (error) {
       console.error("Error updating profile:", error);
+      throw error;
+    }
+  },
+
+  adminUpdateUser: async (data: { 
+    userId: string, 
+    business_name: string, 
+    email: string, 
+    password?: string, 
+    plan: string, 
+    level: string, 
+    points: number, 
+    role: string 
+  }): Promise<void> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
+
+      const response = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error("Error in adminUpdateUser:", error);
       throw error;
     }
   },
@@ -1299,28 +1379,6 @@ export const supabaseService = {
     }
   },
 
-  // --- RANKING ---
-  getRanking: async (limitCount: number = 10): Promise<any[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, business_name, points, logo_url')
-        .order('points', { ascending: false })
-        .limit(limitCount);
-      
-      if (error) throw error;
-      return (data || []).map((p: any) => ({
-        id: p.id,
-        name: p.business_name || 'Membro',
-        business: p.business_name || 'Negócio',
-        pts: p.points || 0,
-        avatar: p.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${p.business_name}`
-      }));
-    } catch (error) {
-      console.error("Error getting ranking:", error);
-      return [];
-    }
-  },
 
   // --- COMMUNITY ---
   getCommunityPosts: async (): Promise<any[]> => {
@@ -1505,6 +1563,66 @@ export const supabaseService = {
       if (error) throw error;
     } catch (error) {
       console.error("Error deleting quick message:", error);
+      throw error;
+    }
+  },
+
+  // --- PARTNERS ---
+  getPartners: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('partners')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting partners:", error);
+      return [];
+    }
+  },
+
+  createPartner: async (partner: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('partners')
+        .insert({ ...partner, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating partner:", error);
+      throw error;
+    }
+  },
+
+  updatePartner: async (id: string, partner: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('partners')
+        .update({ ...partner, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating partner:", error);
+      throw error;
+    }
+  },
+
+  deletePartner: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('partners')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting partner:", error);
       throw error;
     }
   },

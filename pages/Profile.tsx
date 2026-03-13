@@ -21,7 +21,7 @@ export const Profile: React.FC = () => {
   const loadProfile = async () => {
     if (!user) return;
     try {
-      const data = await supabaseService.getProfile(user.id);
+      const data = await supabaseService.getProfileByUserId(user.id);
       const initialUrl = data?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`;
       setProfile(data || { logo_url: initialUrl });
       setPreviewUrl(initialUrl);
@@ -44,9 +44,14 @@ export const Profile: React.FC = () => {
         finalLogoUrl = await supabaseService.uploadImage(selectedFile, filePath);
       }
 
+      // Whitelist: apenas campos editáveis pelo usuário
       await supabaseService.updateProfile(user.id, { 
-        ...profile, 
-        logo_url: finalLogoUrl 
+        name: profile.name || null,
+        logo_url: finalLogoUrl,
+        slug: profile.slug || null,
+        business_name: profile.business_name || null,
+        phone: profile.phone || null,
+        bio: profile.bio || null,
       });
       
       setProfile(prev => ({ ...prev, logo_url: finalLogoUrl }));
@@ -54,7 +59,7 @@ export const Profile: React.FC = () => {
       alert('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Erro ao salvar perfil.');
+      alert('Erro ao salvar perfil. Verifique os dados e tente novamente.');
     } finally { setSaving(false); }
   };
 
@@ -150,6 +155,10 @@ export const Profile: React.FC = () => {
                        <span className="text-gray-400 font-bold px-3">/</span>
                        <input type="text" className="w-full bg-transparent border-none p-3 font-bold focus:ring-0 transition-all" value={profile.slug || ''} onChange={e => setProfile({...profile, slug: e.target.value})} placeholder="seu-nome" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome Completo / Pessoal</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.name || ''} onChange={e => setProfile({...profile, name: e.target.value})} placeholder="Seu nome" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição / Empresa</label>

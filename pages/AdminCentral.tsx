@@ -8,19 +8,19 @@ import {
   Save, X, ShieldCheck, Eye, EyeOff, CheckCircle, 
   Search, User, ArrowRight, RefreshCw, Layout, Smartphone, 
   Package, BookOpen, Briefcase, GraduationCap, Trophy, CreditCard,
-  UserCheck, AlertCircle, Mail, Lock, UserPlus
+  UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminCentral: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'membros' | 'eventos' | 'paginas' | 'marketplace' | 'midia'>('membros');
+  const [activeTab, setActiveTab] = useState<'membros' | 'agenda' | 'marketplace' | 'parceiros'>('membros');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [events, setEvents] = useState<PlatformEvent[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
-  const [mediaItems, setMediaItems] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +32,8 @@ export const AdminCentral: React.FC = () => {
     business_name: '',
     email: '',
     password: '',
-    plan: 'basic' as any,
+    plan: 'pre-cadastro' as any,
+    level: 'consultor' as any,
     points: 0,
     role: 'user' as any
   });
@@ -59,23 +60,21 @@ export const AdminCentral: React.FC = () => {
     price: 0,
     category: '',
     type: 'product' as 'product' | 'offer',
-    image: ''
+    image_url: ''
   });
   const [selectedItemFile, setSelectedItemFile] = useState<File | null>(null);
 
-  // Media Modal State
-  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [editingMedia, setEditingMedia] = useState<any | null>(null);
-  const [mediaForm, setMediaForm] = useState({
+  // Partner Modal State
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [editingPartner, setEditingPartner] = useState<any | null>(null);
+  const [partnerForm, setPartnerForm] = useState({
     title: '',
-    description: '',
-    category: 'MenuCast' as 'MenuCast' | 'Treinamentos' | 'Ferramentas' | 'Eventos',
-    image: '',
-    youtubeEmbed: '',
-    link: '',
-    duration: ''
+    subtitle: '',
+    logo_url: '',
+    whatsapp: '',
+    link: ''
   });
-  const [selectedMediaFile, setSelectedMediaFile] = useState<File | null>(null);
+  const [selectedPartnerFile, setSelectedPartnerFile] = useState<File | null>(null);
 
   const planNames: Record<string, string> = {
     basic: 'Plano Básico',
@@ -95,18 +94,18 @@ export const AdminCentral: React.FC = () => {
   const loadAdminData = async () => {
     setIsLoading(true);
     try {
-      const [allProfiles, allEvents, allProducts, allOffers, allMedia] = await Promise.all([
+      const [allProfiles, allEvents, allProducts, allOffers, allPartners] = await Promise.all([
         supabaseService.getAllProfilesWithSubscriptions(),
         supabaseService.getEvents(),
         supabaseService.getAllProducts(),
         supabaseService.getOffers(),
-        supabaseService.getMedia()
+        supabaseService.getPartners()
       ]);
       setProfiles(allProfiles);
       setEvents(allEvents);
       setProducts(allProducts);
       setOffers(allOffers);
-      setMediaItems(allMedia);
+      setPartners(allPartners);
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
@@ -120,7 +119,8 @@ export const AdminCentral: React.FC = () => {
         business_name: '',
         email: '',
         password: '',
-        plan: 'basic',
+        plan: 'pre-cadastro',
+        level: 'consultor',
         points: 0,
         role: 'user'
     });
@@ -133,7 +133,8 @@ export const AdminCentral: React.FC = () => {
       business_name: profile.business_name || '',
       email: (profile as any).email || '',
       password: '', // Senha em branco para segurança no modo edit
-      plan: (profile as any).plan || 'basic',
+      plan: (profile as any).plan || 'pre-cadastro',
+      level: (profile as any).level || 'consultor',
       points: (profile as any).points || 0,
       role: (profile as any).role || 'user'
     });
@@ -147,15 +148,19 @@ export const AdminCentral: React.FC = () => {
     setLoading(true);
     try {
       if (editingProfile) {
-        await supabaseService.updateProfile(editingProfile.user_id, {
+        await supabaseService.adminUpdateUser({
+          userId: editingProfile.user_id,
           business_name: memberForm.business_name,
+          email: memberForm.email,
+          password: memberForm.password || undefined,
           plan: memberForm.plan,
+          level: memberForm.level,
           points: memberForm.points,
           role: memberForm.role
-        } as any);
+        });
         setIsModalOpen(false);
-        loadAdminData();
-        alert('Membro atualizado!');
+        await loadAdminData();
+        alert('Informações de membro, login e senha sincronizadas e salvas com sucesso!');
       } else {
         alert('Para criar um novo administrador, registre a conta normalmente pela tela principal do sistema e mude o nível de acesso "role" diretamente no painel de banco de dados do Supabase. Essa medida é necessária por questões de segurança na nuvem.');
         setIsModalOpen(false);
@@ -211,31 +216,27 @@ export const AdminCentral: React.FC = () => {
     setIsEventModalOpen(true);
   };
 
-  const handleOpenMediaModal = (media?: any) => {
-    if (media) {
-      setEditingMedia(media);
-      setMediaForm({
-        title: media.title || '',
-        description: media.description || '',
-        category: media.category || 'MenuCast',
-        image: media.image || '',
-        youtubeEmbed: media.youtubeEmbed || '',
-        link: media.link || '',
-        duration: media.duration || ''
+  const handleOpenPartnerModal = (partner?: any) => {
+    if (partner) {
+      setEditingPartner(partner);
+      setPartnerForm({
+        title: partner.title || '',
+        subtitle: partner.subtitle || '',
+        logo_url: partner.logo_url || '',
+        whatsapp: partner.whatsapp || '',
+        link: partner.link || ''
       });
     } else {
-      setEditingMedia(null);
-      setMediaForm({
+      setEditingPartner(null);
+      setPartnerForm({
         title: '',
-        description: '',
-        category: 'MenuCast',
-        image: '',
-        youtubeEmbed: '',
-        link: '',
-        duration: ''
+        subtitle: '',
+        logo_url: '',
+        whatsapp: '',
+        link: ''
       });
     }
-    setIsMediaModalOpen(true);
+    setIsPartnerModalOpen(true);
   };
 
   const handleSaveEvent = async (e: React.FormEvent, file?: File) => {
@@ -262,27 +263,27 @@ export const AdminCentral: React.FC = () => {
     }
   };
 
-  const handleSaveMedia = async (e: React.FormEvent, file?: File) => {
+  const handleSavePartner = async (e: React.FormEvent, file?: File) => {
     e.preventDefault();
     try {
-      let image_url = mediaForm.image;
+      let logo_url = partnerForm.logo_url;
       if (file) {
-        image_url = await supabaseService.uploadImage(file, `media/${Date.now()}_${file.name}`);
+        logo_url = await supabaseService.uploadImage(file, `partners/${Date.now()}_${file.name}`);
       }
       
-      const mediaData = { ...mediaForm, image: image_url };
+      const partnerData = { ...partnerForm, logo_url };
 
-      if (editingMedia) {
-        await supabaseService.updateMedia(editingMedia.id, mediaData);
+      if (editingPartner) {
+        await supabaseService.updatePartner(editingPartner.id, partnerData);
       } else {
-        await supabaseService.createMedia(mediaData);
+        await supabaseService.createPartner(partnerData);
       }
-      setIsMediaModalOpen(false);
+      setIsPartnerModalOpen(false);
       loadAdminData();
-      alert(editingMedia ? 'Agenda atualizada!' : 'Agenda criada!');
+      alert(editingPartner ? 'Parceiro atualizado!' : 'Parceiro criado!');
     } catch (e) {
       console.error(e);
-      alert('Erro ao salvar agenda.');
+      alert('Erro ao salvar parceiro.');
     }
   };
 
@@ -298,14 +299,14 @@ export const AdminCentral: React.FC = () => {
     }
   };
 
-  const deleteMedia = async (id: string) => {
-    if(window.confirm('Tem certeza que deseja excluir esta mídia?')) {
+  const deletePartner = async (id: string) => {
+    if(window.confirm('Tem certeza que deseja excluir este parceiro?')) {
       try {
-        await supabaseService.deleteMedia(id);
+        await supabaseService.deletePartner(id);
         loadAdminData();
       } catch (e) {
         console.error(e);
-        alert('Erro ao excluir mídia.');
+        alert('Erro ao excluir parceiro.');
       }
     }
   };
@@ -315,12 +316,12 @@ export const AdminCentral: React.FC = () => {
     if (item) {
       setEditingItem(item);
       setItemForm({
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        category: item.category,
-        type: item.type,
-        image: item.image || ''
+        name: item.name || item.title || '',
+        description: item.description || '',
+        price: item.price || 0,
+        category: item.category || '',
+        type: item.type || (item.name ? 'product' : 'offer'),
+        image_url: item.image_url || ''
       });
     } else {
       setEditingItem(null);
@@ -330,7 +331,7 @@ export const AdminCentral: React.FC = () => {
         price: 0,
         category: '',
         type: 'product',
-        image: ''
+        image_url: ''
       });
     }
     setIsMarketplaceModalOpen(true);
@@ -341,24 +342,25 @@ export const AdminCentral: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      let image_url = itemForm.image;
+      let final_image_url = itemForm.image_url;
       if (file) {
-        image_url = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
+        final_image_url = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
       }
       
-      const itemData = { ...itemForm, image: image_url };
+      const { type, name, ...restOfForm } = itemForm;
+      const itemData: any = { ...restOfForm, image_url: final_image_url };
 
       if (editingItem) {
-        if (itemData.type === 'product') {
-            await supabaseService.updateProduct(editingItem.id, itemData);
+        if (type === 'product') {
+            await supabaseService.updateProduct(editingItem.id, { ...itemData, name });
         } else {
-            await supabaseService.updateOffer(editingItem.id, itemData);
+            await supabaseService.updateOffer(editingItem.id, { ...itemData, title: name });
         }
       } else {
-        if (itemData.type === 'product') {
-            await supabaseService.createProduct({ ...itemData, user_id: user.id } as any);
+        if (type === 'product') {
+            await supabaseService.createProduct({ ...itemData, name, user_id: user.id });
         } else {
-            await supabaseService.createOffer({ ...itemData, user_id: user.id });
+            await supabaseService.createOffer({ ...itemData, title: name, user_id: user.id });
         }
       }
       setIsMarketplaceModalOpen(false);
@@ -412,7 +414,10 @@ export const AdminCentral: React.FC = () => {
 
       <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 overflow-hidden">
          <div className="flex bg-gray-50 p-2 gap-2 overflow-x-auto scrollbar-hide">
-            {[{ id: 'membros', label: 'Gestão de Membros', icon: Users }, { id: 'eventos', label: 'Gestão de Eventos', icon: Calendar }, { id: 'marketplace', label: 'Marketplace', icon: Package }, { id: 'midia', label: 'Agenda & Conteúdo', icon: BookOpen }, { id: 'paginas', label: 'Páginas & Planos', icon: Settings2 }].map(tab => (
+            {[{ id: 'membros', label: 'Membros', icon: Users, desc: 'Gestão de Usuários' },
+            { id: 'agenda', label: 'Agenda', icon: Calendar, desc: 'Eventos da Plataforma' },
+            { id: 'marketplace', label: 'Menu Store', icon: ShoppingBag, desc: 'Produtos do Admin' },
+            { id: 'parceiros', label: 'Parceiros', icon: UserPlus, desc: 'Logos e Links de Parceiros' }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex-1 min-w-[150px] flex items-center justify-center gap-3 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>
                     <tab.icon className="w-4 h-4" /> {tab.label}
                 </button>
@@ -478,6 +483,7 @@ export const AdminCentral: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-3 mt-1">
                                                       <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{planNames[plan] || plan}</span>
+                                                      <span className="text-[9px] font-black bg-amber-50 text-amber-600 px-2 py-1 rounded-lg uppercase">{profile.points || 0} pts</span>
                                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{profile.city || 'Sem cidade'}</span>
                                                       {profile.email && <span className="text-[10px] font-medium text-slate-400 italic">{profile.email}</span>}
                                                     </div>
@@ -496,14 +502,17 @@ export const AdminCentral: React.FC = () => {
                     {activeTab === 'marketplace' && (
                         <div className="space-y-8">
                             <div className="flex justify-between items-center px-4">
-                                <h3 className="text-2xl font-black italic uppercase">Gestão do Marketplace</h3>
-                                <button onClick={() => handleOpenMarketplaceModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
+                                <div>
+                                    <h3 className="text-2xl font-black italic uppercase">Gestão Menu Store</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos registrados exclusivamente pelo admin</p>
+                                </div>
+                                <button onClick={() => { setEditingItem(null); setItemForm({ name: '', description: '', price: 0, category: 'Produtos', type: 'product', image_url: '' }); setIsMarketplaceModalOpen(true); }} className="bg-[#F67C01] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
                                     <Plus className="w-4 h-4" /> NOVO ITEM
                                 </button>
                             </div>
                             
                             <div className="grid gap-4">
-                                {[...products.map(p => ({...p, _key: `product-${p.id}`})), ...offers.map(o => ({...o, _key: `offer-${o.id}`}))].map(item => (
+                                {[...products.map(p => ({...p, type: 'product', _key: `product-${p.id}`})), ...offers.map(o => ({...o, type: 'offer', name: o.title, _key: `offer-${o.id}`}))].map(item => (
                                     <div key={item._key} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
                                             <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
@@ -526,12 +535,12 @@ export const AdminCentral: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    {activeTab === 'eventos' && (
+                    {activeTab === 'agenda' && (
                         <div className="space-y-8">
                             <div className="flex justify-between items-center px-4">
-                                <h3 className="text-2xl font-black italic uppercase">Gestão de Eventos</h3>
+                                <h3 className="text-2xl font-black italic uppercase">Agenda</h3>
                                 <button onClick={() => handleOpenEventModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
-                                    <Plus className="w-4 h-4" /> NOVO EVENTO
+                                    <Plus className="w-4 h-4" /> NOVO ITEM
                                 </button>
                             </div>
                             
@@ -560,57 +569,45 @@ export const AdminCentral: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    {activeTab === 'paginas' && (
-                        <div className="text-center py-20">
-                            <Settings2 className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                            <h3 className="text-xl font-black uppercase italic text-slate-400">Configurações de Páginas & Planos</h3>
-                            <p className="text-slate-400 text-sm mt-2">Módulo em desenvolvimento para gestão de conteúdo dinâmico.</p>
-                        </div>
-                    )}
-                    {activeTab === 'midia' && (
+                    {activeTab === 'parceiros' && (
                         <div className="space-y-8">
                             <div className="flex justify-between items-center px-4">
-                                <h3 className="text-2xl font-black italic uppercase">Gestão de Agenda</h3>
-                                <button onClick={() => handleOpenMediaModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
-                                    <Plus className="w-4 h-4" /> NOVA MÍDIA
+                                <h3 className="text-2xl font-black italic uppercase">Gestão de Parceiros</h3>
+                                <button onClick={() => handleOpenPartnerModal()} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
+                                    <Plus className="w-4 h-4" /> NOVO PARCEIRO
                                 </button>
                             </div>
                             
-                            {mediaItems.length === 0 ? (
+                            {partners.length === 0 ? (
                                 <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-gray-100">
-                                    <BookOpen className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                                    <h3 className="text-xl font-black uppercase italic text-slate-400">Nenhuma Agenda Cadastrada</h3>
-                                    <p className="text-slate-400 text-sm mt-2">Clique em "Nova Agenda" para adicionar conteúdo.</p>
+                                    <Briefcase className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                                    <h3 className="text-xl font-black uppercase italic text-slate-400">Nenhum Parceiro Cadastrado</h3>
+                                    <p className="text-slate-400 text-sm mt-2">Clique em "Novo Parceiro" para adicionar conteúdo.</p>
                                 </div>
                             ) : (
                                 <div className="grid gap-4">
-                                    {mediaItems.map(media => (
-                                        <div key={media.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                    {partners.map(partner => (
+                                        <div key={partner.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                             <div className="flex items-center gap-6">
-                                                <div className="w-16 h-16 rounded-2xl bg-indigo-50 overflow-hidden shadow-sm">
-                                                    {media.image ? (
-                                                        <img src={media.image} alt={media.title} className="w-full h-full object-cover" />
+                                                <div className="w-16 h-16 rounded-2xl bg-indigo-50 overflow-hidden shadow-sm flex items-center justify-center">
+                                                    {partner.logo_url ? (
+                                                        <img src={partner.logo_url} alt={partner.title} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-indigo-600">
-                                                            <BookOpen className="w-8 h-8" />
-                                                        </div>
+                                                        <Briefcase className="w-8 h-8 text-indigo-400" />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-black text-gray-900 text-lg">{media.title}</h4>
-                                                    <div className="flex items-center gap-3 mt-1">
-                                                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase ${media.category === 'MenuCast' ? 'bg-purple-100 text-purple-700' : media.category === 'Treinamentos' ? 'bg-indigo-100 text-indigo-700' : media.category === 'Eventos' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                            {media.category}
-                                                        </span>
-                                                        {media.duration && (
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{media.duration}</span>
-                                                        )}
+                                                    <h4 className="font-black text-gray-900 text-lg">{partner.title}</h4>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{partner.subtitle}</p>
+                                                    <div className="flex gap-2 mt-2">
+                                                        <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg font-black">{partner.whatsapp}</span>
+                                                        {partner.link && <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg font-black truncate max-w-[200px]">{partner.link}</span>}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleOpenMediaModal(media)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
-                                                <button onClick={() => deleteMedia(media.id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
+                                                <button onClick={() => handleOpenPartnerModal(partner)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                                <button onClick={() => deletePartner(partner.id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                             </div>
                                         </div>
                                     ))}
@@ -620,69 +617,51 @@ export const AdminCentral: React.FC = () => {
                     )}
                 </div>
             )}
-         </div>
-      </div>
+          </div>
+       </div>
 
-      {/* MODAL CRIAR/EDITAR MÍDIA */}
-      {isMediaModalOpen && (
+       {/* MODAL CRIAR/EDITAR PARCEIRO */}
+      {isPartnerModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
              <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-2xl font-black uppercase italic">{editingMedia ? 'Editar Agenda' : 'Nova Agenda'}</h3>
-                        <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Gerencie vídeos, podcasts e ferramentas</p>
+                        <h3 className="text-2xl font-black uppercase italic">{editingPartner ? 'Editar Parceiro' : 'Novo Parceiro'}</h3>
+                        <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Gestão de marcas e networking</p>
                     </div>
-                    <button onClick={() => setIsMediaModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                    <button onClick={() => setIsPartnerModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
-                <form onSubmit={(e) => handleSaveMedia(e, selectedMediaFile || undefined)} className="p-10 space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título</label>
-                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.title} onChange={e => setMediaForm({...mediaForm, title: e.target.value})} />
-                        </div>
-                        
+                <form onSubmit={(e) => handleSavePartner(e, selectedPartnerFile || undefined)} className="p-10 space-y-6">
+                    <div className="space-y-4">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</label>
-                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.category} onChange={e => setMediaForm({...mediaForm, category: e.target.value as any})}>
-                                <option value="MenuCast">MenuCast</option>
-                                <option value="Treinamentos">Treinamentos</option>
-                                <option value="Ferramentas">Ferramentas</option>
-                                <option value="Eventos">Eventos</option>
-                            </select>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome / Título</label>
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.title} onChange={e => setPartnerForm({...partnerForm, title: e.target.value})} />
                         </div>
-                        
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Duração (Opcional)</label>
-                            <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.duration} onChange={e => setMediaForm({...mediaForm, duration: e.target.value})} placeholder="Ex: 45m" />
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subtítulo / Ramo</label>
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.subtitle} onChange={e => setPartnerForm({...partnerForm, subtitle: e.target.value})} />
                         </div>
-
-                        <div className="col-span-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL da Imagem de Capa</label>
-                            <input required type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.image} onChange={e => setMediaForm({...mediaForm, image: e.target.value})} placeholder="https://..." />
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Telefone WhatsApp</label>
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.whatsapp} onChange={e => setPartnerForm({...partnerForm, whatsapp: e.target.value})} placeholder="(00) 00000-0000" />
                         </div>
-                        <div className="col-span-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Imagem (Opcional)</label>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Link de Redirecionamento</label>
+                            <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.link} onChange={e => setPartnerForm({...partnerForm, link: e.target.value})} placeholder="https://..." />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Logo (Opcional)</label>
                             <input type="file" accept="image/*" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                    setSelectedMediaFile(file);
+                                    setSelectedPartnerFile(file);
                                 }
                             }} />
-                        </div>
-
-                        <div className="col-span-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Link do YouTube (Embed) ou Link Externo</label>
-                            <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? mediaForm.link : mediaForm.youtubeEmbed} onChange={e => mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? setMediaForm({...mediaForm, link: e.target.value}) : setMediaForm({...mediaForm, youtubeEmbed: e.target.value})} placeholder="https://..." />
-                        </div>
-
-                        <div className="col-span-2">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição</label>
-                            <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold resize-none" value={mediaForm.description} onChange={e => setMediaForm({...mediaForm, description: e.target.value})} />
                         </div>
                     </div>
 
                     <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                        <Save className="w-5 h-5" /> {editingMedia ? 'SALVAR ALTERAÇÕES' : 'CRIAR AGENDA'}
+                        <Save className="w-5 h-5" /> {editingPartner ? 'SALVAR ALTERAÇÕES' : 'CRIAR PARCEIRO'}
                     </button>
                 </form>
              </div>
@@ -724,10 +703,6 @@ export const AdminCentral: React.FC = () => {
                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.category} onChange={e => setItemForm({...itemForm, category: e.target.value})} />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL da Imagem</label>
-                            <input required type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.image} onChange={e => setItemForm({...itemForm, image: e.target.value})} />
-                        </div>
-                        <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Imagem (Opcional)</label>
                             <input type="file" accept="image/*" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" onChange={(e) => {
                                 const file = e.target.files?.[0];
@@ -755,7 +730,7 @@ export const AdminCentral: React.FC = () => {
              <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-2xl font-black uppercase italic">{editingEvent ? 'Editar Evento' : 'Novo Evento'}</h3>
+                        <h3 className="text-2xl font-black uppercase italic">{editingEvent ? 'Editar Item da Agenda' : 'Novo Item na Agenda'}</h3>
                         <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Divulgue workshops e networking</p>
                     </div>
                     <button onClick={() => setIsEventModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -799,7 +774,7 @@ export const AdminCentral: React.FC = () => {
                     </div>
 
                     <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                        <Save className="w-5 h-5" /> {editingEvent ? 'SALVAR ALTERAÇÕES' : 'CRIAR EVENTO'}
+                        <Save className="w-5 h-5" /> {editingEvent ? 'SALVAR ALTERAÇÕES' : 'ADICIONAR NA AGENDA'}
                     </button>
                 </form>
              </div>
@@ -834,10 +809,23 @@ export const AdminCentral: React.FC = () => {
 
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Plano Ativo</label>
-                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
+                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
+                                <option value="pre-cadastro">Pré-cadastro</option>
                                 <option value="basic">Plano Básico</option>
                                 <option value="pro">Plano PRO</option>
                                 <option value="full">Plano FULL</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nível de Gamificação</label>
+                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none" value={memberForm.level} onChange={e => setMemberForm({...memberForm, level: e.target.value as any})}>
+                                <option value="consultor">Consultor</option>
+                                <option value="elite">Elite</option>
+                                <option value="bronze">Bronze</option>
+                                <option value="prata">Prata</option>
+                                <option value="ouro">Ouro</option>
+                                <option value="diamante">Diamante</option>
                             </select>
                         </div>
                         
@@ -880,7 +868,3 @@ export const AdminCentral: React.FC = () => {
     </div>
   );
 };
-
-const MapPin = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-);
