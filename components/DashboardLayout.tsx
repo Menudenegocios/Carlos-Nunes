@@ -7,7 +7,8 @@ import {
   Trophy, LogOut, Menu, X, Star, Layout, 
   Store, ChevronLeft, Briefcase, GraduationCap,
   Handshake, CreditCard, Sparkles, BookOpen, Settings2,
-  AlertCircle, ChevronRight, Globe, LayoutGrid, Lock
+  AlertCircle, ChevronRight, Globe, LayoutGrid, Lock,
+  Rocket
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
@@ -30,9 +31,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false },
     ...(isAdmin ? [{ label: 'Central', icon: Settings2, to: '/admin-central', locked: false }] : []),
     { label: 'Minha Vitrine', icon: Globe, to: '/catalog', locked: isPreRegistration && !isAdmin },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: isPreRegistration && !isAdmin },
-    { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: isPreRegistration && !isAdmin },
     { label: 'Menu Club', icon: Trophy, to: '/rewards', locked: isPreRegistration && !isAdmin },
+    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin },
+    { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin },
+    { label: 'Mentoria de Aceleração', icon: Rocket, to: '/mentoria', locked: user.plan !== 'full' && !isAdmin },
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false },
   ];

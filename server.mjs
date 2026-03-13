@@ -186,6 +186,10 @@ async function handleSubscriptionDeleted(subscription) {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get(/.*/, (req, res) => {
+  // Se a requisição for para um asset que não existe, retorna 404 real para evitar erro de MIME
+  if (req.path.startsWith('/assets/')) {
+    return res.status(404).send('Asset not found');
+  }
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
