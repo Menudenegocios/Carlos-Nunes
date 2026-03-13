@@ -229,6 +229,22 @@ export interface Profile {
   };
   store_config?: StoreConfig;
   bio_config?: BioConfig;
+  // Admin/Subscription related fields
+  name?: string;
+  email?: string;
+  plan?: string;
+  subscriptions?: Subscription[] | Subscription;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  plan?: string;
+  status?: string;
+  current_period_end?: number;
+  created_at?: number;
 }
 
 export interface Coupon {

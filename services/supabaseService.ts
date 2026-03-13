@@ -585,12 +585,40 @@ export const supabaseService = {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*');
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `);
       
       if (error) throw error;
       return data || [];
     } catch (error) {
       console.error("Error getting all profiles:", error);
+      return [];
+    }
+  },
+
+  getAllProfilesWithSubscriptions: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting all profiles with subscriptions:", error);
       return [];
     }
   },
@@ -615,7 +643,14 @@ export const supabaseService = {
       // Try by ID first
       const { data: profileById, error: errorById } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `)
         .eq('id', identifier)
         .maybeSingle();
       
@@ -624,7 +659,14 @@ export const supabaseService = {
       // Try by slug
       const { data: profileBySlug, error: errorBySlug } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `)
         .eq('slug', identifier)
         .maybeSingle();
       

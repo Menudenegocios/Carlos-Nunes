@@ -96,7 +96,7 @@ export const AdminCentral: React.FC = () => {
     setIsLoading(true);
     try {
       const [allProfiles, allEvents, allProducts, allOffers, allMedia] = await Promise.all([
-        supabaseService.getAllProfiles(),
+        supabaseService.getAllProfilesWithSubscriptions(),
         supabaseService.getEvents(),
         supabaseService.getAllProducts(),
         supabaseService.getOffers(),
@@ -433,28 +433,63 @@ export const AdminCentral: React.FC = () => {
                             </div>
                             
                             <div className="grid gap-4">
-                                {profiles.filter(p => p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())).map(profile => (
-                                    <div key={profile.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
-                                        <div className="flex items-center gap-6">
-                                            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                                                <img src={profile.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.business_name}`} className="w-full h-full object-cover" />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-black text-gray-900 text-lg">{profile.business_name}</h4>
-                                                <div className="flex items-center gap-3">
-                                                  <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{planNames[(profile as any).plan || 'profissionais']}</span>
-                                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{profile.city || 'Sem cidade'}</span>
-                                                  {(profile as any).email && <span className="text-[10px] font-medium text-slate-400 italic">{(profile as any).email}</span>}
+                                {profiles.filter(p => 
+                                    (p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                                    (p.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                ).map(profile => {
+                                    const subscription = (profile as any).subscriptions?.[0] || (profile as any).subscriptions;
+                                    const status = subscription?.status || 'inactive';
+                                    const plan = subscription?.plan || profile.plan || 'profissionais';
+                                    
+                                    const statusColors: Record<string, string> = {
+                                        active: 'bg-emerald-50 text-emerald-600',
+                                        trialing: 'bg-blue-50 text-blue-600',
+                                        past_due: 'bg-amber-50 text-amber-600',
+                                        canceled: 'bg-rose-50 text-rose-600',
+                                        incomplete: 'bg-slate-50 text-slate-600',
+                                        inactive: 'bg-slate-50 text-slate-600'
+                                    };
+
+                                    const statusLabels: Record<string, string> = {
+                                        active: 'Ativo',
+                                        trialing: 'Trial',
+                                        past_due: 'Atrasado',
+                                        canceled: 'Cancelado',
+                                        incomplete: 'Incompleto',
+                                        inactive: 'Inativo'
+                                    };
+
+                                    return (
+                                        <div key={profile.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-white flex items-center justify-center">
+                                                    {profile.logo_url ? (
+                                                        <img src={profile.logo_url} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <User className="w-6 h-6 text-slate-300" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-3">
+                                                        <h4 className="font-black text-gray-900 text-lg">{profile.business_name || profile.name || 'Membro sem nome'}</h4>
+                                                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase ${statusColors[status] || 'bg-slate-50 text-slate-600'}`}>
+                                                            {statusLabels[status] || status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 mt-1">
+                                                      <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{planNames[plan] || plan}</span>
+                                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{profile.city || 'Sem cidade'}</span>
+                                                      {profile.email && <span className="text-[10px] font-medium text-slate-400 italic">{profile.email}</span>}
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                                <button onClick={() => deleteMember(profile.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-2">
-
-                                            <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteMember(profile.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
