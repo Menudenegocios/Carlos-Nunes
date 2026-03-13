@@ -4,7 +4,7 @@ import { Plus, X, GripVertical, CheckCircle, Clock, Circle, DollarSign, User, Br
 
 interface Deal {
   id: string;
-  clientName: string;
+  client_name: string;
   title: string; // Product or Service
   value: number;
   status: 'prospecting' | 'proposal' | 'negotiation' | 'closed';
@@ -15,9 +15,9 @@ export const Tasks: React.FC = () => {
   const [deals, setDeals] = useState<Deal[]>(() => {
     const saved = localStorage.getItem('menu_crm_deals');
     return saved ? JSON.parse(saved) : [
-      { id: '1', clientName: 'Empório do Pão', title: 'Consultoria Mensal', value: 1500, status: 'negotiation', priority: 'high' },
-      { id: '2', clientName: 'Academia Fit', title: 'Gestão de Redes Sociais', value: 800, status: 'prospecting', priority: 'medium' },
-      { id: '3', clientName: 'Restaurante Sabor', title: 'Criação de Site', value: 2500, status: 'closed', priority: 'high' },
+      { id: '1', client_name: 'Empório do Pão', title: 'Consultoria Mensal', value: 1500, status: 'negotiation', priority: 'high' },
+      { id: '2', client_name: 'Academia Fit', title: 'Gestão de Redes Sociais', value: 800, status: 'prospecting', priority: 'medium' },
+      { id: '3', client_name: 'Restaurante Sabor', title: 'Criação de Site', value: 2500, status: 'closed', priority: 'high' },
     ];
   });
 
@@ -25,7 +25,7 @@ export const Tasks: React.FC = () => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   // Form State
-  const [newDeal, setNewDeal] = useState({ clientName: '', title: '', value: '' });
+  const [newDeal, setNewDeal] = useState({ client_name: '', title: '', value: '' });
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -35,11 +35,11 @@ export const Tasks: React.FC = () => {
 
   const addDeal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newDeal.clientName.trim() || !newDeal.title.trim()) return;
+    if (!newDeal.client_name.trim() || !newDeal.title.trim()) return;
 
     const deal: Deal = {
       id: Date.now().toString(),
-      clientName: newDeal.clientName,
+      client_name: newDeal.client_name,
       title: newDeal.title,
       value: Number(newDeal.value) || 0,
       status: 'prospecting',
@@ -47,7 +47,7 @@ export const Tasks: React.FC = () => {
     };
 
     setDeals([...deals, deal]);
-    setNewDeal({ clientName: '', title: '', value: '' });
+    setNewDeal({ client_name: '', title: '', value: '' });
     setIsFormOpen(false);
   };
 
@@ -166,7 +166,7 @@ export const Tasks: React.FC = () => {
                </div>
                
                {/* Deal Info */}
-               <h4 className="font-bold text-gray-900 mb-1">{deal.clientName}</h4>
+               <h4 className="font-bold text-gray-900 mb-1">{deal.client_name}</h4>
                <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
                  <Briefcase className="w-3 h-3" /> {deal.title}
                </p>
@@ -248,8 +248,8 @@ export const Tasks: React.FC = () => {
                      type="text" 
                      placeholder="Nome do Cliente" 
                      className="w-full border-gray-300 rounded-lg text-sm"
-                     value={newDeal.clientName}
-                     onChange={(e) => setNewDeal({...newDeal, clientName: e.target.value})}
+                     value={newDeal.client_name}
+                     onChange={(e) => setNewDeal({...newDeal, client_name: e.target.value})}
                    />
                 </div>
                 <div className="flex-1">

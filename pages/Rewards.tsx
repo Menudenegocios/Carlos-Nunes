@@ -22,7 +22,7 @@ export const Rewards: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4">
       {/* Header Estilo Unificado Menu Club */}
-      <div className="bg-[#0F172A] dark:bg-black rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+      <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
@@ -30,8 +30,8 @@ export const Rewards: React.FC = () => {
                  <Trophy className="h-10 w-10 text-brand-primary" />
               </div>
               <div>
-                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">Club</span>
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 overflow-visible">
+                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Club</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">TRANSFORME SUA ATIVIDADE EM CRESCIMENTO REAL.</p>
               </div>
@@ -150,8 +150,8 @@ const B2BMatchView = ({ user }: { user: User }) => {
     try {
       const newOffer = await supabaseService.createB2BOffer({
         ...formData,
-        userId: user.id,
-        businessName: user.name,
+        user_id: user.id,
+        business_name: user.name,
         businessLogo: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`
       });
       // Atualiza a lista local imediatamente para visualização instantânea
@@ -168,7 +168,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
   const filteredOffers = offers.filter(o => 
     o.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    o.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+    o.business_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -199,16 +199,16 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
        {activeSubTab === 'offers' ? (
          <>
-           <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl mb-12">
+           <div className="bg-white rounded-[3rem] p-10 md:p-12 border border-gray-100 shadow-xl mb-12">
               <div className="grid md:grid-cols-2 gap-12 items-center">
                  <div className="space-y-6">
                     <div className="flex items-center gap-3">
-                       <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-emerald-600">
+                       <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
                           <Zap className="w-6 h-6 fill-current" />
                        </div>
-                       <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">💰 MENU CASH – A MOEDA INTERNA</h3>
+                       <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">💰 MENU CASH – A MOEDA INTERNA</h3>
                     </div>
-                    <p className="text-gray-500 dark:text-zinc-400 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
+                    <p className="text-gray-500 font-medium">O Menu Club funciona com uma moeda interna chamada Menu Cash. O dinheiro continua circulando dentro da rede, criando retenção e prosperidade coletiva.</p>
                     
                     <div className="space-y-4">
                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Regras de Cashback por Nível:</p>
@@ -218,7 +218,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                             "Ouro: 10% de cashback",
                             "Diamante: 20% de cashback + Anunciar na Menu Store"
                           ].map((text, i) => (
-                            <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
+                            <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700">
                                <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
                             </div>
                           ))}
@@ -226,7 +226,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                     </div>
                  </div>
 
-                 <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+                 <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
                     <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
                        <Shield className="w-4 h-4" /> Regra importante
                     </p>
@@ -236,14 +236,14 @@ const B2BMatchView = ({ user }: { user: User }) => {
                          "Pode utilizar até 30% do valor de uma compra",
                          "Saldo válido enquanto o plano estiver ativo"
                        ].map((text, i) => (
-                         <li key={i} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                         <li key={i} className="flex gap-3 text-xs font-medium text-gray-500">
                             <div className="w-1.5 h-1.5 bg-brand-primary rounded-full mt-1.5 shrink-0"></div>
                             {text}
                          </li>
                        ))}
                     </ul>
-                    <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
-                       <p className="text-sm font-black text-gray-900 dark:text-white italic">"Isso cria circulação e retenção."</p>
+                    <div className="pt-4 border-t border-gray-200">
+                       <p className="text-sm font-black text-gray-900 italic">"Isso cria circulação e retenção."</p>
                     </div>
                  </div>
               </div>
@@ -255,7 +255,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                 <input 
                    type="text" 
                    placeholder="Filtrar parceiros por serviço ou nome..." 
-                   className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
+                   className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                    value={searchTerm}
                    onChange={e => setSearchTerm(e.target.value)}
                 />
@@ -270,28 +270,28 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {isLoading ? (
-                 [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
+                 [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)
               ) : filteredOffers.length === 0 ? (
-                 <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                 <div className="col-span-full py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
                     <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade de Menu Cash encontrada.</p>
                  </div>
               ) : filteredOffers.map(offer => (
-                 <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
+                 <div key={offer.id} className="group bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-6">
-                       <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
+                       <div className="w-14 h-14 rounded-2xl bg-indigo-50 overflow-hidden border-2 border-white shadow-md">
                           <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
                        </div>
-                       <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
+                       <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 uppercase">
                           {offer.discount}
                        </span>
                     </div>
                     <div className="flex-1 space-y-3">
-                       <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
-                       <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
-                       <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
+                       <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-1">{offer.title}</h3>
+                       <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">{offer.business_name}</p>
+                       <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{offer.description}</p>
                     </div>
-                    <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
+                    <button className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
                        SOLICITAR CONEXÃO <ArrowRight className="w-3 h-3" />
                     </button>
                  </div>
@@ -304,7 +304,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
        {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                  <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                      <div>
                          <h3 className="text-2xl font-black uppercase italic tracking-tighter">Publicar Oportunidade</h3>
@@ -315,16 +315,16 @@ const B2BMatchView = ({ user }: { user: User }) => {
                  <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
                      <div>
                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Título da Oportunidade</label>
-                         <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Parceria em Gestão de Redes Sociais" />
+                         <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Parceria em Gestão de Redes Sociais" />
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                          <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Benefício / Desconto</label>
-                             <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 15% OFF ou Consultoria Grátis" />
+                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 15% OFF ou Consultoria Grátis" />
                          </div>
                          <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Categoria B2B</label>
-                             <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                             <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                                  <option>Serviços</option>
                                  <option>Insumos</option>
                                  <option>Tecnologia</option>
@@ -334,7 +334,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                      </div>
                      <div>
                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">O que você está oferecendo?</label>
-                         <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descreva os detalhes da parceria..." />
+                         <textarea required rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descreva os detalhes da parceria..." />
                      </div>
                      <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
                          {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR OPORTUNIDADE AGORA'}
@@ -353,7 +353,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    sellerName: '',
+    seller_name: '',
     amount: '',
     description: ''
   });
@@ -377,16 +377,16 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
     setIsSaving(true);
     try {
       const newTx = await supabaseService.createB2BTransaction({
-        buyerId: user.id,
-        buyerName: user.name,
-        sellerId: 'mock_seller_id', // Na vida real, selecionaria o usuário
-        sellerName: formData.sellerName,
+        buyer_id: user.id,
+        buyer_name: user.name,
+        seller_id: 'mock_seller_id', // Na vida real, selecionaria o usuário
+        seller_name: formData.seller_name,
         amount: parseFloat(formData.amount),
         description: formData.description
       });
       setTransactions(prev => [newTx, ...prev]);
       setIsModalOpen(false);
-      setFormData({ sellerName: '', amount: '', description: '' });
+      setFormData({ seller_name: '', amount: '', description: '' });
     } catch (err) {
       console.error("Erro ao registrar:", err);
       alert("Erro ao registrar transação.");
@@ -408,7 +408,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter dark:text-white">Minhas Transações B2B</h3>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter">Minhas Transações B2B</h3>
           <p className="text-slate-500 font-medium text-sm">Registre negócios fechados com outros membros para ganhar Menu Cash.</p>
         </div>
         <button 
@@ -421,36 +421,36 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
 
       {isLoading ? (
         <div className="space-y-4">
-          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 dark:bg-zinc-800 rounded-3xl animate-pulse"></div>)}
+          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 rounded-3xl animate-pulse"></div>)}
         </div>
       ) : transactions.length === 0 ? (
-        <div className="py-20 text-center bg-gray-50 dark:bg-zinc-800/20 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-zinc-800">
+        <div className="py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
           <Handshake className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma transação registrada ainda.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {transactions.map(tx => (
-            <div key={tx.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-gray-100 dark:border-zinc-800 shadow-sm flex items-center justify-between">
+            <div key={tx.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md ${tx.status === 'confirmed' ? 'bg-emerald-500' : tx.status === 'rejected' ? 'bg-red-500' : 'bg-orange-500'}`}>
                   {tx.status === 'confirmed' ? <CheckCircle className="w-6 h-6" /> : tx.status === 'rejected' ? <X className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h4 className="font-black text-gray-900 dark:text-white text-lg">{tx.buyerId === user.id ? `Compra de ${tx.sellerName}` : `Venda para ${tx.buyerName}`}</h4>
+                  <h4 className="font-black text-gray-900 text-lg">{tx.buyer_id === user.id ? `Compra de ${tx.seller_name}` : `Venda para ${tx.buyer_name}`}</h4>
                   <p className="text-xs text-slate-500 font-medium">{tx.description}</p>
                 </div>
               </div>
               <div className="text-right flex items-center gap-6">
                 <div>
-                  <p className="text-lg font-black text-gray-900 dark:text-white">
+                  <p className="text-lg font-black text-gray-900">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.amount)}
                   </p>
                   <p className={`text-[10px] font-black uppercase tracking-widest ${tx.status === 'confirmed' ? 'text-emerald-500' : tx.status === 'rejected' ? 'text-red-500' : 'text-orange-500'}`}>
                     {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Confirmação'}
                   </p>
                 </div>
-                {tx.sellerId === user.id && tx.status === 'pending' && (
+                {tx.seller_id === user.id && tx.status === 'pending' && (
                   <div className="flex gap-2">
                     <button onClick={() => handleConfirm(tx.id, 'confirmed')} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all">
                       <CheckCircle className="w-5 h-5" />
@@ -468,7 +468,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+          <div className="bg-white rounded-[3.5rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
             <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
               <div>
                 <h3 className="text-2xl font-black uppercase italic tracking-tighter">Registrar Negócio</h3>
@@ -479,15 +479,15 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
             <form onSubmit={handleCreateTransaction} className="p-10 space-y-6">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Nome da Empresa / Vendedor</label>
-                <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.sellerName} onChange={e => setFormData({...formData, sellerName: e.target.value})} placeholder="Ex: Agência XYZ" />
+                <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.seller_name} onChange={e => setFormData({...formData, seller_name: e.target.value})} placeholder="Ex: Agência XYZ" />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Valor da Compra (R$)</label>
-                <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="Ex: 1500.00" />
+                <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="Ex: 1500.00" />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 text-left">Descrição do Serviço/Produto</label>
-                <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Criação de identidade visual..." />
+                <textarea required rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Criação de identidade visual..." />
               </div>
               <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
                 {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'ENVIAR PARA CONFIRMAÇÃO'}
@@ -506,31 +506,31 @@ const LevelsView = ({ user }: { user: User }) => {
   return (
     <div className="space-y-12 animate-fade-in">
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">🏅 NÍVEIS DO MENU CLUB</h2>
+        <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">🏅 NÍVEIS DO MENU CLUB</h2>
         <p className="text-slate-500 font-medium">Sua jornada de crescimento e autoridade dentro do ecossistema.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {levels.map((level, i) => (
-          <div key={i} className={`bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border-2 shadow-sm transition-all flex flex-col ${user.level.toLowerCase() === level.name.toLowerCase() ? 'border-brand-primary ring-8 ring-brand-primary/5 scale-105 z-10' : 'border-gray-100 dark:border-zinc-800 opacity-60'}`}>
+          <div key={i} className={`bg-white rounded-[3rem] p-8 border-2 shadow-sm transition-all flex flex-col ${user.level.toLowerCase() === level.name.toLowerCase() ? 'border-brand-primary ring-8 ring-brand-primary/5 scale-105 z-10' : 'border-gray-100 opacity-60'}`}>
             <div className={`w-14 h-14 rounded-2xl ${level.color} mb-6 flex items-center justify-center text-white shadow-xl`}>
                 <Award className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic mb-1">{level.name}</h3>
+            <h3 className="text-2xl font-black text-gray-900 uppercase italic mb-1">{level.name}</h3>
             <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-2">{level.points} pts</p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-4">{level.criteria}</p>
             
-            <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 italic mb-6">"{level.description}"</p>
+            <p className="text-sm font-black text-indigo-600 italic mb-6">"{level.description}"</p>
             
             <ul className="space-y-4 flex-1">
                 {level.benefits.map((b, j) => (
-                  <li key={j} className="flex gap-3 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                  <li key={j} className="flex gap-3 text-xs font-medium text-gray-500">
                     <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> {b}
                   </li>
                 ))}
             </ul>
             {user.level.toLowerCase() === level.name.toLowerCase() && (
-              <div className="mt-10 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 py-3 rounded-2xl text-center font-black text-[10px] uppercase tracking-widest">
+              <div className="mt-10 bg-emerald-50 text-emerald-600 py-3 rounded-2xl text-center font-black text-[10px] uppercase tracking-widest">
                   NÍVEL ATIVO
               </div>
             )}
@@ -552,26 +552,26 @@ const MissionsView = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-12 animate-fade-in">
+    <div className="bg-white rounded-[3.5rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-12 animate-fade-in">
        <div className="flex justify-between items-end">
           <div>
-            <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">📊 PONTOS</h3>
+            <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">📊 PONTOS</h3>
             <p className="text-slate-500 font-medium mt-1">Os pontos determinam seu nível e ranking no ecossistema.</p>
           </div>
-          <div className="bg-gray-50 dark:bg-zinc-800 px-6 py-3 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+          <div className="bg-gray-50 px-6 py-3 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
              Simples. Claro. Objetivo.
           </div>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {missions.map((m, i) => (
-             <div key={i} className="group p-8 bg-gray-50/50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 flex items-center justify-between hover:bg-white dark:hover:bg-zinc-800 hover:shadow-xl transition-all cursor-pointer">
+             <div key={i} className="group p-8 bg-gray-50/50 rounded-[2.5rem] border border-gray-100 flex items-center justify-between hover:bg-white hover:shadow-xl transition-all cursor-pointer">
                 <div className="flex items-center gap-6">
-                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+                   <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
                       <m.icon className="w-7 h-7" />
                    </div>
                    <div>
-                      <h4 className="font-black text-gray-900 dark:text-white text-lg leading-tight">{m.title}</h4>
+                      <h4 className="font-black text-gray-900 text-lg leading-tight">{m.title}</h4>
                       <p className="text-xs text-slate-500 font-medium mt-1">{m.desc}</p>
                    </div>
                 </div>
@@ -610,14 +610,14 @@ const RankingView = () => {
   return (
     <div className="space-y-12 animate-fade-in">
        {/* Info Section */}
-       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-12 border border-gray-100 dark:border-zinc-800 shadow-xl">
+       <div className="bg-white rounded-[3rem] p-10 md:p-12 border border-gray-100 shadow-xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
              <div className="space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl text-yellow-600">
+                   <div className="p-3 bg-yellow-50 rounded-2xl text-yellow-600">
                       <Medal className="w-6 h-6" />
                    </div>
-                   <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">🥇 Ranking Oficial</h3>
+                   <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">🥇 Ranking Oficial</h3>
                 </div>
                 <div className="space-y-3">
                    {[
@@ -625,14 +625,14 @@ const RankingView = () => {
                      rankingRules.top10Badge ? "Top 10 maiores pontuadores recebem badge especial" : "Top 5 maiores pontuadores",
                      rankingRules.top3Highlight ? "Top 3 ganham destaque na plataforma" : "Reconhecimento público"
                    ].map((text, i) => (
-                     <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 dark:text-zinc-300">
+                     <div key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700">
                         <CheckCircle className="w-4 h-4 text-emerald-500" /> {text}
                      </div>
                    ))}
                 </div>
              </div>
 
-             <div className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6">
+             <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Divulgação:</p>
                 <div className="grid grid-cols-2 gap-4">
                    {[
@@ -641,27 +641,27 @@ const RankingView = () => {
                      "Eventos",
                      "Newsletter"
                    ].map((text, i) => (
-                     <div key={i} className="flex items-center gap-2 text-xs font-black text-gray-500 dark:text-zinc-400 uppercase tracking-tight">
+                     <div key={i} className="flex items-center gap-2 text-xs font-black text-gray-500 uppercase tracking-tight">
                         <div className="w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
                         {text}
                      </div>
                    ))}
                 </div>
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-700">
-                   <p className="text-sm font-black text-gray-900 dark:text-white italic">"Reconhecimento é combustível de movimento."</p>
+                <div className="pt-4 border-t border-gray-200">
+                   <p className="text-sm font-black text-gray-900 italic">"Reconhecimento é combustível de movimento."</p>
                 </div>
              </div>
           </div>
        </div>
 
        {/* List Section */}
-       <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-10">
+       <div className="bg-white rounded-[3.5rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-10">
           <div className="flex items-center gap-4">
-             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl text-yellow-600">
+             <div className="p-4 bg-yellow-50 rounded-2xl text-yellow-600">
                 <Medal className="w-8 h-8" />
              </div>
              <div>
-               <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">Ranking Regional</h3>
+               <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">Ranking Regional</h3>
                <p className="text-slate-500 font-medium">Os empreendedores mais influentes da rede.</p>
              </div>
           </div>
@@ -669,7 +669,7 @@ const RankingView = () => {
           <div className="space-y-4">
              {isLoading ? (
                <div className="space-y-4">
-                 {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 dark:bg-zinc-800 rounded-3xl animate-pulse"></div>)}
+                 {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-3xl animate-pulse"></div>)}
                </div>
              ) : ranking.length === 0 ? (
                <div className="py-20 text-center">

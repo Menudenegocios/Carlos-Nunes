@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+
 import { 
   Play, Star, X, Award, CheckCircle, GraduationCap, 
   Video, Map, Sparkles, Target, Image,
@@ -94,18 +94,18 @@ export const Academy: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
       {/* Header Estilo Unificado Catálogo */}
-      <div className="bg-[#0F172A] dark:bg-black rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+      <div className="bg-white rounded-[3.5rem] p-8 md:p-12 text-gray-900 relative overflow-hidden shadow-2xl border border-gray-100 transition-colors duration-500">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
-              <div className="p-5 bg-indigo-500/10 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">
+              <div className="p-5 bg-indigo-50 backdrop-blur-xl rounded-[2rem] border border-indigo-100 shadow-xl">
                  <GraduationCap className="h-10 w-10 text-brand-primary" />
               </div>
               <div>
-                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2 italic uppercase">
-                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">Menu Academy</span>
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase overflow-visible">
+                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] title-fix">Menu Academy</span>
                  </h1>
-                 <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">CONHECIMENTO ESTRATÉGICO PARA SEU NEGÓCIO LOCAL.</p>
+                 <p className="text-gray-500 text-sm font-bold uppercase tracking-[0.2em]">CONHECIMENTO ESTRATÉGICO PARA SEU NEGÓCIO LOCAL.</p>
               </div>
             </div>
 
@@ -116,7 +116,7 @@ export const Academy: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
+          <div className="flex p-1.5 mt-12 bg-gray-50 backdrop-blur-md rounded-[2.2rem] border border-gray-100 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                   { id: 'treinamentos', label: 'CURSOS', desc: 'Vídeo aulas', icon: Video },
@@ -126,13 +126,13 @@ export const Academy: React.FC = () => {
                   <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)} 
-                    className={`flex flex-col items-center justify-center min-w-[120px] px-8 py-3 rounded-[1.6rem] transition-all duration-300 whitespace-nowrap ${activeTab === tab.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-white/10'}`}
+                    className={`flex flex-col items-center justify-center min-w-[120px] px-8 py-3 rounded-[1.6rem] transition-all duration-300 whitespace-nowrap ${activeTab === tab.id ? 'bg-[#F67C01] text-white shadow-xl scale-105' : 'text-gray-400 hover:bg-black/5'}`}
                   >
                       <div className="flex items-center gap-2 mb-0.5">
                         <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
                         <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
                       </div>
-                      <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</span>
+                      <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : 'text-gray-900'}`}>{tab.desc}</span>
                   </button>
               ))}
           </div>
@@ -168,7 +168,7 @@ export const Academy: React.FC = () => {
                     <button 
                       key={cat} 
                       onClick={() => setTrainingCategory(cat)}
-                      className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${trainingCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-zinc-900 text-slate-400 border border-gray-100 dark:border-zinc-800'}`}
+                      className={`px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${trainingCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-gray-100'}`}
                     >
                        {cat}
                     </button>
@@ -177,7 +177,7 @@ export const Academy: React.FC = () => {
 
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
                  {filteredCourses.map(course => (
-                    <div key={course.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer" onClick={() => setSelectedCourse(course)}>
+                    <div key={course.id} className="group bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer" onClick={() => setSelectedCourse(course)}>
                        <div className="h-48 overflow-hidden relative bg-black">
                           <img src={course.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" alt={course.title} />
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -186,21 +186,21 @@ export const Academy: React.FC = () => {
                              </div>
                           </div>
                           <div className="absolute top-4 left-4 pointer-events-none">
-                             <span className="bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase text-indigo-600 dark:text-brand-primary tracking-widest">{course.category}</span>
+                             <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[9px] font-black uppercase text-indigo-600 tracking-widest">{course.category}</span>
                           </div>
                        </div>
                        <div className="p-8 space-y-4">
                           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
                              <Clock className="w-3.5 h-3.5" /> {course.duration} • <Users className="w-3.5 h-3.5" /> {course.students} alunos
                           </div>
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-brand-primary transition-colors">{course.title}</h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">{course.description}</p>
+                          <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">{course.title}</h3>
+                          <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">{course.description}</p>
                           <div className="pt-4 flex items-center justify-between">
                              <div className="flex items-center gap-1 text-yellow-400">
                                 <Star className="w-4 h-4 fill-current" />
-                                <span className="text-xs font-black text-gray-900 dark:text-white">{course.rating}</span>
+                                <span className="text-xs font-black text-gray-900">{course.rating}</span>
                              </div>
-                             <button className="px-5 py-2.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-brand-primary rounded-xl font-black text-[10px] uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                             <button className="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-black text-[10px] uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                                 Acessar Aula
                              </button>
                           </div>
@@ -215,13 +215,13 @@ export const Academy: React.FC = () => {
            <div className="space-y-8 animate-[fade-in_0.4s_ease-out]">
               <button 
                 onClick={() => setSelectedCourse(null)}
-                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 dark:hover:text-brand-primary transition-colors font-black text-[10px] uppercase tracking-widest px-4"
+                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-black text-[10px] uppercase tracking-widest px-4"
               >
                  <ChevronRight className="w-4 h-4 rotate-180" /> VOLTAR PARA CURSOS
               </button>
 
-              <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-6 md:p-10 border border-gray-100 dark:border-zinc-800 shadow-xl">
-                 <div className="aspect-video w-full rounded-[2rem] overflow-hidden bg-black shadow-2xl mb-10 border border-gray-200 dark:border-zinc-800">
+              <div className="bg-white rounded-[3rem] p-6 md:p-10 border border-gray-100 shadow-xl">
+                 <div className="aspect-video w-full rounded-[2rem] overflow-hidden bg-black shadow-2xl mb-10 border border-gray-200">
                     {selectedCourse.youtubeEmbed ? (
                       <iframe 
                         className="w-full h-full" 
@@ -242,7 +242,7 @@ export const Academy: React.FC = () => {
 
                  <div className="max-w-4xl mx-auto space-y-6">
                     <div className="flex flex-wrap items-center gap-4 mb-2">
-                       <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-brand-primary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-800/30">
+                       <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-indigo-100">
                           {selectedCourse.category}
                        </span>
                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
@@ -253,21 +253,21 @@ export const Academy: React.FC = () => {
                        </div>
                     </div>
                     
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">{selectedCourse.title}</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{selectedCourse.title}</h2>
                     
-                    <div className="flex items-center gap-4 py-4 border-y border-gray-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-4 py-4 border-y border-gray-100">
                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-brand-primary flex items-center justify-center text-white font-black text-lg shadow-lg">
                           {selectedCourse.instructor.charAt(0)}
                        </div>
                        <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Instrutor</p>
-                          <p className="font-bold text-gray-900 dark:text-white">{selectedCourse.instructor}</p>
+                          <p className="font-bold text-gray-900">{selectedCourse.instructor}</p>
                        </div>
                     </div>
 
-                    <div className="prose dark:prose-invert max-w-none">
-                       <h3 className="text-lg font-black uppercase italic tracking-tight text-gray-900 dark:text-white mb-4">Sobre este treinamento</h3>
-                       <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    <div className="prose max-w-none">
+                       <h3 className="text-lg font-black uppercase italic tracking-tight text-gray-900 mb-4">Sobre este treinamento</h3>
+                       <p className="text-slate-600 leading-relaxed font-medium">
                           {selectedCourse.description}
                        </p>
                     </div>
@@ -277,13 +277,13 @@ export const Academy: React.FC = () => {
         )}
 
         {activeTab === 'trilha' && (
-           <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 md:p-16 border border-gray-100 dark:border-zinc-800 shadow-xl space-y-12 px-4 mx-4">
+           <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-12 px-4 mx-4">
               <div className="max-w-2xl">
-                 <h2 className="text-3xl font-black text-gray-900 dark:text-white italic uppercase tracking-tighter mb-4">Seu Caminho para o Topo</h2>
-                 <p className="text-slate-500 dark:text-zinc-400 font-medium">Siga este passo a passo validado para transformar seu pequeno negócio em uma referência regional.</p>
+                 <h2 className="text-3xl font-black text-gray-900 italic uppercase tracking-tighter mb-4">Seu Caminho para o Topo</h2>
+                 <p className="text-slate-500 font-medium">Siga este passo a passo validado para transformar seu pequeno negócio em uma referência regional.</p>
               </div>
 
-              <div className="space-y-8 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-1 before:bg-indigo-50 dark:before:bg-zinc-800">
+              <div className="space-y-8 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-1 before:bg-indigo-50">
                  {[
                     { step: '01', title: 'Fundação Digital', desc: 'Configure sua Bio Digital Pro e seu Catálogo para começar a ser visto.', icon: Smartphone },
                     { step: '02', title: 'Atração de Leads', desc: 'Aprenda a rodar seus primeiros anúncios focados no seu bairro.', icon: Target },
@@ -291,13 +291,13 @@ export const Academy: React.FC = () => {
                     { step: '04', title: 'Escala & Fidelidade', desc: 'Ative o Clube de Vantagens e multiplique suas recomendações.', icon: Zap }
                  ].map((item, idx) => (
                     <div key={idx} className="relative flex gap-8 pl-14 items-start group">
-                       <div className="absolute left-0 w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 border-2 border-indigo-600 dark:border-brand-primary flex items-center justify-center text-indigo-600 dark:text-brand-primary z-10 shadow-lg group-hover:scale-110 transition-transform">
+                       <div className="absolute left-0 w-14 h-14 rounded-2xl bg-white border-2 border-indigo-600 flex items-center justify-center text-indigo-600 z-10 shadow-lg group-hover:scale-110 transition-transform">
                           <item.icon className="w-6 h-6" />
                        </div>
                        <div className="pt-2">
-                          <h4 className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-1">Passo {item.step}</h4>
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-2">{item.title}</h3>
-                          <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed max-w-lg">{item.desc}</p>
+                          <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">Passo {item.step}</h4>
+                          <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight mb-2">{item.title}</h3>
+                          <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-lg">{item.desc}</p>
                        </div>
                     </div>
                  ))}
@@ -325,25 +325,25 @@ export const Academy: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                 <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Agentes de IA</h3>
+                 <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Agentes de IA</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {AI_AGENTS.map(agent => (
-                       <div key={agent.id} className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
+                       <div key={agent.id} className="bg-white rounded-[3rem] p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
                           <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                              <agent.icon className="w-10 h-10" />
                           </div>
                           <div>
-                             <p className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-[0.2em] mb-2">{agent.role}</p>
-                             <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter">{agent.name}</h3>
+                             <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">{agent.role}</p>
+                             <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">{agent.name}</h3>
                           </div>
-                          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed flex-1">
+                          <p className="text-xs text-slate-500 font-medium leading-relaxed flex-1">
                              {agent.description}
                           </p>
                           <a 
                            href={agent.url} 
                            target="_blank"
                            rel="noopener noreferrer"
-                           className="w-full py-4 bg-[#0F172A] dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
+                           className="w-full py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
                           >
                              ABRIR AGENTE <ExternalLink className="w-3.5 h-3.5" />
                           </a>

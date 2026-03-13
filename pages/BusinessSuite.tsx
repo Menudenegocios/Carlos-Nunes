@@ -14,23 +14,22 @@ import { SectionLanding } from '../components/SectionLanding';
 import { Link } from 'react-router-dom';
 
 export const BusinessSuite: React.FC = () => {
-  const { user, realAdmin } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'crm' | 'finance' | 'menuzap_pro'>('home');
 
   if (!user) return null;
 
-  const isAdmin = user.role === 'admin' || realAdmin?.role === 'admin';
-  const isPro = isAdmin || user.plan === 'negocios';
-  const hasAccess = isAdmin || (user.plan !== 'profissionais');
+  const isAdmin = user.role === 'admin';
+  const hasAccess = isAdmin || (user.plan === 'pro' || user.plan === 'full');
 
   if (!hasAccess) {
       return (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-fade-in">
-              <div className="w-24 h-24 bg-brand-primary/10 dark:bg-brand-primary/20 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl border border-brand-primary/20">
+              <div className="w-24 h-24 bg-brand-primary/10 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl border border-brand-primary/20">
                   <Lock className="w-10 h-10 text-brand-primary" />
               </div>
-              <h2 className="text-4xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter mb-4">Módulo de Gestão Business</h2>
-              <p className="text-gray-500 dark:text-zinc-400 max-w-md text-lg font-medium leading-relaxed mb-10">
+              <h2 className="text-4xl font-black text-gray-900 uppercase italic tracking-tighter mb-4">Módulo de Gestão Business</h2>
+              <p className="text-gray-500 max-w-md text-lg font-medium leading-relaxed mb-10">
                   A Central de Negócios (CRM, Financeiro e Agenda) é exclusiva para planos <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
               </p>
               <Link to="/plans" className="bg-[#F67C01] text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
@@ -42,7 +41,7 @@ export const BusinessSuite: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4">
-      <div className="bg-[#0F172A] dark:bg-black rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+      <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
@@ -51,7 +50,7 @@ export const BusinessSuite: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic uppercase">CRM & Vendas</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase">CRM & Vendas</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">O PAINEL DE CONTROLE DO SEU SUCESSO COMERCIAL.</p>
               </div>
@@ -108,17 +107,18 @@ export const BusinessSuite: React.FC = () => {
                 accentColor="brand"
             />
         )}
-        {activeTab === 'crm' && <CRMView userId={user.id} />}
+        {activeTab === 'crm' && <CRMView user_id={user.id} />}
         {/* Fix: Added missing FinanceView component mapping */}
-        {activeTab === 'finance' && <FinanceView userId={user.id} />}
+        {activeTab === 'finance' && <FinanceView user_id={user.id} />}
         {activeTab === 'menuzap_pro' && <MenuzapProView user={user} />}
       </div>
     </div>
   );
 };
 
-const CRMView = ({ userId }: { userId: string }) => {
+const CRMView = ({ user_id }: { user_id: string }) => {
   const [activeSubTab, setActiveSubTab] = useState<'pipeline' | 'clients' | 'followup' | 'reports' | 'quick_messages'>('pipeline');
+  const [activeClientTab, setActiveClientTab] = useState<'dados' | 'config' | 'vitrine' | 'financeiro'>('dados');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,7 +135,7 @@ const CRMView = ({ userId }: { userId: string }) => {
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Lead>>({ name: '', phone: '', source: 'manual', stage: 'new', value: 0, notes: '' });
   const [clientFormData, setClientFormData] = useState<Partial<Client>>({ name: '', phone: '', email: '', company: '', notes: '', tags: [], birthDate: '' });
-  const [taskFormData, setTaskFormData] = useState<Partial<CRMTask>>({ title: '', description: '', dueDate: Date.now() + 86400000, status: 'pending', type: 'call' });
+  const [taskFormData, setTaskFormData] = useState<Partial<CRMTask>>({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' });
   const [quickMessageFormData, setQuickMessageFormData] = useState<Partial<QuickMessageTemplate>>({ title: '', content: '', category: 'primeiro_contato' });
 
   useEffect(() => { 
@@ -147,39 +147,39 @@ const CRMView = ({ userId }: { userId: string }) => {
 
   const loadQuickMessages = async () => {
       try {
-        const data = await supabaseService.getQuickMessages(userId);
+        const data = await supabaseService.getQuickMessages(user_id);
         setQuickMessages(data);
       } catch (e) { console.error(e); }
   };
 
   const loadTasks = async () => {
       try {
-        const data = await supabaseService.getTasks(userId);
+        const data = await supabaseService.getTasks(user_id);
         setTasks(data);
       } catch (e) { console.error(e); }
   };
 
   const loadLeads = async () => { 
       try {
-        const data = await supabaseService.getLeads(userId); 
+        const data = await supabaseService.getLeads(user_id); 
         setLeads(data); 
       } catch (e) { console.error(e); }
   };
 
   const loadClients = async () => {
       try {
-        const data = await supabaseService.getClients(userId);
+        const data = await supabaseService.getClients(user_id);
         setClients(data);
       } catch (e) { console.error(e); }
   };
 
   const handleSaveLead = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
         if (editingLead) await supabaseService.updateLead(editingLead.id, { ...formData });
-        else await supabaseService.addLead({ ...formData, userId } as Lead);
+        else await supabaseService.addLead({ ...formData, user_id } as Lead);
         setIsModalOpen(false);
         await loadLeads();
     } finally { setIsSaving(false); }
@@ -187,11 +187,11 @@ const CRMView = ({ userId }: { userId: string }) => {
 
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
         if (editingClient) await supabaseService.updateClient(editingClient.id, { ...clientFormData });
-        else await supabaseService.addClient({ ...clientFormData, userId } as Client);
+        else await supabaseService.addClient({ ...clientFormData, user_id } as Client);
         setIsClientModalOpen(false);
         await loadClients();
         setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [] });
@@ -200,24 +200,24 @@ const CRMView = ({ userId }: { userId: string }) => {
 
   const handleSaveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
         if (editingTask) await supabaseService.updateTask(editingTask.id, { ...taskFormData });
-        else await supabaseService.addTask({ ...taskFormData, userId } as CRMTask);
+        else await supabaseService.addTask({ ...taskFormData, user_id } as CRMTask);
         setIsTaskModalOpen(false);
         await loadTasks();
-        setTaskFormData({ title: '', description: '', dueDate: Date.now() + 86400000, status: 'pending', type: 'call' });
+        setTaskFormData({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' });
     } finally { setIsSaving(false); }
   };
 
   const handleSaveQuickMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
         if (editingQuickMessage) await supabaseService.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData });
-        else await supabaseService.addQuickMessage({ ...quickMessageFormData, userId } as QuickMessageTemplate);
+        else await supabaseService.addQuickMessage({ ...quickMessageFormData, user_id } as QuickMessageTemplate);
         setIsQuickMessageModalOpen(false);
         await loadQuickMessages();
         setQuickMessageFormData({ title: '', content: '', category: 'primeiro_contato' });
@@ -280,12 +280,12 @@ const CRMView = ({ userId }: { userId: string }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Sub-abas do CRM */}
-      <div className="flex p-1.5 bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 w-fit gap-1 overflow-x-auto scrollbar-hide max-w-full">
-          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>CRM</button>
-          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Carteira (Clientes)</button>
-          <button onClick={() => setActiveSubTab('followup')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'followup' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Follow-up</button>
-          <button onClick={() => setActiveSubTab('quick_messages')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'quick_messages' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Mensagens Rápidas</button>
-          <button onClick={() => setActiveSubTab('reports')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'reports' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Relatórios</button>
+      <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1 overflow-x-auto scrollbar-hide max-w-full">
+          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>CRM</button>
+          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Carteira (Clientes)</button>
+          <button onClick={() => setActiveSubTab('followup')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'followup' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Follow-up</button>
+          <button onClick={() => setActiveSubTab('quick_messages')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'quick_messages' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Mensagens Rápidas</button>
+          <button onClick={() => setActiveSubTab('reports')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'reports' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Relatórios</button>
       </div>
 
       {activeSubTab === 'pipeline' && (
@@ -296,23 +296,23 @@ const CRMView = ({ userId }: { userId: string }) => {
                   <h3 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-3 italic">
                      <span className={`w-3 h-3 rounded-full ${stage.bg} shadow-sm`}></span> {stage.label}
                   </h3>
-                  <span className="bg-white dark:bg-zinc-900 px-4 py-1.5 rounded-full text-[10px] font-black text-slate-400 border border-gray-100 dark:border-zinc-800">
+                  <span className="bg-white px-4 py-1.5 rounded-full text-[10px] font-black text-slate-400 border border-gray-100">
                      {leads.filter(l => l.stage === stage.id).length}
                   </span>
                </div>
-               <div className={`bg-gray-50/50 dark:bg-zinc-900/30 rounded-[3.5rem] p-4 space-y-4 min-h-[550px] border border-gray-100 dark:border-zinc-800 shadow-inner`}>
+               <div className={`bg-gray-50/50 rounded-[3.5rem] p-4 space-y-4 min-h-[550px] border border-gray-100 shadow-inner`}>
                   {leads.filter(l => l.stage === stage.id).map(lead => (
-                     <div key={lead.id} draggable onDragStart={(e) => handleDragStart(e, lead.id)} className={`bg-white dark:bg-zinc-900 p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-zinc-800 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing ${draggedLeadId === lead.id ? 'opacity-40' : ''}`} onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}>
+                     <div key={lead.id} draggable onDragStart={(e) => handleDragStart(e, lead.id)} className={`bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing ${draggedLeadId === lead.id ? 'opacity-40' : ''}`} onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}>
                         <div className="flex justify-between items-start mb-4">
                            <GripVertical className="w-3.5 h-3.5 text-slate-300" />
-                           <span className="text-[9px] font-black bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-lg uppercase">{lead.source}</span>
+                           <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg uppercase">{lead.source}</span>
                         </div>
-                        <h4 className="font-black text-gray-900 dark:text-white text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
+                        <h4 className="font-black text-gray-900 text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
                         <p className="text-[11px] font-bold text-slate-400 uppercase">{lead.phone}</p>
                         {Number(lead.value) > 0 && <p className="mt-4 text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p>}
                      </div>
                   ))}
-                  <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }} className="w-full py-5 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
+                  <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
                      <Plus className="w-4 h-4" /> Novo lead
                   </button>
                </div>
@@ -322,9 +322,9 @@ const CRMView = ({ userId }: { userId: string }) => {
       )}
 
       {activeSubTab === 'clients' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
            <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Carteira de Clientes</h3>
+              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Carteira de Clientes</h3>
               <button onClick={() => { setEditingClient(null); setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [], birthDate: '' }); setIsClientModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
                 <Plus className="w-4 h-4" /> NOVO CLIENTE
               </button>
@@ -332,18 +332,18 @@ const CRMView = ({ userId }: { userId: string }) => {
 
            <div className="space-y-4">
               {clients.length > 0 ? clients.map(client => (
-                 <div key={client.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all">
+                 <div key={client.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all">
                     <div className="flex items-center gap-6">
-                       <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center shadow-sm">
+                       <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
                           <User className="w-6 h-6" />
                        </div>
                        <div>
-                          <h4 className="font-black text-gray-900 dark:text-white text-base tracking-tight">{client.name}</h4>
+                          <h4 className="font-black text-gray-900 text-base tracking-tight">{client.name}</h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{client.company || 'Particular'} • {client.phone}</p>
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                       {client.email && <span className="hidden md:inline-block text-[10px] font-bold text-slate-400 bg-white dark:bg-zinc-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-zinc-800">{client.email}</span>}
+                       {client.email && <span className="hidden md:inline-block text-[10px] font-bold text-slate-400 bg-white px-3 py-1 rounded-lg border border-gray-100">{client.email}</span>}
                        <button onClick={() => { setEditingClient(client); setClientFormData(client); setIsClientModalOpen(true); }} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors">
                           Editar
                        </button>
@@ -363,25 +363,25 @@ const CRMView = ({ userId }: { userId: string }) => {
       )}
 
       {activeSubTab === 'followup' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
            <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Follow-up</h3>
-              <button onClick={() => { setEditingTask(null); setTaskFormData({ title: '', description: '', dueDate: Date.now() + 86400000, status: 'pending', type: 'call' }); setIsTaskModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Follow-up</h3>
+              <button onClick={() => { setEditingTask(null); setTaskFormData({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' }); setIsTaskModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
                 <Plus className="w-4 h-4" /> NOVO CONTATO
               </button>
            </div>
            <div className="space-y-4">
               {tasks.filter(t => ['call', 'meeting', 'email', 'whatsapp'].includes(t.type)).length > 0 ? tasks.filter(t => ['call', 'meeting', 'email', 'whatsapp'].includes(t.type)).map(task => (
-                 <div key={task.id} className={`p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border ${task.status === 'completed' ? 'border-emerald-500/30 opacity-60' : 'border-gray-100 dark:border-zinc-800'} flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all`}>
+                 <div key={task.id} className={`p-6 bg-gray-50 rounded-[2rem] border ${task.status === 'completed' ? 'border-emerald-500/30 opacity-60' : 'border-gray-100'} flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all`}>
                     <div className="flex items-center gap-6">
                        <button onClick={() => handleToggleTaskStatus(task)} className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-500'}`}>
                           {task.status === 'completed' && <CheckCircle className="w-5 h-5" />}
                        </button>
                        <div>
-                          <h4 className={`font-black text-base tracking-tight ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-gray-900 dark:text-white'}`}>{task.title}</h4>
+                          <h4 className={`font-black text-base tracking-tight ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-gray-900'}`}>{task.title}</h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                             {new Date(task.dueDate).toLocaleDateString('pt-BR')} • {task.type.toUpperCase()}
-                             {task.relatedTo && ` • ${task.relatedTo.name}`}
+                             {new Date(task.due_date).toLocaleDateString('pt-BR')} • {task.type.toUpperCase()}
+                             {task.related_to && ` • ${task.related_to.name}`}
                           </p>
                        </div>
                     </div>
@@ -405,53 +405,53 @@ const CRMView = ({ userId }: { userId: string }) => {
       )}
 
       {activeSubTab === 'reports' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
            <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Relatórios Comerciais</h3>
+              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Relatórios Comerciais</h3>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2rem] border border-gray-100 dark:border-zinc-800">
-                 <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mb-4">
+              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
                     <Briefcase className="w-6 h-6 text-blue-500" />
                  </div>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total de Leads</p>
-                 <h4 className="text-3xl font-black text-gray-900 dark:text-white">{leads.length}</h4>
+                 <h4 className="text-3xl font-black text-gray-900">{leads.length}</h4>
               </div>
               
-              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2rem] border border-gray-100 dark:border-zinc-800">
-                 <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center mb-4">
+              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+                 <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
                     <User className="w-6 h-6 text-emerald-500" />
                  </div>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Clientes Convertidos</p>
-                 <h4 className="text-3xl font-black text-gray-900 dark:text-white">{clients.length}</h4>
+                 <h4 className="text-3xl font-black text-gray-900">{clients.length}</h4>
               </div>
               
-              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2rem] border border-gray-100 dark:border-zinc-800">
-                 <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center mb-4">
+              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+                 <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4">
                     <DollarSign className="w-6 h-6 text-[#F67C01]" />
                  </div>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor no Funil</p>
-                 <h4 className="text-3xl font-black text-gray-900 dark:text-white">
+                 <h4 className="text-3xl font-black text-gray-900">
                     R$ {leads.filter(l => l.stage !== 'lost' && l.stage !== 'closed').reduce((acc, l) => acc + (Number(l.value) || 0), 0).toFixed(2)}
                  </h4>
               </div>
               
-              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2rem] border border-gray-100 dark:border-zinc-800">
-                 <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center mb-4">
+              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
+                 <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4">
                     <CheckCircle className="w-6 h-6 text-purple-500" />
                  </div>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarefas Pendentes</p>
-                 <h4 className="text-3xl font-black text-gray-900 dark:text-white">{tasks.filter(t => t.status === 'pending').length}</h4>
+                 <h4 className="text-3xl font-black text-gray-900">{tasks.filter(t => t.status === 'pending').length}</h4>
               </div>
            </div>
         </div>
       )}
 
       {activeSubTab === 'quick_messages' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
            <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Mensagens Rápidas</h3>
+              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Mensagens Rápidas</h3>
               <div className="flex gap-3">
                  <a href="https://www.notion.so/16c055f18fde8002b658ea22e1bbf29a?v=16c055f18fde81eca778000ce9f09c73" target="_blank" rel="noopener noreferrer" className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2">
                    <ExternalLink className="w-4 h-4" /> SCRIPTS DE ALTA CONVERSÃO
@@ -464,15 +464,15 @@ const CRMView = ({ userId }: { userId: string }) => {
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {quickMessages.length > 0 ? quickMessages.map(msg => (
-                 <div key={msg.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex flex-col justify-between gap-4 group hover:bg-white transition-all">
+                 <div key={msg.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col justify-between gap-4 group hover:bg-white transition-all">
                     <div>
                         <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-black text-gray-900 dark:text-white text-base tracking-tight">{msg.title}</h4>
-                            <span className="text-[9px] font-black bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-lg uppercase">{msg.category.replace('_', ' ')}</span>
+                            <h4 className="font-black text-gray-900 text-base tracking-tight">{msg.title}</h4>
+                            <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg uppercase">{msg.category.replace('_', ' ')}</span>
                         </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3">{msg.content}</p>
+                        <p className="text-sm text-slate-500 line-clamp-3">{msg.content}</p>
                     </div>
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
                        <button onClick={() => {
                            const text = encodeURIComponent(msg.content);
                            window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -501,7 +501,7 @@ const CRMView = ({ userId }: { userId: string }) => {
 
       {isModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingLead ? 'Detalhes do Lead' : 'Capturar Lead'}</h3></div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -510,15 +510,15 @@ const CRMView = ({ userId }: { userId: string }) => {
                     <div className="grid grid-cols-2 gap-6">
                        <div className="col-span-2">
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Negócio</label>
-                          <input type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
+                          <input type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
                        </div>
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
@@ -531,53 +531,144 @@ const CRMView = ({ userId }: { userId: string }) => {
 
       {isClientModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[90vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h3></div>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">
+                        {editingClient ? editingClient.name : 'Novo Cliente'}
+                      </h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Gestão de Unidade de Negócio</p>
+                    </div>
                     <button onClick={() => setIsClientModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
-                <form onSubmit={handleSaveClient} className="p-10 space-y-6 overflow-y-auto scrollbar-hide flex-1">
-                    <div className="space-y-6">
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={clientFormData.name} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} />
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
-                             <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={clientFormData.phone} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
+
+                {/* Tabs for Client Detail */}
+                <div className="flex bg-gray-50 p-2 gap-2">
+                  {[
+                    { id: 'dados', label: 'Dados' },
+                    { id: 'config', label: 'Config' },
+                    { id: 'vitrine', label: 'Vitrine' },
+                    { id: 'financeiro', label: 'Financeiro' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveClientTab(tab.id as any)}
+                      className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                        activeClientTab === tab.id 
+                        ? 'bg-white text-indigo-600 shadow-sm' 
+                        : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex-1 overflow-y-auto scrollbar-hide p-10">
+                  {activeClientTab === 'dados' && (
+                    <form onSubmit={handleSaveClient} className="space-y-6">
+                        <div className="space-y-6">
+                           <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
+                              <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.name} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} />
+                           </div>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
+                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Empresa (Opcional)</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.company} onChange={e => setClientFormData({...clientFormData, company: e.target.value})} />
+                              </div>
+                           </div>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email (Opcional)</label>
+                                 <input type="email" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.email} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data de Aniversário (Opcional)</label>
+                                 <input type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.birthDate || ''} onChange={e => setClientFormData({...clientFormData, birthDate: e.target.value})} />
+                              </div>
+                           </div>
+                           <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Anotações</label>
+                              <textarea className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-24 resize-none" value={clientFormData.notes} onChange={e => setClientFormData({...clientFormData, notes: e.target.value})}></textarea>
+                           </div>
+                        </div>
+                        <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Dados'}
+                        </button>
+                    </form>
+                  )}
+
+                  {activeClientTab === 'config' && (
+                    <div className="space-y-8 animate-fade-in">
+                       <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
+                          <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Permissões e Acessos</h4>
+                          <p className="text-xs text-slate-500 mb-6">Configure o nível de acesso deste cliente à plataforma e integrações.</p>
+                          <div className="space-y-4">
+                             {['Acesso à Vitrine', 'Receber Notificações', 'Sincronizar Financeiro'].map((item, i) => (
+                               <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl">
+                                  <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">{item}</span>
+                                  <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
+                                     <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                                  </div>
+                               </div>
+                             ))}
                           </div>
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Empresa (Opcional)</label>
-                             <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={clientFormData.company} onChange={e => setClientFormData({...clientFormData, company: e.target.value})} />
-                          </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email (Opcional)</label>
-                             <input type="email" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={clientFormData.email} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />
-                          </div>
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data de Aniversário (Opcional)</label>
-                             <input type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={clientFormData.birthDate || ''} onChange={e => setClientFormData({...clientFormData, birthDate: e.target.value})} />
-                          </div>
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Anotações</label>
-                          <textarea className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white h-24 resize-none" value={clientFormData.notes} onChange={e => setClientFormData({...clientFormData, notes: e.target.value})}></textarea>
                        </div>
                     </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Cliente'}
-                    </button>
-                </form>
+                  )}
+
+                  {activeClientTab === 'vitrine' && (
+                    <div className="space-y-8 animate-fade-in">
+                       <div className="text-center py-12 bg-gray-50 rounded-[2.5rem] border border-gray-100">
+                          <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                             <LayoutGrid className="w-8 h-8 text-indigo-500" />
+                          </div>
+                          <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight mb-2">Página na Vitrine</h4>
+                          <p className="text-xs text-slate-400 max-w-xs mx-auto mb-8">Este cliente possuí uma página pública indexada em nosso marketplace de negócios.</p>
+                          <button className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all">
+                             VER PÁGINA PÚBLICA
+                          </button>
+                       </div>
+                    </div>
+                  )}
+
+                  {activeClientTab === 'financeiro' && (
+                    <div className="space-y-8 animate-fade-in">
+                       <div className="grid grid-cols-1 gap-4">
+                          {[
+                            { label: 'Total Recebido', value: 'R$ 12.450,00', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                            { label: 'Pendente', value: 'R$ 3.200,00', icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' },
+                            { label: 'Disponível', value: 'R$ 8.120,00', icon: DollarSign, color: 'text-blue-500', bg: 'bg-blue-50' }
+                          ].map((item, i) => (
+                            <div key={i} className={`${item.bg} p-8 rounded-[2.5rem] border border-white/10 flex items-center justify-between`}>
+                               <div>
+                                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{item.label}</p>
+                                  <h4 className={`text-3xl font-black ${item.color} tracking-tighter italic`}>{item.value}</h4>
+                               </div>
+                               <item.icon className={`w-8 h-8 ${item.color} opacity-30`} />
+                            </div>
+                          ))}
+                       </div>
+                       <div className="pt-6 border-t border-gray-100">
+                          <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-indigo-500 hover:text-indigo-500 transition-all">
+                            VER EXTRATO COMPLETO
+                          </button>
+                       </div>
+                    </div>
+                  )}
+                </div>
             </div>
          </div>
       )}
 
       {isTaskModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}</h3></div>
                     <button onClick={() => setIsTaskModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -586,16 +677,16 @@ const CRMView = ({ userId }: { userId: string }) => {
                     <div className="space-y-6">
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Tarefa</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={taskFormData.title} onChange={e => setTaskFormData({...taskFormData, title: e.target.value})} />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={taskFormData.title} onChange={e => setTaskFormData({...taskFormData, title: e.target.value})} />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data de Vencimento</label>
-                             <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={new Date(taskFormData.dueDate || Date.now()).toISOString().split('T')[0]} onChange={e => setTaskFormData({...taskFormData, dueDate: new Date(e.target.value).getTime()})} />
+                             <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={new Date(taskFormData.due_date || Date.now()).toISOString().split('T')[0]} onChange={e => setTaskFormData({...taskFormData, due_date: new Date(e.target.value).getTime()})} />
                           </div>
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo</label>
-                             <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={taskFormData.type} onChange={e => setTaskFormData({...taskFormData, type: e.target.value as any})}>
+                             <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={taskFormData.type} onChange={e => setTaskFormData({...taskFormData, type: e.target.value as any})}>
                                 <option value="call">Ligação</option>
                                 <option value="whatsapp">WhatsApp</option>
                                 <option value="email">E-mail</option>
@@ -607,14 +698,14 @@ const CRMView = ({ userId }: { userId: string }) => {
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Relacionado a (Opcional)</label>
                           <select 
-                            className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" 
-                            value={taskFormData.relatedTo ? `${taskFormData.relatedTo.type}:${taskFormData.relatedTo.id}` : ''} 
+                            className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" 
+                            value={taskFormData.related_to ? `${taskFormData.related_to.type}:${taskFormData.related_to.id}` : ''} 
                             onChange={e => {
                                const val = e.target.value;
-                               if (!val) { setTaskFormData({...taskFormData, relatedTo: undefined}); return; }
+                               if (!val) { setTaskFormData({...taskFormData, related_to: undefined}); return; }
                                const [type, id] = val.split(':');
                                const name = type === 'lead' ? leads.find(l => l.id === id)?.name : clients.find(c => c.id === id)?.name;
-                               if (name) setTaskFormData({...taskFormData, relatedTo: { type: type as any, id, name }});
+                               if (name) setTaskFormData({...taskFormData, related_to: { type: type as any, id, name }});
                             }}
                           >
                              <option value="">Nenhum</option>
@@ -628,7 +719,7 @@ const CRMView = ({ userId }: { userId: string }) => {
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição</label>
-                          <textarea className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white h-24 resize-none" value={taskFormData.description} onChange={e => setTaskFormData({...taskFormData, description: e.target.value})}></textarea>
+                          <textarea className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-24 resize-none" value={taskFormData.description} onChange={e => setTaskFormData({...taskFormData, description: e.target.value})}></textarea>
                        </div>
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
@@ -641,7 +732,7 @@ const CRMView = ({ userId }: { userId: string }) => {
 
       {isQuickMessageModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingQuickMessage ? 'Editar Mensagem' : 'Nova Mensagem'}</h3></div>
                     <button onClick={() => setIsQuickMessageModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -650,11 +741,11 @@ const CRMView = ({ userId }: { userId: string }) => {
                     <div className="space-y-6">
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título (Para você identificar)</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={quickMessageFormData.title} onChange={e => setQuickMessageFormData({...quickMessageFormData, title: e.target.value})} placeholder="Ex: Follow-up de Apresentação" />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={quickMessageFormData.title} onChange={e => setQuickMessageFormData({...quickMessageFormData, title: e.target.value})} placeholder="Ex: Follow-up de Apresentação" />
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                          <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={quickMessageFormData.category} onChange={e => setQuickMessageFormData({...quickMessageFormData, category: e.target.value as any})}>
+                          <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={quickMessageFormData.category} onChange={e => setQuickMessageFormData({...quickMessageFormData, category: e.target.value as any})}>
                              <option value="primeiro_contato">Primeiro Contato</option>
                              <option value="apos_proposta">Após Proposta</option>
                              <option value="lembrete_decisao">Lembrete de Decisão</option>
@@ -665,7 +756,7 @@ const CRMView = ({ userId }: { userId: string }) => {
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Mensagem</label>
-                          <textarea required className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white h-40 resize-none" value={quickMessageFormData.content} onChange={e => setQuickMessageFormData({...quickMessageFormData, content: e.target.value})} placeholder="Digite a mensagem aqui..."></textarea>
+                          <textarea required className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-40 resize-none" value={quickMessageFormData.content} onChange={e => setQuickMessageFormData({...quickMessageFormData, content: e.target.value})} placeholder="Digite a mensagem aqui..."></textarea>
                           <p className="text-[9px] text-slate-400 mt-2 italic px-2">Dica: Você pode usar [Nome do Cliente] ou [Meu Negócio] para se organizar.</p>
                        </div>
                     </div>
@@ -681,7 +772,7 @@ const CRMView = ({ userId }: { userId: string }) => {
 };
 
 // Fix: Added missing FinanceView component
-const FinanceView = ({ userId }: { userId: string }) => {
+const FinanceView = ({ user_id }: { user_id: string }) => {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -692,26 +783,26 @@ const FinanceView = ({ userId }: { userId: string }) => {
     type: 'income', 
     date: new Date().toISOString().split('T')[0], 
     category: 'Geral',
-    entityType: 'personal'
+    entity_type: 'personal'
   });
 
   useEffect(() => { loadEntries(); }, []);
   const loadEntries = async () => {
     try {
-      const data = await supabaseService.getFinancialEntries(userId);
+      const data = await supabaseService.getFinancialEntries(user_id);
       setEntries(data);
     } catch (e) { console.error(e); }
   };
 
   const handleSaveEntry = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
-      await supabaseService.addFinancialEntry({ ...formData, userId } as FinancialEntry);
+      await supabaseService.addFinancialEntry({ ...formData, user_id } as FinancialEntry);
       setIsModalOpen(false);
       await loadEntries();
-      setFormData({ description: '', value: 0, type: 'income', date: new Date().toISOString().split('T')[0], category: 'Geral', entityType: 'personal' });
+      setFormData({ description: '', value: 0, type: 'income', date: new Date().toISOString().split('T')[0], category: 'Geral', entity_type: 'personal' });
     } finally { setIsSaving(false); }
   };
 
@@ -721,7 +812,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
     await loadEntries();
   };
 
-  const filteredEntries = entries.filter(e => e.entityType === entityFilter);
+  const filteredEntries = entries.filter(e => e.entity_type === entityFilter);
   const totalIncome = filteredEntries.filter(e => e.type === 'income').reduce((acc, curr) => acc + curr.value, 0);
   const totalExpense = filteredEntries.filter(e => e.type === 'expense').reduce((acc, curr) => acc + curr.value, 0);
   const balance = totalIncome - totalExpense;
@@ -729,27 +820,27 @@ const FinanceView = ({ userId }: { userId: string }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Filtro de Entidade */}
-      <div className="flex p-1.5 bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 w-fit gap-1">
-          <button onClick={() => setEntityFilter('personal')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'personal' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Pessoa Física</button>
-          <button onClick={() => setEntityFilter('business')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'business' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>Empresa</button>
+      <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1">
+          <button onClick={() => setEntityFilter('personal')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'personal' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Pessoa Física</button>
+          <button onClick={() => setEntityFilter('business')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'business' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Empresa</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Entradas ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
            <div className="flex items-center justify-between">
               <h4 className="text-3xl font-black text-emerald-600 tracking-tighter">R$ {totalIncome.toFixed(2)}</h4>
               <ArrowUpCircle className="w-8 h-8 text-emerald-500" />
            </div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Saídas ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
            <div className="flex items-center justify-between">
               <h4 className="text-3xl font-black text-rose-600 tracking-tighter">R$ {totalExpense.toFixed(2)}</h4>
               <ArrowDownCircle className="w-8 h-8 text-rose-500" />
            </div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Saldo Atual ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
            <div className="flex items-center justify-between">
               <h4 className={`text-3xl font-black tracking-tighter ${balance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>R$ {balance.toFixed(2)}</h4>
@@ -758,9 +849,9 @@ const FinanceView = ({ userId }: { userId: string }) => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+      <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
         <div className="flex justify-between items-center">
-           <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Fluxo de Caixa ({entityFilter === 'personal' ? 'Pessoa Física' : 'Empresa'})</h3>
+           <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Fluxo de Caixa ({entityFilter === 'personal' ? 'Pessoa Física' : 'Empresa'})</h3>
            <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
              <Plus className="w-4 h-4" /> NOVO LANÇAMENTO
            </button>
@@ -768,13 +859,13 @@ const FinanceView = ({ userId }: { userId: string }) => {
 
         <div className="space-y-4">
            {filteredEntries.length > 0 ? filteredEntries.map(entry => (
-              <div key={entry.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all">
+              <div key={entry.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center justify-between group hover:bg-white transition-all">
                  <div className="flex items-center gap-6">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${entry.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                        {entry.type === 'income' ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
                     </div>
                     <div>
-                       <h4 className="font-black text-gray-900 dark:text-white text-base tracking-tight">{entry.description}</h4>
+                       <h4 className="font-black text-gray-900 text-base tracking-tight">{entry.description}</h4>
                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{entry.category} • {new Date(entry.date).toLocaleDateString('pt-BR')}</p>
                     </div>
                  </div>
@@ -798,7 +889,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
 
       {isModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-y-auto max-h-[80vh] border border-white/5 animate-scale-in">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-y-auto max-h-[80vh] border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">Financeiro</h3></div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -807,16 +898,16 @@ const FinanceView = ({ userId }: { userId: string }) => {
                     <div className="space-y-6">
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Pagamento Consultoria" />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Ex: Pagamento Consultoria" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor (R$)</label>
-                             <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
+                             <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
                           </div>
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo</label>
-                             <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})}>
+                             <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})}>
                                 <option value="income">Receita (+)</option>
                                 <option value="expense">Despesa (-)</option>
                              </select>
@@ -825,16 +916,16 @@ const FinanceView = ({ userId }: { userId: string }) => {
                        <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data</label>
-                             <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                             <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
                           </div>
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                             <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Serviços" />
+                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Serviços" />
                           </div>
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Entidade</label>
-                          <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.entityType} onChange={e => setFormData({...formData, entityType: e.target.value as any})}>
+                          <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.entity_type} onChange={e => setFormData({...formData, entity_type: e.target.value as any})}>
                              <option value="personal">Pessoa Física</option>
                              <option value="business">Empresa</option>
                           </select>
@@ -852,7 +943,7 @@ const FinanceView = ({ userId }: { userId: string }) => {
 };
 
 // Fix: Added missing ScheduleView component
-const ScheduleView = ({ userId }: { userId: string }) => {
+const ScheduleView = ({ user_id }: { user_id: string }) => {
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -868,17 +959,17 @@ const ScheduleView = ({ userId }: { userId: string }) => {
   useEffect(() => { loadSchedule(); }, []);
   const loadSchedule = async () => {
     try {
-      const data = await supabaseService.getSchedule(userId);
+      const data = await supabaseService.getSchedule(user_id);
       setItems(data);
     } catch (e) { console.error(e); }
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
+    if (!user_id) return;
     setIsSaving(true);
     try {
-      await supabaseService.addScheduleItem({ ...formData, userId } as ScheduleItem);
+      await supabaseService.addScheduleItem({ ...formData, user_id } as ScheduleItem);
       setIsModalOpen(false);
       await loadSchedule();
       setFormData({ title: '', client: '', date: new Date().toISOString().split('T')[0], time: '09:00', type: 'servico', status: 'pending' });
@@ -893,9 +984,9 @@ const ScheduleView = ({ userId }: { userId: string }) => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-       <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+       <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
           <div className="flex justify-between items-center">
-             <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-3">
+             <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-3">
                 <CalendarDays className="text-indigo-600" /> Agenda de Serviços
              </h3>
              <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
@@ -905,14 +996,14 @@ const ScheduleView = ({ userId }: { userId: string }) => {
 
           <div className="grid gap-4">
              {items.length > 0 ? items.map(item => (
-                <div key={item.id} className="p-8 bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all">
+                <div key={item.id} className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all">
                    <div className="flex items-center gap-8">
-                      <div className="flex flex-col items-center justify-center w-20 h-20 bg-white dark:bg-zinc-900 rounded-[1.8rem] shadow-sm border border-indigo-50 dark:border-indigo-900">
+                      <div className="flex flex-col items-center justify-center w-20 h-20 bg-white rounded-[1.8rem] shadow-sm border border-indigo-50">
                          <span className="text-[10px] font-black text-indigo-400 uppercase">{new Date(item.date).toLocaleDateString('pt-BR', { month: 'short' })}</span>
-                         <span className="text-2xl font-black text-gray-900 dark:text-white">{new Date(item.date).getDate()}</span>
+                         <span className="text-2xl font-black text-gray-900">{new Date(item.date).getDate()}</span>
                       </div>
                       <div>
-                         <h4 className="font-black text-gray-900 dark:text-white text-xl tracking-tight leading-none mb-2">{item.title}</h4>
+                         <h4 className="font-black text-gray-900 text-xl tracking-tight leading-none mb-2">{item.title}</h4>
                          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> {item.client}</span>
                             <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {item.time}</span>
@@ -942,7 +1033,7 @@ const ScheduleView = ({ userId }: { userId: string }) => {
 
        {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">Agendamento</h3></div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -951,25 +1042,25 @@ const ScheduleView = ({ userId }: { userId: string }) => {
                     <div className="space-y-6">
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título do Compromisso</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Entrega de Pedido" />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Entrega de Pedido" />
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome do Cliente</label>
-                          <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
+                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data</label>
-                             <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                             <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
                           </div>
                           <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horário</label>
-                             <input required type="time" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} />
+                             <input required type="time" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} />
                           </div>
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo de Serviço</label>
-                          <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})}>
+                          <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as any})}>
                              <option value="servico">Execução de Serviço</option>
                              <option value="visita">Visita Técnica</option>
                              <option value="reuniao">Reunião / Café</option>
@@ -1052,16 +1143,16 @@ const MenuzapProView = ({ user }: { user: any }) => {
                         instruction: 'Mova cards, crie agendamentos e gerencie seu caixa sem sair da conversa.'
                     }
                 ].map((item, i) => (
-                    <div key={i} className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-sm space-y-6 group hover:border-orange-500/30 transition-all">
-                        <div className="w-14 h-14 bg-orange-50 dark:bg-orange-950/30 rounded-2xl flex items-center justify-center text-[#F67C01] font-black text-xl italic">
+                    <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-6 group hover:border-orange-500/30 transition-all">
+                        <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-[#F67C01] font-black text-xl italic">
                             {item.step}
                         </div>
-                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">
+                        <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">
                             <item.icon className="w-5 h-5 inline-block mr-2 mb-1 text-[#F67C01]" />
                             {item.title}
                         </h4>
-                        <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">{item.desc}</p>
-                        <div className="pt-4 border-t border-gray-50 dark:border-zinc-800">
+                        <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                        <div className="pt-4 border-t border-gray-50">
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
                                 {item.instruction}
                             </p>

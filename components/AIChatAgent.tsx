@@ -61,7 +61,7 @@ export const AIChatAgent: React.FC = () => {
           onClick={() => setIsOpen(true)}
           className="w-16 h-16 bg-brand-primary text-white rounded-full shadow-[0_10px_40px_-10px_rgba(246,124,1,0.5)] flex items-center justify-center hover:scale-110 transition-all group relative active:scale-95"
         >
-          <div className="absolute -top-2 -left-2 bg-white dark:bg-zinc-900 p-1.5 rounded-xl shadow-lg border border-brand-primary/20 animate-bounce">
+          <div className="absolute -top-2 -left-2 bg-white p-1.5 rounded-xl shadow-lg border border-brand-primary/20 animate-bounce">
             <Sparkles className="w-3 h-3 text-brand-primary" />
           </div>
           <MessageCircle className="w-8 h-8 group-hover:rotate-12 transition-transform" />
@@ -70,7 +70,7 @@ export const AIChatAgent: React.FC = () => {
 
       {/* Janela de Chat */}
       {isOpen && (
-        <div className="bg-white dark:bg-zinc-900 w-[380px] h-[550px] rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-zinc-800 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white w-[380px] h-[550px] rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           
           {/* Header */}
           <div className="bg-gradient-to-r from-brand-primary to-orange-600 p-6 flex items-center justify-between text-white">
@@ -95,21 +95,21 @@ export const AIChatAgent: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-brand-surface/30 dark:bg-black/20 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-brand-surface/30 scrollbar-hide">
             {messages.map((m, idx) => (
               <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex gap-2 max-w-[85%] ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
                   <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center shadow-sm ${
-                    m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 text-brand-primary'
+                    m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white text-brand-primary'
                   }`}>
                     {m.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                   </div>
                   <div className={`p-4 rounded-[1.4rem] text-sm font-medium leading-relaxed shadow-sm ${
                     m.role === 'user' 
                       ? 'bg-indigo-600 text-white rounded-tr-none' 
-                      : 'bg-white dark:bg-zinc-800 dark:text-zinc-200 rounded-tl-none border border-gray-100 dark:border-zinc-700 text-gray-800'
+                      : 'bg-white rounded-tl-none border border-gray-100 text-gray-800'
                   }`}>
-                    <div className="prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-a:text-brand-primary">
+                    <div className="prose prose-sm prose-p:leading-relaxed prose-a:text-brand-primary">
                       <ReactMarkdown>{m.content}</ReactMarkdown>
                     </div>
                   </div>
@@ -119,10 +119,10 @@ export const AIChatAgent: React.FC = () => {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[85%]">
-                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-800 text-brand-primary flex items-center justify-center shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-white text-brand-primary flex items-center justify-center shadow-sm">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   </div>
-                  <div className="bg-white dark:bg-zinc-800 p-3 rounded-[1.4rem] rounded-tl-none border border-gray-100 dark:border-zinc-700">
+                  <div className="bg-white p-3 rounded-[1.4rem] rounded-tl-none border border-gray-100">
                     <div className="flex gap-1">
                       <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
                       <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce delay-75"></div>
@@ -136,14 +136,14 @@ export const AIChatAgent: React.FC = () => {
           </div>
 
           {/* Input */}
-          <div className="p-5 bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-zinc-800">
+          <div className="p-5 bg-white border-t border-gray-100">
             <form onSubmit={handleSend} className="relative flex items-center">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Pergunte sobre planos, Bio ou Catálogo..."
-                className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl py-4 pl-5 pr-14 text-sm font-bold focus:ring-2 focus:ring-brand-primary/20 dark:text-white transition-all outline-none"
+                className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-5 pr-14 text-sm font-bold focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
               />
               <button 
                 type="submit"

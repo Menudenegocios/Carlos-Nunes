@@ -34,8 +34,8 @@ export const Home: React.FC = () => {
 
       // Get 3 most recent posts
       const sortedPosts = posts.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return dateB - dateA;
       }).slice(0, 3);
       setRecentPosts(sortedPosts);
@@ -45,7 +45,10 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col bg-brand-surface dark:bg-brand-dark transition-colors duration-500">
+    <div 
+      className="flex flex-col transition-colors duration-500"
+      style={{ backgroundColor: 'var(--bg-main)' }}
+    >
       
       {/* 1. HERO SECTION */}
       <section className="relative pt-20 pb-20 overflow-hidden">
@@ -56,41 +59,41 @@ export const Home: React.FC = () => {
 
         <div className="max-w-5xl mx-auto px-6 relative z-10 text-center">
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100 dark:border-slate-700">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100">
                 <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
             </div>
-            <h1 className="text-5xl md:text-7xl font-black text-brand-dark dark:text-white tracking-tighter leading-[0.9]">
-              A Plataforma <span className="text-brand-primary italic">All-in-One</span> para conectar, gerenciar e escalar o seu negócio.
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
+              A Plataforma <span className="text-brand-primary italic">All-in-One</span> <br className="hidden md:block"/> para conectar, gerenciar e escalar o seu negócio.
             </h1>
-            <p className="text-xl text-slate-500 dark:text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Abandone as planilhas e dezenas de aplicativos. Tenha sua vitrine digital, CRM, agenda, controle financeiro e networking B2B em um único ecossistema.
             </p>
             
             {/* Smart Search Bar */}
             <div className="max-w-4xl mx-auto pt-8">
-                <div className="bg-white dark:bg-zinc-900 p-3 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] dark:shadow-none border border-gray-100 dark:border-zinc-800 flex flex-col md:flex-row gap-2 ring-8 ring-brand-primary/5">
+                <div className="bg-white p-3 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col md:flex-row gap-2 ring-8 ring-brand-primary/5">
                     <div className="flex-1 relative flex items-center px-6">
                         <Search className="w-6 h-6 text-brand-primary absolute left-8" />
                         <input 
                             type="text" 
                             placeholder="O que você precisa hoje? (Ex: Pizzaria, Mentor...)" 
-                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark dark:text-white focus:ring-0 placeholder:text-gray-400 outline-none"
+                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
                             value={filters.search}
                             onChange={(e) => setFilters({...filters, search: e.target.value})}
                         />
                     </div>
-                    <div className="w-px h-10 bg-gray-100 dark:bg-slate-800 hidden md:block self-center"></div>
+                    <div className="w-px h-10 bg-gray-100 hidden md:block self-center"></div>
                     <div className="flex-1 relative flex items-center px-6">
                         <MapPin className="w-6 h-6 text-indigo-600 absolute left-8" />
                         <input 
                             type="text" 
                             placeholder="Sua Cidade ou Região" 
-                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark dark:text-white focus:ring-0 placeholder:text-gray-400 outline-none"
+                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
                             value={filters.city}
                             onChange={(e) => setFilters({...filters, city: e.target.value})}
                         />
                     </div>
-                    <button className="bg-brand-dark dark:bg-brand-primary text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl active:scale-95">
+                    <button className="bg-brand-dark text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl active:scale-95">
                         EXPLORAR
                     </button>
                 </div>
@@ -101,32 +104,32 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 2. FERRAMENTAS */}
-      <section className="py-24 bg-white dark:bg-zinc-900 border-y border-gray-100 dark:border-zinc-800">
+      <section className="py-24 bg-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
               Ferramentas para <span className="text-brand-primary">impulsionar</span> o seu negócio
             </h2>
-            <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-lg text-slate-500 font-medium">
               Tudo o que você precisa para atrair clientes, organizar sua rotina e vender mais, sem complicação.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: Store, title: 'Vitrine Digital', desc: 'Seu site profissional pronto em minutos. Exponha produtos, serviços e receba pedidos diretamente no seu WhatsApp.', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-              { icon: Users, title: 'CRM de Clientes', desc: 'Acompanhe cada negociação. Saiba exatamente quem são seus clientes, o histórico de compras e não perca nenhuma venda.', color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-              { icon: Calendar, title: 'Agenda Inteligente', desc: 'Organize seus horários e compromissos. Permita que seus clientes agendem serviços diretamente pela sua vitrine.', color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-              { icon: Briefcase, title: 'Marketplace B2B', desc: 'Conecte-se com outros empreendedores. Encontre fornecedores, parceiros de negócios e novas oportunidades na sua região.', color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-              { icon: Award, title: 'Programa de Recompensas', desc: 'Ganhe Menu Cash ao indicar a plataforma ou fechar negócios. Troque seus pontos por benefícios exclusivos e destaque.', color: 'text-brand-primary', bg: 'bg-orange-100 dark:bg-orange-900/30' },
-              { icon: TrendingUp, title: 'Gestão Financeira', desc: 'Controle suas entradas e saídas de forma simples. Tenha clareza sobre o lucro do seu negócio para tomar melhores decisões.', color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/30' }
+              { icon: Store, title: 'Vitrine Digital', desc: 'Seu site profissional pronto em minutos. Exponha produtos, serviços e receba pedidos diretamente no seu WhatsApp.', color: 'text-blue-500', bg: 'bg-blue-100' },
+              { icon: Users, title: 'CRM de Clientes', desc: 'Acompanhe cada negociação. Saiba exatamente quem são seus clientes, o histórico de compras e não perca nenhuma venda.', color: 'text-emerald-500', bg: 'bg-emerald-100' },
+              { icon: Calendar, title: 'Agenda Inteligente', desc: 'Organize seus horários e compromissos. Permita que seus clientes agendem serviços diretamente pela sua vitrine.', color: 'text-purple-500', bg: 'bg-purple-100' },
+              { icon: Briefcase, title: 'Marketplace B2B', desc: 'Conecte-se com outros empreendedores. Encontre fornecedores, parceiros de negócios e novas oportunidades na sua região.', color: 'text-amber-500', bg: 'bg-amber-100' },
+              { icon: Award, title: 'Programa de Recompensas', desc: 'Ganhe Menu Cash ao indicar a plataforma ou fechar negócios. Troque seus pontos por benefícios exclusivos e destaque.', color: 'text-brand-primary', bg: 'bg-orange-100' },
+              { icon: TrendingUp, title: 'Gestão Financeira', desc: 'Controle suas entradas e saídas de forma simples. Tenha clareza sobre o lucro do seu negócio para tomar melhores decisões.', color: 'text-indigo-500', bg: 'bg-indigo-100' }
             ].map((tool, idx) => (
-              <div key={idx} className="bg-gray-50 dark:bg-zinc-800/50 p-8 rounded-[2rem] border border-gray-100 dark:border-zinc-800 hover:shadow-xl transition-all group">
+              <div key={idx} className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all group">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${tool.bg}`}>
                   <tool.icon className={`w-7 h-7 ${tool.color}`} />
                 </div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3">{tool.title}</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-medium">
+                <h3 className="text-xl font-black text-gray-900 mb-3">{tool.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed font-medium">
                   {tool.desc}
                 </p>
               </div>
@@ -136,14 +139,14 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 3. VITRINES EM DESTAQUE */}
-      <section className="py-24 bg-brand-surface dark:bg-brand-dark">
+      <section className="py-24 bg-brand-surface">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="space-y-4 max-w-2xl">
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">
+              <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
                 Empreendedores em <span className="text-brand-primary">Destaque</span>
               </h2>
-              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-lg text-slate-500 font-medium">
                 Conheça os negócios que estão escalando e gerando resultados reais na plataforma.
               </p>
             </div>
@@ -156,15 +159,15 @@ export const Home: React.FC = () => {
             {featuredProfiles.map((profile) => (
               <Link 
                 key={profile.id}
-                to={profile.slug ? `/${profile.slug}` : `/store/${profile.userId}`}
-                className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-gray-100 dark:border-zinc-800 hover:shadow-xl transition-all group flex flex-col items-center text-center"
+                to={profile.slug ? `/${profile.slug}` : `/store/${profile.user_id}`}
+                className="bg-white rounded-[2rem] p-6 border border-gray-100 hover:shadow-xl transition-all group flex flex-col items-center text-center"
               >
-                <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-gray-50 dark:border-zinc-800 group-hover:scale-110 transition-transform duration-500">
-                  <img src={profile.logoUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400'} alt={profile.businessName} className="w-full h-full object-cover" />
+                <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-gray-50 group-hover:scale-110 transition-transform duration-500">
+                  <img src={profile.logo_url || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400'} alt={profile.business_name} className="w-full h-full object-cover" />
                 </div>
-                <h3 className="font-black text-gray-900 dark:text-white text-lg mb-1 line-clamp-1">{profile.businessName}</h3>
+                <h3 className="font-black text-gray-900 text-lg mb-1 line-clamp-1">{profile.business_name}</h3>
                 <p className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-4">{profile.category || 'Negócio Local'}</p>
-                <div className="mt-auto w-full pt-4 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-center gap-2 text-slate-400 group-hover:text-brand-primary transition-colors">
+                <div className="mt-auto w-full pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-slate-400 group-hover:text-brand-primary transition-colors">
                   <span className="text-[10px] font-black uppercase tracking-widest">Ver Vitrine</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </div>
@@ -180,11 +183,11 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 4. COMO FUNCIONA */}
-      <section className="py-24 bg-brand-dark text-white relative overflow-hidden">
+      <section className="py-24 bg-white text-brand-dark relative overflow-hidden transition-colors border-y border-gray-100">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-primary via-transparent to-transparent"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic text-slate-900">
               Transforme a gestão do seu negócio em <span className="text-brand-primary">4 passos</span>
             </h2>
           </div>
@@ -196,10 +199,10 @@ export const Home: React.FC = () => {
               { step: '03', title: 'Expanda seu Networking', desc: 'Conecte-se no Marketplace B2B e interaja na Comunidade.' },
               { step: '04', title: 'Alcance Novos Níveis', desc: 'Acumule pontos por resultados e desbloqueie benefícios exclusivos.' }
             ].map((item, idx) => (
-              <div key={idx} className="relative p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="text-5xl font-black text-white/10 mb-6 italic">{item.step}</div>
+              <div key={idx} className="relative p-8 rounded-[2rem] bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-all">
+                <div className="text-5xl font-black text-brand-primary/10 mb-6 italic">{item.step}</div>
                 <h3 className="text-xl font-black mb-3">{item.title}</h3>
-                <p className="text-slate-400 font-medium text-sm leading-relaxed">{item.desc}</p>
+                <p className="text-slate-500 font-medium text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -207,14 +210,14 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 5. BLOG & CONTEÚDO */}
-      <section className="py-24 bg-white dark:bg-zinc-900">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="space-y-4 max-w-2xl">
-              <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">
+              <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
                 Insights para o seu <span className="text-brand-primary">Crescimento</span>
               </h2>
-              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-lg text-slate-500 font-medium">
                 Artigos, dicas e estratégias para ajudar você a escalar sua empresa.
               </p>
             </div>
@@ -225,17 +228,17 @@ export const Home: React.FC = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {recentPosts.map((post) => (
-              <Link key={post.id} to={`/blog/${post.id}`} className="group flex flex-col bg-gray-50 dark:bg-zinc-800/50 rounded-[2rem] overflow-hidden border border-gray-100 dark:border-zinc-800 hover:shadow-xl transition-all">
+              <Link key={post.id} to={`/blog/${post.id}`} className="group flex flex-col bg-gray-50 rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-xl transition-all">
                 <div className="h-48 overflow-hidden relative">
-                  <img src={post.imageUrl || 'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?auto=format&fit=crop&q=80&w=800'} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute top-4 left-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand-primary">
+                  <img src={post.image_url || 'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?auto=format&fit=crop&q=80&w=800'} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand-primary">
                     {post.category || 'Artigo'}
                   </div>
                 </div>
                 <div className="p-8 flex-1 flex flex-col">
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors">{post.title}</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-3 mb-6 flex-1">{post.summary}</p>
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mt-auto pt-4 border-t border-gray-200 dark:border-zinc-700">
+                  <h3 className="text-xl font-black text-gray-900 mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors">{post.title}</h3>
+                  <p className="text-slate-500 text-sm line-clamp-3 mb-6 flex-1">{post.summary}</p>
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mt-auto pt-4 border-t border-gray-200">
                     <span>{post.date}</span>
                     <span className="flex items-center gap-1 text-brand-primary group-hover:gap-2 transition-all">Ler Artigo <ArrowRight className="w-3 h-3" /></span>
                   </div>
@@ -252,13 +255,13 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 6. FAQ */}
-      <section className="py-24 bg-gray-50 dark:bg-zinc-800/30 border-y border-gray-100 dark:border-zinc-800">
+      <section className="py-24 bg-gray-50 border-y border-gray-100">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
                 <HelpCircle className="w-4 h-4" /> Dúvidas Comuns
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tighter uppercase italic">
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
               Perguntas <span className="text-brand-primary">Frequentes</span>
             </h2>
           </div>
@@ -266,21 +269,21 @@ export const Home: React.FC = () => {
           <div className="space-y-4">
             {[
               { q: "O que é o Menu de Negócios?", a: "É uma plataforma completa que une vitrine digital, CRM, agendamento e marketplace B2B para impulsionar seu negócio." },
-              { q: "Quanto custa para usar?", a: "Temos planos gratuitos para começar e opções premium com recursos avançados como domínio personalizado e taxas menores." },
+              { q: "Quanto custa para usar?", a: "Temos planos de adesão flexíveis para começar e opções premium com recursos avançados como domínio personalizado e taxas menores." },
               { q: "Preciso ter CNPJ?", a: "Não! Você pode começar como autônomo ou freelancer e profissionalizar sua gestão conosco." },
               { q: "Como funciona o Programa de Recompensas?", a: "Você ganha pontos (Menu Cash) ao completar tarefas, indicar amigos e fechar negócios, trocando por benefícios exclusivos." },
               { q: "Posso cancelar quando quiser?", a: "Sim, não temos fidelidade. Você tem total liberdade sobre sua assinatura." }
             ].map((faq, idx) => (
-              <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 overflow-hidden transition-all hover:shadow-lg">
+              <div key={idx} className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden transition-all hover:shadow-lg">
                 <button 
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full flex items-center justify-between p-6 text-left"
                 >
-                  <span className="font-black text-gray-900 dark:text-white text-lg">{faq.q}</span>
+                  <span className="font-black text-gray-900 text-lg">{faq.q}</span>
                   <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${openFaq === idx ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${openFaq === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <p className="px-6 pb-6 text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                  <p className="px-6 pb-6 text-slate-500 font-medium leading-relaxed">
                     {faq.a}
                   </p>
                 </div>
@@ -291,20 +294,20 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 7. CHAMADA FINAL */}
-      <section className="py-32 relative overflow-hidden bg-brand-surface dark:bg-brand-dark">
+      <section className="py-32 relative overflow-hidden bg-brand-surface">
         <div className="absolute inset-0">
-          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000" alt="Equipe trabalhando" className="w-full h-full object-cover opacity-10 dark:opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-brand-surface/80 to-transparent dark:from-brand-dark dark:via-brand-dark/80"></div>
+          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000" alt="Equipe trabalhando" className="w-full h-full object-cover opacity-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-brand-surface/80 to-transparent"></div>
         </div>
         
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-10">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-800 shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100 dark:border-zinc-700">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-white shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100">
             <CheckCircle className="w-4 h-4 text-emerald-500" /> O Próximo Passo
           </div>
-          <h2 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white leading-none tracking-tighter uppercase italic">
-            Pronto para elevar o nível do seu <span className="text-brand-primary">negócio?</span>
+          <h2 className="text-5xl md:text-7xl font-black text-gray-900 leading-tight tracking-tighter uppercase italic overflow-visible">
+            Pronto para elevar o nível do seu <span className="text-brand-primary title-fix">negócio?</span>
           </h2>
-          <p className="text-xl text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto">
+          <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">
             Junte-se ao ecossistema que centraliza e impulsiona o empreendedorismo.
           </p>
           <div className="pt-8">

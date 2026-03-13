@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockBackend } from '../services/mockBackend';
+import { supabase } from '../services/supabaseClient';
 import { Lead, ExtractorResult, PipelineStage } from '../types';
 import { 
   MapPin, Instagram, Building2, Search, Download, 
@@ -49,7 +49,7 @@ export const Menuflow: React.FC = () => {
           />
         </nav>
         
-        {user.plan === 'profissionais' && ( // Fixed plan check to match User types
+        {user.plan === 'basic' && ( // Fixed plan check to match User types
           <div className="p-4 bg-gray-800 m-4 rounded-lg">
             <p className="text-xs text-gray-300 mb-2">Upgrade para Pro para automações ilimitadas.</p>
             <button className="w-full text-xs py-1 px-2 bg-indigo-600 rounded text-white font-bold">
@@ -85,7 +85,7 @@ const MenuButton = ({ active, onClick, icon: Icon, label }: any) => (
 
 // 1. CRM / KANBAN VIEW
 const CRMView = () => {
-  const { user } = useAuth(); // Added useAuth hook to get userId
+  const { user } = useAuth(); // Added useAuth hook to get user_id
   const [leads, setLeads] = useState<Lead[]>([]);
   
   useEffect(() => {
@@ -94,9 +94,9 @@ const CRMView = () => {
 
   const loadLeads = async () => {
     if (!user) return;
-    // Added userId argument to getLeads call as required by mockBackend
-    const data = await mockBackend.getLeads(user.id);
-    setLeads(data);
+    const { data } = await supabase.from('leads').select('*').eq('user_id', user.id);
+    // map DB snake_case back to frontend camelCase if necessary, or just cast
+    setLeads((data as any) || []);
   };
 
   const moveLead = async (leadId: string, currentStage: PipelineStage, direction: 'next' | 'prev') => {
@@ -106,7 +106,7 @@ const CRMView = () => {
     
     if (newIdx >= 0 && newIdx < stages.length) {
       const newStage = stages[newIdx];
-      await mockBackend.updateLeadStage(leadId, newStage);
+      await supabase.from('leads').update({ stage: newStage, updated_at: new Date().toISOString() }).eq('id', leadId);
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage: newStage } : l));
     }
   };
@@ -201,7 +201,10 @@ const ExtractorsView = () => {
     setLoading(true);
     setResults([]);
     try {
-      const data = await mockBackend.runExtractor(activeExtractor, keyword);
+      // Placeholder for future Extractor Edge Function integration
+      const data: ExtractorResult[] = [
+        { id: 'ext-1', name: 'Leads Exemplo ' + keyword, phone: '551199999999', address: 'Endereço Teste', source: activeExtractor }
+      ];
       setResults(data);
     } finally {
       setLoading(false);
@@ -216,8 +219,8 @@ const ExtractorsView = () => {
       .filter(r => !imported.includes(r.id))
       .map(r => ({
         id: r.id,
-        // FIX: Provide missing required userId property from user context
-        userId: user.id,
+        // FIX: Provide missing required user_id property from user context
+        user_id: user.id,
         name: r.name,
         phone: r.phone,
         source: r.source,
@@ -225,7 +228,16 @@ const ExtractorsView = () => {
         notes: `Extraído de ${r.source} - Busca: ${keyword}`
       }));
     
-    await mockBackend.addLeads(leadsToAdd);
+    const dbLeads = leadsToAdd.map(l => ({
+      id: l.id,
+      user_id: l.user_id, // Map back to snake_case
+      name: l.name,
+      phone: l.phone,
+      source: l.source,
+      stage: l.stage,
+      notes: l.notes
+    }));
+    await supabase.from('leads').insert(dbLeads);
     setImported(prev => [...prev, ...leadsToAdd.map(l => l.id)]);
     alert(`${leadsToAdd.length} leads importados para o CRM!`);
   };

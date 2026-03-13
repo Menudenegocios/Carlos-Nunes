@@ -8,87 +8,87 @@ export interface Media {
   youtubeEmbed?: string;
   link?: string;
   duration?: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  plan: 'profissionais' | 'freelancers' | 'negocios';
+  plan: 'pre-cadastro' | 'basic' | 'pro' | 'full';
   points: number;
-  level: 'elite' | 'bronze' | 'ouro' | 'diamante';
-  menuCash: number;
-  referralCode: string;
-  referralsCount: number;
+  level: 'consultor' | 'elite' | 'bronze' | 'prata' | 'ouro' | 'diamante';
+  menu_cash: number;
+  referral_code: string;
+  referrals_count: number;
   role?: 'user' | 'partner' | 'member' | 'client' | 'admin';
 }
 
 export interface PortfolioItem {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
   description: string;
-  imageUrl: string;
+  image_url: string;
   category?: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface B2BOffer {
   id: string;
-  userId: string;
-  businessName: string;
+  user_id: string;
+  business_name: string;
   businessLogo: string;
   title: string;
   description: string;
   discount: string;
   category: string;
   terms: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface B2BTransaction {
   id: string;
-  buyerId: string;
-  buyerName: string;
-  sellerId: string;
-  sellerName: string;
+  buyer_id: string;
+  buyer_name: string;
+  seller_id: string;
+  seller_name: string;
   amount: number;
   description: string;
   status: 'pending' | 'confirmed' | 'rejected';
-  createdAt: number;
+  created_at: number;
 }
 
 export interface PointsTransaction {
   id: string;
-  userId: string;
+  user_id: string;
   action: string;
   points: number;
-  createdAt: number;
+  created_at: number;
   category: 'assinatura' | 'indicacao' | 'engajamento' | 'especial';
 }
 
 export interface CommunityComment {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
   content: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface CommunityPost {
   id: string;
-  userId: string;
-  userName: string;
-  businessName?: string;
-  userAvatar: string;
+  user_id: string;
+  user_name: string;
+  business_name?: string;
+  user_avatar: string;
   content: string;
-  imageUrl?: string;
+  image_url?: string;
   likes: number;
   likedBy: string[];
   comments: CommunityComment[];
-  createdAt: number;
+  created_at: number;
 }
 
 export interface BioLink {
@@ -109,164 +109,163 @@ export interface SocialProof {
 export interface BioShowcaseItem {
   id: string;
   name: string;
-  imageUrl: string;
+  image_url: string;
   price: number;
   link: string;
 }
 
 export interface BioConfig {
-  themeId: string;
-  fontFamily: 'font-sans' | 'font-serif' | 'font-mono' | 'font-display';
+  theme_id: string;
+  font_family: 'font-sans' | 'font-serif' | 'font-mono' | 'font-display';
   links: BioLink[];
-  customColors?: {
+  custom_colors?: {
     background?: string;
     button?: string;
     text?: string;
   };
-  meshGradient?: boolean;
-  floatingCTA?: {
+  mesh_gradient?: boolean;
+  floating_cta?: {
     enabled: boolean;
     label: string;
     type: 'whatsapp' | 'catalog';
   };
-  socialProof?: SocialProof[];
-  blogEnabled?: boolean;
-  blogButtonLabel?: string;
+  social_proof?: SocialProof[];
+  blog_enabled?: boolean;
+  blog_button_label?: string;
   showcase?: {
     enabled: boolean;
     title: string;
     type: 'products' | 'services';
     items?: BioShowcaseItem[];
   };
-  shareCard?: {
+  share_card?: {
     enabled: boolean;
   };
 }
 
 export interface SeoConfig {
-  metaTitle?: string;
-  metaDescription?: string;
+  meta_title?: string;
+  meta_description?: string;
   keywords?: string[];
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
 }
 
 export interface WhatsappBotConfig {
   enabled: boolean;
   name?: string;
-  welcomeMessage?: string;
-  avatarUrl?: string;
+  welcome_message?: string;
+  avatar_url?: string;
 }
 
 export interface StoreConfig {
-  coverUrl?: string;
-  bannerImages?: string[]; // Suporte para até 3 fotos no banner
-  themeColor?: string;
-  videoUrl?: string;
-  openingHours?: string;
+  cover_url?: string;
+  banner_images?: string[]; // Suporte para até 3 fotos no banner
+  theme_color?: string;
+  video_url?: string;
+  opening_hours?: string;
   address?: string;
   city?: string;
-  googleMapsLink?: string;
-  businessType?: 'local_business' | 'professional';
-  salesType?: 'product' | 'service' | 'both';
-  aiChatEnabled?: boolean;
-  schedulingEnabled?: boolean;
-  gaId?: string;
-  pixelId?: string;
+  google_maps_link?: string;
+  business_type?: 'local_business' | 'professional';
+  sales_type?: 'product' | 'service' | 'both';
+  ai_chat_enabled?: boolean;
+  scheduling_enabled?: boolean;
+  ga_id?: string;
+  pixel_id?: string;
   seo?: SeoConfig;
-  whatsappBot?: WhatsappBotConfig;
-  vitrineTheme?: 'modern' | 'classic' | 'minimal';
-  whatsappFormEnabled?: boolean;
-  whatsappFormTitle?: string;
-  vitrineNiche?: string;
-  vitrineCity?: string;
-  videoPortfolio?: string[]; // Suporte para até 9 vídeos (Reels)
+  whatsapp_bot?: WhatsappBotConfig;
+  vitrine_theme?: 'modern' | 'classic' | 'minimal';
+  whatsapp_form_enabled?: boolean;
+  whatsapp_form_title?: string;
+  vitrine_niche?: string;
+  vitrine_city?: string;
+  video_portfolio?: string[]; // Suporte para até 9 vídeos (Reels)
   // Campos para Landing Page de Especialista
-  aboutMe?: string;
+  about_me?: string;
   solutions?: string;
-  problemsSolved?: string;
-  businessInterests?: string;
-  highlightedProductIds?: string[]; // Até 3 IDs de produtos em destaque
-  paymentMethods?: {
+  problems_solved?: string;
+  business_interests?: string;
+  highlighted_product_ids?: string[]; // Até 3 IDs de produtos em destaque
+  payment_methods?: {
     pix: boolean;
     card: boolean;
     cash: boolean;
     credit: boolean;
   };
-  socialLinks?: {
+  social_links?: {
     instagram?: string;
     whatsapp?: string;
     website?: string;
   };
-  calendarLink?: string;
+  calendar_link?: string;
 }
 
 export interface StoreCategory {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   order: number;
 }
 
 export interface Profile {
   id: string;
-  userId: string;
-  isPublished?: boolean;
+  user_id: string;
   slug?: string;
-  businessName?: string;
+  business_name?: string;
   category?: string;
   phone?: string;
   address?: string;
   city?: string;
   neighborhood?: string;
   bio?: string;
-  logoUrl?: string;
-  vitrineCategory?: 'Produtos' | 'Serviços' | 'Oportunidades';
-  socialLinks?: {
+  logo_url?: string;
+  vitrine_category?: 'Produtos' | 'Serviços' | 'Oportunidades';
+  social_links?: {
     instagram?: string;
     whatsapp?: string;
     website?: string;
   };
-  storeConfig?: StoreConfig;
-  bioConfig?: BioConfig;
+  store_config?: StoreConfig;
+  bio_config?: BioConfig;
 }
 
 export interface Coupon {
   id: string;
-  userId: string;
+  user_id: string;
   code: string;
   title: string;
   discount: string; // Ex: "10%" ou "R$ 50,00"
   type: 'percentage' | 'fixed';
-  pointsReward?: number;
+  points_reward?: number;
   description?: string;
-  expiryDate?: string;
-  createdAt: number;
+  expiry_date?: string;
+  created_at: number;
   active: boolean;
 }
 
 export interface SchedulingConfig {
   enabled: boolean;
-  durationMinutes: number;
-  meetingType: 'google_meet' | 'in_person' | 'phone';
-  googleCalendarConnected: boolean;
+  duration_minutes: number;
+  meeting_type: 'google_meet' | 'in_person' | 'phone';
+  google_calendar_connected: boolean;
   availability?: string;
 }
 
 export interface Offer {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
   description: string;
   category: string;
   city: string;
   price?: string;
-  createdAt: number;
-  imageUrl?: string;
-  videoUrl?: string;
-  logoUrl?: string;
-  socialLinks?: {
+  created_at: number;
+  image_url?: string;
+  video_url?: string;
+  logo_url?: string;
+  social_links?: {
     instagram?: string;
     whatsapp?: string;
     website?: string;
@@ -279,7 +278,7 @@ export interface Prize {
   id: string;
   title: string;
   cost: number;
-  imageUrl: string;
+  image_url: string;
 }
 
 export enum OfferCategory {
@@ -292,49 +291,47 @@ export enum OfferCategory {
 
 export interface Product {
   id: string;
-  userId: string;
-  storeCategoryId?: string;
+  user_id: string;
+  store_category_id?: string;
   name: string;
   description: string;
   price: number;
-  promoPrice?: number;
-  imageUrl: string;
-  videoUrl?: string;
+  promo_price?: number;
+  image_url: string;
+  video_url?: string;
   category: string;
   available: boolean;
   variations?: string[];
-  buttonType?: 'buy' | 'quote';
-  externalLink?: string;
+  button_type?: 'buy' | 'quote';
+  external_link?: string;
   stock?: number;
-  pointsReward?: number;
-  isLocal?: boolean;
+  points_reward?: number;
+  is_local?: boolean;
 }
 
 export interface BlogPost {
   id: string;
-  userId?: string;
+  user_id?: string;
   title: string;
   summary: string;
   content: string;
   author: string;
   date: string;
-  imageUrl: string;
+  image_url: string;
   category: string;
-  // added for internal tracking and sorting in StoreView.tsx
-  created_at?: string;
   // added for consistency with other backend objects
-  createdAt?: string | number;
+  created_at?: string;
   // SEO fields
-  seoTitle?: string;
-  seoDescription?: string;
-  seoKeywords?: string[];
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
   slug?: string;
-  altText?: string;
-  googleMyBusinessSync?: boolean;
+  alt_text?: string;
+  google_my_business_sync?: boolean;
   // Social fields
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
 }
 
 export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lost';
@@ -343,19 +340,19 @@ export interface LeadTimelineEvent {
   id: string;
   type: 'creation' | 'stage_change' | 'contact' | 'note';
   content: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface Client {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   phone: string;
   email?: string;
   company?: string;
   notes?: string;
-  createdAt: number;
-  lastContact?: number;
+  created_at: number;
+  last_contact?: number;
   tags?: string[];
   totalValue?: number;
   birthDate?: string;
@@ -363,33 +360,33 @@ export interface Client {
 
 export interface Lead {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   phone: string;
   source: 'maps' | 'instagram' | 'cnpj' | 'manual' | 'vitrine_publica' | 'bot_whatsapp';
   stage: PipelineStage;
   notes?: string;
-  lastContact?: number;
+  last_contact?: number;
   value?: number;
-  createdAt?: number;
+  created_at?: number;
   timeline?: LeadTimelineEvent[];
-  clientId?: string; // Link opcional para um cliente convertido
+  client_id?: string; // Link opcional para um cliente convertido
 }
 
 export interface FinancialEntry {
   id: string;
-  userId: string;
+  user_id: string;
   description: string;
   value: number;
   type: 'income' | 'expense';
   date: string;
   category: string;
-  entityType: 'personal' | 'business';
+  entity_type: 'personal' | 'business';
 }
 
 export interface ScheduleItem {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
   client: string;
   date: string;
@@ -409,9 +406,9 @@ export interface ExtractorResult {
 
 export interface NetworkingProfile {
   id: string;
-  userId?: string;
+  user_id?: string;
   name: string;
-  businessName: string;
+  business_name: string;
   sector: string;
   avatar: string;
   lookingFor: string;
@@ -419,7 +416,7 @@ export interface NetworkingProfile {
 
 export interface LoyaltyCard {
   id: string;
-  businessName: string;
+  business_name: string;
   reward: string;
   totalStamps: number;
   currentStamps: number;
@@ -428,8 +425,8 @@ export interface LoyaltyCard {
 
 export interface Quote {
   id: string;
-  clientName: string;
-  serviceInterest: string;
+  client_name: string;
+  service_interest: string;
   date: string;
   status: 'pendente' | 'respondido' | 'fechado';
   message: string;
@@ -446,12 +443,12 @@ export interface Review {
 
 export interface VitrineComment {
   id: string;
-  vitrineUserId: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
+  vitrine_user_id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
   content: string;
-  createdAt: number;
+  created_at: number;
 }
 
 export interface PlatformEvent {
@@ -466,23 +463,23 @@ export interface PlatformEvent {
 
 export interface CRMTask {
   id: string;
-  userId: string;
+  user_id: string;
   title: string;
   description?: string;
-  dueDate: number;
+  due_date: number;
   status: 'pending' | 'completed';
   type: 'call' | 'meeting' | 'email' | 'whatsapp' | 'other';
-  relatedTo?: {
+  related_to?: {
     type: 'lead' | 'client';
     id: string;
     name: string;
   };
-  createdAt: number;
+  created_at: number;
 }
 
 export interface QuickMessageTemplate {
   id: string;
-  userId: string;
+  user_id: string;
   category: 'primeiro_contato' | 'apos_proposta' | 'lembrete_decisao' | 'pos_venda' | 'reativacao' | 'outros';
   title: string;
   content: string;
@@ -490,50 +487,50 @@ export interface QuickMessageTemplate {
 
 export interface Project {
   id: string;
-  userId: string;
+  user_id: string;
   name: string;
   description?: string;
   status?: string;
   priority?: string;
-  smartGoalId?: string;
-  createdAt: string;
+  smart_goal_id?: string;
+  created_at: string;
 }
 
 export interface SWOTAnalysis {
   id: string;
-  projectId?: string;
-  userId: string;
+  project_id?: string;
+  user_id: string;
   strengths: string[];
   weaknesses: string[];
   opportunities: string[];
   threats: string[];
-  createdAt: string;
+  created_at: string;
 }
 
 export interface SMARTGoal {
   id: string;
-  projectId?: string;
-  userId: string;
+  project_id?: string;
+  user_id: string;
   specific: string;
   measurable: string;
   attainable: string;
   relevant: string;
-  timeBound: string;
-  createdAt: string;
+  time_bound: string;
+  created_at: string;
 }
 
 export interface BusinessCanva {
   id: string;
-  projectId?: string;
-  userId: string;
-  keyPartners: string;
-  keyActivities: string;
-  valuePropositions: string;
-  customerRelationships: string;
-  customerSegments: string;
-  keyResources: string;
+  project_id?: string;
+  user_id: string;
+  key_partners: string;
+  key_activities: string;
+  value_propositions: string;
+  customer_relationships: string;
+  customer_segments: string;
+  key_resources: string;
   channels: string;
-  costStructure: string;
-  revenueStreams: string;
-  createdAt: string;
+  cost_structure: string;
+  revenue_streams: string;
+  created_at: string;
 }

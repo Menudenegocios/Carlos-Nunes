@@ -68,7 +68,7 @@ export const BioBuilder: React.FC = () => {
   const [activeEditorTab, setActiveEditorTab] = useState<'home' | 'content' | 'social_proof' | 'design' | 'share'>('home');
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [links, setLinks] = useState<BioLink[]>([]);
-  const [socialProof, setSocialProof] = useState<SocialProof[]>([]);
+  const [social_proof, setSocialProof] = useState<SocialProof[]>([]);
   const [bioShowcaseItems, setBioShowcaseItems] = useState<BioShowcaseItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -77,8 +77,8 @@ export const BioBuilder: React.FC = () => {
   const [bgColor, setBgColor] = useState('#064e3b');
   const [btnColor, setBtnColor] = useState('#059669');
   const [textColor, setTextColor] = useState('#ffffff');
-  const [fontFamily, setFontFamily] = useState('font-sans');
-  const [selectedCategory, setSelectedCategory] = useState('profissionais');
+  const [font_family, setFontFamily] = useState('font-sans');
+  const [selectedCategory, setSelectedCategory] = useState('basic');
   const [useMeshGradient, setUseMeshGradient] = useState(false);
   
   const [schedEnabled, setSchedEnabled] = useState(false);
@@ -95,7 +95,7 @@ export const BioBuilder: React.FC = () => {
   const [isBioItemModalOpen, setIsBioItemModalOpen] = useState(false);
   const [editingBioItem, setEditingBioItem] = useState<BioShowcaseItem | null>(null);
   const [bioItemForm, setBioItemForm] = useState<Partial<BioShowcaseItem>>({ 
-    name: '', price: 0, link: '', imageUrl: ''
+    name: '', price: 0, link: '', image_url: ''
   });
 
   useEffect(() => { if (user) loadData(); }, [user]);
@@ -106,35 +106,35 @@ export const BioBuilder: React.FC = () => {
         const data = await supabaseService.getProfile(user.id);
                 if (data) {
           setProfile(data);
-          setLinks(data.bioConfig?.links || [
+          setLinks(data.bio_config?.links || [
             { id: '1', type: 'whatsapp', label: 'WhatsApp Comercial', url: '', active: true },
             { id: '2', type: 'instagram', label: 'Siga no Instagram', url: '', active: true }
           ]);
-          setSocialProof(data.bioConfig?.socialProof || []);
-          setBioShowcaseItems(data.bioConfig?.showcase?.items || []);
+          setSocialProof(data.bio_config?.social_proof || []);
+          setBioShowcaseItems(data.bio_config?.showcase?.items || []);
 
-          if (data.bioConfig?.customColors) {
-            setBgColor(data.bioConfig.customColors.background || '#064e3b');
-            setBtnColor(data.bioConfig.customColors.button || '#059669');
-            setTextColor(data.bioConfig.customColors.text || '#ffffff');
+          if (data.bio_config?.custom_colors) {
+            setBgColor(data.bio_config.custom_colors.background || '#064e3b');
+            setBtnColor(data.bio_config.custom_colors.button || '#059669');
+            setTextColor(data.bio_config.custom_colors.text || '#ffffff');
           }
 
-          if (data.bioConfig?.fontFamily) setFontFamily(data.bioConfig.fontFamily);
-          if (data.bioConfig?.themeId) setSelectedCategory(data.bioConfig.themeId);
-          if (data.bioConfig?.meshGradient) setUseMeshGradient(data.bioConfig.meshGradient);
+          if (data.bio_config?.font_family) setFontFamily(data.bio_config.font_family);
+          if (data.bio_config?.theme_id) setSelectedCategory(data.bio_config.theme_id);
+          if (data.bio_config?.mesh_gradient) setUseMeshGradient(data.bio_config.mesh_gradient);
           
-          if (data.storeConfig?.schedulingEnabled) setSchedEnabled(true);
-          if (data.bioConfig?.floatingCTA) {
-              setCtaEnabled(data.bioConfig.floatingCTA.enabled);
-              setCtaLabel(data.bioConfig.floatingCTA.label);
+          if (data.store_config?.scheduling_enabled) setSchedEnabled(true);
+          if (data.bio_config?.floating_cta) {
+              setCtaEnabled(data.bio_config.floating_cta.enabled);
+              setCtaLabel(data.bio_config.floating_cta.label);
           }
 
-          if (data.bioConfig?.showcase) {
-              setShowcaseEnabled(data.bioConfig.showcase.enabled);
-              setShowcaseTitle(data.bioConfig.showcase.title || 'Destaques');
+          if (data.bio_config?.showcase) {
+              setShowcaseEnabled(data.bio_config.showcase.enabled);
+              setShowcaseTitle(data.bio_config.showcase.title || 'Destaques');
           }
-          if (data.bioConfig?.shareCard) {
-              setShareCardEnabled(data.bioConfig.shareCard.enabled);
+          if (data.bio_config?.share_card) {
+              setShareCardEnabled(data.bio_config.share_card.enabled);
           }
         }
     } catch (e) {
@@ -146,14 +146,14 @@ export const BioBuilder: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      // Construct the bioConfig object
-      const bioConfig = { 
-          themeId: selectedCategory, 
-          fontFamily: fontFamily as any, 
+      // Construct the bio_config object
+      const bio_config = { 
+          theme_id: selectedCategory, 
+          font_family: font_family as any, 
           links,
-          socialProof,
-          meshGradient: useMeshGradient,
-          floatingCTA: {
+          social_proof,
+          mesh_gradient: useMeshGradient,
+          floating_cta: {
               enabled: ctaEnabled,
               label: ctaLabel
           },
@@ -163,10 +163,10 @@ export const BioBuilder: React.FC = () => {
               type: 'services' as "products" | "services",
               items: bioShowcaseItems
           },
-          shareCard: {
+          share_card: {
               enabled: shareCardEnabled
           },
-          customColors: {
+          custom_colors: {
             background: bgColor,
             button: btnColor,
             text: textColor
@@ -174,11 +174,10 @@ export const BioBuilder: React.FC = () => {
       };
 
       const profileData: any = {
-        businessName: profile.businessName,
-        logoUrl: profile.logoUrl,
-        bioConfig: bioConfig,
-        storeConfig: profile.storeConfig,
-        isPublished: true,
+        business_name: profile.business_name,
+        logo_url: profile.logo_url,
+        bio_config: bio_config,
+        store_config: profile.store_config,
         slug: profile.slug
       };
 
@@ -208,7 +207,7 @@ export const BioBuilder: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const compressed = await resizeImage(reader.result as string, 400, 400);
-        setProfile(prev => ({ ...prev, logoUrl: compressed }));
+        setProfile(prev => ({ ...prev, logo_url: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -220,7 +219,7 @@ export const BioBuilder: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const compressed = await resizeImage(reader.result as string, 600, 600);
-        setBioItemForm(prev => ({ ...prev, imageUrl: compressed }));
+        setBioItemForm(prev => ({ ...prev, image_url: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -244,15 +243,15 @@ export const BioBuilder: React.FC = () => {
   };
 
   const addSocialProof = () => {
-    setSocialProof([...socialProof, { id: Date.now().toString(), author: 'Nome do Cliente', text: 'Depoimento incrível sobre o serviço.', stars: 5 }]);
+    setSocialProof([...social_proof, { id: Date.now().toString(), author: 'Nome do Cliente', text: 'Depoimento incrível sobre o serviço.', stars: 5 }]);
   };
 
   const updateSocialProof = (id: string, fields: Partial<SocialProof>) => {
-    setSocialProof(socialProof.map(s => s.id === id ? { ...s, ...fields } : s));
+    setSocialProof(social_proof.map(s => s.id === id ? { ...s, ...fields } : s));
   };
 
   const removeSocialProof = (id: string) => {
-    setSocialProof(socialProof.filter(s => s.id !== id));
+    setSocialProof(social_proof.filter(s => s.id !== id));
   };
 
   const applyTheme = (theme: typeof PRESET_THEMES[0]) => {
@@ -279,7 +278,7 @@ export const BioBuilder: React.FC = () => {
     <div className="relative mx-auto w-[310px] h-[630px] bg-black rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden group">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-2xl z-50"></div>
       <div 
-        className={`w-full h-full overflow-y-auto scrollbar-hide flex flex-col items-center pt-12 pb-10 px-6 transition-all duration-500 ${fontFamily}`}
+        className={`w-full h-full overflow-y-auto scrollbar-hide flex flex-col items-center pt-12 pb-10 px-6 transition-all duration-500 ${font_family}`}
         style={{ 
           backgroundColor: bgColor, 
           color: textColor,
@@ -287,13 +286,13 @@ export const BioBuilder: React.FC = () => {
         }}
       >
         <div className="w-20 h-20 rounded-full border-4 border-white/20 shadow-xl overflow-hidden mb-4 mt-4 flex-shrink-0 bg-white/10 flex items-center justify-center">
-          {profile.logoUrl ? (
-            <img src={profile.logoUrl} className="w-full h-full object-cover" alt="Me" />
+          {profile.logo_url ? (
+            <img src={profile.logo_url} className="w-full h-full object-cover" alt="Me" />
           ) : (
             <UserIcon className="w-10 h-10 opacity-20" />
           )}
         </div>
-        <h2 className="font-black text-lg text-center leading-tight mb-1">{profile.businessName || 'Seu Negócio'}</h2>
+        <h2 className="font-black text-lg text-center leading-tight mb-1">{profile.business_name || 'Seu Negócio'}</h2>
         <p className="text-[10px] opacity-80 text-center font-medium max-w-[200px] mb-8">{profile.bio || 'Bem-vindo ao meu perfil profissional.'}</p>
         
         {schedEnabled && (
@@ -327,8 +326,8 @@ export const BioBuilder: React.FC = () => {
                             style={{ backgroundColor: btnColor + '33', borderColor: btnColor + '66' }}
                         >
                              <div className="w-24 h-24 rounded-2xl bg-white/10 flex-shrink-0 overflow-hidden border border-white/10">
-                                {item.imageUrl ? (
-                                    <img src={item.imageUrl} className="w-full h-full object-cover" />
+                                {item.image_url ? (
+                                    <img src={item.image_url} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="h-full flex items-center justify-center text-white/10"><ImageIcon className="w-6 h-6" /></div>
                                 )}
@@ -356,10 +355,10 @@ export const BioBuilder: React.FC = () => {
             </div>
         )}
 
-        {socialProof.length > 0 && (
+        {social_proof.length > 0 && (
           <div className="w-full space-y-3 mb-8">
             <p className="text-[8px] font-black uppercase tracking-widest opacity-50 text-center">Depoimentos</p>
-            {socialProof.slice(0, 2).map(proof => (
+            {social_proof.slice(0, 2).map(proof => (
               <div key={proof.id} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5 shadow-xl">
                 <div className="flex text-yellow-400 gap-0.5 mb-1 scale-75 origin-left">
                   {[...Array(proof.stars)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
@@ -377,7 +376,7 @@ export const BioBuilder: React.FC = () => {
             >
                  <p className="text-[8px] font-black text-white uppercase italic tracking-tighter border-b border-white/10 pb-2">Código QR</p>
                  <div className="w-10 h-10 rounded-full border-2 border-white mx-auto overflow-hidden">
-                    {profile.logoUrl && <img src={profile.logoUrl} className="w-full h-full object-cover" />}
+                    {profile.logo_url && <img src={profile.logo_url} className="w-full h-full object-cover" />}
                  </div>
                  <div className="p-2 bg-white rounded-xl w-24 h-24 mx-auto">
                     <QrCode className="w-full h-full text-black" />
@@ -450,22 +449,22 @@ export const BioBuilder: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <div className="lg:col-span-7">
                {activeEditorTab === 'content' && (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><User className="text-indigo-600" /> Perfil Principal</h3>
+                  <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-10 animate-fade-in">
+                     <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><User className="text-indigo-600" /> Perfil Principal</h3>
                      
                      {/* URL ALIAS (SLUG) */}
-                     <div className="bg-indigo-50 dark:bg-indigo-950/20 p-8 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30 space-y-4">
+                     <div className="bg-indigo-50 p-8 rounded-[2.5rem] border border-indigo-100 space-y-4">
                         <div className="flex items-center gap-3">
                            <Globe2 className="w-5 h-5 text-indigo-600" />
-                           <h4 className="font-black text-sm text-indigo-900 dark:text-indigo-300 uppercase tracking-tight">URL Personalizada</h4>
+                           <h4 className="font-black text-sm text-indigo-900 uppercase tracking-tight">URL Personalizada</h4>
                         </div>
-                        <div className="flex flex-col md:flex-row gap-0 overflow-hidden rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
-                           <div className="bg-white dark:bg-zinc-800 px-5 py-4 text-xs font-black text-slate-400 border-r border-indigo-100 dark:border-indigo-900 select-none flex items-center">
+                        <div className="flex flex-col md:flex-row gap-0 overflow-hidden rounded-2xl border-2 border-indigo-200 shadow-sm">
+                           <div className="bg-white px-5 py-4 text-xs font-black text-slate-400 border-r border-indigo-100 select-none flex items-center">
                               menudenegocios.com/
                            </div>
                            <input 
                               type="text" 
-                              className="flex-1 bg-white dark:bg-zinc-900 px-5 py-4 font-black text-indigo-600 dark:text-indigo-400 placeholder:text-slate-300 outline-none"
+                              className="flex-1 bg-white px-5 py-4 font-black text-indigo-600 placeholder:text-slate-300 outline-none"
                               placeholder="seu-nome"
                               value={profile.slug || ''}
                               onChange={e => handleSlugChange(e.target.value)}
@@ -478,16 +477,16 @@ export const BioBuilder: React.FC = () => {
                         <div className="space-y-6">
                            <div>
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Título da Bio</label>
-                              <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={profile.businessName || ''} onChange={e => setProfile({...profile, businessName: e.target.value})} placeholder="Ex: Ana Doces Gourmet" />
+                              <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={profile.business_name || ''} onChange={e => setProfile({...profile, business_name: e.target.value})} placeholder="Ex: Ana Doces Gourmet" />
                            </div>
                            <div>
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Texto de Destaque</label>
-                              <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={profile.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} placeholder="Breve descrição..." />
+                              <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm resize-none" value={profile.bio || ''} onChange={e => setProfile({...profile, bio: e.target.value})} placeholder="Breve descrição..." />
                            </div>
                         </div>
-                        <div className="flex flex-col items-center justify-center p-8 bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-zinc-700">
+                        <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
                            <div className="w-24 h-24 rounded-full bg-white shadow-xl overflow-hidden border-4 border-white mb-4 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                              {profile.logoUrl ? <img src={profile.logoUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Camera className="w-8 h-8" /></div>}
+                              {profile.logo_url ? <img src={profile.logo_url} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Camera className="w-8 h-8" /></div>}
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Camera className="w-6 h-6 text-white" /></div>
                            </div>
                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
@@ -495,28 +494,28 @@ export const BioBuilder: React.FC = () => {
                      </div>
 
                      {/* Vitrine de Itens */}
-                     <div className="space-y-6 pt-10 border-t border-gray-100 dark:border-zinc-800">
+                     <div className="space-y-6 pt-10 border-t border-gray-100">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><LayoutGrid className="text-indigo-600" /> Vitrine da Bio</h3>
+                                <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><LayoutGrid className="text-indigo-600" /> Vitrine da Bio</h3>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure o carrossel exclusivo da sua Bio Link.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" checked={showcaseEnabled} onChange={e => setShowcaseEnabled(e.target.checked)} className="sr-only peer" />
-                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
                             </label>
                         </div>
                         
                         {showcaseEnabled && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700">
+                                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
                                     <div className="flex justify-between items-center mb-8">
                                         <div>
                                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Título da Seção</label>
-                                            <input type="text" className="bg-white dark:bg-zinc-900 border-none rounded-2xl p-4 font-bold dark:text-white" value={showcaseTitle} onChange={e => setShowcaseTitle(e.target.value)} />
+                                            <input type="text" className="bg-white border-none rounded-2xl p-4 font-bold" value={showcaseTitle} onChange={e => setShowcaseTitle(e.target.value)} />
                                         </div>
                                         <button 
-                                            onClick={() => { setEditingBioItem(null); setBioItemForm({ name: '', price: 0, link: '', imageUrl: '' }); setIsBioItemModalOpen(true); }}
+                                            onClick={() => { setEditingBioItem(null); setBioItemForm({ name: '', price: 0, link: '', image_url: '' }); setIsBioItemModalOpen(true); }}
                                             className="bg-[#F67C01] text-white px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95"
                                         >
                                             <Plus className="w-5 h-5" /> CRIAR ITEM
@@ -525,13 +524,13 @@ export const BioBuilder: React.FC = () => {
 
                                     <div className="grid gap-4">
                                         {bioShowcaseItems.length > 0 ? bioShowcaseItems.map(item => (
-                                            <div key={item.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 flex items-center justify-between group">
+                                            <div key={item.id} className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between group">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
-                                                        {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover" />}
+                                                        {item.image_url && <img src={item.image_url} className="w-full h-full object-cover" />}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-black text-xs text-gray-900 dark:text-white uppercase">{item.name}</h4>
+                                                        <h4 className="font-black text-xs text-gray-900 uppercase">{item.name}</h4>
                                                         <p className="text-[10px] font-black text-emerald-600">R$ {item.price.toFixed(2)}</p>
                                                     </div>
                                                 </div>
@@ -549,18 +548,18 @@ export const BioBuilder: React.FC = () => {
                         )}
                      </div>
 
-                     <div className="space-y-6 pt-10 border-t border-gray-100 dark:border-zinc-800">
+                     <div className="space-y-6 pt-10 border-t border-gray-100">
                         <div className="flex justify-between items-center">
-                           <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Layout className="text-indigo-600" /> Botões e Links</h3>
+                           <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><Layout className="text-indigo-600" /> Botões e Links</h3>
                            <button onClick={addLink} className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest">ADICIONAR LINK</button>
                         </div>
                         <div className="space-y-4">
                            {links.map(link => (
-                              <div key={link.id} className="p-6 bg-gray-50 dark:bg-zinc-800/40 rounded-[2rem] border border-gray-100 dark:border-zinc-800 flex gap-4 items-center group">
-                                 <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-slate-300"><GripVertical className="w-5 h-5" /></div>
+                              <div key={link.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex gap-4 items-center group">
+                                 <div className="p-3 bg-white rounded-xl text-slate-300"><GripVertical className="w-5 h-5" /></div>
                                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input type="text" className="bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-xs font-bold" value={link.label} placeholder="Rótulo" onChange={e => updateLink(link.id, { label: e.target.value })} />
-                                    <input type="text" className="bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-xs font-bold" value={link.url} placeholder="URL / Link" onChange={e => updateLink(link.id, { url: e.target.value })} />
+                                    <input type="text" className="bg-white border-none rounded-xl p-4 text-xs font-bold" value={link.label} placeholder="Rótulo" onChange={e => updateLink(link.id, { label: e.target.value })} />
+                                    <input type="text" className="bg-white border-none rounded-xl p-4 text-xs font-bold" value={link.url} placeholder="URL / Link" onChange={e => updateLink(link.id, { url: e.target.value })} />
                                  </div>
                                  <button onClick={() => removeLink(link.id)} className="p-3 text-rose-300 hover:text-rose-500"><Trash2 className="w-5 h-5" /></button>
                               </div>
@@ -571,25 +570,25 @@ export const BioBuilder: React.FC = () => {
                )}
 
                {activeEditorTab === 'social_proof' && (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
+                  <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-10 animate-fade-in">
                      <div className="flex justify-between items-center">
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Star className="text-brand-primary" /> Prova Social</h3>
+                        <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><Star className="text-brand-primary" /> Prova Social</h3>
                         <button onClick={addSocialProof} className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest">ADICIONAR DEPOIMENTO</button>
                      </div>
                      
                      <div className="space-y-6">
-                        {socialProof.length > 0 ? socialProof.map(proof => (
-                           <div key={proof.id} className="p-8 bg-gray-50 dark:bg-zinc-800/40 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 space-y-6 group relative">
+                        {social_proof.length > 0 ? social_proof.map(proof => (
+                           <div key={proof.id} className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 space-y-6 group relative">
                               <button onClick={() => removeSocialProof(proof.id)} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"><X className="w-5 h-5" /></button>
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                  <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Nome do Cliente</label>
-                                    <input type="text" className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-sm font-bold dark:text-white shadow-sm" value={proof.author} onChange={e => updateSocialProof(proof.id, { author: e.target.value })} />
+                                    <input type="text" className="w-full bg-white border-none rounded-xl p-4 text-sm font-bold shadow-sm" value={proof.author} onChange={e => updateSocialProof(proof.id, { author: e.target.value })} />
                                  </div>
                                  <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Avaliação (1 a 5 estrelas)</label>
-                                    <div className="flex gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl shadow-sm w-fit">
+                                    <div className="flex gap-2 p-2 bg-white rounded-xl shadow-sm w-fit">
                                        {[1, 2, 3, 4, 5].map(star => (
                                           <button 
                                              key={star} 
@@ -605,12 +604,12 @@ export const BioBuilder: React.FC = () => {
                               </div>
                               <div>
                                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">O que o cliente disse?</label>
-                                 <textarea rows={3} className="w-full bg-white dark:bg-zinc-900 border-none rounded-xl p-4 text-sm font-medium dark:text-white shadow-sm resize-none" value={proof.text} onChange={e => updateSocialProof(proof.id, { text: e.target.value })} />
+                                 <textarea rows={3} className="w-full bg-white border-none rounded-xl p-4 text-sm font-medium shadow-sm resize-none" value={proof.text} onChange={e => updateSocialProof(proof.id, { text: e.target.value })} />
                               </div>
                            </div>
                         )) : (
-                           <div className="py-20 text-center border-4 border-dashed border-gray-50 dark:border-zinc-800 rounded-[3rem]">
-                              <Star className="w-12 h-12 text-slate-100 dark:text-zinc-800 mx-auto mb-4" />
+                           <div className="py-20 text-center border-4 border-dashed border-gray-50 rounded-[3rem]">
+                              <Star className="w-12 h-12 text-slate-100 mx-auto mb-4" />
                               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Nenhum depoimento cadastrado.</p>
                            </div>
                         )}
@@ -619,8 +618,8 @@ export const BioBuilder: React.FC = () => {
                )}
 
                {activeEditorTab === 'design' && (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-[#F67C01]" /> Identidade Visual</h3>
+                  <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-12 animate-fade-in overflow-y-auto max-h-[800px] scrollbar-hide">
+                     <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><PaletteIcon className="text-[#F67C01]" /> Identidade Visual</h3>
                      
                      <div className="space-y-8">
                         {/* Temas Rápidos */}
@@ -631,7 +630,7 @@ export const BioBuilder: React.FC = () => {
                                  <button 
                                     key={theme.id} 
                                     onClick={() => applyTheme(theme)}
-                                    className="group flex flex-col items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 hover:border-brand-primary transition-all"
+                                    className="group flex flex-col items-center gap-3 p-4 rounded-2xl border border-gray-100 hover:border-brand-primary transition-all"
                                  >
                                     <div className="w-full aspect-square rounded-xl shadow-lg flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: theme.bg }}>
                                        <div className="w-3/4 h-3 rounded-full" style={{ backgroundColor: theme.btn }}></div>
@@ -644,24 +643,24 @@ export const BioBuilder: React.FC = () => {
                         </div>
 
                         {/* Cores Personalizadas */}
-                        <div className="grid md:grid-cols-3 gap-8 pt-8 border-t border-gray-50 dark:border-zinc-800">
+                        <div className="grid md:grid-cols-3 gap-8 pt-8 border-t border-gray-50">
                            <div className="space-y-4">
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Fundo</label>
-                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                              <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
                                  <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={bgColor} onChange={e => setBgColor(e.target.value)} />
                                  <span className="text-[10px] font-mono font-bold uppercase">{bgColor}</span>
                               </div>
                            </div>
                            <div className="space-y-4">
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Botões</label>
-                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                              <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
                                  <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={btnColor} onChange={e => setBtnColor(e.target.value)} />
                                  <span className="text-[10px] font-mono font-bold uppercase">{btnColor}</span>
                               </div>
                            </div>
                            <div className="space-y-4">
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Textos</label>
-                              <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800 p-3 rounded-2xl">
+                              <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
                                  <input type="color" className="w-10 h-10 border-none bg-transparent cursor-pointer" value={textColor} onChange={e => setTextColor(e.target.value)} />
                                  <span className="text-[10px] font-mono font-bold uppercase">{textColor}</span>
                               </div>
@@ -669,14 +668,14 @@ export const BioBuilder: React.FC = () => {
                         </div>
 
                         {/* Tipografia */}
-                        <div className="pt-8 border-t border-gray-50 dark:border-zinc-800">
+                        <div className="pt-8 border-t border-gray-50">
                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Estilo de Fonte</label>
                            <div className="grid md:grid-cols-2 gap-4">
                               {FONTS.map(font => (
                                  <button 
                                     key={font.id} 
                                     onClick={() => setFontFamily(font.family)}
-                                    className={`p-6 rounded-2xl border text-left transition-all ${fontFamily === font.family ? 'border-brand-primary bg-orange-50 dark:bg-orange-950/20' : 'border-gray-100 dark:border-zinc-800'}`}
+                                    className={`p-6 rounded-2xl border text-left transition-all ${font_family === font.family ? 'border-brand-primary bg-orange-50' : 'border-gray-100'}`}
                                  >
                                     <h4 className={`text-xl font-bold ${font.family}`}>{font.label}</h4>
                                     <p className="text-[9px] text-slate-400 uppercase font-black mt-1">Abc 123 • Exemplo de Texto</p>
@@ -686,13 +685,13 @@ export const BioBuilder: React.FC = () => {
                         </div>
 
                         {/* Componentes Extras & Efeitos Premium */}
-                        <div className="pt-8 border-t border-gray-50 dark:border-zinc-800">
+                        <div className="pt-8 border-t border-gray-50">
                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8">Personalização Avançada</label>
                            <div className="grid gap-6">
                               {/* Fundo Premium */}
-                              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100 dark:border-zinc-700">
+                              <div className="bg-gray-50 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100">
                                  <div className="flex gap-4 items-center">
-                                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-indigo-600"><Sparkles className="w-6 h-6" /></div>
+                                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600"><Sparkles className="w-6 h-6" /></div>
                                     <div>
                                        <h4 className="font-black text-sm uppercase italic tracking-tighter">Fundo Premium (Mesh Gradient)</h4>
                                        <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Ative o efeito de gradiente fluido para um visual de elite.</p>
@@ -700,14 +699,14 @@ export const BioBuilder: React.FC = () => {
                                  </div>
                                  <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={useMeshGradient} onChange={e => setUseMeshGradient(e.target.checked)} className="sr-only peer" />
-                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
+                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
                                  </label>
                               </div>
 
                               {/* Bloco QR Code */}
-                              <div className="bg-gray-50 dark:bg-zinc-800/40 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100 dark:border-zinc-700">
+                              <div className="bg-gray-50 p-8 rounded-[2.5rem] flex items-center justify-between border border-gray-100">
                                  <div className="flex gap-4 items-center">
-                                    <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-[#F67C01]"><QrCode className="w-6 h-6" /></div>
+                                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#F67C01]"><QrCode className="w-6 h-6" /></div>
                                     <div>
                                        <h4 className="font-black text-sm uppercase italic tracking-tighter">Bloco QR Code</h4>
                                        <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Exiba um código de acesso rápido no rodapé da sua Bio.</p>
@@ -715,7 +714,7 @@ export const BioBuilder: React.FC = () => {
                                  </div>
                                  <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={shareCardEnabled} onChange={e => setShareCardEnabled(e.target.checked)} className="sr-only peer" />
-                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
+                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-brand-primary"></div>
                                  </label>
                               </div>
                            </div>
@@ -725,21 +724,21 @@ export const BioBuilder: React.FC = () => {
                )}
 
                {activeEditorTab === 'share' && (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm space-y-10 animate-fade-in">
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar Bio Digital</h3>
+                  <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-10 animate-fade-in">
+                     <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight flex items-center gap-2"><Share2 className="text-indigo-600" /> Ativar Bio Digital</h3>
                      <div className="space-y-8">
-                        <div className="p-8 bg-gray-50 dark:bg-zinc-800 rounded-[2.5rem] border border-gray-100 dark:border-zinc-700 text-center space-y-8">
-                           <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-sm text-indigo-600">
+                        <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 text-center space-y-8">
+                           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm text-indigo-600">
                               <Globe className="w-8 h-8" />
                            </div>
                            <div>
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Seu Link da Bio</p>
-                              <p className="text-lg font-black text-gray-900 dark:text-white truncate">
+                              <p className="text-lg font-black text-gray-900 truncate">
                                  menudenegocios.com/{profile.slug || user?.id}
                               </p>
                            </div>
                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                              <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-900 text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
+                              <button onClick={copyBioLink} className={`px-8 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md ${copied ? 'bg-emerald-600 text-white' : 'bg-white text-indigo-600 border border-indigo-100 hover:bg-gray-50'}`}>
                                  {copied ? 'COPIADO!' : 'COPIAR LINK DA BIO'}
                               </button>
                               <button 
@@ -772,7 +771,7 @@ export const BioBuilder: React.FC = () => {
       {/* Modal de Item da Vitrine da Bio */}
       {isBioItemModalOpen && (
          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+            <div className="bg-white rounded-[3rem] w-full max-w-xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingBioItem ? 'Editar Item' : 'Novo Item na Bio'}</h3></div>
                     <button onClick={() => setIsBioItemModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
@@ -782,18 +781,18 @@ export const BioBuilder: React.FC = () => {
                        <div className="space-y-4">
                           <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Título</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.name} onChange={e => setBioItemForm({...bioItemForm, name: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={bioItemForm.name} onChange={e => setBioItemForm({...bioItemForm, name: e.target.value})} />
                           </div>
                           <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Preço (R$)</label>
-                            <input required type="number" step="0.01" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.price} onChange={e => setBioItemForm({...bioItemForm, price: Number(e.target.value)})} />
+                            <input required type="number" step="0.01" className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={bioItemForm.price} onChange={e => setBioItemForm({...bioItemForm, price: Number(e.target.value)})} />
                           </div>
                        </div>
                        <div className="space-y-4">
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Foto do Item</label>
-                          <div className="aspect-square bg-gray-50 dark:bg-zinc-800 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-zinc-700 relative overflow-hidden group cursor-pointer" onClick={() => bioShowcaseImgInputRef.current?.click()}>
-                            {bioItemForm.imageUrl ? (
-                                <img src={bioItemForm.imageUrl} className="w-full h-full object-cover" />
+                          <div className="aspect-square bg-gray-50 rounded-[1.5rem] border-2 border-dashed border-gray-200 relative overflow-hidden group cursor-pointer" onClick={() => bioShowcaseImgInputRef.current?.click()}>
+                            {bioItemForm.image_url ? (
+                                <img src={bioItemForm.image_url} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-300">
                                     <Camera className="w-8 h-8 mb-2" />
@@ -806,7 +805,7 @@ export const BioBuilder: React.FC = () => {
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2"><LinkIcon className="w-3 h-3" /> Link de Redirecionamento</label>
-                        <input required type="url" className="w-full bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 font-bold dark:text-white" value={bioItemForm.link} onChange={e => setBioItemForm({...bioItemForm, link: e.target.value})} placeholder="https://wa.me/... ou https://loja.com/..." />
+                        <input required type="url" className="w-full bg-gray-50 rounded-xl p-4 font-bold" value={bioItemForm.link} onChange={e => setBioItemForm({...bioItemForm, link: e.target.value})} placeholder="https://wa.me/... ou https://loja.com/..." />
                     </div>
                     <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase text-sm hover:opacity-90 active:scale-95 transition-all">
                         SALVAR ITEM NA BIO
@@ -819,26 +818,26 @@ export const BioBuilder: React.FC = () => {
       {/* MODAL DE SUCESSO */}
       {showSuccess && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
-              <div className="relative bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
+              <div className="relative bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col">
                   <div className="p-10 md:p-16 text-center space-y-10 relative z-10">
                       <div className="w-24 h-24 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto border border-emerald-500/20">
                           <Sparkles className="w-12 h-12 text-emerald-500" />
                       </div>
                       <div className="space-y-4">
-                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">BIO DIGITAL <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
-                          <p className="text-slate-500 dark:text-zinc-400 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitors.</p>
+                          <h2 className="text-4xl md:text-5xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">BIO DIGITAL <br/><span className="text-emerald-500">PRO ATIVADA!</span></h2>
+                          <p className="text-slate-500 font-medium text-lg">Use o link abaixo em seu Instagram para converter visitors.</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-gray-100 dark:border-zinc-800">
+                      <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Link da sua Bio</p>
-                          <div className="flex items-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 truncate flex-1 text-left">menudenegocios.com/{profile.slug || user?.id}</span>
-                              <button onClick={copyBioLink} className={`p-3 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-slate-400 hover:bg-indigo-600 hover:text-white'}`}>
+                          <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                              <span className="text-sm font-black text-indigo-600 truncate flex-1 text-left">menudenegocios.com/{profile.slug || user?.id}</span>
+                              <button onClick={copyBioLink} className={`p-3 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-slate-400 hover:bg-indigo-600 hover:text-white'}`}>
                                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                               </button>
                           </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                          <button onClick={() => setShowSuccess(false)} className="flex-1 py-5 bg-gray-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all">VOLTAR AO EDITOR</button>
+                          <button onClick={() => setShowSuccess(false)} className="flex-1 py-5 bg-gray-100 text-slate-600 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all">VOLTAR AO EDITOR</button>
                           <a href={`${window.location.origin}/#/bio/${profile.slug || user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
                       </div>
                   </div>

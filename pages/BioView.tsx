@@ -9,17 +9,17 @@ import {
 } from 'lucide-react';
 
 export const BioView: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { user_id } = useParams<{ user_id: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) loadBioData();
-  }, [userId]);
+    if (user_id) loadBioData();
+  }, [user_id]);
 
   const loadBioData = async () => {
     try {
-      const prof = await supabaseService.getProfile(userId!);
+      const prof = await supabaseService.getProfile(user_id!);
       setProfile(prof);
     } catch (error) {
       console.error('Error loading bio data:', error);
@@ -31,32 +31,32 @@ export const BioView: React.FC = () => {
   if (loading) return <div className="min-h-screen bg-[#0F172A] flex items-center justify-center text-white/50 font-black uppercase text-xs tracking-widest">Carregando Bio Pro...</div>;
   if (!profile) return <div className="min-h-screen flex items-center justify-center">Perfil não encontrado.</div>;
 
-  const bio = profile.bioConfig;
-  const colors = bio?.customColors || { background: '#064e3b', button: '#059669', text: '#ffffff' };
+  const bio = profile.bio_config;
+  const colors = bio?.custom_colors || { background: '#064e3b', button: '#059669', text: '#ffffff' };
   const links = bio?.links?.filter(l => l.active) || [];
   const showcaseItems = bio?.showcase?.items || [];
 
   return (
     <div 
-      className={`min-h-screen w-full flex flex-col items-center pt-16 pb-20 px-6 transition-all duration-500 overflow-x-hidden ${bio?.fontFamily || 'font-sans'}`}
+      className={`min-h-screen w-full flex flex-col items-center pt-16 pb-20 px-6 transition-all duration-500 overflow-x-hidden ${bio?.font_family || 'font-sans'}`}
       style={{ 
         backgroundColor: colors.background || '#064e3b', 
         color: colors.text || '#ffffff',
-        backgroundImage: bio?.meshGradient ? `radial-gradient(at 0% 0%, ${colors.button}66 0px, transparent 50%), radial-gradient(at 100% 0%, ${colors.button}33 0px, transparent 50%), radial-gradient(at 50% 100%, ${colors.button}44 0px, transparent 50%)` : 'none'
+        backgroundImage: bio?.mesh_gradient ? `radial-gradient(at 0% 0%, ${colors.button}66 0px, transparent 50%), radial-gradient(at 100% 0%, ${colors.button}33 0px, transparent 50%), radial-gradient(at 50% 100%, ${colors.button}44 0px, transparent 50%)` : 'none'
       }}
     >
         <div className="w-24 h-24 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden mb-6 flex-shrink-0 bg-white/10 flex items-center justify-center">
-          {profile.logoUrl ? (
-            <img src={profile.logoUrl} className="w-full h-full object-cover" alt="Me" />
+          {profile.logo_url ? (
+            <img src={profile.logo_url} className="w-full h-full object-cover" alt="Me" />
           ) : (
             <Smartphone className="w-12 h-12 opacity-20" />
           )}
         </div>
         
-        <h1 className="font-black text-2xl text-center leading-tight mb-2 uppercase italic tracking-tighter">{profile.businessName}</h1>
+        <h1 className="font-black text-2xl text-center leading-tight mb-2 uppercase italic tracking-tighter">{profile.business_name}</h1>
         <p className="text-sm opacity-80 text-center font-medium max-w-xs mb-10 leading-relaxed">{profile.bio}</p>
 
-        {profile.storeConfig?.schedulingEnabled && (
+        {profile.store_config?.scheduling_enabled && (
            <div 
              className="w-full max-w-sm py-5 px-6 rounded-3xl text-center font-black text-xs shadow-2xl mb-6 border border-white/10 animate-pulse flex items-center justify-center gap-3"
              style={{ backgroundColor: colors.text, color: colors.background }}
@@ -93,8 +93,8 @@ export const BioView: React.FC = () => {
                             style={{ backgroundColor: colors.button + '33', borderColor: colors.button + '66' }}
                         >
                              <div className="w-24 h-24 rounded-[1.8rem] bg-white/10 flex-shrink-0 overflow-hidden border border-white/10">
-                                {item.imageUrl ? (
-                                    <img src={item.imageUrl} className="w-full h-full object-cover" />
+                                {item.image_url ? (
+                                    <img src={item.image_url} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="h-full flex items-center justify-center text-white/10"><ImageIcon className="w-8 h-8" /></div>
                                 )}
@@ -112,10 +112,10 @@ export const BioView: React.FC = () => {
             </div>
         )}
 
-        {bio?.socialProof && bio.socialProof.length > 0 && (
+        {bio?.social_proof && bio.social_proof.length > 0 && (
           <div className="w-full max-w-sm space-y-4 mb-12">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 text-center">Experiência dos Clientes</p>
-            {bio.socialProof.map(proof => (
+            {bio.social_proof.map(proof => (
               <div key={proof.id} className="bg-white/10 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/5 shadow-xl">
                 <div className="flex text-yellow-400 gap-0.5 mb-3">
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-current" />)}
@@ -127,13 +127,13 @@ export const BioView: React.FC = () => {
           </div>
         )}
 
-        {bio?.shareCard?.enabled && (
+        {bio?.share_card?.enabled && (
             <div className="w-full max-w-sm mt-8 p-8 rounded-[3rem] border border-white/10 text-center space-y-6 shadow-2xl"
                 style={{ backgroundColor: colors.button + '44' }}
             >
                  <p className="text-xs font-black text-white uppercase italic tracking-tighter border-b border-white/10 pb-3">Compartilhar Cartão</p>
                  <div className="w-16 h-16 rounded-full border-2 border-white mx-auto overflow-hidden shadow-lg">
-                    {profile.logoUrl && <img src={profile.logoUrl} className="w-full h-full object-cover" />}
+                    {profile.logo_url && <img src={profile.logo_url} className="w-full h-full object-cover" />}
                  </div>
                  <div className="p-4 bg-white rounded-[2rem] w-48 h-48 mx-auto shadow-2xl">
                     <QrCode className="w-full h-full text-black" />

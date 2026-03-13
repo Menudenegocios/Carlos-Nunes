@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { mockBackend } from '../services/mockBackend';
+import { supabase } from '../services/supabaseClient';
 import { Review } from '../types';
 import { Star, ThumbsUp } from 'lucide-react';
 
@@ -10,8 +10,10 @@ export const Reviews: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const data = await mockBackend.getReviews();
-      setReviews(data);
+      const { data, error } = await supabase.from('reviews').select('*');
+      if (data) {
+        setReviews(data as any);
+      }
       setLoading(false);
     };
     loadData();

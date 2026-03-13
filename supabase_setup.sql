@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     social_links JSONB DEFAULT '{}'::jsonb,
     store_config JSONB DEFAULT '{}'::jsonb,
     bio_config JSONB DEFAULT '{}'::jsonb,
-    plan TEXT DEFAULT 'profissionais',
+    plan TEXT DEFAULT 'pre-cadastro',
     points INTEGER DEFAULT 0,
-    level TEXT DEFAULT 'bronze',
+    level TEXT DEFAULT 'consultor',
     menu_cash NUMERIC DEFAULT 0,
     referral_code TEXT UNIQUE,
     referrals_count INTEGER DEFAULT 0,
@@ -313,8 +313,8 @@ CREATE POLICY "Users can delete own B2B offers." ON public.b2b_offers FOR DELETE
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, business_name, plan, email)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'profissionais', new.email);
+  INSERT INTO public.profiles (user_id, business_name, plan, email, level)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'pre-cadastro', new.email, 'consultor');
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

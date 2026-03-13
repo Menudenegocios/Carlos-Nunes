@@ -49,10 +49,10 @@ export const Community: React.FC = () => {
     setIsPosting(true);
     try {
       const newPost = await supabaseService.createCommunityPost({
-        userId: user.id,
-        userName: user.name,
-        businessName: userProfile?.businessName || 'Empreendedor',
-        userAvatar: userProfile?.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
+        user_id: user.id,
+        user_name: user.name,
+        business_name: userProfile?.business_name || 'Empreendedor',
+        user_avatar: userProfile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
         content: newPostContent,
       });
       setPosts([newPost, ...posts]);
@@ -99,19 +99,19 @@ export const Community: React.FC = () => {
              <div className="text-center">
                 <div className="w-20 h-20 rounded-2xl bg-gray-100 mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden">
                    <img 
-                    src={userProfile?.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} 
+                    src={userProfile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} 
                     className="w-full h-full object-cover" 
                     alt="Me" 
                    />
                 </div>
                 <h3 className="font-bold text-gray-900 leading-tight">{user?.name}</h3>
-                <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider mt-1">{userProfile?.businessName || 'Meu Negócio'}</p>
+                <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider mt-1">{userProfile?.business_name || 'Meu Negócio'}</p>
              </div>
              
              <div className="mt-8 space-y-4 pt-6 border-t border-gray-50">
                 <div className="flex justify-between items-center text-sm">
                    <span className="text-gray-500 font-medium">Postagens</span>
-                   <span className="font-black text-gray-900">{posts.filter(p => p.userId === user?.id).length}</span>
+                   <span className="font-black text-gray-900">{posts.filter(p => p.user_id === user?.id).length}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                    <span className="text-gray-500 font-medium">Pontos Clube</span>
@@ -128,7 +128,7 @@ export const Community: React.FC = () => {
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
              <div className="flex gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
-                    <img src={userProfile?.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} alt="Me" className="w-full h-full object-cover" />
+                    <img src={userProfile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} alt="Me" className="w-full h-full object-cover" />
                 </div>
                 <form onSubmit={handleCreatePost} className="flex-1 space-y-4">
                    <textarea 
@@ -222,12 +222,12 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
        <div className="p-6 pb-4 flex justify-between items-start">
           <div className="flex gap-4">
              <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
-                <img src={post.userAvatar} className="w-full h-full object-cover" alt={post.userName} />
+                <img src={post.user_avatar} className="w-full h-full object-cover" alt={post.user_name} />
              </div>
              <div>
-                <h4 className="font-bold text-gray-900 leading-tight">{post.userName}</h4>
-                <p className="text-xs text-indigo-600 font-bold">{post.businessName}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{new Date(post.createdAt).toLocaleDateString()} às {new Date(post.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                <h4 className="font-bold text-gray-900 leading-tight">{post.user_name}</h4>
+                <p className="text-xs text-indigo-600 font-bold">{post.business_name}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{new Date(post.created_at).toLocaleDateString()} às {new Date(post.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
              </div>
           </div>
           <button className="text-gray-400 hover:text-gray-600"><MoreHorizontal className="w-5 h-5" /></button>
@@ -236,9 +236,9 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
        {/* Card Body */}
        <div className="px-6 pb-4">
           <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
-          {post.imageUrl && (
+          {post.image_url && (
             <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100">
-               <img src={post.imageUrl} className="w-full object-cover max-h-80" alt="Post content" />
+               <img src={post.image_url} className="w-full object-cover max-h-80" alt="Post content" />
             </div>
           )}
        </div>
@@ -289,10 +289,10 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
                 {post.comments.map(comment => (
                    <div key={comment.id} className="flex gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                         <img src={comment.userAvatar} alt={comment.userName} className="w-full h-full object-cover" />
+                         <img src={comment.user_avatar} alt={comment.user_name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
-                         <h5 className="text-xs font-black text-gray-900 mb-0.5">{comment.userName}</h5>
+                         <h5 className="text-xs font-black text-gray-900 mb-0.5">{comment.user_name}</h5>
                          <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
                       </div>
                    </div>

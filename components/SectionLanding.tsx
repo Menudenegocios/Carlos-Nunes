@@ -43,12 +43,12 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${bgClass} bg-opacity-10 ${textClass} border ${borderClass} border-opacity-20 text-[10px] font-black uppercase tracking-[0.2em]`}>
           <Icon className="w-4 h-4" /> {subtitle}
         </div>
-        <h1 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tighter max-w-3xl mx-auto">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">
+        <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-[1.1] tracking-tighter max-w-3xl mx-auto">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA]">
             {title}
           </span>
         </h1>
-        <p className="text-gray-500 dark:text-zinc-400 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto font-medium">
+        <p className="text-slate-600 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto font-medium">
           {description}
         </p>
       </div>
@@ -71,11 +71,11 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
       {/* Grid de Benefícios */}
       <div className="grid md:grid-cols-2 gap-8 mb-16">
         {benefits.map((benefit, idx) => (
-          <div key={idx} className="flex items-start gap-4 p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all">
+          <div key={idx} className="flex items-start gap-4 p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
             <div className={`mt-1 ${textClass}`}>
-              <CheckCircle className="w-6 h-6 fill-current bg-white dark:bg-zinc-900 rounded-full" />
+              <CheckCircle className="w-6 h-6 fill-current bg-white rounded-full" />
             </div>
-            <span className="text-gray-700 dark:text-zinc-300 font-bold text-base leading-tight">{benefit}</span>
+            <span className="text-gray-700 font-bold text-base leading-tight">{benefit}</span>
           </div>
         ))}
       </div>
@@ -91,17 +91,17 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
       </div>
 
       {/* Stats Integrados */}
-      <div className="mt-24 grid grid-cols-2 md:grid-cols-3 gap-8 pt-12 border-t border-gray-100 dark:border-zinc-800">
+      <div className="mt-24 grid grid-cols-2 md:grid-cols-3 gap-8 pt-12 border-t border-gray-100">
         <div className="text-center">
-           <p className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tighter">+40%</p>
+           <p className="text-3xl font-black text-gray-900 mb-1 tracking-tighter">+40%</p>
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Crescimento</p>
         </div>
         <div className="text-center">
-           <p className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tighter">ZERO</p>
+           <p className="text-3xl font-black text-gray-900 mb-1 tracking-tighter">ZERO</p>
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Taxas</p>
         </div>
         <div className="text-center col-span-2 md:col-span-1">
-           <p className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tighter">100%</p>
+           <p className="text-3xl font-black text-gray-900 mb-1 tracking-tighter">100%</p>
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Foco Local</p>
         </div>
       </div>

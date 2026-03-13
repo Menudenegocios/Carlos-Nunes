@@ -11,8 +11,7 @@ interface CouponWithOffer extends Coupon {
 }
 
 export const Coupons: React.FC = () => {
-  /* Fix: Use refreshProfile instead of login to update user state after redemption */
-  const { user, refreshProfile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [coupons, setCoupons] = useState<CouponWithOffer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +31,7 @@ export const Coupons: React.FC = () => {
     code: '',
     title: '',
     discount: '',
-    pointsReward: 50,
+    points_reward: 50,
     description: ''
   });
 
@@ -52,7 +51,7 @@ export const Coupons: React.FC = () => {
       
       const couponsWithOffers: CouponWithOffer[] = allCoupons.map(coupon => {
         const offer = offers.find(o => o.id === (coupon as any).offerId);
-        return { ...coupon, offer: offer || { id: 'unknown', title: 'Desconhecido', logoUrl: '' } as Offer };
+        return { ...coupon, offer: offer || { id: 'unknown', title: 'Desconhecido', logo_url: '' } as Offer };
       });
       
       setCoupons(couponsWithOffers);
@@ -83,10 +82,10 @@ export const Coupons: React.FC = () => {
       await supabaseService.redeemCoupon(
         user.id, 
         selectedCoupon.id, 
-        selectedCoupon.pointsReward || 0
+        selectedCoupon.points_reward || 0
       );
-      await refreshProfile();
-      alert(`Cupom ${selectedCoupon.code} ativado! Você ganhou ${selectedCoupon.pointsReward} pontos.`);
+      // Profile is updated implicitly or on next load
+      alert(`Cupom ${selectedCoupon.code} ativado! Você ganhou ${selectedCoupon.points_reward} pontos.`);
       setSelectedCoupon(null);
     } catch (error) {
       alert('Erro ao ativar cupom.');
@@ -101,7 +100,7 @@ export const Coupons: React.FC = () => {
       code: '',
       title: '',
       discount: '',
-      pointsReward: 50,
+      points_reward: 50,
       description: ''
     });
     setIsEditing(false);
@@ -115,7 +114,7 @@ export const Coupons: React.FC = () => {
       code: coupon.code,
       title: coupon.title,
       discount: coupon.discount,
-      pointsReward: coupon.pointsReward || 0,
+      points_reward: coupon.points_reward || 0,
       description: coupon.description || ''
     });
     setIsEditing(true);
@@ -146,15 +145,15 @@ export const Coupons: React.FC = () => {
         code: newCouponData.code.toUpperCase(),
         title: newCouponData.title,
         discount: newCouponData.discount,
-        pointsReward: Number(newCouponData.pointsReward),
+        points_reward: Number(newCouponData.points_reward),
         description: newCouponData.description,
         offerId: newCouponData.offerId
       };
 
       if (isEditing && editingCouponId) {
-        await supabaseService.updateCoupon(editingCouponId, user.id, { ...commonData, userId: user.id, type: 'percentage', active: true });
+        await supabaseService.updateCoupon(editingCouponId, user.id, { ...commonData, user_id: user.id, type: 'percentage', active: true });
       } else {
-        await supabaseService.createCoupon({ ...commonData, userId: user.id, type: 'percentage', active: true });
+        await supabaseService.createCoupon({ ...commonData, user_id: user.id, type: 'percentage', active: true });
       }
       
       setIsCreateModalOpen(false);
@@ -208,7 +207,7 @@ export const Coupons: React.FC = () => {
         ) : (
           coupons.map(coupon => (
             <div key={coupon.id} className="relative group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-              {user && user.id === coupon.offer.userId && (
+              {user && user.id === coupon.offer.user_id && (
                 <div className="absolute top-2 right-2 z-20 flex gap-1">
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleEditCoupon(coupon); }}
@@ -230,7 +229,7 @@ export const Coupons: React.FC = () => {
               <div className="bg-gray-900 p-4 text-white flex justify-between items-center relative">
                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white p-0.5">
-                       <img src={coupon.offer.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${coupon.offer.title}`} className="w-full h-full rounded-full" alt="Logo" />
+                       <img src={coupon.offer.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${coupon.offer.title}`} className="w-full h-full rounded-full" alt="Logo" />
                     </div>
                     <div>
                       <h3 className="font-bold text-sm text-gray-200">{coupon.offer.title}</h3>
@@ -250,7 +249,7 @@ export const Coupons: React.FC = () => {
                  <div className="mt-auto pt-4 border-t border-dashed border-gray-200 flex justify-between items-center text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <Zap className="w-3 h-3 text-yellow-500" />
-                      Ganhe +{coupon.pointsReward} pts
+                      Ganhe +{coupon.points_reward} pts
                     </span>
                     <span className="flex items-center gap-1">
                        <Clock className="w-3 h-3" />
@@ -287,7 +286,7 @@ export const Coupons: React.FC = () => {
                    {selectedCoupon.code}
                 </div>
                 <div className="text-xs text-gray-500">
-                   Ao utilizar este cupom, você ganhará automaticamente <strong className="text-yellow-600">{selectedCoupon.pointsReward} pontos</strong> no Clube de Vantagens.
+                   Ao utilizar este cupom, você ganhará automaticamente <strong className="text-yellow-600">{selectedCoupon.points_reward} pontos</strong> no Clube de Vantagens.
                 </div>
                 <button 
                   onClick={handleRedeem}
@@ -401,8 +400,8 @@ export const Coupons: React.FC = () => {
                              <input 
                                 type="number"
                                 className="w-20 border-gray-200 rounded-lg p-1.5 font-bold"
-                                value={newCouponData.pointsReward}
-                                onChange={e => setNewCouponData({...newCouponData, pointsReward: Number(e.target.value)})}
+                                value={newCouponData.points_reward}
+                                onChange={e => setNewCouponData({...newCouponData, points_reward: Number(e.target.value)})}
                              />
                              <span className="ml-2 text-sm font-bold text-pink-700">Pontos no Clube</span>
                           </div>

@@ -13,7 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export const AdminCentral: React.FC = () => {
-  const { user, impersonate } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'membros' | 'eventos' | 'paginas' | 'marketplace' | 'midia'>('membros');
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -29,10 +29,10 @@ export const AdminCentral: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [memberForm, setMemberForm] = useState({
-    businessName: '',
+    business_name: '',
     email: '',
     password: '',
-    plan: 'profissionais' as any,
+    plan: 'basic' as any,
     points: 0,
     role: 'user' as any
   });
@@ -78,15 +78,14 @@ export const AdminCentral: React.FC = () => {
   const [selectedMediaFile, setSelectedMediaFile] = useState<File | null>(null);
 
   const planNames: Record<string, string> = {
-    profissionais: 'Plano Básico',
-    freelancers: 'Plano PRO',
-    negocios: 'Plano FULL'
+    basic: 'Plano Básico',
+    pro: 'Plano Pro',
+    full: 'Plano FULL'
   };
 
   const plansConfig = [
     { name: 'Plano Básico', color: 'border-slate-300', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
-    { name: 'Plano Premium', color: 'border-brand-primary', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
-    { name: 'Plano Pro', color: 'border-emerald-500', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] }
+    { name: 'Plano Pro', color: 'border-brand-primary', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] }
   ];
 
   useEffect(() => {
@@ -118,10 +117,10 @@ export const AdminCentral: React.FC = () => {
   const handleOpenCreateModal = () => {
     setEditingProfile(null);
     setMemberForm({
-        businessName: '',
+        business_name: '',
         email: '',
         password: '',
-        plan: 'profissionais',
+        plan: 'basic',
         points: 0,
         role: 'user'
     });
@@ -131,10 +130,10 @@ export const AdminCentral: React.FC = () => {
   const handleOpenEditModal = (profile: Profile) => {
     setEditingProfile(profile);
     setMemberForm({
-      businessName: profile.businessName || '',
+      business_name: profile.business_name || '',
       email: (profile as any).email || '',
       password: '', // Senha em branco para segurança no modo edit
-      plan: (profile as any).plan || 'profissionais',
+      plan: (profile as any).plan || 'basic',
       points: (profile as any).points || 0,
       role: (profile as any).role || 'user'
     });
@@ -148,29 +147,19 @@ export const AdminCentral: React.FC = () => {
     setLoading(true);
     try {
       if (editingProfile) {
-        await supabaseService.updateProfile(editingProfile.userId, {
-          businessName: memberForm.businessName,
+        await supabaseService.updateProfile(editingProfile.user_id, {
+          business_name: memberForm.business_name,
           plan: memberForm.plan,
           points: memberForm.points,
           role: memberForm.role
         } as any);
+        setIsModalOpen(false);
+        loadAdminData();
+        alert('Membro atualizado!');
       } else {
-        if (!user) {
-          alert('Você precisa estar logado para realizar esta operação.');
-          setLoading(false);
-          return;
-        }
-        await supabaseService.createMemberAsAdmin({
-          businessName: memberForm.businessName,
-          email: memberForm.email,
-          plan: memberForm.plan,
-          points: memberForm.points,
-          role: memberForm.role
-        });
+        alert('Para criar um novo administrador, registre a conta normalmente pela tela principal do sistema e mude o nível de acesso "role" diretamente no painel de banco de dados do Supabase. Essa medida é necessária por questões de segurança na nuvem.');
+        setIsModalOpen(false);
       }
-      setIsModalOpen(false);
-      loadAdminData();
-      alert(editingProfile ? 'Membro atualizado!' : 'Membro criado com sucesso!');
     } catch (err: any) { 
       console.error("Erro ao salvar membro:", err);
       console.error("Erro completo:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
@@ -184,24 +173,8 @@ export const AdminCentral: React.FC = () => {
     }
   };
 
-  const handleImpersonate = (profile: Profile) => {
-    const targetUser: UserType = {
-        id: profile.userId,
-        name: profile.businessName || 'Membro',
-        email: (profile as any).email || '',
-        plan: (profile as any).plan || 'profissionais',
-        points: (profile as any).points || 0,
-        level: (profile as any).level || 'bronze',
-        menuCash: (profile as any).menuCash || 0,
-        referralCode: (profile as any).referralCode || '',
-        referralsCount: (profile as any).referralsCount || 0,
-        role: 'user'
-    };
-    impersonate(targetUser);
-    navigate('/dashboard');
-  };
 
-  const deleteMember = async (userId: string) => {
+  const deleteMember = async (user_id: string) => {
     if (window.confirm('Excluir este membro permanentemente?')) {
       try {
         // Deleting users usually requires Admin API or Edge Function
@@ -268,12 +241,12 @@ export const AdminCentral: React.FC = () => {
   const handleSaveEvent = async (e: React.FormEvent, file?: File) => {
     e.preventDefault();
     try {
-      let imageUrl = eventForm.image;
+      let image_url = eventForm.image;
       if (file) {
-        imageUrl = await supabaseService.uploadImage(file, `events/${Date.now()}_${file.name}`);
+        image_url = await supabaseService.uploadImage(file, `events/${Date.now()}_${file.name}`);
       }
       
-      const eventData = { ...eventForm, image: imageUrl };
+      const eventData = { ...eventForm, image: image_url };
 
       if (editingEvent) {
         await supabaseService.updateEvent(editingEvent.id, eventData);
@@ -292,12 +265,12 @@ export const AdminCentral: React.FC = () => {
   const handleSaveMedia = async (e: React.FormEvent, file?: File) => {
     e.preventDefault();
     try {
-      let imageUrl = mediaForm.image;
+      let image_url = mediaForm.image;
       if (file) {
-        imageUrl = await supabaseService.uploadImage(file, `media/${Date.now()}_${file.name}`);
+        image_url = await supabaseService.uploadImage(file, `media/${Date.now()}_${file.name}`);
       }
       
-      const mediaData = { ...mediaForm, image: imageUrl };
+      const mediaData = { ...mediaForm, image: image_url };
 
       if (editingMedia) {
         await supabaseService.updateMedia(editingMedia.id, mediaData);
@@ -368,12 +341,12 @@ export const AdminCentral: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      let imageUrl = itemForm.image;
+      let image_url = itemForm.image;
       if (file) {
-        imageUrl = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
+        image_url = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
       }
       
-      const itemData = { ...itemForm, image: imageUrl };
+      const itemData = { ...itemForm, image: image_url };
 
       if (editingItem) {
         if (itemData.type === 'product') {
@@ -383,9 +356,9 @@ export const AdminCentral: React.FC = () => {
         }
       } else {
         if (itemData.type === 'product') {
-            await supabaseService.createProduct({ ...itemData, userId: user.id } as any);
+            await supabaseService.createProduct({ ...itemData, user_id: user.id } as any);
         } else {
-            await supabaseService.createOffer({ ...itemData, userId: user.id });
+            await supabaseService.createOffer({ ...itemData, user_id: user.id });
         }
       }
       setIsMarketplaceModalOpen(false);
@@ -397,7 +370,7 @@ export const AdminCentral: React.FC = () => {
     }
   };
 
-  const deleteItem = async (id: string, type: 'product' | 'offer', userId?: string) => {
+  const deleteItem = async (id: string, type: 'product' | 'offer', user_id?: string) => {
     if (window.confirm('Excluir este item?')) {
       try {
         if (type === 'product') {
@@ -437,8 +410,8 @@ export const AdminCentral: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-[3rem] shadow-xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
-         <div className="flex bg-gray-50 dark:bg-zinc-800/50 p-2 gap-2 overflow-x-auto scrollbar-hide">
+      <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 overflow-hidden">
+         <div className="flex bg-gray-50 p-2 gap-2 overflow-x-auto scrollbar-hide">
             {[{ id: 'membros', label: 'Gestão de Membros', icon: Users }, { id: 'eventos', label: 'Gestão de Eventos', icon: Calendar }, { id: 'marketplace', label: 'Marketplace', icon: Package }, { id: 'midia', label: 'Agenda & Conteúdo', icon: BookOpen }, { id: 'paginas', label: 'Páginas & Planos', icon: Settings2 }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex-1 min-w-[150px] flex items-center justify-center gap-3 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>
                     <tab.icon className="w-4 h-4" /> {tab.label}
@@ -455,19 +428,19 @@ export const AdminCentral: React.FC = () => {
                                 <h3 className="text-2xl font-black italic uppercase">Membros Registrados</h3>
                                 <div className="relative">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input type="text" placeholder="Buscar..." className="pl-12 pr-6 py-3 bg-gray-50 dark:bg-zinc-800 rounded-xl border-none font-bold text-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                    <input type="text" placeholder="Buscar..." className="pl-12 pr-6 py-3 bg-gray-50 rounded-xl border-none font-bold text-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 </div>
                             </div>
                             
                             <div className="grid gap-4">
-                                {profiles.filter(p => p.businessName?.toLowerCase().includes(searchTerm.toLowerCase())).map(profile => (
-                                    <div key={profile.id} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                {profiles.filter(p => p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())).map(profile => (
+                                    <div key={profile.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
                                             <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                                                <img src={profile.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.businessName}`} className="w-full h-full object-cover" />
+                                                <img src={profile.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.business_name}`} className="w-full h-full object-cover" />
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-gray-900 dark:text-white text-lg">{profile.businessName}</h4>
+                                                <h4 className="font-black text-gray-900 text-lg">{profile.business_name}</h4>
                                                 <div className="flex items-center gap-3">
                                                   <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{planNames[(profile as any).plan || 'profissionais']}</span>
                                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{profile.city || 'Sem cidade'}</span>
@@ -476,9 +449,9 @@ export const AdminCentral: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleImpersonate(profile)} title="Entrar na conta" className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><UserCheck className="w-5 h-5" /></button>
-                                            <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteMember(profile.userId)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+
+                                            <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteMember(profile.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -496,13 +469,13 @@ export const AdminCentral: React.FC = () => {
                             
                             <div className="grid gap-4">
                                 {[...products.map(p => ({...p, _key: `product-${p.id}`})), ...offers.map(o => ({...o, _key: `offer-${o.id}`}))].map(item => (
-                                    <div key={item._key} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                    <div key={item._key} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
-                                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 flex items-center justify-center shadow-sm">
+                                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
                                                 <Package className="w-7 h-7" />
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-gray-900 dark:text-white text-lg">{item.name}</h4>
+                                                <h4 className="font-black text-gray-900 text-lg">{item.name}</h4>
                                                 <div className="flex items-center gap-3">
                                                   <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{item.type}</span>
                                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">R$ {item.price}</span>
@@ -510,8 +483,8 @@ export const AdminCentral: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleOpenMarketplaceModal(item)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteItem(item.id, item.type, item.userId)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+                                            <button onClick={() => handleOpenMarketplaceModal(item)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteItem(item.id, item.type, item.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -529,13 +502,13 @@ export const AdminCentral: React.FC = () => {
                             
                             <div className="grid gap-4">
                                 {events.map(event => (
-                                    <div key={event.id} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                    <div key={event.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
-                                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 flex items-center justify-center shadow-sm">
+                                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
                                                 <Calendar className="w-7 h-7" />
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-gray-900 dark:text-white text-lg">{event.title}</h4>
+                                                <h4 className="font-black text-gray-900 text-lg">{event.title}</h4>
                                                 <div className="flex items-center gap-3">
                                                   <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{event.type}</span>
                                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{event.date}</span>
@@ -544,8 +517,8 @@ export const AdminCentral: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleOpenEventModal(event)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteEvent(event.id)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+                                            <button onClick={() => handleOpenEventModal(event)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteEvent(event.id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -569,7 +542,7 @@ export const AdminCentral: React.FC = () => {
                             </div>
                             
                             {mediaItems.length === 0 ? (
-                                <div className="text-center py-20 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800">
+                                <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-gray-100">
                                     <BookOpen className="w-16 h-16 text-slate-200 mx-auto mb-6" />
                                     <h3 className="text-xl font-black uppercase italic text-slate-400">Nenhuma Agenda Cadastrada</h3>
                                     <p className="text-slate-400 text-sm mt-2">Clique em "Nova Agenda" para adicionar conteúdo.</p>
@@ -577,9 +550,9 @@ export const AdminCentral: React.FC = () => {
                             ) : (
                                 <div className="grid gap-4">
                                     {mediaItems.map(media => (
-                                        <div key={media.id} className="p-6 bg-gray-50/50 dark:bg-zinc-800/40 rounded-3xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                        <div key={media.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                             <div className="flex items-center gap-6">
-                                                <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden shadow-sm">
+                                                <div className="w-16 h-16 rounded-2xl bg-indigo-50 overflow-hidden shadow-sm">
                                                     {media.image ? (
                                                         <img src={media.image} alt={media.title} className="w-full h-full object-cover" />
                                                     ) : (
@@ -589,7 +562,7 @@ export const AdminCentral: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-black text-gray-900 dark:text-white text-lg">{media.title}</h4>
+                                                    <h4 className="font-black text-gray-900 text-lg">{media.title}</h4>
                                                     <div className="flex items-center gap-3 mt-1">
                                                         <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase ${media.category === 'MenuCast' ? 'bg-purple-100 text-purple-700' : media.category === 'Treinamentos' ? 'bg-indigo-100 text-indigo-700' : media.category === 'Eventos' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
                                                             {media.category}
@@ -601,8 +574,8 @@ export const AdminCentral: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleOpenMediaModal(media)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Edit2 className="w-5 h-5" /></button>
-                                                <button onClick={() => deleteMedia(media.id)} className="p-3 bg-white dark:bg-zinc-900 rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100 dark:border-zinc-800"><Trash2 className="w-5 h-5" /></button>
+                                                <button onClick={() => handleOpenMediaModal(media)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                                <button onClick={() => deleteMedia(media.id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                             </div>
                                         </div>
                                     ))}
@@ -618,7 +591,7 @@ export const AdminCentral: React.FC = () => {
       {/* MODAL CRIAR/EDITAR MÍDIA */}
       {isMediaModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic">{editingMedia ? 'Editar Agenda' : 'Nova Agenda'}</h3>
@@ -630,12 +603,12 @@ export const AdminCentral: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={mediaForm.title} onChange={e => setMediaForm({...mediaForm, title: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.title} onChange={e => setMediaForm({...mediaForm, title: e.target.value})} />
                         </div>
                         
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</label>
-                            <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={mediaForm.category} onChange={e => setMediaForm({...mediaForm, category: e.target.value as any})}>
+                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.category} onChange={e => setMediaForm({...mediaForm, category: e.target.value as any})}>
                                 <option value="MenuCast">MenuCast</option>
                                 <option value="Treinamentos">Treinamentos</option>
                                 <option value="Ferramentas">Ferramentas</option>
@@ -645,16 +618,16 @@ export const AdminCentral: React.FC = () => {
                         
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Duração (Opcional)</label>
-                            <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={mediaForm.duration} onChange={e => setMediaForm({...mediaForm, duration: e.target.value})} placeholder="Ex: 45m" />
+                            <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.duration} onChange={e => setMediaForm({...mediaForm, duration: e.target.value})} placeholder="Ex: 45m" />
                         </div>
 
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL da Imagem de Capa</label>
-                            <input required type="url" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={mediaForm.image} onChange={e => setMediaForm({...mediaForm, image: e.target.value})} placeholder="https://..." />
+                            <input required type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.image} onChange={e => setMediaForm({...mediaForm, image: e.target.value})} placeholder="https://..." />
                         </div>
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Imagem (Opcional)</label>
-                            <input type="file" accept="image/*" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" onChange={(e) => {
+                            <input type="file" accept="image/*" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                     setSelectedMediaFile(file);
@@ -664,12 +637,12 @@ export const AdminCentral: React.FC = () => {
 
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Link do YouTube (Embed) ou Link Externo</label>
-                            <input type="url" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? mediaForm.link : mediaForm.youtubeEmbed} onChange={e => mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? setMediaForm({...mediaForm, link: e.target.value}) : setMediaForm({...mediaForm, youtubeEmbed: e.target.value})} placeholder="https://..." />
+                            <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? mediaForm.link : mediaForm.youtubeEmbed} onChange={e => mediaForm.category === 'Ferramentas' || mediaForm.category === 'Eventos' ? setMediaForm({...mediaForm, link: e.target.value}) : setMediaForm({...mediaForm, youtubeEmbed: e.target.value})} placeholder="https://..." />
                         </div>
 
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição</label>
-                            <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white resize-none" value={mediaForm.description} onChange={e => setMediaForm({...mediaForm, description: e.target.value})} />
+                            <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold resize-none" value={mediaForm.description} onChange={e => setMediaForm({...mediaForm, description: e.target.value})} />
                         </div>
                     </div>
 
@@ -684,7 +657,7 @@ export const AdminCentral: React.FC = () => {
       {/* MODAL CRIAR/EDITAR MARKETPLACE */}
       {isMarketplaceModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic">{editingItem ? 'Editar Item' : 'Novo Item'}</h3>
@@ -696,16 +669,16 @@ export const AdminCentral: React.FC = () => {
                     <div className="space-y-4">
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome do Item</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Preço (R$)</label>
-                                <input required type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={itemForm.price} onChange={e => setItemForm({...itemForm, price: Number(e.target.value)})} />
+                                <input required type="number" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.price} onChange={e => setItemForm({...itemForm, price: Number(e.target.value)})} />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
-                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={itemForm.type} onChange={e => setItemForm({...itemForm, type: e.target.value as any})}>
+                                <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.type} onChange={e => setItemForm({...itemForm, type: e.target.value as any})}>
                                     <option value="product">Produto</option>
                                     <option value="offer">Oferta</option>
                                 </select>
@@ -713,15 +686,15 @@ export const AdminCentral: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={itemForm.category} onChange={e => setItemForm({...itemForm, category: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.category} onChange={e => setItemForm({...itemForm, category: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL da Imagem</label>
-                            <input required type="url" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={itemForm.image} onChange={e => setItemForm({...itemForm, image: e.target.value})} />
+                            <input required type="url" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.image} onChange={e => setItemForm({...itemForm, image: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Imagem (Opcional)</label>
-                            <input type="file" accept="image/*" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" onChange={(e) => {
+                            <input type="file" accept="image/*" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                     setSelectedItemFile(file);
@@ -730,7 +703,7 @@ export const AdminCentral: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição</label>
-                            <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white resize-none" value={itemForm.description} onChange={e => setItemForm({...itemForm, description: e.target.value})} />
+                            <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold resize-none" value={itemForm.description} onChange={e => setItemForm({...itemForm, description: e.target.value})} />
                         </div>
                     </div>
 
@@ -744,7 +717,7 @@ export const AdminCentral: React.FC = () => {
       {/* MODAL CRIAR/EDITAR EVENTO */}
       {isEventModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic">{editingEvent ? 'Editar Evento' : 'Novo Evento'}</h3>
@@ -756,16 +729,16 @@ export const AdminCentral: React.FC = () => {
                     <div className="space-y-4">
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Título do Evento</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={eventForm.title} onChange={e => setEventForm({...eventForm, title: e.target.value})} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Data</label>
-                                <input required type="date" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.date} onChange={e => setEventForm({...eventForm, date: e.target.value})} />
+                                <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={eventForm.date} onChange={e => setEventForm({...eventForm, date: e.target.value})} />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
-                                <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.type} onChange={e => setEventForm({...eventForm, type: e.target.value as any})}>
+                                <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={eventForm.type} onChange={e => setEventForm({...eventForm, type: e.target.value as any})}>
                                     <option value="Online">Online</option>
                                     <option value="Presencial">Presencial</option>
                                 </select>
@@ -773,15 +746,15 @@ export const AdminCentral: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Local / Link</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Descrição Curta</label>
-                            <textarea rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white resize-none" value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} />
+                            <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold resize-none" value={eventForm.description} onChange={e => setEventForm({...eventForm, description: e.target.value})} />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Upload de Imagem (Opcional)</label>
-                            <input type="file" accept="image/*" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" onChange={(e) => {
+                            <input type="file" accept="image/*" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
                                     setSelectedEventFile(file);
@@ -799,7 +772,7 @@ export const AdminCentral: React.FC = () => {
       )}
       {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic">{editingProfile ? 'Configurações do Membro' : 'Novo Cadastro Manual'}</h3>
@@ -811,31 +784,31 @@ export const AdminCentral: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome do Negócio / Usuário</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={memberForm.businessName} onChange={e => setMemberForm({...memberForm, businessName: e.target.value})} />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.business_name} onChange={e => setMemberForm({...memberForm, business_name: e.target.value})} />
                         </div>
                         
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Mail className="w-3 h-3" /> E-mail (Login)</label>
-                            <input required type="email" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={memberForm.email} onChange={e => setMemberForm({...memberForm, email: e.target.value})} placeholder="exemplo@login.com" />
+                            <input required type="email" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.email} onChange={e => setMemberForm({...memberForm, email: e.target.value})} placeholder="exemplo@login.com" />
                         </div>
                         
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Lock className="w-3 h-3" /> Senha</label>
-                            <input required={!editingProfile} type="password" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={memberForm.password} onChange={e => setMemberForm({...memberForm, password: e.target.value})} placeholder={editingProfile ? "•••••••• (deixe em branco para manter)" : "Senha inicial"} />
+                            <input required={!editingProfile} type="password" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.password} onChange={e => setMemberForm({...memberForm, password: e.target.value})} placeholder={editingProfile ? "•••••••• (deixe em branco para manter)" : "Senha inicial"} />
                         </div>
 
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Plano Ativo</label>
-                            <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
-                                <option value="profissionais">Plano Básico</option>
-                                <option value="freelancers">Plano PRO</option>
-                                <option value="negocios">Plano FULL</option>
+                            <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
+                                <option value="basic">Plano Básico</option>
+                                <option value="pro">Plano PRO</option>
+                                <option value="full">Plano FULL</option>
                             </select>
                         </div>
                         
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Saldo de Pontos</label>
-                            <input type="number" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-4 font-bold dark:text-white" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
+                            <input type="number" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
                         </div>
 
                         <div className="col-span-2">
@@ -849,7 +822,7 @@ export const AdminCentral: React.FC = () => {
                                         className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all border ${
                                             memberForm.role === role 
                                             ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg' 
-                                            : 'bg-gray-50 dark:bg-zinc-800 text-slate-400 border-transparent hover:border-slate-300'
+                                            : 'bg-gray-50 text-slate-400 border-transparent hover:border-slate-300'
                                         }`}
                                     >
                                         {role === 'user' ? 'Usuário' : 

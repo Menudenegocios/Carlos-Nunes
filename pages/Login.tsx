@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/Logo';
-import { AlertCircle, Lock, Mail, Sparkles, WifiOff } from 'lucide-react';
+import { AlertCircle, Lock, Mail, Sparkles } from 'lucide-react';
+import { supabase } from '../services/supabaseClient';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginAsDemo, networkError, forgotPassword } = useAuth();
+  const { forgotPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -36,65 +37,49 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
+
     try {
-      const role = await login(email.trim(), password);
-      if (role === 'admin' || email.trim().toLowerCase() === 'nunesempreendedor@gmail.com') {
-        navigate('/admin-central');
-      } else {
-        navigate('/dashboard');
-      }
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (signInError) throw signInError;
+      
+      setSuccess('Login efetuado com sucesso! Redirecionando...');
+
+      // Small delay just for the user to see the success message
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 500);
+      
     } catch (err: any) {
-      console.error("Erro detalhado de login:", err);
-      if (err.message === 'Failed to fetch' || err.code === 'auth/network-request-failed') {
-        setError("Erro de conexão. Verifique sua internet ou utilize o Acesso Rápido (Demo).");
-      } else if (err.code === 'auth/invalid-credential' || err.message.includes("Invalid login credentials")) {
-        setError("E-mail ou senha incorretos. Tente novamente.");
-      } else if (err.message.includes("Email not confirmed")) {
-        setError("Seu e-mail ainda não foi verificado.");
-      } else {
-        setError(err.message || 'Erro ao fazer login.');
-      }
-    } finally {
+      console.error("Erro de login:", err);
+      setError(err.message || 'Erro ao fazer login.');
       setLoading(false);
     }
   };
 
-  const handleDemoLogin = () => {
-    const role = loginAsDemo();
-    if (role === 'admin') {
-      navigate('/admin-central');
-    } else {
-      navigate('/dashboard');
-    }
-  };
-
   return (
-    <div className="min-h-[85vh] flex flex-col justify-center py-12 px-6 lg:px-8 bg-brand-surface dark:bg-black transition-colors">
+    <div className="min-h-[85vh] flex flex-col justify-center py-12 px-6 lg:px-8 bg-brand-surface transition-colors">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex mb-10 transform hover:scale-105 transition-transform">
            <Logo size="lg" />
         </div>
-        <h2 className="text-center text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none uppercase italic">
-          Bem-vindo ao <br/><span className="text-brand-primary">Menu de Negócios</span>
+        <h2 className="text-center text-4xl font-black text-gray-900 tracking-tighter leading-tight uppercase italic overflow-visible">
+          Bem-vindo ao <br/><span className="text-brand-primary title-fix">Menu de Negócios</span>
         </h2>
-        <p className="mt-3 text-center text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+        <p className="mt-3 text-center text-gray-500 font-bold uppercase tracking-widest text-[10px]">
           Sua plataforma de negócios.
         </p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-zinc-900 py-10 px-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-none sm:rounded-[3rem] sm:px-12 border border-gray-100 dark:border-zinc-800 transition-all">
+        <div className="bg-white py-10 px-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] sm:rounded-[3rem] sm:px-12 border border-gray-100 transition-all">
           
-          {networkError && (
-             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                <WifiOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                   <p className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-1">Servidor Indisponível</p>
-                   <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">O banco de dados parece estar offline. Use o botão <strong>Demo</strong> para explorar a plataforma sem internet.</p>
-                </div>
-             </div>
-          )}
+
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -113,7 +98,7 @@ export const Login: React.FC = () => {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
                 />
               </div>
             </div>
@@ -134,7 +119,7 @@ export const Login: React.FC = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
+                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
                 />
               </div>
               <div className="text-right mt-2">
@@ -150,14 +135,14 @@ export const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/30 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
+              <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
                 <AlertCircle className="w-6 h-6 flex-shrink-0" />
                 <span className="leading-tight">{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/30 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
+              <div className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
                 <Sparkles className="w-6 h-6 flex-shrink-0" />
                 <span className="leading-tight">{success}</span>
               </div>
@@ -171,26 +156,13 @@ export const Login: React.FC = () => {
               >
                 {loading ? 'Acessando...' : 'Entrar no Sistema'}
               </button>
-              
-              <div className="relative py-2">
-                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100 dark:border-zinc-800"></div></div>
-                 <div className="relative flex justify-center text-[10px]"><span className="px-4 bg-white dark:bg-zinc-900 text-gray-400 font-black uppercase tracking-widest">OU</span></div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleDemoLogin}
-                className="w-full flex items-center justify-center gap-2 py-5 px-4 border border-brand-primary/20 dark:border-brand-primary/30 rounded-2xl text-xs font-black text-brand-primary bg-brand-primary/5 dark:bg-brand-primary/10 hover:bg-brand-primary/10 transition-all uppercase tracking-widest"
-              >
-                <Sparkles className="w-4 h-4" /> Acesso Rápido (Demo)
-              </button>
             </div>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-gray-50 dark:border-zinc-800 text-center">
+          <div className="mt-10 pt-8 border-t border-gray-50 text-center">
              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 Ainda não tem conta? 
-                <Link to="/register" className="ml-2 text-brand-primary hover:underline">Cadastrar Grátis</Link>
+                <Link to="/register" className="ml-2 text-brand-primary hover:underline">Cadastrar Agora</Link>
              </p>
           </div>
         </div>

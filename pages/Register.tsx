@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 import { Logo } from '../components/Logo';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,27 +15,51 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setError('');
     setSuccess('');
     setLoading(true);
+
     try {
-      await register(name, email, password);
-      console.log("Registro e login concluídos.");
+      console.log("Register: Iniciando cadastro para", email);
       
-      setSuccess('Conta criada e logada com sucesso! Redirecionando...');
+      // Criar um timeout para evitar travamentos infinitos no front
+      const signUpPromise = supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name
+          }
+        }
+      });
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout: O servidor do Supabase demorou muito para responder. Verifique sua conexão.")), 15000)
+      );
+
+      const { error: signUpError } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+
+      if (signUpError) throw signUpError;
+      
+      // Forçar logout imediato após o cadastro para seguir o fluxo de confirmação por e-mail + login manual
+      // Adicionamos um pequeno delay para garantir que a sessão local seja limpa pelo Supabase antes de navegar
+      await supabase.auth.signOut();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log("Register: Finalizado com sucesso.");
+      
+      setSuccess('Conta criada! Verifique seu e-mail para confirmar o cadastro. Após confirmar, você poderá fazer login.');
+      
       setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+        navigate('/login', { replace: true });
+        setLoading(false);
+      }, 4000);
+
     } catch (err: any) {
-      console.error("Erro capturado no componente:", err);
-      if (err.message.includes("User already registered")) {
-        setError("Este e-mail já está cadastrado. Tente fazer login.");
-      } else if (err.message.includes("Password should be at least 6 characters")) {
-        setError("A senha deve ter pelo menos 6 caracteres.");
-      } else {
-        setError(err.message || 'Erro ao registrar nova conta. Verifique os dados e tente novamente.');
-      }
-    } finally {
+      console.error("Register: Erro no cadastro:", err);
+      setError(err.message || 'Erro inesperado. Tente novamente em alguns instantes.');
       setLoading(false);
     }
   };
@@ -47,10 +70,10 @@ export const Register: React.FC = () => {
         <div className="inline-flex mb-8">
            <Logo size="lg" />
         </div>
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+        <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Crie sua conta
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-400">
+        <p className="mt-2 text-center text-sm text-gray-600">
           Já tem uma conta?{' '}
           <Link to="/login" className="font-medium text-[#F67C01] hover:opacity-80">
             Fazer login
@@ -59,10 +82,10 @@ export const Register: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 dark:border-slate-800 transition-colors">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 transition-colors">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Nome Completo (ou Nome do Negócio)
               </label>
               <div className="mt-1">
@@ -70,16 +93,17 @@ export const Register: React.FC = () => {
                   id="name"
                   name="name"
                   type="text"
+                  autoComplete="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 E-mail
               </label>
               <div className="mt-1">
@@ -91,13 +115,13 @@ export const Register: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Senha
               </label>
               <div className="mt-1">
@@ -105,10 +129,11 @@ export const Register: React.FC = () => {
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
               </div>
             </div>
@@ -131,7 +156,7 @@ export const Register: React.FC = () => {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-black text-white bg-[#F67C01] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F67C01] disabled:opacity-50 transition-all uppercase tracking-widest"
               >
-                {loading ? 'Criando conta...' : 'Começar Agora Grátis'}
+                {loading ? 'Criando conta...' : 'Começar Agora'}
               </button>
             </div>
           </form>
@@ -139,15 +164,15 @@ export const Register: React.FC = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-slate-700"></div>
+                <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 font-bold uppercase tracking-widest text-[10px]">
+                <span className="px-2 bg-white text-gray-500 font-bold uppercase tracking-widest text-[10px]">
                   Segurança Garantida
                 </span>
               </div>
             </div>
-            <p className="mt-4 text-center text-[10px] text-gray-500 dark:text-slate-400 leading-relaxed uppercase tracking-tighter">
+            <p className="mt-4 text-center text-[10px] text-gray-500 leading-relaxed uppercase tracking-tighter">
               Ao criar sua conta, você concorda com nossos <Link to="/terms" className="underline font-black">Termos de Uso</Link> e <Link to="/privacy" className="underline font-black">Política de Privacidade</Link>.
             </p>
           </div>

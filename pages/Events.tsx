@@ -69,7 +69,7 @@ export const Events: React.FC = () => {
       setIsLoading(true);
       try {
         const items = await supabaseService.getMedia();
-        // Fallback to MOCK_MEDIA if no items are found in Firebase
+        // Fallback to MOCK_MEDIA if no items are found
         if (items.length > 0) {
           setMediaItems(items);
         } else {
@@ -106,11 +106,11 @@ export const Events: React.FC = () => {
       
       {/* 1. HERO SECTION */}
       <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <Video className="w-3 h-3" /> Central de Conteúdo
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          Explore nossa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Agenda & Eventos.</span>
+        <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-none max-w-4xl mx-auto uppercase">
+          Explore nossa <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic font-black">Agenda & Eventos.</span>
         </h1>
         
         <div className="max-w-2xl mx-auto relative group">
@@ -118,7 +118,7 @@ export const Events: React.FC = () => {
             <input 
                type="text" 
                placeholder="Busque por podcasts, treinamentos, eventos..." 
-               className="w-full pl-16 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-[2.5rem] font-bold text-gray-900 dark:text-white focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none shadow-xl transition-all"
+               className="w-full pl-16 pr-6 py-5 bg-white border border-gray-100 rounded-[2.5rem] font-bold text-gray-900 focus:ring-4 focus:ring-indigo-50 outline-none shadow-xl transition-all"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
             />
@@ -130,7 +130,7 @@ export const Events: React.FC = () => {
                 <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as MediaType)} 
-                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800'}`}
+                    className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-xl scale-105' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}
                 >
                     <tab.icon className="w-4 h-4" /> {tab.label}
                 </button>
@@ -145,16 +145,16 @@ export const Events: React.FC = () => {
                 <Filter className="w-3.5 h-3.5" />
                 Agenda <ChevronRight className="w-3 h-3" /> {activeTab}
             </div>
-            <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-lg">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">
                 {displayMedia.length} RESULTADOS
             </span>
         </div>
 
         {displayMedia.length === 0 ? (
-            <div className="text-center py-32 bg-white dark:bg-zinc-900 rounded-[4rem] border-2 border-dashed border-gray-100 dark:border-zinc-800">
-                <Video className="w-16 h-16 text-gray-200 dark:text-zinc-700 mx-auto mb-6" />
-                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Nenhum conteúdo encontrado</h3>
-                <p className="text-gray-500 dark:text-zinc-400 mt-2 font-medium">Tente buscar por outros termos ou mude a categoria.</p>
+            <div className="text-center py-32 bg-white rounded-[4rem] border-2 border-dashed border-gray-100">
+                <Video className="w-16 h-16 text-gray-200 mx-auto mb-6" />
+                <h3 className="text-2xl font-black text-gray-900">Nenhum conteúdo encontrado</h3>
+                <p className="text-gray-500 mt-2 font-medium">Tente buscar por outros termos ou mude a categoria.</p>
                 <button 
                     onClick={() => {setSearchTerm(''); setActiveTab('Todos');}}
                     className="mt-6 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all"
@@ -169,7 +169,7 @@ export const Events: React.FC = () => {
                     <div 
                       key={item.id} 
                       onClick={() => item.category === 'Eventos' || item.category === 'Ferramentas' ? (item.link ? window.open(item.link, '_blank') : null) : setSelectedItem(item)}
-                      className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer"
+                      className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer"
                     >
                     <div className="relative h-48 overflow-hidden bg-black">
                         <img src={item.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-90 group-hover:opacity-100" alt={item.title} />
@@ -197,22 +197,22 @@ export const Events: React.FC = () => {
                     </div>
                     <div className="p-6 flex-1 flex flex-col">
                         {item.category === 'Eventos' && (
-                          <div className="flex items-center gap-2 text-indigo-600 dark:text-brand-primary text-[10px] font-black uppercase tracking-widest mb-3">
+                          <div className="flex items-center gap-2 text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-3">
                               <Calendar className="w-3.5 h-3.5" /> {item.date}
                           </div>
                         )}
-                        <h3 className="text-lg font-black text-gray-900 dark:text-white leading-tight mb-3 group-hover:text-indigo-600 dark:group-hover:text-brand-primary transition-colors line-clamp-2">{item.title}</h3>
-                        <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium line-clamp-2 mb-4">
+                        <h3 className="text-lg font-black text-gray-900 leading-tight mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">{item.title}</h3>
+                        <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4">
                           {item.description}
                         </p>
                         
-                        <div className="mt-auto pt-4 border-t border-gray-50 dark:border-zinc-800 flex items-center justify-between">
+                        <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                             {item.category === 'Eventos' ? (
                                 <span className="text-[10px] font-black text-gray-400 uppercase">Ver Detalhes</span>
                             ) : item.category === 'Ferramentas' ? (
                                 <span className="text-[10px] font-black text-emerald-600 uppercase flex items-center gap-1"><ExternalLink className="w-3 h-3"/> Acessar</span>
                             ) : (
-                                <span className="text-[10px] font-black text-indigo-600 dark:text-brand-primary uppercase flex items-center gap-1"><Play className="w-3 h-3"/> Assistir</span>
+                                <span className="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-1"><Play className="w-3 h-3"/> Assistir</span>
                             )}
                         </div>
                     </div>

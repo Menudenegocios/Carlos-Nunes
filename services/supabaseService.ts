@@ -8,7 +8,7 @@ export const supabaseService = {
   uploadImage: async (file: File, path: string): Promise<string> => {
     try {
       const { data, error } = await supabase.storage
-        .from('images') // Changed from 'media' to 'images' to match the second implementation which seemed more complete
+        .from('images')
         .upload(path, file, {
           cacheControl: '3600',
           upsert: true
@@ -42,7 +42,7 @@ export const supabaseService = {
     }
   },
 
-  createMedia: async (mediaData: Omit<Media, 'id' | 'createdAt'>): Promise<Media> => {
+  createMedia: async (mediaData: Omit<Media, 'id' | 'created_at'>): Promise<Media> => {
     try {
       const { data, error } = await supabase
         .from('media')
@@ -90,12 +90,12 @@ export const supabaseService = {
   },
 
   // --- LOYALTY ---
-  getLoyaltyCards: async (userId: string): Promise<any[]> => {
+  getLoyaltyCards: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('loyalty_cards')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', user_id);
       
       if (error) throw error;
       return data || [];
@@ -132,12 +132,12 @@ export const supabaseService = {
   },
 
   // --- PLANS ---
-  upgradePlan: async (userId: string, plan: string): Promise<void> => {
+  upgradePlan: async (user_id: string, plan: string): Promise<void> => {
     try {
       const { error } = await supabase
         .from('users')
         .update({ plan, updated_at: new Date().toISOString() })
-        .eq('id', userId);
+        .eq('id', user_id);
       
       if (error) throw error;
     } catch (error) {
@@ -147,12 +147,12 @@ export const supabaseService = {
   },
 
   // --- POINTS ---
-  getPointsHistory: async (userId: string): Promise<any[]> => {
+  getPointsHistory: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('points_history')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('date', { ascending: false });
       
       if (error) throw error;
@@ -397,12 +397,12 @@ export const supabaseService = {
     }
   },
 
-  getMyOffers: async (userId: string): Promise<any[]> => {
+  getMyOffers: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('offers')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', user_id);
       
       if (error) throw error;
       return data || [];
@@ -412,12 +412,12 @@ export const supabaseService = {
     }
   },
 
-  getProducts: async (userId: string): Promise<any[]> => {
+  getProducts: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', user_id);
       
       if (error) throw error;
       return data || [];
@@ -458,7 +458,7 @@ export const supabaseService = {
     }
   },
 
-  updateCoupon: async (id: string, userId: string, coupon: Partial<any>): Promise<void> => {
+  updateCoupon: async (id: string, user_id: string, coupon: Partial<any>): Promise<void> => {
     try {
       const { error } = await supabase
         .from('coupons')
@@ -472,7 +472,7 @@ export const supabaseService = {
     }
   },
 
-  deleteCoupon: async (id: string, userId: string): Promise<void> => {
+  deleteCoupon: async (id: string, user_id: string): Promise<void> => {
     try {
       const { error } = await supabase
         .from('coupons')
@@ -486,14 +486,14 @@ export const supabaseService = {
     }
   },
 
-  redeemCoupon: async (userId: string, couponId: string, points: number): Promise<void> => {
+  redeemCoupon: async (user_id: string, couponId: string, points: number): Promise<void> => {
     try {
       // 1. Register redemption
       const { error: redemptionError } = await supabase
         .from('coupon_redemptions')
         .insert({
           coupon_id: couponId,
-          user_id: userId,
+          user_id: user_id,
           redeemed_at: new Date().toISOString()
         });
       
@@ -503,7 +503,7 @@ export const supabaseService = {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('points')
-        .eq('id', userId)
+        .eq('id', user_id)
         .single();
       
       if (profileError) throw profileError;
@@ -511,7 +511,7 @@ export const supabaseService = {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ points: (profile.points || 0) + points })
-        .eq('id', userId);
+        .eq('id', user_id);
       
       if (updateError) throw updateError;
     } catch (error) {
@@ -530,8 +530,8 @@ export const supabaseService = {
       
       if (error) throw error;
       return data || [];
-    } catch (error) {
-      console.error("Error getting blog posts:", error);
+    } catch (error: any) {
+      console.error("Error getting blog posts:", error?.message || error);
       return [];
     }
   },
@@ -604,8 +604,8 @@ export const supabaseService = {
       
       if (error) throw error;
       return data || [];
-    } catch (error) {
-      console.error("Error getting published profiles:", error);
+    } catch (error: any) {
+      console.error("Error getting published profiles:", error?.message || error);
       return [];
     }
   },
@@ -617,7 +617,7 @@ export const supabaseService = {
         .from('profiles')
         .select('*')
         .eq('id', identifier)
-        .single();
+        .maybeSingle();
       
       if (!errorById && profileById) return profileById;
       
@@ -626,7 +626,7 @@ export const supabaseService = {
         .from('profiles')
         .select('*')
         .eq('slug', identifier)
-        .single();
+        .maybeSingle();
       
       if (!errorBySlug && profileBySlug) return profileBySlug;
       
@@ -637,12 +637,12 @@ export const supabaseService = {
     }
   },
 
-  updateProfile: async (userId: string, profile: Partial<any>): Promise<void> => {
+  updateProfile: async (user_id: string, profile: Partial<any>): Promise<void> => {
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ ...profile, updated_at: new Date().toISOString() })
-        .eq('id', userId);
+        .eq('id', user_id);
       
       if (error) throw error;
     } catch (error) {
@@ -651,11 +651,11 @@ export const supabaseService = {
     }
   },
 
-  saveProfile: async (userId: string, profile: Partial<any>): Promise<void> => {
+  saveProfile: async (user_id: string, profile: Partial<any>): Promise<void> => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({ ...profile, id: userId, updated_at: new Date().toISOString() });
+        .upsert({ ...profile, id: user_id, updated_at: new Date().toISOString() });
       
       if (error) throw error;
     } catch (error) {
@@ -665,12 +665,12 @@ export const supabaseService = {
   },
 
   // --- PROJECTS ---
-  getProjects: async (userId: string): Promise<any[]> => {
+  getProjects: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -725,13 +725,60 @@ export const supabaseService = {
     }
   },
 
+  // --- NOTES ---
+  getNotes: async (user_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting notes:", error);
+      return [];
+    }
+  },
+
+  addNote: async (note: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({ ...note, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding note:", error);
+      throw error;
+    }
+  },
+
+  deleteNote: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      throw error;
+    }
+  },
+
   // --- LEADS ---
-  getLeads: async (userId: string): Promise<any[]> => {
+  getLeads: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('leads')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -800,12 +847,12 @@ export const supabaseService = {
   },
 
   // --- VITRINE ---
-  getStoreCategories: async (userId: string): Promise<any[]> => {
+  getStoreCategories: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('store_categories')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('order', { ascending: true });
       
       if (error) throw error;
@@ -846,12 +893,12 @@ export const supabaseService = {
     }
   },
 
-  getVitrineComments: async (vitrineUserId: string): Promise<any[]> => {
+  getVitrineComments: async (vitrine_user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('vitrine_comments')
         .select('*')
-        .eq('vitrine_user_id', vitrineUserId)
+        .eq('vitrine_user_id', vitrine_user_id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -879,12 +926,12 @@ export const supabaseService = {
   },
 
   // --- CLIENTS ---
-  getClients: async (userId: string): Promise<any[]> => {
+  getClients: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('name', { ascending: true });
       
       if (error) throw error;
@@ -940,12 +987,12 @@ export const supabaseService = {
   },
 
   // --- FINANCIAL ENTRIES ---
-  getFinancialEntries: async (userId: string): Promise<any[]> => {
+  getFinancialEntries: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('financial_entries')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('date', { ascending: false });
       
       if (error) throw error;
@@ -987,12 +1034,12 @@ export const supabaseService = {
   },
 
   // --- SMART GOALS ---
-  getSmartGoals: async (userId: string): Promise<any[]> => {
+  getSmartGoals: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('smart_goals')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', user_id);
       
       if (error) throw error;
       return data || [];
@@ -1002,11 +1049,11 @@ export const supabaseService = {
     }
   },
 
-  saveSmartGoal: async (userId: string, data: any): Promise<void> => {
+  saveSmartGoal: async (user_id: string, data: any): Promise<void> => {
     try {
       const { error } = await supabase
         .from('smart_goals')
-        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
       
       if (error) throw error;
     } catch (error) {
@@ -1016,12 +1063,12 @@ export const supabaseService = {
   },
 
   // --- SWOT ANALYSIS ---
-  getSwotAnalysis: async (userId: string): Promise<any | null> => {
+  getSwotAnalysis: async (user_id: string): Promise<any | null> => {
     try {
       const { data, error } = await supabase
         .from('swot_analysis')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
@@ -1032,11 +1079,11 @@ export const supabaseService = {
     }
   },
 
-  saveSwotAnalysis: async (userId: string, data: any): Promise<void> => {
+  saveSwotAnalysis: async (user_id: string, data: any): Promise<void> => {
     try {
       const { error } = await supabase
         .from('swot_analysis')
-        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
       
       if (error) throw error;
     } catch (error) {
@@ -1046,12 +1093,12 @@ export const supabaseService = {
   },
 
   // --- BUSINESS CANVA ---
-  getBusinessCanva: async (userId: string): Promise<any | null> => {
+  getBusinessCanva: async (user_id: string): Promise<any | null> => {
     try {
       const { data, error } = await supabase
         .from('business_canva')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
@@ -1062,11 +1109,11 @@ export const supabaseService = {
     }
   },
 
-  saveBusinessCanva: async (userId: string, data: any): Promise<void> => {
+  saveBusinessCanva: async (user_id: string, data: any): Promise<void> => {
     try {
       const { error } = await supabase
         .from('business_canva')
-        .upsert({ ...data, user_id: userId, updated_at: new Date().toISOString() });
+        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
       
       if (error) throw error;
     } catch (error) {
@@ -1076,12 +1123,12 @@ export const supabaseService = {
   },
 
   // --- SCHEDULE ---
-  getSchedule: async (userId: string): Promise<any[]> => {
+  getSchedule: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('schedule_items')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('date', { ascending: true });
       
       if (error) throw error;
@@ -1154,12 +1201,12 @@ export const supabaseService = {
     }
   },
 
-  getB2BTransactions: async (userId: string): Promise<any[]> => {
+  getB2BTransactions: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('b2b_transactions')
         .select('*')
-        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+        .or(`buyer_id.eq.${user_id},seller_id.eq.${user_id}`)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -1261,7 +1308,7 @@ export const supabaseService = {
     }
   },
 
-  likePost: async (postId: string, userId: string): Promise<void> => {
+  likePost: async (postId: string, user_id: string): Promise<void> => {
     try {
       const { data: post, error: fetchError } = await supabase
         .from('community_posts')
@@ -1272,12 +1319,12 @@ export const supabaseService = {
       if (fetchError) throw fetchError;
       
       const likedBy = post.liked_by || [];
-      if (!likedBy.includes(userId)) {
+      if (!likedBy.includes(user_id)) {
         const { error: updateError } = await supabase
           .from('community_posts')
           .update({
             likes: (post.likes || 0) + 1,
-            liked_by: [...likedBy, userId]
+            liked_by: [...likedBy, user_id]
           })
           .eq('id', postId);
         
@@ -1290,12 +1337,12 @@ export const supabaseService = {
   },
 
   // --- TASKS ---
-  getTasks: async (userId: string): Promise<any[]> => {
+  getTasks: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('due_date', { ascending: true });
       
       if (error) throw error;
@@ -1351,12 +1398,12 @@ export const supabaseService = {
   },
 
   // --- QUICK MESSAGES ---
-  getQuickMessages: async (userId: string): Promise<any[]> => {
+  getQuickMessages: async (user_id: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('quick_messages')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', user_id);
       
       if (error) throw error;
       return data || [];
@@ -1410,25 +1457,4 @@ export const supabaseService = {
     }
   },
 
-  // --- ADMIN ---
-  createMemberAsAdmin: async (memberData: any, _password?: string): Promise<string> => {
-    try {
-      // In a real app, we would use supabase.auth.admin.createUser if we had service role
-      // For this refactor, we'll just upsert the profile.
-      const { data, error } = await supabase
-        .from('profiles')
-        .upsert({
-          ...memberData,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data.id;
-    } catch (error) {
-      console.error("Error creating member as admin:", error);
-      throw error;
-    }
-  }
 };

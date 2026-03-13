@@ -24,17 +24,17 @@ export const MyOffers: React.FC = () => {
     category: OfferCategory.SERVICOS_PROFISSIONAIS,
     city: '',
     price: '',
-    imageUrl: '',
-    videoUrl: '', 
-    logoUrl: '',
+    image_url: '',
+    video_url: '', 
+    logo_url: '',
     instagram: '',
     whatsapp: '',
     website: '',
     // Scheduling Config
-    schedulingEnabled: false,
+    scheduling_enabled: false,
     schedulingDuration: 60,
     schedulingType: 'google_meet', // google_meet | in_person
-    googleCalendarConnected: false
+    google_calendar_connected: false
   });
 
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
@@ -60,16 +60,16 @@ export const MyOffers: React.FC = () => {
       category: offer.category as OfferCategory,
       city: offer.city,
       price: offer.price || '',
-      imageUrl: offer.imageUrl || '',
-      videoUrl: offer.videoUrl || '',
-      logoUrl: offer.logoUrl || '',
-      instagram: offer.socialLinks?.instagram || '',
-      whatsapp: offer.socialLinks?.whatsapp || '',
-      website: offer.socialLinks?.website || '',
-      schedulingEnabled: offer.scheduling?.enabled || false,
-      schedulingDuration: offer.scheduling?.durationMinutes || 60,
-      schedulingType: offer.scheduling?.meetingType || 'google_meet',
-      googleCalendarConnected: offer.scheduling?.googleCalendarConnected || false,
+      image_url: offer.image_url || '',
+      video_url: offer.video_url || '',
+      logo_url: offer.logo_url || '',
+      instagram: offer.social_links?.instagram || '',
+      whatsapp: offer.social_links?.whatsapp || '',
+      website: offer.social_links?.website || '',
+      scheduling_enabled: offer.scheduling?.enabled || false,
+      schedulingDuration: offer.scheduling?.duration_minutes || 60,
+      schedulingType: offer.scheduling?.meeting_type || 'google_meet',
+      google_calendar_connected: offer.scheduling?.google_calendar_connected || false,
     });
     setEditingId(offer.id);
     setIsEditing(true);
@@ -98,7 +98,7 @@ export const MyOffers: React.FC = () => {
     setIsConnectingGoogle(true);
     // Simulate API delay
     setTimeout(() => {
-      setFormData(prev => ({ ...prev, googleCalendarConnected: true }));
+      setFormData(prev => ({ ...prev, google_calendar_connected: true }));
       setIsConnectingGoogle(false);
     }, 1500);
   };
@@ -114,19 +114,19 @@ export const MyOffers: React.FC = () => {
         category: formData.category as OfferCategory,
         city: formData.city,
         price: formData.price,
-        imageUrl: formData.imageUrl,
-        videoUrl: formData.videoUrl,
-        logoUrl: formData.logoUrl,
-        socialLinks: {
+        image_url: formData.image_url,
+        video_url: formData.video_url,
+        logo_url: formData.logo_url,
+        social_links: {
           instagram: formData.instagram,
           whatsapp: formData.whatsapp,
           website: formData.website
         },
-        scheduling: formData.schedulingEnabled ? {
+        scheduling: formData.scheduling_enabled ? {
           enabled: true,
-          durationMinutes: Number(formData.schedulingDuration),
-          meetingType: formData.schedulingType as 'google_meet' | 'in_person',
-          googleCalendarConnected: formData.googleCalendarConnected,
+          duration_minutes: Number(formData.schedulingDuration),
+          meeting_type: formData.schedulingType as 'google_meet' | 'in_person',
+          google_calendar_connected: formData.google_calendar_connected,
           availability: 'Seg-Sex, 09:00 - 18:00' // Default simplified availability
         } : undefined
       };
@@ -137,7 +137,7 @@ export const MyOffers: React.FC = () => {
         setOffers(prev => prev.map(o => o.id === editingId ? { ...o, ...commonData } as Offer : o));
       } else {
         // Create
-        const newOffer = await supabaseService.createOffer({ ...commonData, userId: user.id } as any);
+        const newOffer = await supabaseService.createOffer({ ...commonData, user_id: user.id } as any);
         setOffers(prev => [newOffer, ...prev]);
       }
       
@@ -155,20 +155,20 @@ export const MyOffers: React.FC = () => {
       category: OfferCategory.SERVICOS_PROFISSIONAIS,
       city: '',
       price: '',
-      imageUrl: '',
-      videoUrl: '',
-      logoUrl: '',
+      image_url: '',
+      video_url: '',
+      logo_url: '',
       instagram: '',
       whatsapp: '',
       website: '',
-      schedulingEnabled: false,
+      scheduling_enabled: false,
       schedulingDuration: 60,
       schedulingType: 'google_meet',
-      googleCalendarConnected: false
+      google_calendar_connected: false
     });
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'imageUrl' | 'logoUrl') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'image_url' | 'logo_url') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -179,8 +179,8 @@ export const MyOffers: React.FC = () => {
     }
   };
 
-  // Only Freelancers and Local Businesses can create ads in the feed
-  const canCreateAds = user && (user.plan === 'freelancers' || user.plan === 'negocios');
+  // Only Pro and Full plans can create ads in the feed
+  const canCreateAds = user && (user.plan === 'pro' || user.plan === 'full');
 
   return (
     <div className="space-y-8">
@@ -366,11 +366,11 @@ export const MyOffers: React.FC = () => {
                             <input 
                               type="checkbox" 
                               className="sr-only" 
-                              checked={formData.schedulingEnabled}
-                              onChange={e => setFormData({ ...formData, schedulingEnabled: e.target.checked })}
+                              checked={formData.scheduling_enabled}
+                              onChange={e => setFormData({ ...formData, scheduling_enabled: e.target.checked })}
                             />
-                            <div className={`block w-12 h-7 rounded-full transition-colors shadow-inner ${formData.schedulingEnabled ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                            <div className={`absolute left-1 top-1 bg-white w-5 h-5 rounded-full shadow-sm transition-transform duration-200 ${formData.schedulingEnabled ? 'transform translate-x-5' : ''}`}></div>
+                            <div className={`block w-12 h-7 rounded-full transition-colors shadow-inner ${formData.scheduling_enabled ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-5 h-5 rounded-full shadow-sm transition-transform duration-200 ${formData.scheduling_enabled ? 'transform translate-x-5' : ''}`}></div>
                           </div>
                           <div className="ml-3 text-sm font-medium text-gray-700">
                             Ativar Agendamento
@@ -378,15 +378,15 @@ export const MyOffers: React.FC = () => {
                         </label>
                     </div>
                     
-                    {formData.schedulingEnabled && (
+                    {formData.scheduling_enabled && (
                       <div className="space-y-6 animate-[fade-in-down_0.3s_ease-out]">
                         
                         {/* Integration Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           
                           {/* Google Calendar Card */}
-                          <div className={`border rounded-xl p-4 transition-all relative overflow-hidden ${formData.googleCalendarConnected ? 'bg-white border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
-                             {formData.googleCalendarConnected && (
+                          <div className={`border rounded-xl p-4 transition-all relative overflow-hidden ${formData.google_calendar_connected ? 'bg-white border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
+                             {formData.google_calendar_connected && (
                                <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">CONECTADO</div>
                              )}
                              <div className="flex flex-col h-full justify-between">
@@ -402,14 +402,14 @@ export const MyOffers: React.FC = () => {
                                 <button 
                                    type="button"
                                    onClick={connectGoogleCalendar}
-                                   disabled={formData.googleCalendarConnected || isConnectingGoogle}
+                                   disabled={formData.google_calendar_connected || isConnectingGoogle}
                                    className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                                     formData.googleCalendarConnected 
+                                     formData.google_calendar_connected 
                                        ? 'bg-green-50 text-green-700 cursor-default' 
                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg'
                                    }`}
                                  >
-                                   {isConnectingGoogle ? 'Conectando...' : formData.googleCalendarConnected ? (
+                                   {isConnectingGoogle ? 'Conectando...' : formData.google_calendar_connected ? (
                                      <> <CheckCircle className="w-3 h-3" /> Conta Vinculada </>
                                    ) : 'Conectar Agora'}
                                  </button>
@@ -417,7 +417,7 @@ export const MyOffers: React.FC = () => {
                           </div>
 
                           {/* Google Meet Card */}
-                          <div className={`border rounded-xl p-4 transition-all relative ${formData.googleCalendarConnected ? 'bg-white border-indigo-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-70'}`}>
+                          <div className={`border rounded-xl p-4 transition-all relative ${formData.google_calendar_connected ? 'bg-white border-indigo-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-70'}`}>
                              <div className="flex flex-col h-full justify-between">
                                 <div className="flex items-center gap-3 mb-4">
                                   <div className="p-2 bg-gray-50 rounded-full border border-gray-100">
@@ -429,7 +429,7 @@ export const MyOffers: React.FC = () => {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-center h-full">
-                                   {formData.googleCalendarConnected ? (
+                                   {formData.google_calendar_connected ? (
                                       <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
                                         <CheckCircle className="w-3 h-3" /> Ativo via Calendar
                                       </div>
@@ -496,7 +496,7 @@ export const MyOffers: React.FC = () => {
 
                           </div>
                           
-                          {formData.schedulingType === 'google_meet' && !formData.googleCalendarConnected && (
+                          {formData.schedulingType === 'google_meet' && !formData.google_calendar_connected && (
                              <div className="mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-lg flex items-start gap-2">
                                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                <p>Você selecionou "Online (Meet)", mas ainda não conectou o Google Calendar. Para gerar links automáticos, por favor conecte sua conta acima.</p>
@@ -523,12 +523,12 @@ export const MyOffers: React.FC = () => {
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-2">Imagem de Capa</label>
                           <div className="space-y-3">
-                            {formData.imageUrl && (
+                            {formData.image_url && (
                               <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-300 group">
-                                <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
-                                  onClick={() => setFormData({...formData, imageUrl: ''})}
+                                  onClick={() => setFormData({...formData, image_url: ''})}
                                   className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <X className="w-3 h-3" />
@@ -540,7 +540,7 @@ export const MyOffers: React.FC = () => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleImageUpload(e, 'imageUrl')}
+                                onChange={(e) => handleImageUpload(e, 'image_url')}
                                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"
                               />
                             </div>
@@ -555,8 +555,8 @@ export const MyOffers: React.FC = () => {
                               type="url"
                               placeholder="https://exemplo.com/imagem.jpg"
                               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-xs focus:ring-indigo-500 focus:border-indigo-500"
-                              value={formData.imageUrl}
-                              onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                              value={formData.image_url}
+                              onChange={e => setFormData({ ...formData, image_url: e.target.value })}
                             />
                           </div>
 
@@ -569,8 +569,8 @@ export const MyOffers: React.FC = () => {
                               type="url"
                               placeholder="https://youtube.com/watch?v=..."
                               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-xs focus:ring-indigo-500 focus:border-indigo-500"
-                              value={formData.videoUrl}
-                              onChange={e => setFormData({ ...formData, videoUrl: e.target.value })}
+                              value={formData.video_url}
+                              onChange={e => setFormData({ ...formData, video_url: e.target.value })}
                             />
                           </div>
                         </div>
@@ -579,12 +579,12 @@ export const MyOffers: React.FC = () => {
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-2">Logotipo</label>
                           <div className="space-y-3">
-                            {formData.logoUrl && (
+                            {formData.logo_url && (
                               <div className="relative w-20 h-20 rounded-full overflow-hidden border border-gray-300 group mx-auto">
-                                <img src={formData.logoUrl} alt="Logo Preview" className="w-full h-full object-cover" />
+                                <img src={formData.logo_url} alt="Logo Preview" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
-                                  onClick={() => setFormData({...formData, logoUrl: ''})}
+                                  onClick={() => setFormData({...formData, logo_url: ''})}
                                   className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                 >
                                   <X className="w-5 h-5" />
@@ -596,7 +596,7 @@ export const MyOffers: React.FC = () => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => handleImageUpload(e, 'logoUrl')}
+                                onChange={(e) => handleImageUpload(e, 'logo_url')}
                                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"
                               />
                             </div>
@@ -611,8 +611,8 @@ export const MyOffers: React.FC = () => {
                               type="url"
                               placeholder="https://..."
                               className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-xs focus:ring-indigo-500 focus:border-indigo-500"
-                              value={formData.logoUrl}
-                              onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
+                              value={formData.logo_url}
+                              onChange={e => setFormData({ ...formData, logo_url: e.target.value })}
                             />
                           </div>
                         </div>

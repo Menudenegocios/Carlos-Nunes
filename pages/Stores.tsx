@@ -23,7 +23,7 @@ export const Stores: React.FC = () => {
     try {
       const data = await supabaseService.getAllProfiles();
       // Mostra apenas lojas com nome definido
-      setProfiles(data.filter(p => p.businessName));
+      setProfiles(data.filter(p => p.business_name));
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +38,7 @@ export const Stores: React.FC = () => {
   ];
 
   const filteredProfiles = profiles.filter(p => {
-    const matchesSearch = (p.businessName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (p.business_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          (p.city?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'Todas' || p.category === activeCategory;
     return matchesSearch && matchesCategory;
@@ -49,28 +49,28 @@ export const Stores: React.FC = () => {
       
       {/* 1. HERO SECTION - MARKETPLACE STYLE */}
       <section className="text-center space-y-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-brand-primary rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100 dark:border-indigo-800">
+        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100">
            <Sparkles className="w-3.5 h-3.5" /> Conexão Regional
         </div>
-        <h1 className="text-5xl md:text-8xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9] max-w-5xl mx-auto">
+        <h1 className="text-5xl md:text-8xl font-black text-gray-900 tracking-tighter leading-[0.9] max-w-5xl mx-auto">
           A Vitrine de <br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 dark:from-brand-primary dark:to-brand-accent italic">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 italic">
             Negócios Locais.
           </span>
         </h1>
-        <p className="text-xl md:text-2xl text-gray-500 dark:text-zinc-400 max-w-3xl mx-auto font-medium leading-relaxed">
+        <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto font-medium leading-relaxed">
           Explore e conecte-se com as melhores marcas, artesãos e prestadores do seu próprio bairro.
         </p>
         
         {/* Barra de Busca Estilizada */}
         <div className="max-w-3xl mx-auto relative group">
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-indigo-50 dark:bg-zinc-800 rounded-2xl text-indigo-600 dark:text-brand-primary group-focus-within:bg-indigo-600 group-focus-within:text-white transition-all">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-focus-within:bg-indigo-600 group-focus-within:text-white transition-all">
                 <Search className="w-6 h-6" />
             </div>
             <input 
                type="text" 
                placeholder="Pesquise por nome, cidade ou especialidade..." 
-               className="w-full pl-20 pr-8 py-7 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-[3rem] font-bold text-xl text-gray-900 dark:text-white focus:ring-[12px] focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none shadow-2xl transition-all placeholder:text-gray-300"
+               className="w-full pl-20 pr-8 py-7 bg-white border border-gray-100 rounded-[3rem] font-bold text-xl text-gray-900 focus:ring-[12px] focus:ring-indigo-50 outline-none shadow-2xl transition-all placeholder:text-gray-300"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
             />
@@ -82,7 +82,7 @@ export const Stores: React.FC = () => {
                 <button 
                     key={cat.label}
                     onClick={() => setActiveCategory(cat.label)} 
-                    className={`flex items-center gap-3 px-10 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all ${activeCategory === cat.label ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-200 scale-105' : 'bg-white dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 border border-gray-100 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700'}`}
+                    className={`flex items-center gap-3 px-10 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all ${activeCategory === cat.label ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-200 scale-105' : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'}`}
                 >
                     <cat.icon className="w-4 h-4" /> {cat.label}
                 </button>
@@ -94,33 +94,33 @@ export const Stores: React.FC = () => {
       <section className="min-h-[600px] pt-12">
         {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-                {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white dark:bg-zinc-900 rounded-[3.5rem] h-[500px] animate-pulse border border-gray-100 dark:border-zinc-800 shadow-sm"></div>)}
+                {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white rounded-[3.5rem] h-[500px] animate-pulse border border-gray-100 shadow-sm"></div>)}
             </div>
         ) : filteredProfiles.length === 0 ? (
-            <div className="text-center py-40 bg-white dark:bg-zinc-900 rounded-[5rem] border-2 border-dashed border-gray-100 dark:border-zinc-800 shadow-inner">
-                <Store className="w-24 h-24 text-gray-100 dark:text-zinc-800 mx-auto mb-8" />
-                <h3 className="text-3xl font-black text-gray-900 dark:text-white">Nenhum negócio no radar</h3>
-                <p className="text-gray-500 dark:text-zinc-400 mt-4 font-medium text-lg">Tente ajustar sua busca ou escolher outra categoria.</p>
+            <div className="text-center py-40 bg-white rounded-[5rem] border-2 border-dashed border-gray-100 shadow-inner">
+                <Store className="w-24 h-24 text-gray-100 mx-auto mb-8" />
+                <h3 className="text-3xl font-black text-gray-900">Nenhum negócio no radar</h3>
+                <p className="text-gray-500 mt-4 font-medium text-lg">Tente ajustar sua busca ou escolher outra categoria.</p>
             </div>
         ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
                 {filteredProfiles.map(profile => (
                     <Link 
-                        to={`/store/${profile.userId}`} 
+                        to={`/store/${profile.user_id}`} 
                         key={profile.id} 
-                        className="group bg-white dark:bg-zinc-900 rounded-[3.5rem] border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-4 transition-all duration-700 flex flex-col h-full"
+                        className="group bg-white rounded-[3.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-4 transition-all duration-700 flex flex-col h-full"
                     >
                         {/* Capa de Impacto */}
-                        <div className="h-48 bg-gray-200 dark:bg-zinc-800 relative overflow-hidden">
-                            {profile.storeConfig?.coverUrl ? (
-                                <img src={profile.storeConfig.coverUrl} alt="Cover" className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-1000" />
+                        <div className="h-48 bg-gray-200 relative overflow-hidden">
+                            {profile.store_config?.cover_url ? (
+                                <img src={profile.store_config.cover_url} alt="Cover" className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-1000" />
                             ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-indigo-900/40 via-purple-900/40 to-slate-900/40"></div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                             
                             <div className="absolute top-6 left-6 flex gap-2">
-                                <div className="flex items-center gap-1.5 bg-white/95 dark:bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl text-indigo-600 dark:text-brand-primary text-[10px] font-black border border-white/40 dark:border-zinc-700 shadow-lg">
+                                <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl text-indigo-600 text-[10px] font-black border border-white/40 shadow-lg">
                                     <Star className="w-3.5 h-3.5 fill-current" /> VERIFICADO
                                 </div>
                             </div>
@@ -129,9 +129,9 @@ export const Stores: React.FC = () => {
                         {/* Conteúdo do Card */}
                         <div className="px-10 pb-10 pt-0 relative flex-1 flex flex-col">
                             <div className="flex justify-between items-end -mt-16 mb-8 relative z-10">
-                                <div className="w-28 h-28 rounded-[2.5rem] border-[6px] border-white dark:border-zinc-900 bg-white dark:bg-zinc-800 shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                                    {profile.logoUrl ? (
-                                        <img src={profile.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                                <div className="w-28 h-28 rounded-[2.5rem] border-[6px] border-white bg-white shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                                    {profile.logo_url ? (
+                                        <img src={profile.logo_url} alt="Logo" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-200">
                                             <ImageIcon className="w-12 h-12" />
@@ -139,35 +139,35 @@ export const Stores: React.FC = () => {
                                     )}
                                 </div>
                                 {profile.category && (
-                                    <span className="bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary text-[10px] font-black px-6 py-2.5 rounded-2xl uppercase tracking-widest border border-brand-primary/20">
+                                    <span className="bg-brand-primary/10 text-brand-primary text-[10px] font-black px-6 py-2.5 rounded-2xl uppercase tracking-widest border border-brand-primary/20">
                                         {profile.category}
                                     </span>
                                 )}
                             </div>
 
                             <div className="space-y-4 flex-1">
-                                <h3 className="text-3xl font-black text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1 tracking-tighter">
-                                    {profile.businessName}
+                                <h3 className="text-3xl font-black text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1 tracking-tighter">
+                                    {profile.business_name}
                                 </h3>
-                                <div className="flex items-center text-gray-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-[0.1em]">
-                                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg mr-2">
-                                        <MapPin className="w-4 h-4 text-indigo-600 dark:text-brand-primary" />
+                                <div className="flex items-center text-gray-400 text-xs font-bold uppercase tracking-[0.1em]">
+                                    <div className="p-1.5 bg-indigo-50 rounded-lg mr-2">
+                                        <MapPin className="w-4 h-4 text-indigo-600" />
                                     </div>
                                     {profile.city || 'Localização sob consulta'}
                                 </div>
-                                <p className="text-gray-500 dark:text-zinc-400 text-base font-medium line-clamp-2 leading-relaxed opacity-80">
+                                <p className="text-gray-500 text-base font-medium line-clamp-2 leading-relaxed opacity-80">
                                     {profile.bio || 'Visite a vitrine oficial para descobrir o catálogo completo e as ofertas exclusivas para este bairro.'}
                                 </p>
                             </div>
 
-                            <div className="mt-10 pt-8 border-t border-gray-100 dark:border-zinc-800/50 flex items-center justify-between">
-                                <div className="flex items-center gap-3 text-indigo-600 dark:text-brand-primary">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                            <div className="mt-10 pt-8 border-t border-gray-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3 text-indigo-600">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
                                         <Package className="w-5 h-5" />
                                     </div>
                                     <span className="text-[11px] font-black uppercase tracking-[0.2em]">Vitrine Online</span>
                                 </div>
-                                <div className="bg-gray-900 dark:bg-zinc-800 text-white p-5 rounded-[1.8rem] group-hover:bg-indigo-600 group-hover:scale-110 transition-all shadow-xl">
+                                <div className="bg-gray-900 text-white p-5 rounded-[1.8rem] group-hover:bg-indigo-600 group-hover:scale-110 transition-all shadow-xl">
                                     <ArrowRight className="w-6 h-6" />
                                 </div>
                             </div>
@@ -179,7 +179,7 @@ export const Stores: React.FC = () => {
       </section>
 
       {/* 3. CTA BOTTOM */}
-      <section className="bg-gray-900 dark:bg-zinc-950 rounded-[4rem] p-16 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
+      <section className="bg-gray-900 rounded-[4rem] p-16 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
          <div className="relative z-10 space-y-10 max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1] mb-4">
                 Sua marca também <br/>merece <span className="text-brand-primary">ser lembrada.</span>

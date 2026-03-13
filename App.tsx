@@ -1,11 +1,10 @@
 
 // Test comment
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { isSupabaseConfigured } from './services/supabaseClient';
-import { initUser } from './initUser';
 import { Layout } from './components/Layout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Home } from './pages/Home';
@@ -38,15 +37,7 @@ import { Support } from './pages/Support';
 import { ProjectManagement } from './pages/ProjectManagement';
 import { AdminCentral } from './pages/AdminCentral';
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
-  return isAuthenticated ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" />;
-};
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const AppRoutes = () => {
   return (
@@ -56,35 +47,37 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Categories />} />} path="/categories" />
       <Route element={<Navigate to="/vitrine" replace />} path="/stores" />
       <Route element={<Layout children={<Vitrine />} />} path="/vitrine" />
-      <Route element={<Layout children={<StoreView />} />} path="/store/:userId" />
-      <Route element={<Layout children={<BioView />} />} path="/bio/:userId" />
+      <Route element={<Layout children={<StoreView />} />} path="/store/:user_id" />
+      <Route element={<Layout children={<BioView />} />} path="/bio/:user_id" />
       <Route element={<Layout children={<Coupons />} />} path="/coupons" />
       <Route element={<Layout children={<Login />} />} path="/login" />
       <Route element={<Layout children={<Register />} />} path="/register" />
       <Route element={<Layout children={<Blog />} />} path="/blog" />
       <Route element={<Layout children={<Blog />} />} path="/blog/:id" />
       <Route element={<Layout children={<Marketplace />} />} path="/marketplace" />
-      <Route element={<Layout children={<Plans />} />} path="/plans" />
       <Route element={<Layout children={<AboutUs />} />} path="/quem-somos" />
       <Route element={<Layout children={<Partners />} />} path="/partners" />
       <Route element={<Layout children={<Events />} />} path="/eventos" />
       <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacy" />
       <Route element={<Layout children={<TermsOfUse />} />} path="/terms" />
 
-      {/* Dashboard Routes */}
-      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/business-suite" element={<PrivateRoute><BusinessSuite /></PrivateRoute>} />
-      <Route path="/project-management" element={<PrivateRoute><ProjectManagement /></PrivateRoute>} />
-      <Route path="/marketplace-b2b" element={<PrivateRoute><MarketplaceB2B /></PrivateRoute>} />
-      <Route path="/academy" element={<PrivateRoute><Academy /></PrivateRoute>} />
-      <Route path="/bio-builder" element={<PrivateRoute><BioBuilder /></PrivateRoute>} />
-      <Route path="/catalog" element={<PrivateRoute><MyCatalog /></PrivateRoute>} />
-      <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-      <Route path="/rewards" element={<PrivateRoute><Rewards /></PrivateRoute>} />
-      <Route path="/quotes" element={<PrivateRoute><Quotes /></PrivateRoute>} />
-      <Route path="/reviews" element={<PrivateRoute><Reviews /></PrivateRoute>} />
-      <Route path="/support" element={<PrivateRoute><Support /></PrivateRoute>} />
-      <Route path="/admin-central" element={<PrivateRoute><AdminCentral /></PrivateRoute>} />
+      {/* Dashboard Routes - Wrapped in ProtectedRoute and DashboardLayout */}
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/business-suite" element={<ProtectedRoute><DashboardLayout><BusinessSuite /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/project-management" element={<ProtectedRoute><DashboardLayout><ProjectManagement /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/marketplace-b2b" element={<ProtectedRoute><DashboardLayout><MarketplaceB2B /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/academy" element={<ProtectedRoute><DashboardLayout><Academy /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/bio-builder" element={<ProtectedRoute><DashboardLayout><BioBuilder /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/catalog" element={<ProtectedRoute><DashboardLayout><MyCatalog /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><DashboardLayout><Profile /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/rewards" element={<ProtectedRoute><DashboardLayout><Rewards /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/quotes" element={<ProtectedRoute><DashboardLayout><Quotes /></DashboardLayout></ProtectedRoute>} />
+       <Route path="/reviews" element={<ProtectedRoute><DashboardLayout><Reviews /></DashboardLayout></ProtectedRoute>} />
+       <Route path="/support" element={<ProtectedRoute><DashboardLayout><Support /></DashboardLayout></ProtectedRoute>} />
+       <Route path="/plans" element={<ProtectedRoute><DashboardLayout><Plans /></DashboardLayout></ProtectedRoute>} />
+      
+      {/* Admin Route - Admin restriction */}
+      <Route path="/admin-central" element={<ProtectedRoute requireAdmin={true}><DashboardLayout><AdminCentral /></DashboardLayout></ProtectedRoute>} />
       
       {/* Vanity URL / Slug - Must be last */}
       <Route element={<Layout children={<StoreView />} />} path="/:slug" />
@@ -93,10 +86,6 @@ const AppRoutes = () => {
 };
 
 const App: React.FC = () => {
-  useEffect(() => {
-    initUser();
-  }, []);
-
   return (
     <ThemeProvider>
       {!isSupabaseConfigured && (
@@ -106,7 +95,7 @@ const App: React.FC = () => {
         </div>
       )}
       <AuthProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
         </Router>
       </AuthProvider>

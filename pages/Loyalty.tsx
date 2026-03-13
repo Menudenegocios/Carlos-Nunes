@@ -47,7 +47,7 @@ export const Loyalty: React.FC = () => {
                <div className="absolute top-0 right-0 p-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
                
                <div className="relative z-10">
-                 <h2 className="text-2xl font-bold mb-1">{card.businessName}</h2>
+                 <h2 className="text-2xl font-bold mb-1">{card.business_name}</h2>
                  <p className="text-white/80 text-sm mb-6 flex items-center gap-2">
                    <Gift className="w-4 h-4" /> Prêmio: {card.reward}
                  </p>

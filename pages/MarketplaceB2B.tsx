@@ -52,10 +52,10 @@ export const MarketplaceB2B: React.FC = () => {
     try {
       const newOffer = await supabaseService.createB2BOffer({
         ...formData,
-        userId: user.id,
-        businessName: profile?.businessName || user.name,
-        businessLogo: profile?.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
-        createdAt: new Date().toISOString()
+        user_id: user.id,
+        business_name: profile?.business_name || user.name,
+        businessLogo: profile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
+        created_at: new Date().toISOString()
       } as any);
       setOffers([newOffer, ...offers]);
       setIsModalOpen(false);
@@ -67,7 +67,7 @@ export const MarketplaceB2B: React.FC = () => {
 
   const filteredOffers = offers.filter(o => 
     o.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    o.businessName.toLowerCase().includes(searchTerm.toLowerCase())
+    o.business_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!user) return null;
@@ -75,7 +75,7 @@ export const MarketplaceB2B: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
       {/* Header Estilo Unificado */}
-      <div className="bg-[#0F172A] dark:bg-black rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
+      <div className="bg-[#0F172A] rounded-[3.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
@@ -84,14 +84,14 @@ export const MarketplaceB2B: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2 italic uppercase">
-                    Marketplace <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent">B2B</span>
+                    Marketplace <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA]">B2B</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">PARCERIAS E ACORDOS ENTRE EMPRESÁRIOS LOCAIS.</p>
               </div>
             </div>
             
             <div className="flex gap-4">
-               {user.plan === 'negocios' || user.plan === 'freelancers' ? (
+               {user.plan === 'pro' || user.plan === 'full' ? (
                   <button onClick={() => setIsModalOpen(true)} className="bg-[#F67C01] text-white px-10 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
                       <Plus className="w-4 h-4" /> CRIAR OPORTUNIDADE
                   </button>
@@ -155,7 +155,7 @@ export const MarketplaceB2B: React.FC = () => {
                  <input 
                     type="text" 
                     placeholder="Pesquisar parceiro ou serviço..." 
-                    className="w-full pl-14 pr-6 py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all dark:text-white"
+                    className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                  />
@@ -163,27 +163,27 @@ export const MarketplaceB2B: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
                  {isLoading ? (
-                    [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 dark:bg-zinc-800 rounded-[2.5rem] animate-pulse"></div>)
+                    [1,2,3].map(i => <div key={i} className="h-64 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)
                  ) : filteredOffers.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
                        <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhuma oportunidade disponível no momento.</p>
                     </div>
                  ) : filteredOffers.map(offer => (
-                    <div key={offer.id} className="group bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full overflow-hidden">
+                    <div key={offer.id} className="group bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full overflow-hidden">
                        <div className="flex justify-between items-start mb-6">
-                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md">
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-50 overflow-hidden border-2 border-white shadow-md">
                              <img src={offer.businessLogo} className="w-full h-full object-cover" alt="Logo" />
                           </div>
-                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900 uppercase">
+                          <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 uppercase">
                              {offer.discount}
                           </span>
                        </div>
                        <div className="flex-1 space-y-3">
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight line-clamp-1">{offer.title}</h3>
-                          <p className="text-[10px] text-indigo-600 dark:text-brand-primary font-black uppercase tracking-widest">{offer.businessName}</p>
-                          <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed line-clamp-2">{offer.description}</p>
+                          <h3 className="text-xl font-black text-gray-900 leading-tight line-clamp-1">{offer.title}</h3>
+                          <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">{offer.business_name}</p>
+                          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{offer.description}</p>
                        </div>
-                       <button className="mt-8 w-full py-4 bg-gray-900 dark:bg-zinc-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
+                       <button className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
                           SOLICITAR MATCH <ArrowRight className="w-3 h-3" />
                        </button>
                     </div>
@@ -193,7 +193,7 @@ export const MarketplaceB2B: React.FC = () => {
         )}
 
         {activeTab === 'my-deals' && (
-            <div className="py-20 text-center bg-white dark:bg-zinc-900 rounded-[3rem] border-4 border-dashed border-gray-100 dark:border-zinc-800">
+            <div className="py-20 text-center bg-white rounded-[3rem] border-4 border-dashed border-gray-100">
                <ShieldCheck className="w-20 h-20 text-slate-200 mx-auto mb-8" />
                <h4 className="text-xl font-black text-slate-400 uppercase tracking-widest">Nenhuma Oportunidade Resgatada</h4>
                <button onClick={() => setActiveTab('browse')} className="mt-6 text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline">Ver Oportunidades Ativas</button>
@@ -204,7 +204,7 @@ export const MarketplaceB2B: React.FC = () => {
       {/* Modal Criar Oportunidade */}
       {isModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">Criar Oportunidade B2B</h3>
@@ -215,16 +215,16 @@ export const MarketplaceB2B: React.FC = () => {
                 <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Oportunidade</label>
-                        <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: 20% de Desconto em Consultoria Contábil" />
+                        <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: 20% de Desconto em Consultoria Contábil" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Desconto</label>
-                            <input required type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 20% OFF ou R$ 100" />
+                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.discount} onChange={e => setFormData({...formData, discount: e.target.value})} placeholder="Ex: 20% OFF ou R$ 100" />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                            <select className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                            <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                                 <option>Serviços</option>
                                 <option>Insumos</option>
                                 <option>Tecnologia</option>
@@ -234,11 +234,11 @@ export const MarketplaceB2B: React.FC = () => {
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição Curta</label>
-                        <textarea required rows={3} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-medium text-sm dark:text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="O que você está oferecendo para os parceiros?" />
+                        <textarea required rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium text-sm resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="O que você está oferecendo para os parceiros?" />
                     </div>
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Termos e Condições</label>
-                        <input type="text" className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-2xl p-5 font-bold dark:text-white" value={formData.terms} onChange={e => setFormData({...formData, terms: e.target.value})} placeholder="Ex: Válido apenas para novos contratos." />
+                        <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.terms} onChange={e => setFormData({...formData, terms: e.target.value})} placeholder="Ex: Válido apenas para novos contratos." />
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR OPORTUNIDADE'}

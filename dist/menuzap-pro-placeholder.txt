@@ -1,0 +1,1 @@
+This is a placeholder for the Menuzap Pro Chrome Extension. In a real scenario, this would be a .zip file containing the extension manifest and scripts.

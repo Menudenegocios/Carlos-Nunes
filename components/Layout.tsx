@@ -1,15 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { Menu, X, Store, LogOut, Sun, Moon, ArrowRight } from 'lucide-react';
+import { Menu, X, Store, LogOut, ArrowRight } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Fix: changed incorrect hook call userAuth to useAuth
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -26,22 +23,22 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-surface dark:bg-brand-dark transition-colors duration-300">
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-brand-surface/80 dark:bg-brand-dark/80 backdrop-blur-md border-b border-brand-secondary/20 shadow-sm transition-colors">
+    <div className="min-h-screen flex flex-col font-sans bg-white">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-8 flex justify-between items-center h-24">
           <Link to="/" className="group flex-shrink-0">
-            <Logo size="sm" forceWhite={theme === 'dark'} />
+            <Logo size="sm" />
           </Link>
 
           <nav className="hidden xl:flex items-center gap-12">
             {navItems.map((item) => (
-              <Link 
+              <Link
                 key={item.label}
-                to={item.path} 
+                to={item.path}
                 className={`text-sm font-bold tracking-tight transition-all px-2 py-1 rounded-lg hover:text-brand-primary ${
-                  isActive(item.path) 
-                    ? 'text-brand-primary' 
-                    : 'text-brand-contrast/70 dark:text-brand-surface/60'
+                  isActive(item.path)
+                    ? 'text-brand-primary'
+                    : 'text-slate-600'
                 }`}
               >
                 {item.label}
@@ -50,25 +47,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </nav>
 
           <div className="hidden xl:flex items-center gap-6">
-            <button 
-              onClick={toggleTheme}
-              className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 text-brand-primary border border-brand-secondary/20 hover:scale-110 transition-all"
-              title="Alternar Tema"
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </button>
-
             {user ? (
-              <div className="flex items-center gap-4 p-2 pr-4 rounded-full border bg-white dark:bg-slate-800 border-brand-secondary/20 transition-all">
+              <div className="flex items-center gap-4 p-2 pr-4 rounded-full border bg-white border-gray-200">
                 <Link to="/profile" className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-white text-sm font-black">
                   {user.name.charAt(0)}
                 </Link>
-                <Link to="/dashboard" className="text-xs font-black uppercase tracking-widest hover:text-brand-primary dark:text-brand-surface transition-colors">Painel</Link>
-                <button onClick={logout} className="text-brand-secondary hover:text-rose-500 transition-colors"><LogOut className="w-5 h-5" /></button>
+                <Link to="/dashboard" className="text-xs font-black uppercase tracking-widest hover:text-brand-primary transition-colors text-slate-700">Painel</Link>
+                <button onClick={logout} className="text-slate-400 hover:text-rose-500 transition-colors"><LogOut className="w-5 h-5" /></button>
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <Link to="/login" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-dark dark:bg-brand-primary text-white hover:opacity-90 transition-all">
+                <Link to="/login" className="text-xs font-black px-8 py-4 rounded-full uppercase tracking-widest shadow-lg bg-brand-dark text-white hover:opacity-90 transition-all">
                   Login
                 </Link>
               </div>
@@ -76,10 +65,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           <div className="flex items-center gap-3 xl:hidden">
-            <button onClick={toggleTheme} className="p-2 text-brand-primary">
-               {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
-            </button>
-            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-brand-contrast dark:text-brand-surface"><Menu className="w-8 h-8" /></button>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-brand-contrast"><Menu className="w-8 h-8" /></button>
           </div>
         </div>
       </header>
@@ -88,21 +74,21 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {children}
       </main>
 
-      <footer className="bg-brand-dark text-brand-surface pt-24 pb-12 overflow-hidden relative">
+      <footer className="bg-white text-brand-dark pt-24 pb-12 overflow-hidden relative border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div className="col-span-1 md:col-span-1 space-y-6">
               <Link to="/">
-                <Logo size="sm" forceWhite />
+                <Logo size="sm" />
               </Link>
-              <p className="text-brand-secondary text-sm leading-relaxed font-medium">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 Elevando a conexão entre negócios locais e consumidores através de tecnologia inteligente e design funcional.
               </p>
             </div>
-            
+
             <div>
-              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary mb-8">Navegação</h4>
-              <ul className="space-y-4 text-sm font-bold text-brand-surface/80">
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-primary mb-8">Navegação</h4>
+              <ul className="space-y-4 text-sm font-bold text-slate-600">
                 <li><Link to="/vitrine" className="hover:text-brand-primary transition-colors">Vitrine de Negócios</Link></li>
                 <li><Link to="/marketplace" className="hover:text-brand-primary transition-colors">Marketplace</Link></li>
                 <li><Link to="/eventos" className="hover:text-brand-primary transition-colors">Agenda & Eventos</Link></li>
@@ -111,8 +97,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             <div>
-              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary mb-8">Empresa</h4>
-              <ul className="space-y-4 text-sm font-bold text-brand-surface/80">
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-primary mb-8">Empresa</h4>
+              <ul className="space-y-4 text-sm font-bold text-slate-600">
                 <li><Link to="/quem-somos" className="hover:text-brand-primary transition-colors">Quem Somos</Link></li>
                 <li><Link to="/partners" className="hover:text-brand-primary transition-colors">Nossos Parceiros</Link></li>
                 <li><Link to="/plans" className="hover:text-brand-primary transition-colors">Planos Pro</Link></li>
@@ -120,21 +106,21 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             <div className="space-y-8">
-              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-secondary">Comece Hoje</h4>
-              <Link to="/register" className="group flex items-center justify-between bg-brand-surface text-brand-dark p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-primary hover:text-white">
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-primary">Comece Hoje</h4>
+              <Link to="/register" className="group flex items-center justify-between bg-brand-dark text-white p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-primary">
                 CADASTRAR NEGÓCIO
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
-          
-          <div className="pt-8 border-t border-brand-surface/10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-[10px] text-brand-secondary font-bold uppercase tracking-widest">
+
+          <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
               &copy; {new Date().getFullYear()} MENU PAGES. Sua vitrine inteligente.
             </p>
-            <div className="flex gap-8 text-[10px] text-brand-secondary font-bold uppercase tracking-widest">
-              <Link to="/privacy" className="hover:text-brand-surface transition-colors">Privacidade</Link>
-              <Link to="/terms" className="hover:text-brand-surface transition-colors">Termos</Link>
+            <div className="flex gap-8 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+              <Link to="/privacy" className="hover:text-brand-primary transition-colors">Privacidade</Link>
+              <Link to="/terms" className="hover:text-brand-primary transition-colors">Termos</Link>
             </div>
           </div>
         </div>
@@ -143,19 +129,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[200] xl:hidden">
           <div className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-brand-surface dark:bg-slate-900 p-8 flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="absolute right-0 top-0 bottom-0 w-[80%] bg-white p-8 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center mb-12">
                <Logo size="sm" />
-               <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-10 h-10 text-brand-secondary" /></button>
+               <button onClick={() => setIsMobileMenuOpen(false)}><X className="w-10 h-10 text-slate-400" /></button>
             </div>
             <nav className="flex flex-col gap-4">
                {navItems.map((item) => (
-                 <Link 
-                  key={item.label} 
-                  to={item.path} 
-                  onClick={() => setIsMobileMenuOpen(false)} 
-                  className={`text-2xl font-black border-b border-brand-secondary/20 pb-3 ${
-                    isActive(item.path) ? 'text-brand-primary' : 'text-brand-dark dark:text-brand-surface'
+                 <Link
+                  key={item.label}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`text-2xl font-black border-b border-gray-100 pb-3 ${
+                    isActive(item.path) ? 'text-brand-primary' : 'text-brand-dark'
                   }`}
                 >
                   {item.label}
@@ -163,13 +149,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                ))}
             </nav>
             <div className="mt-auto pt-8 flex flex-col gap-4">
-               <button onClick={toggleTheme} className="flex items-center gap-3 p-5 bg-white dark:bg-slate-800 rounded-3xl font-black dark:text-brand-surface shadow-sm">
-                  {theme === 'light' ? <><Moon className="w-6 h-6" /> Modo Escuro</> : <><Sun className="w-6 h-6 text-brand-accent" /> Modo Claro</>}
-               </button>
                {!user ? (
-                 <Link to="/login" className="w-full bg-brand-dark dark:bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Login</Link>
+                 <Link to="/login" className="w-full bg-brand-dark text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Login</Link>
                ) : (
-                 <Link to="/dashboard" className="w-full bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
+                 <>
+                   <Link to="/dashboard" className="w-full bg-brand-primary text-white p-6 rounded-3xl font-black text-center block uppercase tracking-widest">Meu Painel</Link>
+                   <button
+                     onClick={logout}
+                     className="w-full flex items-center justify-center gap-2 p-6 bg-rose-50 text-rose-600 rounded-3xl font-black uppercase tracking-widest shadow-sm"
+                   >
+                     <LogOut className="w-6 h-6" /> Sair
+                   </button>
+                 </>
                )}
             </div>
           </div>

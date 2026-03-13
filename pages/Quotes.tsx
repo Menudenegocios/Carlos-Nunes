@@ -35,8 +35,8 @@ export const Quotes: React.FC = () => {
           <div key={quote.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex justify-between items-start mb-4">
                <div>
-                  <h3 className="font-bold text-lg text-gray-900">{quote.clientName}</h3>
-                  <p className="text-sm text-gray-500">Interesse: {quote.serviceInterest}</p>
+                  <h3 className="font-bold text-lg text-gray-900">{quote.client_name}</h3>
+                  <p className="text-sm text-gray-500">Interesse: {quote.service_interest}</p>
                </div>
                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                  quote.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' : 

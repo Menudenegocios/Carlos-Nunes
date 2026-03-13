@@ -19,47 +19,42 @@ type TabType = 'inicio' | 'swot' | 'smart' | 'canva' | 'projects';
 
 export const ProjectManagement: React.FC = () => {
   const { user } = useAuth();
-  const userId = user?.id || 'user-123'; // Fallback to placeholder if user not loaded
-  const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const user_id = user?.id || 'user-123'; // Fallback to placeholder if user not loaded
+  const [newProjectCategory, setNewProjectCategory] = useState('Outros');
+  const [newProjectTool, setNewProjectTool] = useState('Outros');
+  const [activeTab, setActiveTab] = useState<'projects' | 'notes'>('projects');
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [newProjectStatus, setNewProjectStatus] = useState('A Fazer');
   const [newProjectPriority, setNewProjectPriority] = useState('Média');
   const [editingProject, setEditingProject] = useState<any>(null);
-  const [smartGoals, setSmartGoals] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
 
   React.useEffect(() => {
-    if (!userId) return;
-    supabaseService.getSmartGoals(userId).then(setSmartGoals).catch(console.error);
-    supabaseService.getProjects(userId).then(setProjects).catch(console.error);
-  }, [userId]);
+    if (!user_id) return;
+    supabaseService.getProjects(user_id).then(setProjects).catch(console.error);
+  }, [user_id]);
 
   const handleSaveProject = async () => {
     if (!newProjectName) return;
     try {
+      const pData = {
+        name: newProjectName,
+        description: newProjectDesc,
+        status: newProjectStatus,
+        priority: newProjectPriority,
+        category: newProjectCategory,
+        support_tool: newProjectTool
+      };
+
       if (editingProject) {
-        await supabaseService.updateProject(editingProject.id, {
-          name: newProjectName,
-          description: newProjectDesc,
-          status: newProjectStatus,
-          priority: newProjectPriority
-        });
-        setProjects(projects.map(p => p.id === editingProject.id ? {
-          ...p,
-          name: newProjectName,
-          description: newProjectDesc,
-          status: newProjectStatus,
-          priority: newProjectPriority
-        } : p));
+        await supabaseService.updateProject(editingProject.id, pData);
+        setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...pData } : p));
       } else {
         const newProject = await supabaseService.addProject({ 
-          userId: userId, 
-          name: newProjectName, 
-          description: newProjectDesc,
-          status: newProjectStatus,
-          priority: newProjectPriority
+          user_id: user_id, 
+          ...pData
         });
         setProjects([newProject, ...projects]);
       }
@@ -76,6 +71,8 @@ export const ProjectManagement: React.FC = () => {
     setNewProjectDesc('');
     setNewProjectStatus('A Fazer');
     setNewProjectPriority('Média');
+    setNewProjectCategory('Outros');
+    setNewProjectTool('Outros');
     setEditingProject(null);
   };
 
@@ -90,6 +87,8 @@ export const ProjectManagement: React.FC = () => {
     setNewProjectDesc(project.description || '');
     setNewProjectStatus(project.status || 'A Fazer');
     setNewProjectPriority(project.priority || 'Média');
+    setNewProjectCategory(project.category || 'Outros');
+    setNewProjectTool(project.support_tool || 'Outros');
     setIsNewProjectModalOpen(true);
   };
 
@@ -103,9 +102,8 @@ export const ProjectManagement: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'inicio', label: 'Início', icon: LayoutGrid },
     { id: 'projects', label: 'Projetos', icon: Briefcase },
-    { id: 'canva', label: 'Business Canva', icon: Layers },
+    { id: 'notes', label: 'Anotações', icon: Edit3 },
   ];
 
   return (
@@ -113,7 +111,7 @@ export const ProjectManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white italic uppercase tracking-tight">
+          <h1 className="text-4xl font-black text-gray-900 italic uppercase tracking-tight">
             Gestão de <span className="text-brand-primary">Projetos</span>
           </h1>
           <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
@@ -139,11 +137,11 @@ export const ProjectManagement: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-zinc-800"
+              className="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl border border-gray-100"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase italic">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
-                <button onClick={() => setIsNewProjectModalOpen(false)} className="text-slate-400 hover:text-gray-900 dark:hover:text-white">
+                <h3 className="text-xl font-black text-gray-900 uppercase italic">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
+                <button onClick={() => setIsNewProjectModalOpen(false)} className="text-slate-400 hover:text-gray-900">
                   <Plus className="w-6 h-6 rotate-45" />
                 </button>
               </div>
@@ -151,19 +149,45 @@ export const ProjectManagement: React.FC = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nome do Projeto</label>
-                  <input type="text" value={newProjectName} onChange={e => setNewProjectName(e.target.value)} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all" placeholder="Ex: Lançamento Produto X" />
+                  <input type="text" value={newProjectName} onChange={e => setNewProjectName(e.target.value)} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all" placeholder="Ex: Lançamento Produto X" />
                 </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Categoria</label>
+                    <select value={newProjectCategory} onChange={e => setNewProjectCategory(e.target.value)} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-medium">
+                        <option value="Marketing">Marketing</option>
+                        <option value="Vendas">Vendas</option>
+                        <option value="Networking">Networking</option>
+                        <option value="Planejamento">Planejamento</option>
+                        <option value="IA">IA</option>
+                        <option value="Finanças">Finanças</option>
+                        <option value="Desenvolvimento">Desenvolvimento</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ferramenta de Apoio</label>
+                    <select value={newProjectTool} onChange={e => setNewProjectTool(e.target.value)} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-medium">
+                        <option value="Meta SMART">Meta SMART</option>
+                        <option value="SWOT">SWOT</option>
+                        <option value="Canva">Canva</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Descrição</label>
-                  <textarea value={newProjectDesc} onChange={e => setNewProjectDesc(e.target.value)} className="w-full bg-gray-50 dark:bg-zinc-800 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all" placeholder="Breve resumo..." rows={3} />
+                  <textarea value={newProjectDesc} onChange={e => setNewProjectDesc(e.target.value)} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all" placeholder="Breve resumo..." rows={3} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <select value={newProjectStatus} onChange={e => setNewProjectStatus(e.target.value)} className="bg-gray-50 dark:bg-zinc-800 border-none rounded-xl p-4 text-sm font-medium">
+                    <select value={newProjectStatus} onChange={e => setNewProjectStatus(e.target.value)} className="bg-gray-50 border-none rounded-xl p-4 text-sm font-medium">
                         <option>A Fazer</option>
                         <option>Em Progresso</option>
                         <option>Concluído</option>
                     </select>
-                    <select value={newProjectPriority} onChange={e => setNewProjectPriority(e.target.value)} className="bg-gray-50 dark:bg-zinc-800 border-none rounded-xl p-4 text-sm font-medium">
+                    <select value={newProjectPriority} onChange={e => setNewProjectPriority(e.target.value)} className="bg-gray-50 border-none rounded-xl p-4 text-sm font-medium">
                         <option>Baixa</option>
                         <option>Média</option>
                         <option>Alta</option>
@@ -186,11 +210,11 @@ export const ProjectManagement: React.FC = () => {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as TabType)}
+            onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/20'
-                : 'bg-white dark:bg-zinc-900 text-slate-400 dark:text-zinc-500 hover:bg-gray-50 dark:hover:bg-zinc-800 border border-gray-100 dark:border-zinc-800'
+                : 'bg-white text-slate-400 hover:bg-gray-50 border border-gray-100'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -209,9 +233,11 @@ export const ProjectManagement: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'inicio' && <HomeView setActiveTab={setActiveTab} />}
-            {activeTab === 'canva' && <BusinessCanvaView />}
-            {activeTab === 'projects' && <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
+            {activeTab === 'projects' ? (
+              <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />
+            ) : (
+              <NotesView user_id={user_id} />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -221,125 +247,132 @@ export const ProjectManagement: React.FC = () => {
 
 // --- SUB-VIEWS ---
 
-const HomeView = ({ setActiveTab }: { setActiveTab: (tab: TabType) => void }) => (
-  <SectionLanding 
-      title="Gestão de Projetos"
-      subtitle="Gestão de Projetos"
-      description="Esta página centraliza todas as ferramentas de gestão estratégica do seu negócio. Utilize as abas acima para navegar entre o Business Model Canva e a gestão de seus Projetos. Cada ferramenta foi desenhada para ajudar você a planejar, executar e acompanhar o sucesso das suas iniciativas."
-      benefits={[
-        "Planejamento estratégico integrado.",
-        "Modelagem de negócios visual.",
-        "Execução e acompanhamento de projetos."
-      ]}
-      youtubeId="dQw4w9WgXcQ"
-      ctaLabel="COMEÇAR AGORA"
-      onStart={() => setActiveTab('projects')}
-      icon={Briefcase}
-      accentColor="brand"
-  />
-);
+const NotesView = ({ user_id }: { user_id: string }) => {
+  const [notes, setNotes] = useState<any[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-// --- SUB-VIEWS ---
+  React.useEffect(() => {
+    if (!user_id) return;
+    supabaseService.getNotes(user_id).then(setNotes).catch(console.error);
+  }, [user_id]);
 
-const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], deleteProject: (id: string) => void, onEdit: (project: any) => void }) => {
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    setIsSaving(true);
+    try {
+      const note = await supabaseService.addNote({ user_id, content: newNote });
+      setNotes([note, ...notes]);
+      setNewNote('');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    try {
+      await supabaseService.deleteNote(id);
+      setNotes(notes.filter(n => n.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-zinc-900 rounded-[3rem] p-12 border border-gray-100 dark:border-zinc-800 shadow-sm">
-      <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight mb-8">Meus Projetos</h3>
-      
-      <div className="space-y-4">
-        {projects.map(p => (
-          <div key={p.id} className="flex items-center justify-between p-6 bg-gray-50 dark:bg-zinc-800 rounded-2xl">
-            <div>
-              <h4 className="font-black text-gray-900 dark:text-white">{p.name}</h4>
-              <p className="text-sm text-slate-400">{p.description}</p>
-              <div className="flex gap-2 mt-2">
-                <span className="text-[10px] font-bold uppercase bg-white dark:bg-zinc-900 px-2 py-1 rounded-lg">{p.status}</span>
-                <span className="text-[10px] font-bold uppercase bg-white dark:bg-zinc-900 px-2 py-1 rounded-lg">{p.priority}</span>
-              </div>
+    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+      <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm">
+        <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight mb-6">Anotações Rápidas</h3>
+        <div className="flex gap-4">
+          <input 
+            type="text" 
+            value={newNote}
+            onChange={e => setNewNote(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddNote()}
+            placeholder="No que você está pensando?"
+            className="flex-1 bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all"
+          />
+          <button 
+            onClick={handleAddNote}
+            disabled={isSaving}
+            className="bg-brand-primary text-white p-5 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            {isSaving ? <Plus className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {notes.length > 0 ? notes.map(note => (
+          <div key={note.id} className="p-8 bg-white rounded-[2.5rem] border border-gray-100 flex justify-between items-start gap-6 group hover:border-brand-primary transition-all shadow-sm">
+            <div className="space-y-2">
+              <p className="text-gray-900 font-medium leading-relaxed">{note.content}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                {new Date(note.created_at).toLocaleDateString('pt-BR')}
+              </p>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => onEdit(p)} className="text-indigo-500 hover:text-indigo-600"><Edit3 className="w-5 h-5" /></button>
-              <button onClick={() => deleteProject(p.id)} className="text-rose-500 hover:text-rose-600"><Trash2 className="w-5 h-5" /></button>
-            </div>
+            <button onClick={() => deleteNote(note.id)} className="p-3 text-slate-200 hover:text-rose-500 transition-colors">
+              <Trash2 className="w-5 h-5" />
+            </button>
           </div>
-        ))}
+        )) : (
+          <div className="text-center py-24 opacity-30">
+            <Edit3 className="w-16 h-16 mx-auto mb-6" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em]">Nenhuma anotação por aqui.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const BusinessCanvaView = () => {
-  const [data, setData] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
-  const userId = user?.id || 'user-123';
-
-  React.useEffect(() => {
-    if (!userId) return;
-    supabaseService.getBusinessCanva(userId).then(d => setData(d || {})).catch(console.error);
-  }, [userId]);
-
-  const saveData = async () => {
-    setLoading(true);
-    try {
-      await supabaseService.saveBusinessCanva(userId, data);
-      alert('Salvo com sucesso!');
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateField = (key: string, value: string) => {
-    setData({ ...data, [key]: value });
-  };
-
+const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], deleteProject: (id: string) => void, onEdit: (project: any) => void }) => {
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-zinc-900 rounded-[3rem] p-12 border border-gray-100 dark:border-zinc-800 shadow-sm">
-      <div className="text-center space-y-4 mb-12">
-        <div className="w-20 h-20 bg-pink-50 dark:bg-pink-950/30 text-pink-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-          <Layers className="w-10 h-10" />
-        </div>
-        <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tight">Business Model Canva</h3>
-        <p className="text-slate-400 text-sm font-medium">Modelagem Visual: Defina os pilares do seu modelo de negócio.</p>
-      </div>
-
-      <div className="space-y-8">
-        {[
-          { key: 'partners', icon: Handshake, title: 'Parceiros Chave', desc: 'Quem ajuda você a entregar valor?', placeholder: 'Ex: Fornecedores, parceiros de tecnologia...' },
-          { key: 'activities', icon: Zap, title: 'Atividades Chave', desc: 'O que seu negócio faz de mais importante?', placeholder: 'Ex: Desenvolvimento de software, marketing...' },
-          { key: 'value', icon: Lightbulb, title: 'Proposta de Valor', desc: 'Que problema você resolve para o cliente?', placeholder: 'Ex: Entrega rápida, preço justo, exclusividade...' },
-          { key: 'relationships', icon: Users, title: 'Relacionamento', desc: 'Como você interage com seus clientes?', placeholder: 'Ex: Atendimento VIP, redes sociais, suporte 24h...' },
-          { key: 'segments', icon: Search, title: 'Segmentos de Clientes', desc: 'Para quem você está criando valor?', placeholder: 'Ex: Pequenos empreendedores, jovens de 18-25 anos...' },
-          { key: 'resources', icon: Shield, title: 'Recursos Chave', desc: 'O que você precisa para operar?', placeholder: 'Ex: Servidores, equipe qualificada, capital...' },
-          { key: 'channels', icon: Globe, title: 'Canais', desc: 'Como seus clientes conhecem seu produto?', placeholder: 'Ex: Instagram, WhatsApp, site oficial...' },
-          { key: 'costs', icon: PieChart, title: 'Estrutura de Custos', desc: 'Quais são os maiores gastos?', placeholder: 'Ex: Salários, marketing, infraestrutura...' },
-          { key: 'revenue', icon: Coins, title: 'Fontes de Receita', desc: 'Como seu negócio ganha dinheiro?', placeholder: 'Ex: Assinaturas, venda direta, publicidade...' }
-        ].map((item, i) => (
-          <div key={i} className="space-y-4 group">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <item.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">{item.title}</h4>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.desc}</p>
-              </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {projects.length > 0 ? projects.map(p => (
+          <div key={p.id} className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-brand-primary transition-all">
+            <div className="space-y-4">
+               <div className="flex justify-between items-start">
+                  <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                    p.category === 'Marketing' ? 'bg-orange-50 text-orange-600' :
+                    p.category === 'Vendas' ? 'bg-emerald-50 text-emerald-600' :
+                    p.category === 'Financeiro' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-500'
+                  }`}>
+                    {p.category || 'Geral'}
+                  </span>
+                  <div className="flex gap-1">
+                    <button onClick={() => onEdit(p)} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Edit3 className="w-4 h-4" /></button>
+                    <button onClick={() => deleteProject(p.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+               </div>
+               
+               <div>
+                  <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">{p.name}</h4>
+                  <p className="text-xs text-slate-500 line-clamp-2 mt-2 font-medium leading-relaxed">{p.description}</p>
+               </div>
             </div>
-            <textarea 
-              className="w-full bg-gray-50 dark:bg-zinc-800/50 border-none rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-pink-500 transition-all resize-none"
-              placeholder={item.placeholder}
-              rows={2}
-              value={data[item.key] || ''}
-              onChange={e => updateField(item.key, e.target.value)}
-            />
-          </div>
-        ))}
 
-        <button onClick={saveData} disabled={loading} className="w-full py-6 bg-brand-primary text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-brand-primary/20 disabled:opacity-50">
-          {loading ? 'Salvando...' : 'Salvar Business Canva'}
-        </button>
+            <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+               <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    p.status === 'Concluído' ? 'bg-emerald-500' :
+                    p.status === 'Em Progresso' ? 'bg-blue-500' : 'bg-slate-300'
+                  }`} />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{p.status}</span>
+               </div>
+               <span className="text-[10px] font-black text-slate-300 uppercase italic tracking-tighter">
+                  {p.support_tool !== 'Outros' ? p.support_tool : ''}
+               </span>
+            </div>
+          </div>
+        )) : (
+          <div className="col-span-full text-center py-24 opacity-30">
+            <Briefcase className="w-16 h-16 mx-auto mb-6" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em]">Nenhum projeto iniciado.</p>
+          </div>
+        )}
       </div>
     </div>
   );

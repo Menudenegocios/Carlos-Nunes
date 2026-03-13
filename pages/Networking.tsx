@@ -16,7 +16,7 @@ export const Networking: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    businessName: '',
+    business_name: '',
     sector: '',
     lookingFor: '',
     avatar: ''
@@ -52,15 +52,15 @@ export const Networking: React.FC = () => {
     try {
       const newProfile = await supabaseService.createNetworkingProfile({
         name: formData.name,
-        businessName: formData.businessName,
+        business_name: formData.business_name,
         sector: formData.sector,
         lookingFor: formData.lookingFor,
         avatar: formData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}`,
-        userId: user.id
+        user_id: user.id
       });
       setProfiles([...profiles, newProfile]);
       setIsModalOpen(false);
-      setFormData({ name: '', businessName: '', sector: '', lookingFor: '', avatar: '' });
+      setFormData({ name: '', business_name: '', sector: '', lookingFor: '', avatar: '' });
     } catch (error) {
       console.error('Error adding partner:', error);
       alert('Erro ao adicionar negócio.');
@@ -85,7 +85,7 @@ export const Networking: React.FC = () => {
 
   const filteredProfiles = profiles.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sector.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -151,7 +151,7 @@ export const Networking: React.FC = () => {
 
               <img src={profile.avatar} alt={profile.name} className="w-20 h-20 rounded-full mb-4 bg-gray-50 border-2 border-white shadow-sm" />
               <h3 className="text-lg font-bold text-gray-900">{profile.name}</h3>
-              <p className="text-indigo-600 font-medium text-sm mb-1">{profile.businessName}</p>
+              <p className="text-indigo-600 font-medium text-sm mb-1">{profile.business_name}</p>
               <div className="flex items-center gap-1 text-gray-500 text-xs mb-4">
                  <Briefcase className="w-3 h-3" /> {profile.sector}
               </div>
@@ -201,8 +201,8 @@ export const Networking: React.FC = () => {
                   type="text" 
                   className="w-full border-gray-300 rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Ex: Doces da Ana"
-                  value={formData.businessName}
-                  onChange={e => setFormData({...formData, businessName: e.target.value})}
+                  value={formData.business_name}
+                  onChange={e => setFormData({...formData, business_name: e.target.value})}
                 />
               </div>
 

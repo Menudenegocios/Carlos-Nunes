@@ -1,6 +1,6 @@
 export const pointsRules = {
-  indicacaoBasico: 120,
-  indicacaoPro: 350,
+  indicacaoBasico: 100,
+  indicacaoPro: 300,
   compraVitrine: 1, // 1 ponto a cada R$1 gasto
   loginDiario: 5,
   publicacaoBlog: 20,
@@ -8,6 +8,14 @@ export const pointsRules = {
 };
 
 export const tiers = [
+  {
+    name: 'Consultor',
+    points: 0,
+    color: 'bg-slate-500',
+    criteria: 'Nível Inicial',
+    description: 'Consultor é o início da jornada.',
+    benefits: ['Acesso básico', 'Onboarding']
+  },
   {
     name: 'Elite',
     points: 300,

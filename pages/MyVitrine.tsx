@@ -10,7 +10,7 @@ import {
   Quote, Palette, Share2, Settings, ListTodo, Medal, Gift, History,
   LayoutGrid, Clock
 } from 'lucide-react';
-import { mockBackend } from '../services/mockBackend';
+import { supabase } from '../services/supabaseClient';
 import { BlogPost, Product, Coupon, Project, Profile } from '../types';
 
 type VitrineTab = 'inicio' | 'resumo' | 'identidade' | 'blog_seo' | 'todos' | 'produtos' | 'projetos' | 'configuracoes';
@@ -40,16 +40,16 @@ export const MyVitrine: React.FC = () => {
   }, [activeTab]);
 
   const loadAllVitrinesData = async () => {
-    const vitrines = await mockBackend.getAllProfiles();
-    setAllVitrines(vitrines);
+    const { data } = await supabase.from('profiles').select('*');
+    setAllVitrines(data as any || []);
   };
 
   const loadBlogData = async () => {
     if (!user) return;
     setIsLoadingBlog(true);
     try {
-      const posts = await mockBackend.getBlogPosts();
-      setBlogPosts(posts.filter(p => p.userId === user.id));
+      const { data } = await supabase.from('blog_posts').select('*').eq('user_id', user.id);
+      setBlogPosts((data as any) || []);
     } finally {
       setIsLoadingBlog(false);
     }
@@ -57,32 +57,32 @@ export const MyVitrine: React.FC = () => {
 
   const loadCatalogData = async () => {
     if (!user) return;
-    const products = await mockBackend.getProducts(user.id);
-    setProducts(products);
-    const coupons = await mockBackend.getCoupons(user.id);
-    setCoupons(coupons);
+    const { data: productsData } = await supabase.from('products').select('*').eq('user_id', user.id);
+    setProducts((productsData as any) || []);
+    const { data: couponsData } = await supabase.from('coupons').select('*').eq('user_id', user.id);
+    setCoupons((couponsData as any) || []);
   };
 
   const loadProjectsData = async () => {
     if (!user) return;
-    const projects = await mockBackend.getProjects(user.id);
-    setProjects(projects);
+    const { data } = await supabase.from('projects').select('*').eq('user_id', user.id);
+    setProjects((data as any) || []);
   };
 
   // Handlers para Projetos
   const handleCreateProject = async () => {
     if (!user) return;
-    const newProject: Omit<Project, 'id' | 'createdAt'> = {
-      userId: user.id,
+    const newProject = {
+      user_id: user.id,
       name: 'Novo Projeto',
       description: 'Descrição'
     };
-    await mockBackend.createProject(newProject);
+    await supabase.from('projects').insert([newProject]);
     loadProjectsData();
   };
 
   const handleDeleteProject = async (id: string) => {
-    await mockBackend.deleteProject(id);
+    await supabase.from('projects').delete().eq('id', id);
     loadProjectsData();
   };
 
@@ -93,7 +93,7 @@ export const MyVitrine: React.FC = () => {
 
   const handleDeleteProduct = async (id: string) => {
     if (!user) return;
-    await mockBackend.deleteProduct(id);
+    await supabase.from('products').delete().eq('id', id);
     loadCatalogData();
   };
 
@@ -104,7 +104,7 @@ export const MyVitrine: React.FC = () => {
 
   const handleDeleteCoupon = async (id: string) => {
     if (!user) return;
-    await mockBackend.deleteCoupon(id, user.id);
+    await supabase.from('coupons').delete().eq('id', id);
     loadCatalogData();
   };
 

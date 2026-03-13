@@ -5,15 +5,15 @@
   --color-brand-primary: #F67C01;
   --color-brand-secondary: #94A3B8;
   --color-brand-accent: #F9D230;
-  --color-brand-surface: #F8FAFC;
+  --color-brand-surface: #FFFFFF;
   --color-brand-dark: #0F172A;
   --color-brand-contrast: #1E293B;
-  --color-brand-text: #000000;
-  
+  --color-brand-text: #0F172A;
+
   --font-sans: "Inter", "Raleway", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Libre Baskerville", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
+
   --animate-marquee: marquee 40s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
 
@@ -28,23 +28,21 @@
 }
 
 @layer base {
+  /* Force light mode globally - dark mode removed */
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background-color: #FFFFFF;
+    color: #0F172A;
+    color-scheme: light;
+  }
+
   :root {
-    --brand-text: #000000;
-    --bg-main: #F8FAFC;
-    --text-main: #1E293B;
-  }
-
-  .dark {
-    --brand-text: #FFFFFF;
-    --bg-main: #020617;
-    --text-main: #F8FAFC;
-  }
-
-  body { 
-    font-family: 'Raleway', sans-serif; 
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    --bg-main: #FFFFFF;
+    --text-main: #0F172A;
+    --brand-text: #0F172A;
+    --foreground: #0F172A;
   }
 }
 
@@ -55,23 +53,33 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(148, 163, 184, 0.2);
   }
-  
-  .dark .glass-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  
+
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  
+
   .marquee-container {
     overflow: hidden;
     white-space: nowrap;
     position: relative;
   }
-  
+
   .marquee-content {
     display: flex;
     width: max-content;
+  }
+
+  /* Fix for cut-off characters in large titles with gradients and italics */
+  .title-fix {
+    display: inline-block !important;
+    overflow: visible !important;
+    padding-right: 0.1em;
+    padding-bottom: 0.05em;
+    line-height: 1.15 !important;
+  }
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    overflow: visible;
   }
 }

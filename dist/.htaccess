@@ -1,0 +1,12 @@
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Impede a listagem de diretórios
+  Options -Indexes
+
+  # Fallback para rotas SPA (Single Page Application)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

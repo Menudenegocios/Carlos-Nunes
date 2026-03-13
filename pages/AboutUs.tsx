@@ -9,13 +9,13 @@ export const AboutUs: React.FC = () => {
       
       {/* 1. HERO SECTION */}
       <section className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <Sparkles className="w-3 h-3" /> Propósito & Tecnologia
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter leading-none max-w-4xl mx-auto">
-          Menu de Negócios <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] dark:from-brand-primary dark:to-brand-accent italic">Plataforma All-in-One.</span>
-        </h1>
-        <p className="text-xl text-gray-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
+         <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-tight max-w-4xl mx-auto uppercase italic overflow-visible">
+          Menu de Negócios <br className="hidden md:block"/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] title-fix">Plataforma All-in-One.</span>
+         </h1>
+        <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
           Nascemos para simplificar a gestão e potencializar o crescimento de quem faz a economia girar. Conectar, gerenciar e escalar em um único ecossistema.
         </p>
       </section>
@@ -23,16 +23,16 @@ export const AboutUs: React.FC = () => {
       {/* 2. BENTO MISSION/VISION/VALUES */}
       <div className="grid md:grid-cols-3 gap-8">
         {[
-          { title: "Missão", icon: Target, bg: "bg-indigo-50 dark:bg-indigo-900/30", color: "text-indigo-600 dark:text-indigo-400", desc: "Eliminar a complexidade tecnológica para pequenos negócios, centralizando as melhores ferramentas de gestão e marketing em um só lugar." },
-          { title: "Visão", icon: Eye, bg: "bg-purple-50 dark:bg-purple-900/30", color: "text-purple-600 dark:text-purple-400", desc: "Ser o ecossistema definitivo para o empreendedor moderno, unindo tecnologia de ponta com uma rede de networking B2B incomparável." },
-          { title: "Valores", icon: Heart, bg: "bg-emerald-50 dark:bg-emerald-900/30", color: "text-emerald-600 dark:text-emerald-400", desc: "Transparência, inovação acessível e a crença de que o crescimento de um negócio fortalece toda a comunidade ao seu redor." }
+          { title: "Missão", icon: Target, bg: "bg-indigo-50", color: "text-indigo-600", desc: "Eliminar a complexidade tecnológica para pequenos negócios, centralizando as melhores ferramentas de gestão e marketing em um só lugar." },
+          { title: "Visão", icon: Eye, bg: "bg-purple-50", color: "text-purple-600", desc: "Ser o ecossistema definitivo para o empreendedor moderno, unindo tecnologia de ponta com uma rede de networking B2B incomparável." },
+          { title: "Valores", icon: Heart, bg: "bg-emerald-50", color: "text-emerald-600", desc: "Transparência, inovação acessível e a crença de que o crescimento de um negócio fortalece toda a comunidade ao seu redor." }
         ].map((item, i) => (
-          <div key={i} className="bg-white dark:bg-zinc-900 p-10 rounded-[3rem] border border-gray-100 dark:border-zinc-800 shadow-lg space-y-6 group hover:shadow-2xl hover:-translate-y-2 transition-all">
+          <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-lg space-y-6 group hover:shadow-2xl hover:-translate-y-2 transition-all">
             <div className={`w-16 h-16 rounded-[1.5rem] ${item.bg} ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
               <item.icon className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white">{item.title}</h3>
-            <p className="text-gray-500 dark:text-zinc-400 font-medium leading-relaxed">
+            <h3 className="text-2xl font-black text-gray-900">{item.title}</h3>
+            <p className="text-gray-500 font-medium leading-relaxed">
               {item.desc}
             </p>
           </div>
@@ -40,12 +40,12 @@ export const AboutUs: React.FC = () => {
       </div>
 
       {/* 3. STORY SECTION */}
-      <section className="bg-white dark:bg-zinc-900 rounded-[4rem] p-12 md:p-24 border border-gray-100 dark:border-zinc-800 shadow-2xl relative overflow-hidden">
+      <section className="bg-white rounded-[4rem] p-12 md:p-24 border border-gray-100 shadow-2xl relative overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-10 relative z-10">
-            <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">Nascemos de uma <br/><span className="text-indigo-600 dark:text-brand-primary">Dor Real.</span></h2>
-            <div className="space-y-6 text-gray-500 dark:text-zinc-400 font-medium leading-relaxed text-lg">
-                <p className="font-black text-gray-900 dark:text-white italic">
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">Nascemos de uma <br/><span className="text-indigo-600">Dor Real.</span></h2>
+            <div className="space-y-6 text-gray-500 font-medium leading-relaxed text-lg">
+                <p className="font-black text-gray-900 italic">
                   O empreendedor perde muito tempo tentando organizar ferramentas que não conversam entre si.
                 </p>
                 <p>
@@ -113,14 +113,14 @@ export const AboutUs: React.FC = () => {
            </div>
         </div>
         <div className="space-y-8 order-1 lg:order-2">
-          <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
+          <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none">
             A união perfeita entre <br/><span className="text-brand-primary">Gestão e Networking.</span>
           </h2>
-          <div className="space-y-6 text-gray-500 dark:text-zinc-400 font-medium leading-relaxed text-lg">
+          <div className="space-y-6 text-gray-500 font-medium leading-relaxed text-lg">
             <p>
               Nós resolvemos a parte chata da gestão para que você tenha tempo de focar no que realmente importa: crescer e se conectar.
             </p>
-            <div className="flex flex-col gap-2 font-black text-2xl text-gray-900 dark:text-white uppercase italic tracking-tighter">
+            <div className="flex flex-col gap-2 font-black text-2xl text-gray-900 uppercase italic tracking-tighter">
               <p className="flex items-center gap-3"><ArrowRight className="w-6 h-6 text-brand-primary" /> Somos a Ferramenta.</p>
               <p className="flex items-center gap-3"><ArrowRight className="w-6 h-6 text-brand-primary" /> Somos a Vitrine.</p>
               <p className="flex items-center gap-3"><ArrowRight className="w-6 h-6 text-brand-primary" /> Somos o Networking.</p>
