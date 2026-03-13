@@ -92,10 +92,27 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
     let planName = 'Plano Básico';
     let planId_technical = 'basic';
-    if (planId === process.env.STRIPE_PRICE_PRO_MONTHLY || planId === process.env.STRIPE_PRICE_PRO_YEARLY) {
+    
+    // Check for Pro Plan
+    const proPriceIds = [
+      process.env.STRIPE_PRICE_PRO_MONTHLY, 
+      process.env.VITE_STRIPE_PRICE_PRO_MONTHLY,
+      process.env.STRIPE_PRICE_PRO_YEARLY,
+      process.env.VITE_STRIPE_PRICE_PRO_YEARLY
+    ].filter(id => !!id);
+
+    // Check for Full Plan
+    const fullPriceIds = [
+      process.env.STRIPE_PRICE_FULL_MONTHLY,
+      process.env.VITE_STRIPE_PRICE_FULL_MONTHLY,
+      process.env.STRIPE_PRICE_FULL_YEARLY,
+      process.env.VITE_STRIPE_PRICE_FULL_YEARLY
+    ].filter(id => !!id);
+
+    if (proPriceIds.includes(planId)) {
       planName = 'Plano Pro';
       planId_technical = 'pro';
-    } else if (planId === process.env.STRIPE_PRICE_FULL_MONTHLY || planId === process.env.STRIPE_PRICE_FULL_YEARLY) {
+    } else if (fullPriceIds.includes(planId)) {
       planName = 'Plano FULL';
       planId_technical = 'full';
     }

@@ -71,7 +71,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   useEffect(() => {
     // onAuthStateChange handles both initial session and subsequent changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: Session | null) => {
-      console.log("Auth State Change:", _event, session?.user?.email);
+      const eventName = _event === 'INITIAL_SESSION' ? 'Sessão Inicial' : _event;
+      console.log(`[Auth] Mudança de Estado: ${eventName}`, session?.user?.email || 'Nenhum usuário logado');
       
       setIsLoading(true);
       if (session?.user) {

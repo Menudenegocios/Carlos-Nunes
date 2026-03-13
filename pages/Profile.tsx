@@ -13,6 +13,8 @@ export const Profile: React.FC = () => {
   const [profile, setProfile] = useState<Partial<ProfileType>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => { if (user) loadProfile(); }, [user]);
 
@@ -20,7 +22,9 @@ export const Profile: React.FC = () => {
     if (!user) return;
     try {
       const data = await supabaseService.getProfile(user.id);
-      setProfile(data || { logo_url: `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}` });
+      const initialUrl = data?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`;
+      setProfile(data || { logo_url: initialUrl });
+      setPreviewUrl(initialUrl);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally { setLoading(false); }
@@ -31,7 +35,22 @@ export const Profile: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabaseService.updateProfile(user.id, { ...profile });
+      let finalLogoUrl = profile.logo_url;
+
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+        const filePath = `imgprofile/${fileName}`;
+        finalLogoUrl = await supabaseService.uploadImage(selectedFile, filePath);
+      }
+
+      await supabaseService.updateProfile(user.id, { 
+        ...profile, 
+        logo_url: finalLogoUrl 
+      });
+      
+      setProfile(prev => ({ ...prev, logo_url: finalLogoUrl }));
+      setSelectedFile(null);
       alert('Perfil atualizado com sucesso!');
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -42,11 +61,9 @@ export const Profile: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfile(prev => ({ ...prev, logo_url: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
@@ -59,7 +76,7 @@ export const Profile: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-6">
               <div className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-xl border border-white/20 p-1 shadow-2xl overflow-hidden relative group">
-                 <img src={profile.logo_url} className="w-full h-full object-cover rounded-[1.8rem]" alt="Me" />
+                 <img src={previewUrl} className="w-full h-full object-cover rounded-[1.8rem]" alt="Me" />
                  <label className="absolute inset-0 bg-emerald-600/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                     <Camera className="w-6 h-6" />
                     <input type="file" hidden onChange={handleImageUpload} />

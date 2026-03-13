@@ -684,7 +684,7 @@ export const supabaseService = {
       const { error } = await supabase
         .from('profiles')
         .update({ ...profile, updated_at: new Date().toISOString() })
-        .eq('id', user_id);
+        .eq('user_id', user_id);
       
       if (error) throw error;
     } catch (error) {
@@ -697,7 +697,10 @@ export const supabaseService = {
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({ ...profile, id: user_id, updated_at: new Date().toISOString() });
+        .upsert(
+          { ...profile, user_id, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
       
       if (error) throw error;
     } catch (error) {

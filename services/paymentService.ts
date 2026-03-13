@@ -37,6 +37,9 @@ export const paymentService = {
     try {
       data = JSON.parse(text);
     } catch {
+      if (text.trim().startsWith('<!DOCTYPE html>')) {
+        throw new Error('O servidor retornou uma página HTML em vez de JSON. Isso geralmente indica um erro de roteamento no servidor ou que o backend (node server.mjs) não está respondendo corretamente na rota /api.');
+      }
       throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`);
     }
 
