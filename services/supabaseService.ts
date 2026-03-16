@@ -693,6 +693,22 @@ export const supabaseService = {
         .maybeSingle();
       
       if (!errorBySlug && profileBySlug) return profileBySlug;
+
+      // Try by user_id
+      const { data: profileByUserId, error: errorByUserId } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `)
+        .eq('user_id', identifier)
+        .maybeSingle();
+      
+      if (!errorByUserId && profileByUserId) return profileByUserId;
       
       return null;
     } catch (error) {
@@ -755,7 +771,8 @@ export const supabaseService = {
     plan: string, 
     level: string, 
     points: number, 
-    role: string 
+    role: string,
+    menu_cash: number
   }): Promise<void> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1337,7 +1354,11 @@ export const supabaseService = {
     try {
       const { data, error } = await supabase
         .from('b2b_transactions')
-        .select('*')
+        .select(`
+          *,
+          buyer:profiles!buyer_id(phone),
+          seller:profiles!seller_id(phone)
+        `)
         .or(`buyer_id.eq.${user_id},seller_id.eq.${user_id}`)
         .order('created_at', { ascending: false });
       
@@ -1351,13 +1372,36 @@ export const supabaseService = {
 
   createB2BTransaction: async (transaction: any): Promise<any> => {
     try {
+      // 1. Create the transaction
       const { data, error } = await supabase
         .from('b2b_transactions')
-        .insert({ ...transaction, status: 'pending', created_at: new Date().toISOString() })
+        .insert({ 
+          ...transaction, 
+          status: 'pending', 
+          created_at: new Date().toISOString(),
+          buyer_confirmed: true // Buyer confirms automatically when creating
+        })
         .select()
         .single();
       
       if (error) throw error;
+
+      // 2. Temporarily deduct Menu Cash from buyer if present
+      if (transaction.menu_cash_amount > 0) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('menu_cash')
+          .eq('user_id', transaction.buyer_id)
+          .single();
+        
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({ menu_cash: (profile.menu_cash || 0) - transaction.menu_cash_amount })
+            .eq('user_id', transaction.buyer_id);
+        }
+      }
+
       return data;
     } catch (error) {
       console.error("Error creating B2B transaction:", error);
@@ -1365,14 +1409,79 @@ export const supabaseService = {
     }
   },
 
+  confirmB2BTransaction: async (id: string, userId: string, isBuyer: boolean): Promise<void> => {
+    try {
+      const updateData = isBuyer ? { buyer_confirmed: true } : { seller_confirmed: true };
+      const { data: tx, error: fetchError } = await supabase
+        .from('b2b_transactions')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Check if both confirmed
+      if (tx.buyer_confirmed && tx.seller_confirmed) {
+        await supabase
+          .from('b2b_transactions')
+          .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+          .eq('id', id);
+        
+        // Finalize Menu Cash transfer to seller
+        if (tx.menu_cash_amount > 0) {
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('menu_cash')
+            .eq('user_id', tx.seller_id)
+            .single();
+          
+          if (sellerProfile) {
+            await supabase
+              .from('profiles')
+              .update({ menu_cash: (sellerProfile.menu_cash || 0) + tx.menu_cash_amount })
+              .eq('user_id', tx.seller_id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error confirming transaction:", error);
+      throw error;
+    }
+  },
+
   updateB2BTransactionStatus: async (id: string, status: 'confirmed' | 'rejected'): Promise<void> => {
     try {
+      const { data: tx, error: fetchError } = await supabase
+        .from('b2b_transactions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('b2b_transactions')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
       
       if (error) throw error;
+
+      // Handle refund if rejected
+      if (status === 'rejected' && tx.menu_cash_amount > 0) {
+        const { data: buyerProfile } = await supabase
+          .from('profiles')
+          .select('menu_cash')
+          .eq('user_id', tx.buyer_id)
+          .single();
+        
+        if (buyerProfile) {
+          await supabase
+            .from('profiles')
+            .update({ menu_cash: (buyerProfile.menu_cash || 0) + tx.menu_cash_amount })
+            .eq('user_id', tx.buyer_id);
+        }
+      }
     } catch (error) {
       console.error("Error updating B2B transaction status:", error);
       throw error;

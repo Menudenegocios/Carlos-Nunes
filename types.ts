@@ -17,7 +17,7 @@ export interface User {
   email: string;
   plan: 'pre-cadastro' | 'basic' | 'pro' | 'full';
   points: number;
-  level: 'consultor' | 'elite' | 'bronze' | 'prata' | 'ouro' | 'diamante';
+  level: 'nível base' | 'bronze' | 'prata' | 'ouro' | 'diamante';
   menu_cash: number;
   referral_code: string;
   referrals_count: number;
@@ -53,9 +53,14 @@ export interface B2BTransaction {
   buyer_name: string;
   seller_id: string;
   seller_name: string;
-  amount: number;
+  product_id?: string;
+  amount: number; // Valor em dinheiro R$
+  total_amount?: number; // Valor total do produto
+  menu_cash_amount?: number; // Valor em Menu Cash
   description: string;
   status: 'pending' | 'confirmed' | 'rejected';
+  buyer_confirmed?: boolean;
+  seller_confirmed?: boolean;
   created_at: number;
 }
 
@@ -240,7 +245,7 @@ export interface Profile {
   referral_code?: string;
   referrals_count?: number;
   subscriptions?: Subscription[] | Subscription;
-  isPublished?: boolean;
+  is_published?: boolean;
 }
 
 export interface Subscription {
@@ -330,6 +335,8 @@ export interface Product {
   stock?: number;
   points_reward?: number;
   is_local?: boolean;
+  accepts_menu_cash?: boolean;
+  menu_cash_percentage?: number;
 }
 
 export interface BlogPost {

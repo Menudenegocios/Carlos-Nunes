@@ -195,7 +195,7 @@ app.post('/api/admin/update-user', async (req, res) => {
         return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
-    const { userId, business_name, email, password, plan, level, points, role } = req.body;
+    const { userId, business_name, email, password, plan, level, points, role, menu_cash } = req.body;
 
     try {
         const updateData = {};
@@ -218,6 +218,7 @@ app.post('/api/admin/update-user', async (req, res) => {
                 level,
                 points,
                 role,
+                menu_cash,
                 updated_at: new Date().toISOString()
             })
             .eq('user_id', userId);

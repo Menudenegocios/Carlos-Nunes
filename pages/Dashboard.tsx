@@ -212,7 +212,7 @@ export const Dashboard: React.FC = () => {
               <Rocket className="w-10 h-10 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">NÍVEL BRONZE</h3>
+              <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">NÍVEL {(user.level || 'Base').toUpperCase()}</h3>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">Faltam {(nextLevel.points - user.points).toLocaleString()} pontos para se tornar {nextLevel.name}</p>
             </div>
           </div>

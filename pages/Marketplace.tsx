@@ -79,9 +79,10 @@ export const Marketplace: React.FC = () => {
     
     if (activeTab === 'vitrines') {
         let filteredProfiles = profiles.filter(p => 
-            p.business_name?.toLowerCase().includes(term) || 
+            p.is_published === true &&
+            (p.business_name?.toLowerCase().includes(term) || 
             p.category?.toLowerCase().includes(term) ||
-            p.store_config?.vitrine_niche?.toLowerCase().includes(term)
+            p.store_config?.vitrine_niche?.toLowerCase().includes(term))
         );
         
         if (subCat !== 'Todas') {

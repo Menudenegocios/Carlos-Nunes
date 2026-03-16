@@ -1,60 +1,69 @@
 export const pointsRules = {
   indicacaoBasico: 100,
   indicacaoPro: 300,
-  compraVitrine: 1, // 1 ponto a cada R$1 gasto
+  compraMenuStore: 1, // 1 ponto a cada R$1 gasto
   loginDiario: 5,
-  publicacaoBlog: 20,
-  fecharNegocio: 50,
+  pontosExtras: 50,
 };
 
 export const tiers = [
   {
-    name: 'Consultor',
+    name: 'Nível Base',
     points: 0,
     color: 'bg-slate-500',
-    criteria: 'Nível Inicial',
-    description: 'Consultor é o início da jornada.',
-    benefits: ['Acesso básico', 'Onboarding']
-  },
-  {
-    name: 'Elite',
-    points: 300,
-    color: 'bg-indigo-600',
-    criteria: 'Mínimo 1 indicação Direta',
-    description: 'Elite é ativação no ecossistema.',
-    benefits: ['Ativação no ecossistema', 'Acesso ao Menu Club', 'Bio Digital Básica']
+    criteria: '0 Indicações',
+    description: 'Você acabou de chegar.',
+    benefits: [
+      'Pode comprar ofertas no Dance Shop usando Dance Cash',
+      'Não pode criar ofertas'
+    ]
   },
   {
     name: 'Bronze',
-    points: 800,
+    points: 300,
     color: 'bg-orange-900',
-    criteria: 'Mínimo 3 indicações Diretas',
-    description: 'Bronze é consistência.',
-    benefits: ['5% de Menu Cash', 'Selo de Membro Bronze', 'Perfil visível no diretório']
+    criteria: 'Mínimo 1 Indicação + 300 pontos',
+    description: 'O Grande Desbloqueio!',
+    benefits: [
+      '5% Menu Cash',
+      'Reconhecimento selo bronze'
+    ]
   },
   {
     name: 'Prata',
-    points: 2000,
+    points: 1000,
     color: 'bg-slate-400',
-    criteria: 'Mínimo 5 indicações Diretas',
-    description: 'Prata é engajamento.',
-    benefits: ['10% de Menu Cash', 'Maior visibilidade', 'Selo de Membro Prata']
+    criteria: '3 Indicações + 1000 pontos',
+    description: 'Destaque na Vitrine.',
+    benefits: [
+      'Sua vitrine ganha destaque na Página principal',
+      '10% Menu Cash',
+      'Reconhecimento selo prata'
+    ]
   },
   {
     name: 'Ouro',
-    points: 5000,
+    points: 2000,
     color: 'bg-yellow-500',
-    criteria: 'Mínimo 10 indicações Diretas',
-    description: 'Ouro é posicionamento.',
-    benefits: ['15% de Menu Cash', 'Destaque Prioritário', 'Selo de Verificado Oficial']
+    criteria: '6 Indicações + 2000 pontos',
+    description: 'Autoridade na rede',
+    benefits: [
+      'Destaque no marketplace (selo ouro)',
+      '15% Menu Cash',
+      'Reconhecimento selo ouro'
+    ]
   },
   {
     name: 'Diamante',
-    points: 12000,
+    points: 4000,
     color: 'bg-blue-500',
-    criteria: 'Mínimo 20 indicações Diretas',
-    description: 'Diamante é autoridade.',
-    benefits: ['20% de Menu Cash', 'Autoridade Máxima', 'Destaque Prioritário Máximo', 'Publicação de 3 produtos na Vitrine', 'Ganha acesso Plano PRO']
+    criteria: '10 Indicações + 4000 pontos',
+    description: 'O topo da plataforma.',
+    benefits: [
+      '1 Licença PRO de 6 meses',
+      '20% Menu Cash',
+      'Reconhecimento selo diamante'
+    ]
   }
 ];
 

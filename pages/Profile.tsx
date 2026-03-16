@@ -52,6 +52,8 @@ export const Profile: React.FC = () => {
         business_name: profile.business_name || null,
         phone: profile.phone || null,
         bio: profile.bio || null,
+        category: profile.category || null,
+        city: profile.city || null,
       });
       
       setProfile(prev => ({ ...prev, logo_url: finalLogoUrl }));
@@ -167,6 +169,14 @@ export const Profile: React.FC = () => {
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Telefone WhatsApp</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.phone || ''} onChange={e => setProfile({...profile, phone: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.category || ''} onChange={e => setProfile({...profile, category: e.target.value})} placeholder="Ex: Tecnologia, Vendas..." />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.city || ''} onChange={e => setProfile({...profile, city: e.target.value})} placeholder="Sua cidade" />
                   </div>
                </div>
                <div>

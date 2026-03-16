@@ -62,11 +62,14 @@ export const MyCatalog: React.FC = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
-    name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', store_category_id: '', external_link: ''
+    name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', store_category_id: '', external_link: '',
+    accepts_menu_cash: false, menu_cash_percentage: 5
   });
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -155,6 +158,7 @@ export const MyCatalog: React.FC = () => {
             setProfile({ 
                 user_id: user.id, 
                 vitrine_category: 'Produtos',
+                is_published: false,
                 social_links: { instagram: '', whatsapp: '', website: '' }, 
                 store_config: { 
                     payment_methods: { pix: true, card: true, cash: true, credit: true },
@@ -199,10 +203,10 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      // Limpa dados que não pertencem à tabela profiles (dados de joins por exemplo)
+      // Limpa dados que não pertencem à tabela profiles
       const { subscriptions, id, created_at, ...profileToSave } = profile as any;
+
       console.log('Saving profile:', profileToSave);
-      
       await supabaseService.saveProfile(user.id, profileToSave);
       console.log('Profile updated successfully');
       
@@ -228,30 +232,29 @@ export const MyCatalog: React.FC = () => {
         const result = reader.result as string;
         
         try {
-          // Para logos e avatares, vamos fazer upload direto pro Supabase
-          if (field === 'logo_url' || field === 'botAvatar' || field === 'productUrl' || field === 'blogUrl') {
-            const fileName = `${Date.now()}_${file.name}`;
-            const path = `uploads/${user?.id}/${fileName}`;
-            const publicUrl = await supabaseService.uploadImage(file, path);
-            
-            if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: publicUrl }));
-            else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: publicUrl, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
-            else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: publicUrl }));
-            else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: publicUrl }));
-          } else {
-            // Para outros, ainda usamos o resize (pode ser otimizado futuramente)
-            const isWide = field === 'cover_url' || (field && field.startsWith('banner')) || field === 'og_image';
-            const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
-
-            if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: compressed } }));
-            else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: compressed } } }));
-            else if (field && field.startsWith('banner')) {
-                const index = parseInt(field.replace('banner', ''));
-                const currentBanners = [...(profile.store_config?.banner_images || [])];
-                currentBanners[index] = compressed;
-                setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
+            if (field === 'logo_url' || field === 'botAvatar' || field === 'productUrl' || field === 'blogUrl' || (field && field.startsWith('banner'))) {
+              const fileName = `${Date.now()}_${file.name}`;
+              const path = `uploads/${user?.id}/${fileName}`;
+              const publicUrl = await supabaseService.uploadImage(file, path);
+              
+              if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: publicUrl }));
+              else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: publicUrl, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
+              else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: publicUrl }));
+              else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: publicUrl }));
+              else if (field && field.startsWith('banner')) {
+                  const index = parseInt(field.replace('banner', ''));
+                  const currentBanners = [...(profile.store_config?.banner_images || [])];
+                  currentBanners[index] = publicUrl;
+                  setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
+              }
+            } else {
+              // Para outros, ainda usamos o resize (pode ser otimizado futuramente)
+              const isWide = field === 'cover_url' || field === 'og_image';
+              const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
+  
+              if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: compressed } }));
+              else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: compressed } } }));
             }
-          }
         } catch (error) {
           console.error('Error uploading image:', error);
           alert('Erro ao carregar a imagem. Tente novamente.');
@@ -272,8 +275,31 @@ export const MyCatalog: React.FC = () => {
         await supabaseService.createProduct({ ...productForm, user_id: user.id });
       }
       setIsProductModalOpen(false);
+      setEditingProduct(null);
+      setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5 });
       loadData();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert("Erro ao salvar produto. Tente novamente.");
     } finally { setIsSaving(false); }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    setProductToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!user || !productToDelete) return;
+    try {
+      await supabaseService.deleteProduct(productToDelete);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
+      loadData();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Erro ao excluir produto.");
+    }
   };
 
   const handleBlogSubmit = async (e: React.FormEvent) => {
@@ -331,12 +357,14 @@ export const MyCatalog: React.FC = () => {
     try {
         await supabaseService.createCoupon({
             ...couponForm,
-            user_id: user.id,
-            offerId: '' // Default or link to specific offer if needed
+            user_id: user.id
         } as any);
         setIsCouponModalOpen(false);
         setCouponForm({ code: '', title: '', discount: '', type: 'percentage', points_reward: 0, description: '', expiry_date: '', active: true });
         loadData();
+    } catch (error) {
+        console.error("Error creating coupon:", error);
+        alert("Erro ao criar cupom. Verifique os dados e tente novamente.");
     } finally { setIsSaving(false); }
   };
 
@@ -373,7 +401,7 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'blog', label: 'Blog & SEO', desc: 'Gerar Autoridade', icon: BookOpen },
+            { id: 'blog', label: 'BLOG', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
@@ -632,18 +660,27 @@ export const MyCatalog: React.FC = () => {
                          </button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      <div className="flex flex-col gap-4">
                          {products.map(prod => (
                             <div key={prod.id} className="group bg-gray-50 rounded-[2.5rem] border border-gray-100 flex items-center gap-6 p-6 transition-all hover:bg-white hover:shadow-2xl relative overflow-hidden">
-                               <div className="w-20 h-20 rounded-[1.8rem] bg-white shadow-md overflow-hidden flex-shrink-0 border border-white">
+                               <div className="w-24 h-24 rounded-[1.8rem] bg-white shadow-md overflow-hidden flex-shrink-0 border border-white">
                                   <img src={prod.image_url} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                </div>
                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-black text-gray-900 text-base truncate uppercase italic tracking-tight">{prod.name}</h5>
-                                  <p className="text-sm font-black text-emerald-600 mt-1">R$ {prod.price.toFixed(2)}</p>
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <h5 className="font-black text-gray-900 text-xl uppercase italic tracking-tight truncate">{prod.name}</h5>
+                                    {prod.accepts_menu_cash && (
+                                        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100">
+                                            M$ {prod.menu_cash_percentage}%
+                                        </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm font-medium text-gray-400 line-clamp-1 mb-2">{prod.description}</p>
+                                  <p className="text-xl font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
                                </div>
-                               <div className="flex flex-col gap-2 relative z-10">
-                                  <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-3 bg-white rounded-xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-4 h-4" /></button>
+                               <div className="flex flex-row gap-2 relative z-10">
+                                  <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-4 bg-white rounded-2xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-5 h-5" /></button>
+                                  <button onClick={() => handleDeleteProduct(prod.id)} className="p-4 bg-white rounded-2xl text-rose-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-5 h-5" /></button>
                                </div>
                             </div>
                          ))}
@@ -705,65 +742,19 @@ export const MyCatalog: React.FC = () => {
 
             {activeSubTab === 'landing' && (
                 <div className="max-w-4xl mx-auto space-y-12">
-                   <div className="flex justify-between items-center">
                       <h3 className="text-2xl font-black text-gray-900 italic uppercase">Configurações da Vitrine</h3>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3 bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expor na Vitrine?</span>
                           <button 
-                            onClick={() => setProfile(prev => ({ ...prev, isPublished: !prev.isPublished }))}
-                            className={`w-12 h-6 rounded-full transition-all relative ${profile.isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                            onClick={() => setProfile(prev => ({ ...prev, is_published: !prev.is_published }))}
+                            className={`w-12 h-6 rounded-full transition-all relative ${profile.is_published ? 'bg-emerald-500' : 'bg-slate-300'}`}
                           >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${profile.isPublished ? 'left-7' : 'left-1'}`} />
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${profile.is_published ? 'left-7' : 'left-1'}`} />
                           </button>
                         </div>
-                        <button onClick={() => handleProfileSave(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR & PUBLICAR</button>
+                        <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
                       </div>
-                   </div>
-
-                   <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6 mt-6">
-                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Subcategoria / Nicho (Tags)</label>
-                          <input 
-                            type="text" 
-                            className="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-indigo-500 transition-all" 
-                            value={profile.store_config?.vitrine_niche || ''} 
-                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, vitrine_niche: e.target.value}})} 
-                            placeholder="Ex: Advocacia, Beleza, Manutenção..." 
-                          />
-                          <p className="text-[10px] text-slate-400 mt-2 px-1">Ajuda os clientes a encontrarem seu negócio mais rápido.</p>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade / Região</label>
-                          <input 
-                            type="text" 
-                            className="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-indigo-500 transition-all" 
-                            value={profile.store_config?.vitrine_city || ''} 
-                            onChange={e => setProfile({...profile, store_config: {...profile.store_config, vitrine_city: e.target.value}})} 
-                            placeholder="Ex: São Paulo - SP" 
-                          />
-                          <p className="text-[10px] text-slate-400 mt-2 px-1">Para clientes que buscam negócios locais.</p>
-                        </div>
-                      </div>
-                   </div>
-
-                   <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
-                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Globe className="w-5 h-5" /> Link Personalizado (Slug)</h4>
-                      <div className="flex items-center bg-white rounded-2xl overflow-hidden border border-gray-100">
-                        <div className="bg-gray-100 px-6 py-4 flex items-center text-slate-400 font-bold text-sm border-r border-gray-200">
-                          https://menudenegocios.com/
-                        </div>
-                        <input 
-                          type="text" 
-                          className="flex-1 bg-transparent border-none p-4 font-black text-indigo-600 outline-none" 
-                          value={profile.slug || ''} 
-                          onChange={e => setProfile({...profile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} 
-                          placeholder="seu-nome-ou-negocio" 
-                        />
-                      </div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Este será o seu link público oficial para compartilhar com clientes.</p>
-                   </div>
 
                    <div className="space-y-6 bg-gray-50 p-8 rounded-[2.5rem]">
                       <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><ImageIcon className="w-5 h-5" /> Banner Rotativo (Até 3 fotos)</h4>
@@ -1031,7 +1022,36 @@ export const MyCatalog: React.FC = () => {
                              {productForm.image_url ? <img src={productForm.image_url} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase">Upload</span></div>}
                              <input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} />
                           </div>
-                       </div>
+                          
+                          <div className="bg-gray-50 p-6 rounded-2xl space-y-4">
+                             <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aceita Menu Cash?</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => setProductForm(prev => ({ ...prev, accepts_menu_cash: !prev.accepts_menu_cash }))}
+                                  className={`w-12 h-6 rounded-full transition-all relative ${productForm.accepts_menu_cash ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                >
+                                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${productForm.accepts_menu_cash ? 'left-7' : 'left-1'}`} />
+                                </button>
+                             </div>
+                             
+                             {productForm.accepts_menu_cash && (
+                                <div className="animate-fade-in">
+                                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Percentual de Menu Cash</label>
+                                   <select 
+                                      className="w-full bg-white border border-gray-100 rounded-xl p-3 font-bold text-xs"
+                                      value={productForm.menu_cash_percentage}
+                                      onChange={e => setProductForm({...productForm, menu_cash_percentage: Number(e.target.value)})}
+                                   >
+                                      <option value={5}>5%</option>
+                                      <option value={10}>10%</option>
+                                      <option value={15}>15%</option>
+                                      <option value={20}>20%</option>
+                                   </select>
+                                </div>
+                             )}
+                          </div>
+                        </div>
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR ITEM NO CATÁLOGO'}
@@ -1078,10 +1098,28 @@ export const MyCatalog: React.FC = () => {
                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Validade (Opcional)</label>
                        <input type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={couponForm.expiry_date} onChange={e => setCouponForm({...couponForm, expiry_date: e.target.value})} />
                     </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
+                     <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CRIAR CUPOM'}
                     </button>
                 </form>
+            </div>
+         </div>
+      )}
+      {/* MODAL: CONFIRMAÇÃO DE EXCLUSÃO */}
+      {isDeleteModalOpen && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
+                <div className="p-8 text-center space-y-6">
+                    <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto border border-rose-100 mb-6">
+                        <Trash2 className="w-10 h-10 text-rose-500" />
+                    </div>
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-gray-900">Excluir Produto?</h3>
+                    <p className="text-slate-500 font-medium">Esta ação é irreversível e o item será removido permanentemente da sua vitrine.</p>
+                    <div className="flex gap-4 pt-4">
+                        <button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-gray-200 transition-all">CANCELAR</button>
+                        <button onClick={confirmDeleteProduct} className="flex-1 py-4 bg-rose-500 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all">EXCLUIR AGORA</button>
+                    </div>
+                </div>
             </div>
          </div>
       )}

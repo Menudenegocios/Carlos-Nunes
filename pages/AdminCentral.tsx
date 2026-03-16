@@ -33,8 +33,9 @@ export const AdminCentral: React.FC = () => {
     email: '',
     password: '',
     plan: 'pre-cadastro' as any,
-    level: 'consultor' as any,
+    level: 'nível base' as any,
     points: 0,
+    menu_cash: 0,
     role: 'user' as any
   });
 
@@ -120,8 +121,9 @@ export const AdminCentral: React.FC = () => {
         email: '',
         password: '',
         plan: 'pre-cadastro',
-        level: 'consultor',
+        level: 'nível base',
         points: 0,
+        menu_cash: 0,
         role: 'user'
     });
     setIsModalOpen(true);
@@ -134,8 +136,9 @@ export const AdminCentral: React.FC = () => {
       email: (profile as any).email || '',
       password: '', // Senha em branco para segurança no modo edit
       plan: (profile as any).plan || 'pre-cadastro',
-      level: (profile as any).level || 'consultor',
+      level: (profile as any).level || 'nível base',
       points: (profile as any).points || 0,
+      menu_cash: (profile as any).menu_cash || 0,
       role: (profile as any).role || 'user'
     });
     setIsModalOpen(true);
@@ -156,6 +159,7 @@ export const AdminCentral: React.FC = () => {
           plan: memberForm.plan,
           level: memberForm.level,
           points: memberForm.points,
+          menu_cash: memberForm.menu_cash,
           role: memberForm.role
         });
         setIsModalOpen(false);
@@ -820,8 +824,7 @@ export const AdminCentral: React.FC = () => {
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nível de Gamificação</label>
                             <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none" value={memberForm.level} onChange={e => setMemberForm({...memberForm, level: e.target.value as any})}>
-                                <option value="consultor">Consultor</option>
-                                <option value="elite">Elite</option>
+                                <option value="nível base">Nível Base</option>
                                 <option value="bronze">Bronze</option>
                                 <option value="prata">Prata</option>
                                 <option value="ouro">Ouro</option>
@@ -832,6 +835,11 @@ export const AdminCentral: React.FC = () => {
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Saldo de Pontos</label>
                             <input type="number" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-brand-primary">Saldo Menu Cash (M$)</label>
+                            <input type="number" step="0.01" className="w-full bg-orange-50/50 border-none rounded-2xl p-4 font-bold text-brand-primary" value={memberForm.menu_cash} onChange={e => setMemberForm({...memberForm, menu_cash: Number(e.target.value)})} />
                         </div>
 
                         <div className="col-span-2">
