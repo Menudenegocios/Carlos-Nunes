@@ -36,7 +36,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     { label: 'Menu Club', icon: Trophy, to: '/rewards', locked: isPreRegistration && !isAdmin, minPlan: 'basic' },
     { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
     { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
-    { label: 'Mentoria Full', icon: Rocket, to: '/mentoria', locked: user.plan !== 'full' && !isAdmin, minPlan: 'full' },
+    { label: 'Mentoria Full', icon: Rocket, to: '/mentoria', locked: false, minPlan: 'full' },
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false, minPlan: 'pre-cadastro' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false, minPlan: 'pre-cadastro' },
   ];
@@ -56,9 +56,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const planNames: Record<string, string> = {
     'pre-cadastro': 'Pré-cadastro',
-    basic: 'Plano Básico',
-    pro: 'Plano Pro',
-    full: 'Plano FULL'
+    basic: 'Plano Comunidade',
+    pro: 'Plano Fundador',
+    full: 'Plano Fundador PRO'
   };
 
   return (

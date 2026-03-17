@@ -90,31 +90,44 @@ app.post('/api/create-checkout-session', async (req, res) => {
             .eq('user_id', user.id);
     }
 
-    let planName = 'Plano Básico';
+    let planName = 'Plano Comunidade';
     let planId_technical = 'basic';
     
-    // Check for Pro Plan
-    const proPriceIds = [
+    // Price IDs for mapping names in metadata
+    const comunidadePriceIds = [
+      process.env.STRIPE_PRICE_BASICO_MONTHLY, 
+      process.env.VITE_STRIPE_PRICE_BASICO_MONTHLY,
+      process.env.STRIPE_PRICE_BASICO_YEARLY,
+      process.env.VITE_STRIPE_PRICE_BASICO_YEARLY,
+      'price_1TBnT7F7zhqZwXmjpnziUAws',
+      'price_1TBnW7F7zhqZwXmjTpuQrsZF'
+    ].filter(id => !!id);
+
+    const fundadorPriceIds = [
       process.env.STRIPE_PRICE_PRO_MONTHLY, 
       process.env.VITE_STRIPE_PRICE_PRO_MONTHLY,
       process.env.STRIPE_PRICE_PRO_YEARLY,
-      process.env.VITE_STRIPE_PRICE_PRO_YEARLY
+      process.env.VITE_STRIPE_PRICE_PRO_YEARLY,
+      'price_1TBnWCF7zhqZwXmjgJgVpdcb'
     ].filter(id => !!id);
 
-    // Check for Full Plan
-    const fullPriceIds = [
+    const fundadorProPriceIds = [
       process.env.STRIPE_PRICE_FULL_MONTHLY,
       process.env.VITE_STRIPE_PRICE_FULL_MONTHLY,
       process.env.STRIPE_PRICE_FULL_YEARLY,
-      process.env.VITE_STRIPE_PRICE_FULL_YEARLY
+      process.env.VITE_STRIPE_PRICE_FULL_YEARLY,
+      'price_1TBnWGF7zhqZwXmjvlFk29OD'
     ].filter(id => !!id);
 
-    if (proPriceIds.includes(planId)) {
-      planName = 'Plano Pro';
+    if (fundadorPriceIds.includes(planId)) {
+      planName = 'Plano Fundador';
       planId_technical = 'pro';
-    } else if (fullPriceIds.includes(planId)) {
-      planName = 'Plano FULL';
+    } else if (fundadorProPriceIds.includes(planId)) {
+      planName = 'Plano Fundador PRO';
       planId_technical = 'full';
+    } else if (comunidadePriceIds.includes(planId)) {
+      planName = 'Plano Comunidade';
+      planId_technical = 'basic';
     }
 
     const session = await stripe.checkout.sessions.create({

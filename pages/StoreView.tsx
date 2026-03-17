@@ -42,7 +42,7 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
         }
 
         // 2. Redirecionar para WhatsApp
-        const message = `OlÃ¡! Sou ${formData.name}. Vim pelo site e gostaria de falar com um atendente.`;
+        const message = `Olá! Sou ${formData.name}. Vim pelo site e gostaria de falar com um atendente.`;
         const whatsappUrl = `https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
         setIsOpen(false);
@@ -55,7 +55,7 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
             {/* Janela do Chat */}
             {isOpen && (
                 <div className="bg-white w-[320px] rounded-[2rem] rounded-br-none shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300">
-                    {/* CabeÃ§alho */}
+                    {/* Cabeçalho */}
                     <div className="bg-[#0F172A] p-6 flex items-center gap-4 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-transparent"></div>
                         <div className="w-12 h-12 rounded-full bg-white border-2 border-emerald-500 flex items-center justify-center overflow-hidden relative z-10">
@@ -79,13 +79,13 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
                         </button>
                     </div>
 
-                    {/* ConteÃºdo */}
+                    {/* Conteúdo */}
                     <div className="p-6 bg-gray-50 min-h-[250px] flex flex-col">
                         {step === 'welcome' ? (
                             <div className="space-y-6 flex-1">
                                 <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100">
                                     <p className="text-sm text-gray-600 leading-relaxed">
-                                        {config.welcome_message || 'OlÃ¡! Bem-vindo Ã  nossa loja. Como posso ajudar vocÃª hoje?'}
+                                        {config.welcome_message || 'Olá! Bem-vindo Ã  nossa loja. Como posso ajudar você hoje?'}
                                     </p>
                                 </div>
                                 <button 
@@ -127,7 +127,7 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
                 </div>
             )}
 
-            {/* BotÃ£o Flutuante (Trigger) */}
+            {/* Botão Flutuante (Trigger) */}
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-16 h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.3)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
@@ -225,7 +225,7 @@ export const StoreView: React.FC = () => {
       setCategories(cats);
       setComments(vitrineComments);
       
-      // LÃ³gica \"Top 3\" Artigos Recentes
+      // Lógica \"Top 3\" Artigos Recentes
       const userPosts = allPosts
         .filter(p => p.user_id === targetUserId)
         .sort((a, b) => {
@@ -257,7 +257,7 @@ export const StoreView: React.FC = () => {
         const updatedComments = await supabaseService.getVitrineComments(profile.user_id);
         setComments(updatedComments);
     } catch (err) {
-        alert('Erro ao enviar comentÃ¡rio.');
+        alert('Erro ao enviar comentário.');
     } finally {
         setIsSubmittingComment(false);
     }
@@ -265,12 +265,12 @@ export const StoreView: React.FC = () => {
 
   const handleMenuCashPurchase = async () => {
     if (!user || !selectedProduct || !currentUserProfile) {
-        alert("VocÃª precisa estar logado para realizar esta aÃ§Ã£o.");
+        alert("Você precisa estar logado para realizar esta ação.");
         return;
     }
 
     if (menuCashToUse <= 0) {
-        alert("Informe uma quantidade vÃ¡lida de Menu Cash.");
+        alert("Informe uma quantidade válida de Menu Cash.");
         return;
     }
 
@@ -282,7 +282,7 @@ export const StoreView: React.FC = () => {
 
     const maxMenuCashAllowed = (selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100;
     if (menuCashToUse > maxMenuCashAllowed) {
-        alert(`O limite de Menu Cash para este produto Ã© M$ ${maxMenuCashAllowed.toFixed(2)} (${selectedProduct.menu_cash_percentage}%).`);
+        alert(`O limite de Menu Cash para este produto é M$ ${maxMenuCashAllowed.toFixed(2)} (${selectedProduct.menu_cash_percentage}%).`);
         return;
     }
 
@@ -298,19 +298,19 @@ export const StoreView: React.FC = () => {
             status: 'pending'
         });
 
-        alert("Interesse enviado com sucesso! A transaÃ§Ã£o estÃ¡ disponÃ­vel no seu painel de Menu Club.");
+        alert("Interesse enviado com sucesso! A transação está disponível no seu painel de Menu Club.");
         setIsPurchaseModalOpen(false);
         setSelectedProduct(null);
         setMenuCashToUse(0);
         
-        // Redirecionar para WhatsApp do vendedor com info da transaÃ§Ã£o
-        const message = `OlÃ¡! Acabo de enviar uma proposta de compra via Menu Cash no produto: ${selectedProduct.name}. \nValor Total: R$ ${selectedProduct.price.toFixed(2)} \nMenu Cash utilizado: M$ ${menuCashToUse.toFixed(2)}`;
+        // Redirecionar para WhatsApp do vendedor com info da transação
+        const message = `Olá! Acabo de enviar uma proposta de compra via Menu Cash no produto: ${selectedProduct.name}. \nValor Total: R$ ${selectedProduct.price.toFixed(2)} \nMenu Cash utilizado: M$ ${menuCashToUse.toFixed(2)}`;
         const whatsappUrl = `https://wa.me/${profile!.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
 
     } catch (err) {
         console.error("Erro ao processar compra:", err);
-        alert("Erro ao processar transaÃ§Ã£o. Tente novamente.");
+        alert("Erro ao processar transação. Tente novamente.");
     } finally {
         setIsProcessingPurchase(false);
     }
@@ -322,9 +322,9 @@ export const StoreView: React.FC = () => {
       <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
         <User className="w-10 h-10 text-gray-400" />
       </div>
-      <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter mb-2">Especialista nÃ£o encontrado</h2>
-      <p className="text-gray-500 max-w-sm">NÃ£o conseguimos localizar o perfil solicitado. Verifique o link ou tente novamente mais tarde.</p>
-      <Link to="/" className="mt-8 bg-brand-primary text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Voltar para o InÃ­cio</Link>
+      <h2 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter mb-2">Especialista não encontrado</h2>
+      <p className="text-gray-500 max-w-sm">Não conseguimos localizar o perfil solicitado. Verifique o link ou tente novamente mais tarde.</p>
+      <Link to="/" className="mt-8 bg-brand-primary text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Voltar para o Início</Link>
     </div>
   );
 
@@ -367,11 +367,11 @@ export const StoreView: React.FC = () => {
         <div className="max-w-7xl mx-auto px-8 -mt-8 relative z-[110]">
             <div className="bg-white p-2 rounded-full shadow-2xl border border-gray-100 flex gap-2 overflow-x-auto scrollbar-hide">
                 {[
-                    { id: 'inicio', label: 'InÃ­cio', icon: Info },
+                    { id: 'inicio', label: 'Início', icon: Info },
                     { id: 'produtos', label: 'Produtos', icon: Package },
                     { id: 'blog', label: 'Blog', icon: BookOpen },
                     { id: 'agenda', label: 'Agenda', icon: Clock },
-                    { id: 'video', label: 'PortfÃ³lio de vÃ­deos', icon: Play },
+                    { id: 'video', label: 'Portfólio de vídeos', icon: Play },
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -414,7 +414,7 @@ export const StoreView: React.FC = () => {
                                      <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Problemas que resolvo</h2>
                                 </div>
                                 <div className="space-y-4">
-                                    {(profile.store_config?.problems_solved || 'SoluÃ§Ãµes estratÃ©gicas para seu negÃ³cio.').split('\n').map((item, i) => (
+                                    {(profile.store_config?.problems_solved || 'Soluções estratégicas para seu negócio.').split('\n').map((item, i) => (
                                         <div key={i} className="flex items-start gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
                                             <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-1" />
                                             <p className="text-base font-bold text-gray-700 leading-tight italic">{item}</p>
@@ -427,10 +427,10 @@ export const StoreView: React.FC = () => {
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><ListTodo className="w-5 h-5" /></div>
-                                     <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">SoluÃ§Ãµes & ServiÃ§os</h2>
+                                     <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Soluções & Serviços</h2>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {(profile.store_config?.solutions || 'Consultoria, GestÃ£o, Treinamento.').split(',').map((item, i) => (
+                                    {(profile.store_config?.solutions || 'Consultoria, Gestão, Treinamento.').split(',').map((item, i) => (
                                         <div key={i} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-4 group hover:bg-slate-100 transition-all">
                                             <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#0F172A] shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
                                             <span className="font-black text-[10px] uppercase tracking-widest text-slate-600">{item.trim()}</span>
@@ -443,14 +443,14 @@ export const StoreView: React.FC = () => {
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><Handshake className="w-5 h-5" /></div>
-                                     <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Interesses de NegÃ³cio</h2>
+                                     <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Interesses de Negócio</h2>
                                 </div>
                                 <p className="text-lg text-gray-600 font-medium leading-relaxed italic">
-                                    "{profile.store_config?.business_interests || 'Aberto a novas conexÃµes e parcerias estratÃ©gicas.'}"
+                                    "{profile.store_config?.business_interests || 'Aberto a novas conexões e parcerias estratégicas.'}"
                                 </p>
                             </section>
 
-                            {/* COMENTÃRIOS */}
+                            {/* COMENTÁRIOS */}
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><MessageSquare className="w-5 h-5" /></div>
@@ -461,7 +461,7 @@ export const StoreView: React.FC = () => {
                                     <form onSubmit={handleCommentSubmit} className="mb-12 space-y-4">
                                         <textarea 
                                             required
-                                            placeholder="DEIXE SEU COMENTÃRIO OU DEPOIMENTO..."
+                                            placeholder="DEIXE SEU COMENTÁRIO OU DEPOIMENTO..."
                                             className="w-full bg-gray-50 border-none rounded-3xl p-6 font-bold text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-[#0F172A]/20 transition-all min-h-[120px]"
                                             value={commentText}
                                             onChange={e => setCommentText(e.target.value)}
@@ -471,14 +471,14 @@ export const StoreView: React.FC = () => {
                                             disabled={isSubmittingComment}
                                             className="px-10 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50"
                                         >
-                                            {isSubmittingComment ? 'ENVIANDO...' : 'PUBLICAR COMENTÃRIO'}
+                                            {isSubmittingComment ? 'ENVIANDO...' : 'PUBLICAR COMENTÁRIO'}
                                         </button>
                                     </form>
                                 ) : (
                                     <div className="mb-12 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-center">
                                         <p className="text-xs font-black text-brand-dark uppercase tracking-widest italic">
-                                            Apenas usuÃ¡rios cadastrados podem comentar. <br/>
-                                            <Link to="/auth" className="underline mt-2 inline-block">FaÃ§a login para participar</Link>
+                                            Apenas usuários cadastrados podem comentar. <br/>
+                                            <Link to="/auth" className="underline mt-2 inline-block">Faça login para participar</Link>
                                         </p>
                                     </div>
                                 )}
@@ -505,7 +505,7 @@ export const StoreView: React.FC = () => {
                                 </div>
                             </section>
 
-                            {/* SEÃ‡ÃƒO BLOG (Apenas 3 Ãºltimos) */}
+                            {/* SEÃ‡ÃƒO BLOG (Apenas 3 últimos) */}
                             {blogPosts.length > 0 && (
                                 <section className="space-y-10">
                                     <div className="flex items-center justify-between">
@@ -542,7 +542,7 @@ export const StoreView: React.FC = () => {
                         <section className="space-y-10 animate-fade-in">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-dark"><Package className="w-6 h-6" /></div>
-                                <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">PortfÃ³lio em Destaque</h2>
+                                <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">Portfólio em Destaque</h2>
                             </div>
                             <div className="flex flex-col gap-6">
                                 {products.map(prod => (
@@ -586,7 +586,7 @@ export const StoreView: React.FC = () => {
                                                 </a>
                                             ) : (
                                                 <a 
-                                                    href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(`OlÃ¡! Tenho interesse no produto: ${prod.name}`)}`}
+                                                    href={`https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Tenho interesse no produto: ${prod.name}`)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2"
@@ -641,7 +641,7 @@ export const StoreView: React.FC = () => {
                             ) : (
                                 <div className="h-[400px] flex flex-col items-center justify-center text-center space-y-4">
                                     <Calendar className="w-16 h-16 text-slate-200" />
-                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Agenda externa nÃ£o configurada.</p>
+                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Agenda externa não configurada.</p>
                                 </div>
                             )}
                         </section>
@@ -651,7 +651,7 @@ export const StoreView: React.FC = () => {
                         <section className="space-y-10 animate-fade-in">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-dark"><Play className="w-6 h-6" /></div>
-                                <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">PortfÃ³lio de vÃ­deos</h2>
+                                <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">Portfólio de vídeos</h2>
                             </div>
                             
                             {profile?.store_config?.video_portfolio && profile.store_config.video_portfolio.length > 0 ? (
@@ -680,7 +680,7 @@ export const StoreView: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="p-12 text-center bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-200">
-                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Nenhum vÃ­deo no portfÃ³lio ainda.</p>
+                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Nenhum vídeo no portfólio ainda.</p>
                                 </div>
                             )}
                         </section>
@@ -713,7 +713,7 @@ export const StoreView: React.FC = () => {
                     </div>
                     <div className="bg-[#0F172A] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
                         <Award className="w-12 h-12 mx-auto text-brand-primary" />
-                        <h4 className="text-xl font-black uppercase italic tracking-tighter title-fix">Membro Verificado <br/>Menu de NegÃ³cios</h4>
+                        <h4 className="text-xl font-black uppercase italic tracking-tighter title-fix">Membro Verificado <br/>Menu de Negócios</h4>
                         <ShieldCheck className="absolute top-0 right-0 w-24 h-24 text-white/10 -mr-8 -mt-8" />
                     </div>
                 </div>
@@ -762,13 +762,13 @@ export const StoreView: React.FC = () => {
                                     name: leadForm.name,
                                     phone: leadForm.whatsapp,
                                     source: 'vitrine_publica',
-                                    notes: `Lead vindo da vitrine pÃºblica. Email: ${leadForm.email}`,
+                                    notes: `Lead vindo da vitrine pública. Email: ${leadForm.email}`,
                                     stage: 'new',
                                     value: 0
                                 }]);
 
                                 // 2. Envia para o WhatsApp
-                                const message = `OlÃ¡! Vi seu perfil no Menu de NegÃ³cios e gostaria de mais informaÃ§Ãµes. \n\nðŸ‘¤ Nome: ${leadForm.name} \nðŸ“§ Email: ${leadForm.email} \nðŸ“± WhatsApp: ${leadForm.whatsapp}`;
+                                const message = `Olá! Vi seu perfil no Menu de Negócios e gostaria de mais informações. \n\nðŸ‘¤ Nome: ${leadForm.name} \nðŸ“§ Email: ${leadForm.email} \nðŸ“± WhatsApp: ${leadForm.whatsapp}`;
                                 const whatsappUrl = `https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
                                 window.open(whatsappUrl, '_blank');
 
@@ -816,7 +816,7 @@ export const StoreView: React.FC = () => {
                             {isSubmittingLead ? 'ENVIANDO...' : 'QUERO ME CONECTAR'} <ArrowRight className="w-5 h-5" />
                         </button>
                         <p className="text-[9px] text-center text-white/40 font-bold uppercase tracking-widest">
-                            Seus dados estÃ£o protegidos pela nossa polÃ­tica de privacidade.
+                            Seus dados estão protegidos pela nossa política de privacidade.
                         </p>
                     </form>
                 </div>
@@ -878,7 +878,7 @@ export const StoreView: React.FC = () => {
                                     />
                                 </div>
                                 <p className="text-[10px] font-bold text-slate-400 italic px-1">
-                                    MÃ¡ximo permitido: M$ {((selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100).toFixed(2)}
+                                    Máximo permitido: M$ {((selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100).toFixed(2)}
                                 </p>
                             </div>
 

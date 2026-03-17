@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
-// Added ArrowRight to the imports from lucide-react to fix the reference error
-import { Check, User, Briefcase, Store, Zap, Shield, Crown, CreditCard, Award, Mic, Video, ArrowRight } from 'lucide-react';
+import { Check, User, Briefcase, Sparkles, Zap, Shield, Crown, CreditCard, Award, Handshake, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { plans, pointsRules } from '../config/gamificationConfig';
 
@@ -11,9 +10,22 @@ export const Plans: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
-  const [billingCycle, setBillingCycle] = useState<'semestral' | 'anual'>('semestral');
+  const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>('mensal');
 
-  const handleSubscribe = async (planKey: 'basic' | 'pro' | 'full') => {
+  const stripePrices = {
+    comunidade: {
+      mensal: 'price_1TBnT7F7zhqZwXmjpnziUAws',
+      anual: 'price_1TBnW7F7zhqZwXmjTpuQrsZF'
+    },
+    fundador: {
+      anual: 'price_1TBnWCF7zhqZwXmjgJgVpdcb'
+    },
+    fundador_pro: {
+      anual: 'price_1TBnWGF7zhqZwXmjvlFk29OD'
+    }
+  };
+
+  const handleSubscribe = async (planKey: 'comunidade' | 'fundador' | 'fundador_pro') => {
     if (!user) {
       alert('Por favor, faça login para assinar um plano.');
       navigate('/login');
@@ -22,33 +34,22 @@ export const Plans: React.FC = () => {
 
     setLoading(planKey);
     try {
-      const { getStripe } = await import('../services/stripeClient');
       const { paymentService } = await import('../services/paymentService');
 
-      // Map planKey to Stripe Price ID from env or config
       let priceId = '';
-      if (planKey === 'basic') {
-        priceId = billingCycle === 'semestral' ? import.meta.env.VITE_STRIPE_PRICE_BASICO_MONTHLY : import.meta.env.VITE_STRIPE_PRICE_BASICO_YEARLY;
-      } else if (planKey === 'pro') {
-        priceId = billingCycle === 'semestral' ? import.meta.env.VITE_STRIPE_PRICE_PRO_MONTHLY : import.meta.env.VITE_STRIPE_PRICE_PRO_YEARLY;
-      } else if (planKey === 'full') {
-        priceId = billingCycle === 'semestral' ? import.meta.env.VITE_STRIPE_PRICE_FULL_MONTHLY : import.meta.env.VITE_STRIPE_PRICE_FULL_YEARLY;
+      if (planKey === 'comunidade') {
+        priceId = billingCycle === 'mensal' ? stripePrices.comunidade.mensal : stripePrices.comunidade.anual;
+      } else {
+        priceId = (stripePrices as any)[planKey].anual;
       }
 
       console.log(`Iniciando checkout para ${planKey} (${priceId})`);
       
-      const { id: sessionId, url } = await paymentService.createCheckoutSession(priceId, billingCycle);
+      const { url } = await paymentService.createCheckoutSession(priceId, billingCycle);
       
       if (url) {
         window.location.href = url;
-      } else {
-        const stripe = await getStripe();
-        if (stripe) {
-          const { error } = await (stripe as any).redirectToCheckout({ sessionId });
-          if (error) throw error;
-        }
       }
-      
     } catch (error: any) {
       console.error('Erro no checkout:', error);
       alert(`Erro no processamento: ${error.message || 'Verifique sua conexão ou tente novamente.'}`);
@@ -58,12 +59,12 @@ export const Plans: React.FC = () => {
   };
 
   const PlanCard = ({ 
-    type, title, subtitle, pixPrice, installments, oldPrice, features, recommended = false, icon: Icon, color, btnText, planKey, period = "semestral", isContactOnly = false
+    type, title, subtitle, pixPrice, installments, oldPrice, features, recommended = false, icon: Icon, color, btnText, planKey, period = "mês", extraInfo
   }: any) => (
     <div className={`relative flex flex-col p-10 rounded-[3.5rem] border transition-all duration-500 ${recommended ? 'border-brand-primary bg-[#0F172A] text-white shadow-2xl scale-105 z-10' : 'border-gray-100 bg-white text-gray-900 shadow-lg hover:shadow-xl hover:-translate-y-2'}`}>
       {recommended && (
         <div className="absolute top-0 right-12 -mt-4 bg-gradient-to-r from-brand-primary to-orange-600 text-white text-[10px] font-black tracking-widest px-6 py-2 rounded-full shadow-xl">
-          MAIS POPULAR NO BAIRRO
+          MAIS POPULAR
         </div>
       )}
       <div className="mb-10">
@@ -76,23 +77,17 @@ export const Plans: React.FC = () => {
       </div>
       
       <div className="mb-12 flex flex-col">
-         {isContactOnly ? (
-           <div className="h-[104px] flex flex-col justify-center">
-             <span className="text-3xl font-black uppercase italic tracking-tighter text-brand-primary">Agendar Reunião</span>
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Consultoria Personalizada</p>
-           </div>
-         ) : (
-           <>
-             <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>
-             <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-black tracking-tighter italic">{installments}</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${recommended ? 'text-slate-500' : 'text-gray-400'}`}>/{period}</span>
-             </div>
-             <p className={`mt-3 text-sm font-bold ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                ou R$ {pixPrice} à vista no Pix
-             </p>
-           </>
-         )}
+        {oldPrice && <span className="text-sm font-bold line-through opacity-40 mb-1">De R$ {oldPrice}</span>}
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-black tracking-tighter italic">R$ {installments}</span>
+          <span className={`text-[9px] font-black uppercase tracking-widest ${recommended ? 'text-slate-500' : 'text-gray-400'}`}>/{period}</span>
+        </div>
+        {extraInfo && <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mt-2">{extraInfo}</p>}
+        {pixPrice && (
+          <p className={`mt-3 text-sm font-bold ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            ou R$ {pixPrice} à vista
+          </p>
+        )}
       </div>
 
       <ul className="flex-1 space-y-6 mb-12">
@@ -106,55 +101,47 @@ export const Plans: React.FC = () => {
       
       <button
         onClick={() => handleSubscribe(planKey)}
-        disabled={loading !== null}
+        disabled={loading !== null || (planKey !== 'comunidade' && billingCycle === 'mensal')}
         className={`w-full py-6 rounded-[2rem] font-black text-xs tracking-widest transition-all shadow-xl active:scale-95 uppercase ${
           recommended ? 'bg-brand-primary text-white hover:bg-orange-600 shadow-brand-primary/20' : 'bg-gray-900 text-white hover:opacity-90 shadow-indigo-600/20'
-        } disabled:opacity-50`}
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
-        {loading === planKey ? 'PROCESSANDO...' : btnText}
+        {planKey !== 'comunidade' && billingCycle === 'mensal' ? 'DISPONÍVEL APENAS NO ANUAL' : (loading === planKey ? 'PROCESSANDO...' : btnText)}
       </button>
     </div>
   );
 
   return (
     <div className="max-w-7xl mx-auto space-y-16 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out]">
-      {/* Header Premium SaaS */}
+      {/* Header Premium */}
       <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 text-left">
             <div className="flex items-center gap-6">
               <div className="p-5 bg-indigo-500/10 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">
-                 <CreditCard className="h-10 w-10 text-brand-primary" />
+                 <Sparkles className="h-10 w-10 text-brand-primary" />
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 overflow-visible">
-                    Planos de <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Adesão</span>
+                    Ecossistema <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase">Menu de Negócios</span>
                  </h1>
-                 <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">Escalabilidade e visibilidade para sua marca.</p>
+                 <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">Conexões + Ferramentas + Autoridade.</p>
               </div>
             </div>
-            <div className="bg-white/5 backdrop-blur-md px-8 py-5 rounded-3xl border border-white/10 flex items-center gap-4">
-                <Shield className="w-8 h-8 text-emerald-400" />
-                <div>
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Garantia total</p>
-                    <p className="text-xs font-bold text-white">7 dias para cancelamento</p>
-                </div>
-            </div>
         </div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
       {/* Billing Toggle */}
-      <div className="flex justify-center">
-        <div className="bg-gray-100 p-1.5 rounded-[2rem] flex gap-1 shadow-inner border border-gray-200">
+      <div className="flex flex-col items-center gap-6">
+        <div className="bg-gray-100 p-1.5 rounded-[2rem] flex gap-1 shadow-inner border border-gray-200 w-fit">
           <button
-            onClick={() => setBillingCycle('semestral')}
+            onClick={() => setBillingCycle('mensal')}
             className={`px-10 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
-              billingCycle === 'semestral'
+              billingCycle === 'mensal'
                 ? 'bg-white text-gray-900 shadow-xl scale-105'
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            Semestral
+            Mensal
           </button>
           <button
             onClick={() => setBillingCycle('anual')}
@@ -164,80 +151,90 @@ export const Plans: React.FC = () => {
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            Anual <span className="bg-white/20 px-2 py-0.5 rounded-full text-[8px]">Economize ✨</span>
+            Anual <span className="bg-white/20 px-2 py-0.5 rounded-full text-[8px]">Melhor Oferta ✨</span>
           </button>
         </div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center max-w-lg">
+          Transforme conexões em oportunidades e oportunidades em negócios reais dentro do nosso ecossistema.
+        </p>
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start px-4 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-stretch px-4 max-w-7xl mx-auto">
         <PlanCard
-          type="ESSENCIAL PARA COMEÇAR" 
-          title="Plano Básico" 
-          planKey="basic" 
-          oldPrice={billingCycle === 'semestral' ? "697" : "897"} 
-          pixPrice={billingCycle === 'semestral' ? plans.basico.semestral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : plans.basico.anual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
-          installments={billingCycle === 'semestral' ? "R$ 59,80" : "R$ 49,90"} 
+          type="ECOSSISTEMA BASE" 
+          title="Plano Comunidade" 
+          planKey="comunidade" 
+          oldPrice={null} 
+          pixPrice={billingCycle === 'mensal' ? "89,00" : "799,00"} 
+          installments={billingCycle === 'mensal' ? "89,00" : "66,58"} 
           icon={User} 
           color="text-indigo-500" 
-          btnText="ATIVAR BÁSICO"
-          period="mês"
-          subtitle="Ideal para profissionais liberais que precisam de uma bio profissional e acesso à rede local de parceiros."
-          features={['Bio digital inteligente personalizada', 'Acesso ao Menu Academy fundamental', 'Participação no clube de vantagens', 'Marketplace B2B (modo leitura)', 'Suporte via e-mail']}
+          btnText="FAZER PARTE"
+          period={billingCycle === 'mensal' ? "mês" : "mês (no anual)"}
+          subtitle="Ideal para empreendedores que querem acessar o ecossistema e gerar conexões."
+          features={['Acesso à comunidade', 'Networking entre membros', 'NetworkingMeet online', 'Acesso às ferramentas da plataforma', 'Hub de Negócios', 'Vitrine Digital', 'CRM & Vendas', 'Gestão de Projetos', 'Clube de Vantagens', 'Menu Academy']}
         />
         <PlanCard
-          type="ALTA PERFORMANCE" 
-          title="Plano PRO" 
-          planKey="pro" 
-          oldPrice={billingCycle === 'semestral' ? "897" : "1.297"} 
-          pixPrice={billingCycle === 'semestral' ? plans.pro.semestral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : plans.pro.anual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
-          installments={billingCycle === 'semestral' ? "R$ 99,50" : "R$ 89,90"} 
-          icon={Briefcase} 
+          type="OPORTUNIDADE EXCLUSIVA" 
+          title="Plano Fundador" 
+          planKey="fundador" 
+          oldPrice="799,00" 
+          pixPrice="599,00" 
+          installments="49,91" 
+          icon={Zap} 
           color="text-brand-primary" 
-          btnText="QUERO SER PRO" 
+          btnText="SEJA UM FUNDADOR" 
           recommended={true}
-          period="mês"
-          subtitle="Acelere suas vendas com catálogo completo, CRM de gestão e destaque prioritário nas buscas regionais."
-          features={['Tudo do Plano Básico incluso', 'Catálogo e loja virtual completa', 'CRM e gestão de vendas profissional', 'Marketplace B2B (anunciar e comprar)', 'Menu Academy PRO (estratégias)', 'Desconto de 50% em eventos', `Gera +${pointsRules.indicacaoPro} pontos por indicação`]}
+          period="mês (no anual)"
+          extraInfo="LIMITADO AOS 100 PRIMEIROS"
+          subtitle="Uma oportunidade exclusiva para os 100 primeiros membros do ecossistema com benefícios vitalícios de reconhecimento."
+          features={['Tudo do Plano Comunidade', 'Selo Membro Fundador permanente', 'Destaque visual no ecossistema', 'Acesso antecipado a novas funções', 'Prioridade em eventos presenciais', 'Gatilho de pertencimento geração 1']}
         />
         <PlanCard
-          type="DOMÍNIO TOTAL" 
-          title="Plano FULL" 
-          planKey="full" 
-          oldPrice={billingCycle === 'semestral' ? "1.997" : "2.997"} 
-          pixPrice={billingCycle === 'semestral' ? plans.full.semestral.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : plans.full.anual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
-          installments={billingCycle === 'semestral' ? "R$ 250,00" : "R$ 199,97"} 
+          type="AUTORIDADE & VISIBILIDADE" 
+          title="Plano Fundador PRO" 
+          planKey="fundador_pro" 
+          oldPrice="2.497,00" 
+          pixPrice="1.497,00" 
+          installments="124,75" 
           icon={Crown} 
           color="text-emerald-500" 
-          btnText="QUERO SER FULL" 
-          period="mês"
-          subtitle="A solução definitiva para empresas que buscam dominar o mercado com todas as ferramentas liberadas."
-          features={['Tudo do Plano PRO incluso', 'Destaque máximo no diretório', 'Acesso a todos os cursos do Academy', 'Suporte prioritário via WhatsApp', 'Consultoria estratégica mensal', 'Sem taxas adicionais no Marketplace']}
+          btnText="QUERO POSICIONAMENTO" 
+          period="mês (no anual)"
+          subtitle="Plano premium para empreendedores que desejam mais visibilidade, autoridade e posicionamento."
+          features={['Tudo do Plano Comunidade', 'Participação no Menucast', 'Vídeo profissional de apresentação', 'Acesso a 6 eventos de networking', 'Destaque máximo na comunidade', 'Posicionamento estratégico VIP']}
         />
       </div>
 
-      {/* Final Section */}
-      <div className="bg-white rounded-[4rem] p-12 md:p-20 border border-gray-100 shadow-xl mx-4 text-center space-y-8 relative overflow-hidden group">
-         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
-            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Award className="w-10 h-10 text-indigo-600" />
-            </div>
-            <h2 className="text-4xl font-black text-gray-900 leading-none tracking-tight italic uppercase">
-              Ainda tem dúvidas sobre o melhor caminho?
+      {/* Diferencial Section */}
+      <div className="bg-white rounded-[4rem] p-12 md:p-20 border border-gray-100 shadow-xl mx-4 text-center space-y-12 relative overflow-hidden group">
+         <div className="relative z-10 space-y-8 max-w-4xl mx-auto">
+            <h2 className="text-4xl font-black text-gray-900 leading-tight tracking-tight italic uppercase">
+              O diferencial do <span className="text-brand-primary">Menu de Negócios</span>
             </h2>
-            <p className="text-gray-500 text-lg font-medium">
-              Nosso time de consultores está pronto para analisar seu momento de negócio e sugerir a ferramenta que trará o melhor retorno sobre investimento.
-            </p>
-            <div className="pt-6">
-               <button className="bg-gray-900 text-white px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center gap-2 mx-auto active:scale-95">
-                 Falar com consultor agora <ArrowRight className="w-4 h-4" />
-               </button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
+                <Handshake className="w-10 h-10 text-indigo-600 mx-auto mb-4" />
+                <h4 className="font-black uppercase italic mb-2">Conexões</h4>
+                <p className="text-xs text-gray-500 font-medium">Relacionamentos que geram oportunidades reais.</p>
+              </div>
+              <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
+                <Briefcase className="w-10 h-10 text-brand-primary mx-auto mb-4" />
+                <h4 className="font-black uppercase italic mb-2">Ferramentas</h4>
+                <p className="text-xs text-gray-500 font-medium">CRM, Projetos e Vitrine para sua gestão.</p>
+              </div>
+              <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
+                <Award className="w-10 h-10 text-emerald-500 mx-auto mb-4" />
+                <h4 className="font-black uppercase italic mb-2">Autoridade</h4>
+                <p className="text-xs text-gray-500 font-medium">Posicionamento profissional de destaque.</p>
+              </div>
             </div>
+            <p className="text-gray-900 text-xl font-black italic uppercase tracking-tighter">
+              "Um ecossistema onde conexões se transformam em oportunidades e oportunidades se transformam em negócios."
+            </p>
          </div>
-         <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px]"></div>
       </div>
-
     </div>
   );
 };
-

@@ -36,6 +36,7 @@ import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
 import { ProjectManagement } from './pages/ProjectManagement';
 import { AdminCentral } from './pages/AdminCentral';
+import { Mentoria } from './pages/Mentoria';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -75,6 +76,7 @@ const AppRoutes = () => {
        <Route path="/reviews" element={<ProtectedRoute><DashboardLayout><Reviews /></DashboardLayout></ProtectedRoute>} />
        <Route path="/support" element={<ProtectedRoute><DashboardLayout><Support /></DashboardLayout></ProtectedRoute>} />
        <Route path="/plans" element={<ProtectedRoute><DashboardLayout><Plans /></DashboardLayout></ProtectedRoute>} />
+       <Route path="/mentoria" element={<ProtectedRoute><DashboardLayout><Mentoria /></DashboardLayout></ProtectedRoute>} />
       
       {/* Admin Route - Admin restriction */}
       <Route path="/admin-central" element={<ProtectedRoute requireAdmin={true}><DashboardLayout><AdminCentral /></DashboardLayout></ProtectedRoute>} />

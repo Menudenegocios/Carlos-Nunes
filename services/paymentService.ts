@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient';
 
 export const paymentService = {
-  createCheckoutSession: async (planId: string, billingCycle: 'semestral' | 'anual') => {
+  createCheckoutSession: async (planId: string, billingCycle: 'mensal' | 'anual') => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {

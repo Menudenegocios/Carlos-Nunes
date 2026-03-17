@@ -68,7 +68,7 @@ export const BusinessSuite: React.FC = () => {
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                 { id: 'crm', label: 'CRM & VENDAS', desc: 'Gestão de leads', icon: Briefcase },
                 { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
-                { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
+                // { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
                 <button 
                   key={tab.id} 
@@ -110,54 +110,29 @@ export const BusinessSuite: React.FC = () => {
         {activeTab === 'crm' && <CRMView user_id={user.id} />}
         {/* Fix: Added missing FinanceView component mapping */}
         {activeTab === 'finance' && <FinanceView user_id={user.id} />}
-        {activeTab === 'menuzap_pro' && <MenuzapProView user={user} />}
+        {/* {activeTab === 'menuzap_pro' && <MenuzapProView user={user} />} */}
       </div>
     </div>
   );
 };
 
 const CRMView = ({ user_id }: { user_id: string }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'pipeline' | 'clients' | 'followup' | 'reports' | 'quick_messages'>('pipeline');
-  const [activeClientTab, setActiveClientTab] = useState<'dados' | 'config' | 'vitrine' | 'financeiro'>('dados');
+  const [activeSubTab, setActiveSubTab] = useState<'pipeline' | 'clients'>('pipeline');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isQuickMessageModalOpen, setIsQuickMessageModalOpen] = useState(false);
-  const [tasks, setTasks] = useState<CRMTask[]>([]);
-  const [quickMessages, setQuickMessages] = useState<QuickMessageTemplate[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [editingTask, setEditingTask] = useState<CRMTask | null>(null);
-  const [editingQuickMessage, setEditingQuickMessage] = useState<QuickMessageTemplate | null>(null);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Lead>>({ name: '', phone: '', source: 'manual', stage: 'new', value: 0, notes: '' });
-  const [clientFormData, setClientFormData] = useState<Partial<Client>>({ name: '', phone: '', email: '', company: '', notes: '', tags: [], birthDate: '' });
-  const [taskFormData, setTaskFormData] = useState<Partial<CRMTask>>({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' });
-  const [quickMessageFormData, setQuickMessageFormData] = useState<Partial<QuickMessageTemplate>>({ title: '', content: '', category: 'primeiro_contato' });
+  const [clientFormData, setClientFormData] = useState<Partial<Client>>({ name: '', phone: '', email: '', notes: '' });
 
   useEffect(() => { 
     loadLeads(); 
     loadClients();
-    loadTasks();
-    loadQuickMessages();
   }, []);
-
-  const loadQuickMessages = async () => {
-      try {
-        const data = await supabaseService.getQuickMessages(user_id);
-        setQuickMessages(data);
-      } catch (e) { console.error(e); }
-  };
-
-  const loadTasks = async () => {
-      try {
-        const data = await supabaseService.getTasks(user_id);
-        setTasks(data);
-      } catch (e) { console.error(e); }
-  };
 
   const loadLeads = async () => { 
       try {
@@ -194,52 +169,8 @@ const CRMView = ({ user_id }: { user_id: string }) => {
         else await supabaseService.addClient({ ...clientFormData, user_id } as Client);
         setIsClientModalOpen(false);
         await loadClients();
-        setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [] });
+        setClientFormData({ name: '', phone: '', email: '', notes: '' });
     } finally { setIsSaving(false); }
-  };
-
-  const handleSaveTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user_id) return;
-    setIsSaving(true);
-    try {
-        if (editingTask) await supabaseService.updateTask(editingTask.id, { ...taskFormData });
-        else await supabaseService.addTask({ ...taskFormData, user_id } as CRMTask);
-        setIsTaskModalOpen(false);
-        await loadTasks();
-        setTaskFormData({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' });
-    } finally { setIsSaving(false); }
-  };
-
-  const handleSaveQuickMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user_id) return;
-    setIsSaving(true);
-    try {
-        if (editingQuickMessage) await supabaseService.updateQuickMessage(editingQuickMessage.id, { ...quickMessageFormData });
-        else await supabaseService.addQuickMessage({ ...quickMessageFormData, user_id } as QuickMessageTemplate);
-        setIsQuickMessageModalOpen(false);
-        await loadQuickMessages();
-        setQuickMessageFormData({ title: '', content: '', category: 'primeiro_contato' });
-    } finally { setIsSaving(false); }
-  };
-
-  const handleToggleTaskStatus = async (task: CRMTask) => {
-    const newStatus = task.status === 'pending' ? 'completed' : 'pending';
-    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
-    await supabaseService.updateTask(task.id, { status: newStatus });
-  };
-
-  const handleDeleteTask = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-    await supabaseService.deleteTask(id);
-    await loadTasks();
-  };
-
-  const handleDeleteQuickMessage = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta mensagem?')) return;
-    await supabaseService.deleteQuickMessage(id);
-    await loadQuickMessages();
   };
 
   const handleDeleteClient = async (id: string) => {
@@ -279,13 +210,9 @@ const CRMView = ({ user_id }: { user_id: string }) => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Sub-abas do CRM */}
       <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1 overflow-x-auto scrollbar-hide max-w-full">
-          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>CRM</button>
-          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Carteira (Clientes)</button>
-          <button onClick={() => setActiveSubTab('followup')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'followup' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Follow-up</button>
-          <button onClick={() => setActiveSubTab('quick_messages')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'quick_messages' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Mensagens Rápidas</button>
-          <button onClick={() => setActiveSubTab('reports')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'reports' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Relatórios</button>
+          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>CRM (Pipeline)</button>
+          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Clientes</button>
       </div>
 
       {activeSubTab === 'pipeline' && (
@@ -325,7 +252,7 @@ const CRMView = ({ user_id }: { user_id: string }) => {
         <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
            <div className="flex justify-between items-center">
               <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Carteira de Clientes</h3>
-              <button onClick={() => { setEditingClient(null); setClientFormData({ name: '', phone: '', email: '', company: '', notes: '', tags: [], birthDate: '' }); setIsClientModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+              <button onClick={() => { setEditingClient(null); setClientFormData({ name: '', phone: '', email: '', notes: '' }); setIsClientModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
                 <Plus className="w-4 h-4" /> NOVO CLIENTE
               </button>
            </div>
@@ -339,11 +266,10 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                        </div>
                        <div>
                           <h4 className="font-black text-gray-900 text-base tracking-tight">{client.name}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{client.company || 'Particular'} • {client.phone}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{client.phone}</p>
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                       {client.email && <span className="hidden md:inline-block text-[10px] font-bold text-slate-400 bg-white px-3 py-1 rounded-lg border border-gray-100">{client.email}</span>}
                        <button onClick={() => { setEditingClient(client); setClientFormData(client); setIsClientModalOpen(true); }} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors">
                           Editar
                        </button>
@@ -356,143 +282,6 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                  <div className="text-center py-20 opacity-40">
                     <User className="w-12 h-12 mx-auto mb-4" />
                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">Sua carteira de clientes está vazia.</p>
-                 </div>
-              )}
-           </div>
-        </div>
-      )}
-
-      {activeSubTab === 'followup' && (
-        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
-           <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Follow-up</h3>
-              <button onClick={() => { setEditingTask(null); setTaskFormData({ title: '', description: '', due_date: Date.now() + 86400000, status: 'pending', type: 'call' }); setIsTaskModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
-                <Plus className="w-4 h-4" /> NOVO CONTATO
-              </button>
-           </div>
-           <div className="space-y-4">
-              {tasks.filter(t => ['call', 'meeting', 'email', 'whatsapp'].includes(t.type)).length > 0 ? tasks.filter(t => ['call', 'meeting', 'email', 'whatsapp'].includes(t.type)).map(task => (
-                 <div key={task.id} className={`p-6 bg-gray-50 rounded-[2rem] border ${task.status === 'completed' ? 'border-emerald-500/30 opacity-60' : 'border-gray-100'} flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white transition-all`}>
-                    <div className="flex items-center gap-6">
-                       <button onClick={() => handleToggleTaskStatus(task)} className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${task.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-500'}`}>
-                          {task.status === 'completed' && <CheckCircle className="w-5 h-5" />}
-                       </button>
-                       <div>
-                          <h4 className={`font-black text-base tracking-tight ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-gray-900'}`}>{task.title}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                             {new Date(task.due_date).toLocaleDateString('pt-BR')} • {task.type.toUpperCase()}
-                             {task.related_to && ` • ${task.related_to.name}`}
-                          </p>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <button onClick={() => { setEditingTask(task); setTaskFormData(task); setIsTaskModalOpen(true); }} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors">
-                          Editar
-                       </button>
-                       <button onClick={() => handleDeleteTask(task.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                       </button>
-                    </div>
-                 </div>
-              )) : (
-                 <div className="text-center py-20 opacity-40">
-                    <Clock className="w-12 h-12 mx-auto mb-4" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">Nenhum follow-up agendado.</p>
-                 </div>
-              )}
-           </div>
-        </div>
-      )}
-
-      {activeSubTab === 'reports' && (
-        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
-           <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Relatórios Comerciais</h3>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
-                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
-                    <Briefcase className="w-6 h-6 text-blue-500" />
-                 </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total de Leads</p>
-                 <h4 className="text-3xl font-black text-gray-900">{leads.length}</h4>
-              </div>
-              
-              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
-                 <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
-                    <User className="w-6 h-6 text-emerald-500" />
-                 </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Clientes Convertidos</p>
-                 <h4 className="text-3xl font-black text-gray-900">{clients.length}</h4>
-              </div>
-              
-              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
-                 <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4">
-                    <DollarSign className="w-6 h-6 text-[#F67C01]" />
-                 </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor no Funil</p>
-                 <h4 className="text-3xl font-black text-gray-900">
-                    R$ {leads.filter(l => l.stage !== 'lost' && l.stage !== 'closed').reduce((acc, l) => acc + (Number(l.value) || 0), 0).toFixed(2)}
-                 </h4>
-              </div>
-              
-              <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
-                 <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4">
-                    <CheckCircle className="w-6 h-6 text-purple-500" />
-                 </div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarefas Pendentes</p>
-                 <h4 className="text-3xl font-black text-gray-900">{tasks.filter(t => t.status === 'pending').length}</h4>
-              </div>
-           </div>
-        </div>
-      )}
-
-      {activeSubTab === 'quick_messages' && (
-        <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
-           <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Mensagens Rápidas</h3>
-              <div className="flex gap-3">
-                 <a href="https://www.notion.so/16c055f18fde8002b658ea22e1bbf29a?v=16c055f18fde81eca778000ce9f09c73" target="_blank" rel="noopener noreferrer" className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2">
-                   <ExternalLink className="w-4 h-4" /> SCRIPTS DE ALTA CONVERSÃO
-                 </a>
-                 <button onClick={() => { setEditingQuickMessage(null); setQuickMessageFormData({ title: '', content: '', category: 'primeiro_contato' }); setIsQuickMessageModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
-                   <Plus className="w-4 h-4" /> NOVA MENSAGEM
-                 </button>
-              </div>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {quickMessages.length > 0 ? quickMessages.map(msg => (
-                 <div key={msg.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col justify-between gap-4 group hover:bg-white transition-all">
-                    <div>
-                        <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-black text-gray-900 text-base tracking-tight">{msg.title}</h4>
-                            <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg uppercase">{msg.category.replace('_', ' ')}</span>
-                        </div>
-                        <p className="text-sm text-slate-500 line-clamp-3">{msg.content}</p>
-                    </div>
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                       <button onClick={() => {
-                           const text = encodeURIComponent(msg.content);
-                           window.open(`https://wa.me/?text=${text}`, '_blank');
-                       }} className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors flex items-center gap-2">
-                          <MessageSquare className="w-3 h-3" /> Enviar
-                       </button>
-                       <div className="flex gap-2">
-                           <button onClick={() => { setEditingQuickMessage(msg); setQuickMessageFormData(msg); setIsQuickMessageModalOpen(true); }} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                              Editar
-                           </button>
-                           <button onClick={() => handleDeleteQuickMessage(msg.id)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                           </button>
-                       </div>
-                    </div>
-                 </div>
-              )) : (
-                 <div className="col-span-1 md:col-span-2 text-center py-20 opacity-40">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-4" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">Nenhuma mensagem rápida salva.</p>
                  </div>
               )}
            </div>
@@ -537,35 +326,12 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                       <h3 className="text-2xl font-black uppercase italic tracking-tighter">
                         {editingClient ? editingClient.name : 'Novo Cliente'}
                       </h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Gestão de Unidade de Negócio</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Gestão de Cliente</p>
                     </div>
                     <button onClick={() => setIsClientModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
 
-                {/* Tabs for Client Detail */}
-                <div className="flex bg-gray-50 p-2 gap-2">
-                  {[
-                    { id: 'dados', label: 'Dados' },
-                    { id: 'config', label: 'Config' },
-                    { id: 'vitrine', label: 'Vitrine' },
-                    { id: 'financeiro', label: 'Financeiro' }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveClientTab(tab.id as any)}
-                      className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                        activeClientTab === tab.id 
-                        ? 'bg-white text-indigo-600 shadow-sm' 
-                        : 'text-slate-400 hover:text-slate-600'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="flex-1 overflow-y-auto scrollbar-hide p-10">
-                  {activeClientTab === 'dados' && (
                     <form onSubmit={handleSaveClient} className="space-y-6">
                         <div className="space-y-6">
                            <div>
@@ -578,18 +344,8 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                                  <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
                               </div>
                               <div>
-                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Empresa (Opcional)</label>
-                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.company} onChange={e => setClientFormData({...clientFormData, company: e.target.value})} />
-                              </div>
-                           </div>
-                           <div className="grid grid-cols-2 gap-4">
-                              <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email (Opcional)</label>
                                  <input type="email" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.email} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />
-                              </div>
-                              <div>
-                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data de Aniversário (Opcional)</label>
-                                 <input type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.birthDate || ''} onChange={e => setClientFormData({...clientFormData, birthDate: e.target.value})} />
                               </div>
                            </div>
                            <div>
@@ -598,179 +354,16 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                            </div>
                         </div>
                         <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Dados'}
+                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Cliente'}
                         </button>
                     </form>
-                  )}
-
-                  {activeClientTab === 'config' && (
-                    <div className="space-y-8 animate-fade-in">
-                       <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
-                          <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Permissões e Acessos</h4>
-                          <p className="text-xs text-slate-500 mb-6">Configure o nível de acesso deste cliente à plataforma e integrações.</p>
-                          <div className="space-y-4">
-                             {['Acesso à Vitrine', 'Receber Notificações', 'Sincronizar Financeiro'].map((item, i) => (
-                               <div key={i} className="flex items-center justify-between p-4 bg-white rounded-2xl">
-                                  <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">{item}</span>
-                                  <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
-                                     <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
-                                  </div>
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-                    </div>
-                  )}
-
-                  {activeClientTab === 'vitrine' && (
-                    <div className="space-y-8 animate-fade-in">
-                       <div className="text-center py-12 bg-gray-50 rounded-[2.5rem] border border-gray-100">
-                          <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                             <LayoutGrid className="w-8 h-8 text-indigo-500" />
-                          </div>
-                          <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight mb-2">Página na Vitrine</h4>
-                          <p className="text-xs text-slate-400 max-w-xs mx-auto mb-8">Este cliente possuí uma página pública indexada em nosso marketplace de negócios.</p>
-                          <button className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all">
-                             VER PÁGINA PÚBLICA
-                          </button>
-                       </div>
-                    </div>
-                  )}
-
-                  {activeClientTab === 'financeiro' && (
-                    <div className="space-y-8 animate-fade-in">
-                       <div className="grid grid-cols-1 gap-4">
-                          {[
-                            { label: 'Total Recebido', value: 'R$ 12.450,00', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                            { label: 'Pendente', value: 'R$ 3.200,00', icon: Clock, color: 'text-orange-500', bg: 'bg-orange-50' },
-                            { label: 'Disponível', value: 'R$ 8.120,00', icon: DollarSign, color: 'text-blue-500', bg: 'bg-blue-50' }
-                          ].map((item, i) => (
-                            <div key={i} className={`${item.bg} p-8 rounded-[2.5rem] border border-white/10 flex items-center justify-between`}>
-                               <div>
-                                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{item.label}</p>
-                                  <h4 className={`text-3xl font-black ${item.color} tracking-tighter italic`}>{item.value}</h4>
-                               </div>
-                               <item.icon className={`w-8 h-8 ${item.color} opacity-30`} />
-                            </div>
-                          ))}
-                       </div>
-                       <div className="pt-6 border-t border-gray-100">
-                          <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-indigo-500 hover:text-indigo-500 transition-all">
-                            VER EXTRATO COMPLETO
-                          </button>
-                       </div>
-                    </div>
-                  )}
                 </div>
-            </div>
-         </div>
-      )}
-
-      {isTaskModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}</h3></div>
-                    <button onClick={() => setIsTaskModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
-                </div>
-                <form onSubmit={handleSaveTask} className="p-10 space-y-6 overflow-y-auto scrollbar-hide flex-1">
-                    <div className="space-y-6">
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Tarefa</label>
-                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={taskFormData.title} onChange={e => setTaskFormData({...taskFormData, title: e.target.value})} />
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Data de Vencimento</label>
-                             <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={new Date(taskFormData.due_date || Date.now()).toISOString().split('T')[0]} onChange={e => setTaskFormData({...taskFormData, due_date: new Date(e.target.value).getTime()})} />
-                          </div>
-                          <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo</label>
-                             <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={taskFormData.type} onChange={e => setTaskFormData({...taskFormData, type: e.target.value as any})}>
-                                <option value="call">Ligação</option>
-                                <option value="whatsapp">WhatsApp</option>
-                                <option value="email">E-mail</option>
-                                <option value="meeting">Reunião</option>
-                                <option value="other">Outro</option>
-                             </select>
-                          </div>
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Relacionado a (Opcional)</label>
-                          <select 
-                            className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" 
-                            value={taskFormData.related_to ? `${taskFormData.related_to.type}:${taskFormData.related_to.id}` : ''} 
-                            onChange={e => {
-                               const val = e.target.value;
-                               if (!val) { setTaskFormData({...taskFormData, related_to: undefined}); return; }
-                               const [type, id] = val.split(':');
-                               const name = type === 'lead' ? leads.find(l => l.id === id)?.name : clients.find(c => c.id === id)?.name;
-                               if (name) setTaskFormData({...taskFormData, related_to: { type: type as any, id, name }});
-                            }}
-                          >
-                             <option value="">Nenhum</option>
-                             <optgroup label="Leads">
-                                {leads.map(l => <option key={`lead-${l.id}`} value={`lead:${l.id}`}>{l.name}</option>)}
-                             </optgroup>
-                             <optgroup label="Clientes">
-                                {clients.map(c => <option key={`client-${c.id}`} value={`client:${c.id}`}>{c.name}</option>)}
-                             </optgroup>
-                          </select>
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição</label>
-                          <textarea className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-24 resize-none" value={taskFormData.description} onChange={e => setTaskFormData({...taskFormData, description: e.target.value})}></textarea>
-                       </div>
-                    </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Tarefa'}
-                    </button>
-                </form>
-            </div>
-         </div>
-      )}
-
-      {isQuickMessageModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingQuickMessage ? 'Editar Mensagem' : 'Nova Mensagem'}</h3></div>
-                    <button onClick={() => setIsQuickMessageModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
-                </div>
-                <form onSubmit={handleSaveQuickMessage} className="p-10 space-y-6 overflow-y-auto scrollbar-hide flex-1">
-                    <div className="space-y-6">
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título (Para você identificar)</label>
-                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={quickMessageFormData.title} onChange={e => setQuickMessageFormData({...quickMessageFormData, title: e.target.value})} placeholder="Ex: Follow-up de Apresentação" />
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                          <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={quickMessageFormData.category} onChange={e => setQuickMessageFormData({...quickMessageFormData, category: e.target.value as any})}>
-                             <option value="primeiro_contato">Primeiro Contato</option>
-                             <option value="apos_proposta">Após Proposta</option>
-                             <option value="lembrete_decisao">Lembrete de Decisão</option>
-                             <option value="pos_venda">Pós-venda</option>
-                             <option value="reativacao">Reativação</option>
-                             <option value="outros">Outros</option>
-                          </select>
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Mensagem</label>
-                          <textarea required className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-40 resize-none" value={quickMessageFormData.content} onChange={e => setQuickMessageFormData({...quickMessageFormData, content: e.target.value})} placeholder="Digite a mensagem aqui..."></textarea>
-                          <p className="text-[9px] text-slate-400 mt-2 italic px-2">Dica: Você pode usar [Nome do Cliente] ou [Meu Negócio] para se organizar.</p>
-                       </div>
-                    </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Mensagem'}
-                    </button>
-                </form>
             </div>
          </div>
       )}
     </div>
   );
 };
-
 // Fix: Added missing FinanceView component
 const FinanceView = ({ user_id }: { user_id: string }) => {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
@@ -802,7 +395,14 @@ const FinanceView = ({ user_id }: { user_id: string }) => {
       await supabaseService.addFinancialEntry({ ...formData, user_id } as FinancialEntry);
       setIsModalOpen(false);
       await loadEntries();
-      setFormData({ description: '', value: 0, type: 'income', date: new Date().toISOString().split('T')[0], category: 'Geral', entity_type: 'personal' });
+      setFormData({ 
+        description: '', 
+        value: 0, 
+        type: 'income', 
+        date: new Date().toISOString().split('T')[0], 
+        category: 'Geral', 
+        entity_type: entityFilter 
+      });
     } finally { setIsSaving(false); }
   };
 
@@ -820,39 +420,45 @@ const FinanceView = ({ user_id }: { user_id: string }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Filtro de Entidade */}
-      <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1">
-          <button onClick={() => setEntityFilter('personal')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'personal' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Pessoa Física</button>
-          <button onClick={() => setEntityFilter('business')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all ${entityFilter === 'business' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Empresa</button>
+      <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1 shadow-sm">
+          <button 
+            onClick={() => setEntityFilter('personal')} 
+            className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${entityFilter === 'personal' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}
+          >
+            <User className="w-3.5 h-3.5" /> Pessoa Física (PF)
+          </button>
+          <button 
+            onClick={() => setEntityFilter('business')} 
+            className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 ${entityFilter === 'business' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}
+          >
+            <Briefcase className="w-3.5 h-3.5" /> Pessoa Jurídica (PJ)
+          </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-           <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Entradas ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
-           <div className="flex items-center justify-between">
-              <h4 className="text-3xl font-black text-emerald-600 tracking-tighter">R$ {totalIncome.toFixed(2)}</h4>
-              <ArrowUpCircle className="w-8 h-8 text-emerald-500" />
-           </div>
+      <div className="bg-[#0F172A] p-10 rounded-[3rem] text-white flex flex-col md:flex-row justify-between items-center gap-8 shadow-xl border border-white/5">
+        <div className="flex gap-12">
+            <div>
+               <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Entradas Totais ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
+               <h4 className="text-4xl font-black text-emerald-400 tracking-tighter italic">R$ {totalIncome.toFixed(2)}</h4>
+            </div>
+            <div>
+               <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Saídas Totais ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
+               <h4 className="text-4xl font-black text-rose-400 tracking-tighter italic">R$ {totalExpense.toFixed(2)}</h4>
+            </div>
         </div>
-        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-           <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Saídas ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
-           <div className="flex items-center justify-between">
-              <h4 className="text-3xl font-black text-rose-600 tracking-tighter">R$ {totalExpense.toFixed(2)}</h4>
-              <ArrowDownCircle className="w-8 h-8 text-rose-500" />
-           </div>
-        </div>
-        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-           <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2">Saldo Atual ({entityFilter === 'personal' ? 'PF' : 'PJ'})</p>
-           <div className="flex items-center justify-between">
-              <h4 className={`text-3xl font-black tracking-tighter ${balance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>R$ {balance.toFixed(2)}</h4>
-              <Wallet className="w-8 h-8 text-indigo-500" />
-           </div>
+        <div className="bg-white/10 px-10 py-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
+            <p className="text-[10px] font-black uppercase text-slate-300 tracking-[0.2em] mb-1 text-center">Saldo em Caixa</p>
+            <h4 className={`text-4xl font-black tracking-tighter text-center ${balance >= 0 ? 'text-indigo-300' : 'text-rose-400'}`}>R$ {balance.toFixed(2)}</h4>
         </div>
       </div>
 
       <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
         <div className="flex justify-between items-center">
-           <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Fluxo de Caixa ({entityFilter === 'personal' ? 'Pessoa Física' : 'Empresa'})</h3>
-           <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+           <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Fluxo de Caixa - {entityFilter === 'personal' ? 'PF' : 'PJ'}</h3>
+           <button onClick={() => {
+              setFormData({...formData, entity_type: entityFilter});
+              setIsModalOpen(true);
+           }} className="bg-[#F67C01] text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2">
              <Plus className="w-4 h-4" /> NOVO LANÇAMENTO
            </button>
         </div>
@@ -881,7 +487,7 @@ const FinanceView = ({ user_id }: { user_id: string }) => {
            )) : (
               <div className="text-center py-20 opacity-40">
                  <DollarSign className="w-12 h-12 mx-auto mb-4" />
-                 <p className="text-[10px] font-black uppercase tracking-[0.2em]">Sem lançamentos este mês para {entityFilter === 'personal' ? 'Pessoa Física' : 'Empresa'}.</p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.2em]">Sem lançamentos para este perfil.</p>
               </div>
            )}
         </div>
@@ -891,7 +497,7 @@ const FinanceView = ({ user_id }: { user_id: string }) => {
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-y-auto max-h-[80vh] border border-white/5 animate-scale-in">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
-                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">Financeiro</h3></div>
+                    <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">Financeiro ({formData.entity_type === 'personal' ? 'PF' : 'PJ'})</h3></div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
                 <form onSubmit={handleSaveEntry} className="p-10 space-y-8">
@@ -919,16 +525,16 @@ const FinanceView = ({ user_id }: { user_id: string }) => {
                              <input required type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
                           </div>
                           <div>
-                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Serviços" />
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Perfil</label>
+                             <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.entity_type} onChange={e => setFormData({...formData, entity_type: e.target.value as any})}>
+                                <option value="personal">Pessoa Física (PF)</option>
+                                <option value="business">Pessoa Jurídica (PJ)</option>
+                             </select>
                           </div>
                        </div>
                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Entidade</label>
-                          <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.entity_type} onChange={e => setFormData({...formData, entity_type: e.target.value as any})}>
-                             <option value="personal">Pessoa Física</option>
-                             <option value="business">Empresa</option>
-                          </select>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria (Opcional)</label>
+                          <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Serviços" />
                        </div>
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
