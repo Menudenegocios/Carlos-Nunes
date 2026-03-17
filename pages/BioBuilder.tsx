@@ -708,7 +708,7 @@ export const BioBuilder: React.FC = () => {
                                     <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600"><Sparkles className="w-6 h-6" /></div>
                                     <div>
                                        <h4 className="font-black text-sm uppercase italic tracking-tighter">Fundo Premium (Mesh Gradient)</h4>
-                                       <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Ative o efeito de gradiente fluido para um visual de elite.</p>
+                                       <p className="text-[10px] text-slate-400 font-bold uppercase max-w-xs">Ative o efeito de gradiente fluido para um visual premium.</p>
                                     </div>
                                  </div>
                                  <label className="relative inline-flex items-center cursor-pointer">

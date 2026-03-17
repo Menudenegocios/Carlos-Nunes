@@ -667,6 +667,7 @@ export const supabaseService = {
         .from('profiles')
         .select(`
           *,
+          display_id,
           subscriptions (
             status,
             plan,
@@ -721,7 +722,14 @@ export const supabaseService = {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          subscriptions (
+            status,
+            plan,
+            current_period_end
+          )
+        `)
         .eq('user_id', userId)
         .maybeSingle();
       
@@ -737,7 +745,7 @@ export const supabaseService = {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, business_name, name, logo_url, points, level, city')
+        .select('user_id, business_name, name, logo_url, points, level, city, display_id')
         .order('points', { ascending: false })
         .limit(limit);
       
@@ -745,6 +753,22 @@ export const supabaseService = {
       return data || [];
     } catch (error) {
       console.error("Error getting ranking:", error);
+      return [];
+    }
+  },
+
+  getReferrals: async (referrerId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, email, plan, points, created_at, display_id')
+        .eq('referrer_id', referrerId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting referrals:", error);
       return [];
     }
   },
@@ -772,7 +796,9 @@ export const supabaseService = {
     level: string, 
     points: number, 
     role: string,
-    menu_cash: number
+    menu_cash: number,
+    has_founder_badge?: boolean,
+    display_id?: number
   }): Promise<void> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();

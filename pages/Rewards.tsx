@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
 import { 
@@ -15,7 +16,36 @@ import { pointsRules, tiers, rankingRules } from '../config/gamificationConfig';
 
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'missions' | 'match' | 'ranking'>('home');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'missions' | 'match' | 'ranking' | 'referrals'>('home');
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [loadingReferrals, setLoadingReferrals] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'referrals') {
+      setActiveTab('referrals');
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (activeTab === 'referrals' && user) {
+      loadReferrals();
+    }
+  }, [activeTab, user]);
+
+  const loadReferrals = async () => {
+    setLoadingReferrals(true);
+    try {
+      const data = await supabaseService.getReferrals(user!.id);
+      setReferrals(data);
+    } catch (error) {
+      console.error("Erro ao carregar indicações:", error);
+    } finally {
+      setLoadingReferrals(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -60,10 +90,11 @@ export const Rewards: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                  { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
+                  { id: 'home', label: 'IN\u00cdCIO', desc: 'Destaques', icon: HomeIcon },
                   { id: 'missions', label: 'PONTOS', desc: 'Ganhar pontos', icon: ListTodo },
                   { id: 'match', label: 'MENU CASH', desc: 'Parcerias B2B', icon: Handshake },
-                  { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
+                  { id: 'acceleration', label: 'N\u00cdVEIS', desc: 'Sua autoridade', icon: Zap },
+                  { id: 'referrals', label: 'INDICA\u00c7\u00d5ES', desc: 'Seu time', icon: Users },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
                   <button 
@@ -84,6 +115,99 @@ export const Rewards: React.FC = () => {
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === 'referrals' && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-gray-100 shadow-xl relative overflow-hidden">
+                <div className="relative z-10">
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                      <div className="space-y-2">
+                        <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tight leading-none title-fix">Minhas Indicações</h2>
+                        <p className="text-slate-500 text-sm font-medium">Acompanhe o status e ganhos gerados por quem você trouxe para o ecossistema.</p>
+                      </div>
+                      <div className="bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
+                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Total de Indicados</span>
+                        <span className="text-2xl font-black text-gray-900">{referrals.length} membros</span>
+                      </div>
+                   </div>
+
+                   {loadingReferrals ? (
+                     <div className="flex justify-center py-20">
+                        <RefreshCw className="w-10 h-10 text-indigo-600 animate-spin" />
+                     </div>
+                   ) : referrals.length === 0 ? (
+                     <div className="text-center py-20 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-300">
+                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Você ainda não possui indicações diretas.</p>
+                        <button onClick={() => setActiveTab('home')} className="mt-6 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:underline">Começar a indicar agora</button>
+                     </div>
+                   ) : (
+                     <div className="overflow-x-auto">
+                        <table className="w-full text-left border-separate border-spacing-y-4">
+                           <thead>
+                              <tr className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                 <th className="px-6 py-2">Membro</th>
+                                 <th className="px-6 py-2">ID</th>
+                                 <th className="px-6 py-2">Data Cadastro</th>
+                                 <th className="px-6 py-2">Plano</th>
+                                 <th className="px-6 py-2">Pontos Gerados</th>
+                                 <th className="px-6 py-2">Status</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              {referrals.map((ref) => {
+                                 const isActive = ref.plan && ref.plan !== 'pre-cadastro';
+                                 return (
+                                   <tr key={ref.id} className="bg-gray-50/50 hover:bg-white transition-all group border border-transparent hover:border-indigo-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md">
+                                      <td className="px-6 py-6 rounded-l-2xl">
+                                         <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black">
+                                               {ref.name?.[0].toUpperCase()}
+                                            </div>
+                                            <div>
+                                               <p className="text-sm font-black text-gray-900">{ref.name}</p>
+                                               <p className="text-[10px] text-slate-400 font-medium">{ref.email}</p>
+                                            </div>
+                                         </div>
+                                      </td>
+                                      <td className="px-6 py-6 text-sm font-bold text-gray-600">#{ref.display_id || '---'}</td>
+                                      <td className="px-6 py-6 text-sm font-medium text-gray-500">{new Date(ref.created_at).toLocaleDateString('pt-BR')}</td>
+                                      <td className="px-6 py-6">
+                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'}`}>
+                                            {ref.plan?.toUpperCase() || 'PR\u00c9-CADASTRO'}
+                                         </span>
+                                      </td>
+                                      <td className="px-6 py-6 font-black text-gray-900">
+                                         {isActive ? (
+                                           <div className="flex items-center gap-1.5">
+                                              <span>{ref.plan === 'basic' ? '+100' : ref.plan === 'pro' ? '+300' : '+500'}</span>
+                                              <Zap className="w-3 h-3 text-brand-primary fill-current" />
+                                           </div>
+                                         ) : '---'}
+                                      </td>
+                                      <td className="px-6 py-6 rounded-r-2xl">
+                                         <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-orange-500'} animate-pulse`}></div>
+                                            <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                               {isActive ? 'ATIVO' : 'INATIVO'}
+                                            </span>
+                                         </div>
+                                      </td>
+                                   </tr>
+                                 );
+                              })}
+                           </tbody>
+                        </table>
+                     </div>
+                   )}
+                   <p className="mt-10 text-[10px] text-slate-400 font-medium leading-relaxed italic border-t border-gray-100 pt-8 uppercase tracking-widest">
+                      * O status ATIVO é atingido após a confirmação do pagamento do plano de adesão.
+                   </p>
+                </div>
+                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+             </div>
+          </div>
+        )}
+
         {activeTab === 'home' && (
             <SectionLanding 
                 title="O motor da economia colaborativa"
@@ -117,7 +241,7 @@ export const Rewards: React.FC = () => {
 };
 
 const B2BMatchView = ({ user }: { user: User }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions' | 'rules'>('offers');
+  const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions' | 'rules'>('rules');
   const [menuCashProducts, setMenuCashProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,6 +318,12 @@ const B2BMatchView = ({ user }: { user: User }) => {
              </div>
              <div className="flex gap-4">
                 <button 
+                   onClick={() => setActiveSubTab('rules')}
+                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'rules' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                   REGRAS
+                </button>
+                <button 
                    onClick={() => setActiveSubTab('offers')}
                    className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'offers' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
@@ -204,12 +334,6 @@ const B2BMatchView = ({ user }: { user: User }) => {
                    className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'transactions' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
                    MINHAS TRANSAÇÕES
-                </button>
-                <button 
-                   onClick={() => setActiveSubTab('rules')}
-                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'rules' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                >
-                   REGRAS
                 </button>
              </div>
           </div>
@@ -740,8 +864,9 @@ const LevelsView = ({ user }: { user: User }) => {
 
 const MissionsView = () => {
   const missions = [
-    { title: 'Indicação Plano Comunidade', desc: 'Traga um novo membro no plano Comunidade.', pts: pointsRules.indicacaoBasico, icon: Users },
-    { title: 'Indicação Plano Fundador', desc: 'Traga um novo membro no plano Fundador.', pts: pointsRules.indicacaoPro, icon: Crown },
+    { title: 'Indicação Plano Básico', desc: 'Traga um novo membro no plano Básico.', pts: pointsRules.indicacaoBasico, icon: Users },
+    { title: 'Indicação Plano Pro', desc: 'Traga um novo membro no plano Pro.', pts: pointsRules.indicacaoPro, icon: Crown },
+    { title: 'Indicação Plano Full', desc: 'Traga um novo membro no plano Full.', pts: (pointsRules as any).indicacaoFull, icon: Rocket },
     { title: 'Compras no Menu Store', desc: 'A cada R$ 1,00 em compras = 1 ponto.', pts: `${pointsRules.compraMenuStore}:1`, icon: ShoppingBag },
     { title: 'Login Diário', desc: 'Acesse a plataforma diariamente.', pts: pointsRules.loginDiario, icon: Clock },
     { title: 'Pontos extras', desc: 'Participação em eventos, campanhas e outros.', pts: pointsRules.pontosExtras, icon: Sparkles }

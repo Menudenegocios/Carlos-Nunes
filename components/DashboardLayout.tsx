@@ -8,17 +8,18 @@ import {
   Store, ChevronLeft, Briefcase, GraduationCap,
   Handshake, CreditCard, Sparkles, BookOpen, Settings2,
   AlertCircle, ChevronRight, Globe, LayoutGrid, Lock,
-  Rocket, ArrowRight
+  Rocket, ArrowRight, Eye
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
 import { motion } from 'framer-motion';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isImpersonating, stopImpersonating, adminUser } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradePlanInfo, setUpgradePlanInfo] = useState<{ plan: string; to: string }>({ plan: '', to: '' });
 
@@ -30,24 +31,70 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   const isPreRegistration = user.plan === 'pre-cadastro';
 
   const menuItems = [
-    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
-    ...(isAdmin ? [{ label: 'Central', icon: Settings2, to: '/admin-central', locked: false, minPlan: 'admin' }] : []),
-    { label: 'Minha Vitrine', icon: Globe, to: '/catalog', locked: isPreRegistration && !isAdmin, minPlan: 'basic' },
-    { label: 'Menu Club', icon: Trophy, to: '/rewards', locked: isPreRegistration && !isAdmin, minPlan: 'basic' },
-    { label: 'CRM & Vendas', icon: Briefcase, to: '/business-suite', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
+    { label: 'Vis\u00e3o Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
+    ...(isAdmin ? [{ label: 'Central Admin', icon: Settings2, to: '/admin-central', locked: false, minPlan: 'admin' }] : []),
+    { 
+      label: 'Minha Vitrine', 
+      icon: Globe, 
+      to: '/catalog', 
+      locked: isPreRegistration && !isAdmin, 
+      minPlan: 'basic',
+      subItems: [
+        { label: 'Ver Minha Vitrine', to: `/store/${user.id}` },
+        { label: 'Configurar Catálogo', to: '/catalog' }
+      ]
+    },
+    { 
+      label: 'Menu Club', 
+      icon: Trophy, 
+      to: '/rewards', 
+      locked: isPreRegistration && !isAdmin, 
+      minPlan: 'basic',
+      subItems: [
+        { label: 'Recompensas', to: '/rewards' },
+        { label: 'Indica\u00e7\u00f5es', to: '/rewards?tab=referrals' }
+      ]
+    },
+    { 
+      label: 'CRM & Vendas', 
+      icon: Briefcase, 
+      to: '/business-suite', 
+      locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, 
+      minPlan: 'pro',
+      subItems: [
+        { label: 'CRM & Vendas', to: '/business-suite' },
+        { label: 'Financeiro', to: '/business-suite' }
+      ]
+    },
     { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
     { label: 'Mentoria Full', icon: Rocket, to: '/mentoria', locked: false, minPlan: 'full' },
     { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false, minPlan: 'pre-cadastro' },
     { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false, minPlan: 'pre-cadastro' },
   ];
 
-  const handleItemClick = (e: React.MouseEvent, item: typeof menuItems[0]) => {
+  const toggleSubItems = (e: React.MouseEvent, item: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isExpanded) {
+      setExpandedItems(prev => 
+        prev.includes(item.label) 
+          ? prev.filter(v => v !== item.label) 
+          : [...prev, item.label]
+      );
+    } else {
+      setIsExpanded(true);
+      setExpandedItems([item.label]);
+    }
+  };
+
+  const handleItemClick = (e: React.MouseEvent, item: any) => {
     if (item.locked && item.to !== '/plans') {
       e.preventDefault();
       setUpgradePlanInfo({ plan: planNames[item.minPlan] || 'Próximo Plano', to: item.to });
       setIsUpgradeModalOpen(true);
       return;
     }
+
     if (item.to === '#') e.preventDefault();
     setIsMobileMenuOpen(false);
   };
@@ -56,143 +103,198 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const planNames: Record<string, string> = {
     'pre-cadastro': 'Pré-cadastro',
-    basic: 'Plano Comunidade',
-    pro: 'Plano Fundador',
-    full: 'Plano Fundador PRO'
+    basic: 'Plano Básico',
+    pro: 'Plano Pro',
+    full: 'Plano Full'
   };
 
   return (
-    <div className="flex h-screen bg-brand-surface overflow-hidden transition-colors duration-300 font-sans">
+    <div className="flex flex-col h-screen bg-brand-surface overflow-hidden transition-colors duration-300 font-sans">
       
-      <aside 
-        className={`hidden lg:flex flex-col bg-white/70 backdrop-blur-xl border border-white/5 h-[calc(100vh-2.5rem)] my-5 ml-5 rounded-[2.5rem] flex-shrink-0 transition-all duration-500 ease-in-out shadow-2xl overflow-hidden ${
-          isExpanded ? 'w-72' : 'w-24'
-        }`}
-      >
-        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
-          <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-between px-2' : 'justify-center'}`}>
-            <div className="flex items-center gap-3 overflow-hidden">
-              <Link to="/" className="flex items-center">
-                 <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "sm" : "xs"} />
-              </Link>
-            </div>
-            
-            {isExpanded && (
-              <button 
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1.5 rounded-lg border border-brand-secondary/10 text-brand-secondary hover:bg-brand-surface hover:text-brand-primary transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={(e) => handleItemClick(e, item)}
-                className={`flex items-center rounded-xl transition-all group overflow-hidden relative ${
-                  isActive(item.to) 
-                    ? 'bg-indigo-50 text-indigo-600' 
-                    : 'text-slate-500 hover:bg-brand-surface hover:text-brand-dark'
-                } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
-              >
-                {isActive(item.to) && (
-                  <motion.div 
-                    layoutId="activeSideTab"
-                    className="absolute inset-0 bg-indigo-50 rounded-xl" 
-                  />
-                )}
-                {isActive(item.to) && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#F67C01] rounded-r-full shadow-[0_0_15px_rgba(246,124,1,0.6)]"></div>
-                )}
-                
-                <item.icon className={`w-5 h-5 transition-all duration-300 relative z-10 ${isActive(item.to) ? 'text-indigo-600 scale-110' : 'text-slate-400 group-hover:text-brand-dark group-hover:scale-110'}`} />
-                {isExpanded && (
-                  <div className="flex items-center justify-between flex-1 overflow-hidden relative z-10">
-                    <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic">{item.label}</span>
-                  </div>
-                )}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <div className="mt-auto p-5 border-t border-brand-secondary/5">
-          <button 
-            onClick={logout}
-            className={`flex items-center gap-4 px-5 py-5 rounded-2xl font-black text-[10px] tracking-widest bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 w-full group shadow-sm ${!isExpanded ? 'justify-center p-3.5' : ''}`}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
-            {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">SAIR DA CONTA</span>}
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <header className={`h-20 bg-white border-b border-brand-secondary/10 px-6 lg:px-10 flex justify-between items-center sticky top-0 z-30 flex-shrink-0`}>
-           <div className="flex items-center gap-6">
-              <button 
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2.5 bg-brand-surface rounded-xl text-brand-secondary lg:hidden"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              
-              <nav className="hidden md:flex items-center gap-8">
-                <Link to="/" className="text-[10px] font-black tracking-widest text-slate-400 hover:text-indigo-600 transition-colors">SITE PRINCIPAL</Link>
-              </nav>
-
-              <div className="h-6 w-px bg-brand-secondary/10 hidden md:block"></div>
-
-              <span className="font-black text-brand-dark text-sm tracking-tight hidden sm:block uppercase">
-                {menuItems.find(i => isActive(i.to))?.label || 'Painel'}
-              </span>
-           </div>
-           
-            <div className="flex items-center gap-4">
-               <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-[11px] font-black text-brand-dark leading-none">{user.name}</span>
-                  <span className="text-[9px] text-[#F67C01] font-black tracking-widest mt-1 uppercase">
-                    {isAdmin ? 'ADMINISTRADOR' : planNames[user.plan]}
-                  </span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform">
-                   {user.name.charAt(0)}
-                 </Link>
-                 <button 
-                   onClick={logout}
-                   className="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:scale-105 transition-all border border-rose-100"
-                   title="Sair"
-                 >
-                   <LogOut className="w-5 h-5" />
-                 </button>
-               </div>
-            </div>
-        </header>
-
-        <div 
-          className="flex-1 overflow-y-auto scroll-smooth flex flex-col bg-white"
-        >
-          <div className="flex-1 p-6 md:p-10">
-            {children}
-          </div>
-
-          <footer className="bg-white border-t border-brand-secondary/10 py-8 px-10 mt-auto">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-brand-secondary">
-              <div className="flex items-center gap-2">
-                 <Logo size="sm" />
+      {/* BANNER MODO PERSONIFICAÇÃO */}
+      {isImpersonating && (
+        <div className="bg-emerald-600 text-white px-6 py-3 flex justify-between items-center z-[100] shadow-xl animate-in slide-in-from-top duration-500">
+           <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                 <Eye className="w-5 h-5 text-white" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-                &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS INC.
-              </p>
-            </div>
-          </footer>
+              <div>
+                 <p className="text-xs font-black uppercase tracking-widest">Modo Personificação Ativo</p>
+                 <p className="text-[10px] font-bold opacity-80 uppercase tracking-wider">Editando a vitrine de: <span className="underline">{user.name}</span></p>
+              </div>
+           </div>
+           <button 
+             onClick={stopImpersonating}
+             className="bg-white text-emerald-700 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center gap-2 shadow-lg"
+           >
+              <ArrowRight className="w-4 h-4 rotate-180" /> VOLTAR PARA ADMIN
+           </button>
         </div>
-      </main>
+      )}
+
+      <div className="flex flex-1 overflow-hidden">
+        <aside 
+          className={`hidden lg:flex flex-col bg-white/70 backdrop-blur-xl border border-white/5 h-[calc(100vh-2.5rem)] my-5 ml-5 rounded-[2.5rem] flex-shrink-0 transition-all duration-500 ease-in-out shadow-2xl overflow-hidden ${
+            isExpanded ? 'w-72' : 'w-24'
+          }`}
+        >
+          <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+            <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-between px-2' : 'justify-center'}`}>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <Link to="/" className="flex items-center">
+                   <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "xs" : "xxs"} />
+                </Link>
+              </div>
+              
+              {isExpanded && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-1.5 rounded-lg border border-brand-secondary/10 text-brand-secondary hover:bg-brand-surface hover:text-brand-primary transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <nav className="space-y-1">
+              {menuItems.map((item) => (
+                <div key={item.label}>
+                  <Link
+                    to={item.to}
+                    onClick={(e) => handleItemClick(e, item)}
+                    className={`flex items-center rounded-xl transition-all group overflow-hidden relative ${
+                      isActive(item.to) 
+                        ? 'bg-indigo-50 text-indigo-600' 
+                        : 'text-slate-500 hover:bg-brand-surface hover:text-brand-dark'
+                    } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
+                  >
+                    {isActive(item.to) && (
+                      <motion.div 
+                        layoutId="activeSideTab"
+                        className="absolute inset-0 bg-indigo-50 rounded-xl" 
+                      />
+                    )}
+                    {isActive(item.to) && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#F67C01] rounded-r-full shadow-[0_0_15px_rgba(246,124,1,0.6)]"></div>
+                    )}
+                    
+                    <item.icon className={`w-5 h-5 transition-all duration-300 relative z-10 ${isActive(item.to) ? 'text-indigo-600 scale-110' : 'text-slate-400 group-hover:text-brand-dark group-hover:scale-110'}`} />
+                    {isExpanded && (
+                      <div className="flex items-center justify-between flex-1 overflow-hidden relative z-10">
+                        <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic">{item.label}</span>
+                        {item.subItems && (
+                          <div 
+                            onClick={(e) => toggleSubItems(e, item)}
+                            className="p-1 hover:bg-black/10 rounded-lg transition-all"
+                          >
+                            <ChevronRight className={`w-4 h-4 transition-transform ${expandedItems.includes(item.label) ? 'rotate-90' : ''}`} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+
+                  {isExpanded && item.subItems && (
+                    <div className={`mt-1 overflow-hidden transition-all duration-300 ${expandedItems.includes(item.label) ? 'max-h-80 mb-2' : 'max-h-0'}`}>
+                      <div className="pl-12 space-y-1">
+                        {item.subItems
+                          .filter(sub => sub.to !== item.to)
+                          .map((sub) => (
+                          <Link
+                            key={sub.label}
+                            to={sub.to}
+                            className={`block py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isActive(sub.to) ? 'text-indigo-600' : 'text-slate-400 hover:text-brand-dark'}`}
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-auto p-5 border-t border-brand-secondary/5">
+            <button 
+              onClick={logout}
+              className={`flex items-center gap-4 px-5 py-5 rounded-2xl font-black text-[10px] tracking-widest bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 w-full group shadow-sm ${!isExpanded ? 'justify-center p-3.5' : ''}`}
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
+              {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">SAIR DA CONTA</span>}
+            </button>
+          </div>
+        </aside>
+
+        <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+          <header className={`h-20 bg-white border-b border-brand-secondary/10 px-6 lg:px-10 flex justify-between items-center sticky top-0 z-30 flex-shrink-0`}>
+             <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2.5 bg-brand-surface rounded-xl text-brand-secondary lg:hidden"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+                
+                <nav className="hidden md:flex items-center gap-8">
+                  <Link to="/" className="text-[10px] font-black tracking-widest text-slate-400 hover:text-indigo-600 transition-colors">SITE PRINCIPAL</Link>
+                </nav>
+
+                <div className="h-6 w-px bg-brand-secondary/10 hidden md:block"></div>
+
+                <span className="font-black text-brand-dark text-sm tracking-tight hidden sm:block uppercase">
+                  {menuItems.find(i => isActive(i.to))?.label || 'Painel'}
+                </span>
+             </div>
+             
+              <div className="flex items-center gap-4">
+                  <div className="hidden sm:flex flex-col text-right">
+                     <div className="flex items-center justify-end gap-2">
+                       <span className="text-[11px] font-black text-brand-dark leading-none">{user.name}</span>
+                       {user.has_founder_badge && (
+                         <span className="bg-gradient-to-r from-[#F67C01] to-orange-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-sm animate-pulse">
+                           FUNDADOR
+                         </span>
+                       )}
+                     </div>
+                     <span className="text-[9px] text-indigo-500 font-black tracking-widest mt-1 uppercase">
+                       {isAdmin ? 'ADMINISTRADOR' : planNames[user.plan]}
+                     </span>
+                  </div>
+                 <div className="flex items-center gap-2">
+                   <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform">
+                     {user.name.charAt(0)}
+                   </Link>
+                   <button 
+                     onClick={logout}
+                     className="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:scale-105 transition-all border border-rose-100"
+                     title="Sair"
+                   >
+                     <LogOut className="w-5 h-5" />
+                   </button>
+                 </div>
+              </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto scroll-smooth flex flex-col bg-white">
+            <div className="flex-1 p-6 md:p-10">
+              {children}
+            </div>
+
+            <footer className="bg-white border-t border-brand-secondary/10 py-8 px-10 mt-auto">
+              <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-brand-secondary">
+                <div className="flex items-center gap-2">
+                   <Logo size="sm" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                  &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS INC.
+                </p>
+              </div>
+            </footer>
+          </div>
+        </main>
+      </div>
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100] lg:hidden animate-fade-in">
@@ -205,7 +307,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
               <div className="flex-1 overflow-y-auto p-4 space-y-1">
                  {menuItems.map((item) => (
                     <Link
-                      key={item.to}
+                      key={item.label}
                       to={item.to}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={`flex items-center gap-4 p-4 rounded-xl transition-all relative ${

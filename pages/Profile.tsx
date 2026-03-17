@@ -4,9 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
 import { Profile as ProfileType } from '../types';
 import { 
-  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, Download
+  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, CreditCard, Clock
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 
 export const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -99,7 +98,7 @@ export const Profile: React.FC = () => {
             <div className="flex gap-4">
                <div className="text-center bg-black/20 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/5">
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Cód. Indicação</p>
-                  <p className="text-xl font-black font-mono tracking-wider">{user?.referral_code}</p>
+                  <p className="text-xl font-black font-mono tracking-wider">{profile.display_id || '...'}</p>
                </div>
             </div>
         </div>
@@ -121,8 +120,8 @@ export const Profile: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-end">
                      <div>
-                        <p className="text-[8px] font-black opacity-40 uppercase tracking-widest">ID Global</p>
-                        <p className="font-mono text-xs opacity-80">{user?.id.toString().slice(-6).toUpperCase()}</p>
+                        <p className="text-[8px] font-black opacity-40 uppercase tracking-widest">ID de Identificação</p>
+                        <p className="font-mono text-base font-black text-emerald-400"># {profile.display_id || '...'}</p>
                      </div>
                      <div className="bg-emerald-400 text-emerald-950 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">NÍVEL {user?.level}</div>
                   </div>
@@ -187,40 +186,68 @@ export const Profile: React.FC = () => {
                   <button type="submit" disabled={saving} className="bg-emerald-600 text-white font-black px-12 py-5 rounded-2xl hover:bg-emerald-700 shadow-2xl shadow-emerald-900/20 transition-all uppercase tracking-widest text-sm flex items-center gap-2">
                      {saving ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} SALVAR ALTERAÇÕES
                   </button>
-               </div>
+                </div>
             </form>
-             <div className="mt-12 p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
-               <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-6">Seu Link Exclusivo</h3>
-               <div className="flex flex-col md:flex-row items-center gap-8">
-                 <div className="bg-white p-4 rounded-2xl shadow-inner">
-                   <QRCodeSVG value={`${window.location.origin}/${profile.slug || user?.id}`} size={150} />
-                 </div>
-                 <div className="flex-1 space-y-4">
-                   <p className="text-sm text-gray-600">
-                     Compartilhe seu link exclusivo: <strong>{window.location.origin}/{profile.slug || user?.id}</strong>
-                   </p>
-                   <button 
-                     onClick={() => {
-                       const canvas = document.querySelector('svg');
-                       if (canvas) {
-                         const data = new XMLSerializer().serializeToString(canvas);
-                         const blob = new Blob([data], {type: 'image/svg+xml'});
-                         const url = URL.createObjectURL(blob);
-                         const link = document.createElement('a');
-                         link.href = url;
-                         link.download = 'qrcode.svg';
-                         link.click();
-                       }
-                     }}
-                     className="bg-indigo-600 text-white font-black px-8 py-3 rounded-2xl hover:bg-indigo-700 transition-all uppercase tracking-widest text-xs flex items-center gap-2"
-                   >
-                     <Download className="w-4 h-4" /> Baixar QR Code
-                   </button>
-                 </div>
-               </div>
+
+            <div className="mt-12 p-10 bg-gray-50 rounded-[3rem] border border-gray-100 shadow-inner relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
+                
+                <div className="relative z-10">
+                   <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                         <CreditCard className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <div>
+                         <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Pagamentos e Assinaturas</h3>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Gestão financeira da sua conta</p>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Plano Atual</p>
+                         <div className="flex items-center justify-between">
+                            <span className="text-lg font-black text-gray-900 uppercase italic tracking-tight">
+                               {(profile as any).subscriptions?.plan?.toUpperCase() || profile.plan?.toUpperCase() || 'PRÉ-CADASTRO'}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                               (profile as any).subscriptions?.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                            }`}>
+                               {(profile as any).subscriptions?.status === 'active' ? 'Ativo' : 'Pendente/Inativo'}
+                            </span>
+                         </div>
+                      </div>
+
+                      <div className="p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Próximo Vencimento</p>
+                         <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-slate-300" />
+                            <span className="text-lg font-black text-gray-900">
+                               {(profile as any).subscriptions?.current_period_end 
+                                  ? new Date((profile as any).subscriptions.current_period_end).toLocaleDateString('pt-BR') 
+                                  : '---'}
+                            </span>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="mt-8 flex flex-col md:flex-row gap-4">
+                      <button 
+                        onClick={() => window.location.href = '/plans'}
+                        className="flex-1 bg-indigo-600 text-white font-black px-8 py-4 rounded-2xl hover:bg-indigo-700 transition-all uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                      >
+                         RENOVAR OU ALTERAR PLANO
+                      </button>
+                      <button 
+                        className="px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 bg-white border border-gray-100 hover:bg-gray-50 transition-all"
+                      >
+                         HISTÓRICO DE COBRANÇAS
+                      </button>
+                    </div>
+                </div>
              </div>
-         </div>
-      </div>
+          </div>
+       </div>
     </div>
   );
 };

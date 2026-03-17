@@ -1,6 +1,7 @@
 export const pointsRules = {
   indicacaoBasico: 100,
   indicacaoPro: 300,
+  indicacaoFull: 500,
   compraMenuStore: 1, // 1 ponto a cada R$1 gasto
   loginDiario: 5,
   pontosExtras: 50,
@@ -14,7 +15,7 @@ export const tiers = [
     criteria: '0 Indicações',
     description: 'Você acabou de chegar.',
     benefits: [
-      'Pode comprar ofertas no Dance Shop usando Dance Cash',
+      'Pode comprar ofertas na Menu Store usando Menu Cash',
       'Não pode criar ofertas'
     ]
   },

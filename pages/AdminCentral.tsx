@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 import { supabaseService } from '../services/supabaseService';
 import { Profile, PlatformEvent, User as UserType } from '../types';
 import { 
@@ -13,7 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export const AdminCentral: React.FC = () => {
-  const { user } = useAuth();
+  const { user, impersonateUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'membros' | 'agenda' | 'marketplace' | 'parceiros'>('membros');
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -33,10 +34,12 @@ export const AdminCentral: React.FC = () => {
     email: '',
     password: '',
     plan: 'pre-cadastro' as any,
-    level: 'nível base' as any,
+    level: 'Nível Base' as any,
     points: 0,
     menu_cash: 0,
-    role: 'user' as any
+    role: 'user' as any,
+    has_founder_badge: false,
+    display_id: undefined as number | undefined
   });
 
   // Event Modal State
@@ -76,16 +79,20 @@ export const AdminCentral: React.FC = () => {
     link: ''
   });
   const [selectedPartnerFile, setSelectedPartnerFile] = useState<File | null>(null);
+  
+  // Delete Confirmation State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
   const planNames: Record<string, string> = {
-    basic: 'Plano Comunidade',
-    pro: 'Plano Fundador',
-    full: 'Plano Fundador PRO'
+    basic: 'Plano Básico',
+    pro: 'Plano Pro',
+    full: 'Plano Full'
   };
 
   const plansConfig = [
-    { name: 'Plano Comunidade', color: 'border-slate-300', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
-    { name: 'Plano Fundador', color: 'border-brand-primary', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] }
+    { name: 'Plano Básico', color: 'border-slate-300', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
+    { name: 'Plano Pro', color: 'border-brand-primary', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] }
   ];
 
   useEffect(() => {
@@ -121,10 +128,12 @@ export const AdminCentral: React.FC = () => {
         email: '',
         password: '',
         plan: 'pre-cadastro',
-        level: 'nível base',
+        level: 'Nível Base',
         points: 0,
         menu_cash: 0,
-        role: 'user'
+        role: 'user',
+        has_founder_badge: false,
+        display_id: undefined
     });
     setIsModalOpen(true);
   };
@@ -136,10 +145,12 @@ export const AdminCentral: React.FC = () => {
       email: (profile as any).email || '',
       password: '', // Senha em branco para segurança no modo edit
       plan: (profile as any).plan || 'pre-cadastro',
-      level: (profile as any).level || 'nível base',
+      level: (profile as any).level || 'Nível Base',
       points: (profile as any).points || 0,
       menu_cash: (profile as any).menu_cash || 0,
-      role: (profile as any).role || 'user'
+      role: (profile as any).role || 'user',
+      has_founder_badge: (profile as any).has_founder_badge || false,
+      display_id: profile.display_id
     });
     setIsModalOpen(true);
   };
@@ -160,7 +171,8 @@ export const AdminCentral: React.FC = () => {
           level: memberForm.level,
           points: memberForm.points,
           menu_cash: memberForm.menu_cash,
-          role: memberForm.role
+          role: memberForm.role,
+          display_id: memberForm.display_id
         });
         setIsModalOpen(false);
         await loadAdminData();
@@ -182,15 +194,40 @@ export const AdminCentral: React.FC = () => {
     }
   };
 
-
   const deleteMember = async (user_id: string) => {
-    if (window.confirm('Excluir este membro permanentemente?')) {
-      try {
-        // Deleting users usually requires Admin API or Edge Function
-        alert("Exclusão de membros via Admin requer configuração de backend/Edge Function.");
-      } catch (e) {
-        alert('Erro ao excluir membro.');
-      }
+    setMemberToDelete(user_id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteMember = async () => {
+    if (!memberToDelete) return;
+    
+    setIsLoading(true);
+    try {
+       const { data: { session } } = await supabase.auth.getSession();
+       if (!session) throw new Error("No active session");
+
+        const response = await fetch(`/api/admin/delete-user?userId=${memberToDelete}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+       if (!response.ok) {
+         const errorData = await response.json();
+         throw new Error(errorData.error || 'Failed to delete user');
+       }
+
+       setIsDeleteModalOpen(false);
+       setMemberToDelete(null);
+       await loadAdminData();
+       alert('Membro excluído permanentemente com sucesso.');
+    } catch (err: any) {
+       console.error("Erro ao excluir:", err);
+       alert(`Erro ao excluir membro: ${err.message}`);
+    } finally {
+       setIsLoading(false);
     }
   };
 
@@ -446,18 +483,20 @@ export const AdminCentral: React.FC = () => {
                                     (p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())) || 
                                     (p.email?.toLowerCase().includes(searchTerm.toLowerCase()))
                                 ).map(profile => {
-                                    const subscription = (profile as any).subscriptions?.[0] || (profile as any).subscriptions;
-                                    const status = subscription?.status || 'inactive';
-                                    const plan = subscription?.plan || profile.plan || 'profissionais';
-                                    
-                                    const statusColors: Record<string, string> = {
-                                        active: 'bg-emerald-50 text-emerald-600',
-                                        trialing: 'bg-blue-50 text-blue-600',
-                                        past_due: 'bg-amber-50 text-amber-600',
-                                        canceled: 'bg-rose-50 text-rose-600',
-                                        incomplete: 'bg-slate-50 text-slate-600',
-                                        inactive: 'bg-slate-50 text-slate-600'
-                                    };
+                                     const subscription = (profile as any).subscriptions?.[0] || (profile as any).subscriptions;
+                                     const plan = subscription?.plan || profile.plan || 'pre-cadastro';
+                                     
+                                     // Se tem plano e não é pré-cadastro, está Ativo, exceto se cancelado explicitamente
+                                     let status = subscription?.status || (plan !== 'pre-cadastro' ? 'active' : 'inactive');
+                                     
+                                     const statusColors: Record<string, string> = {
+                                         active: 'bg-emerald-50 text-emerald-600',
+                                         trialing: 'bg-blue-50 text-blue-600',
+                                         past_due: 'bg-amber-50 text-amber-600',
+                                         canceled: 'bg-rose-50 text-rose-600',
+                                         incomplete: 'bg-slate-50 text-slate-600',
+                                         inactive: 'bg-slate-50 text-slate-600'
+                                     };
 
                                     const statusLabels: Record<string, string> = {
                                         active: 'Ativo',
@@ -484,6 +523,11 @@ export const AdminCentral: React.FC = () => {
                                                         <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase ${statusColors[status] || 'bg-slate-50 text-slate-600'}`}>
                                                             {statusLabels[status] || status}
                                                         </span>
+                                                        {profile.has_founder_badge && (
+                                                            <span className="bg-amber-100 text-amber-600 text-[8px] font-black px-2 py-1 rounded-lg uppercase border border-amber-200">
+                                                                Membro Fundador
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-3 mt-1">
                                                       <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase">{planNames[plan] || plan}</span>
@@ -494,6 +538,13 @@ export const AdminCentral: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
+                                                <button 
+                                                  onClick={() => impersonateUser(profile.user_id)} 
+                                                  title="Modo Personificação" 
+                                                  className="p-3 bg-white rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all shadow-sm border border-gray-100"
+                                                >
+                                                  <Eye className="w-5 h-5" />
+                                                </button>
                                                 <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
                                                 <button onClick={() => deleteMember(profile.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                             </div>
@@ -815,10 +866,21 @@ export const AdminCentral: React.FC = () => {
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Plano Ativo</label>
                             <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
                                 <option value="pre-cadastro">Pré-cadastro</option>
-                                <option value="basic">Plano Comunidade</option>
-                                <option value="pro">Plano Fundador</option>
-                                <option value="full">Plano Fundador PRO</option>
+                                <option value="basic">Plano Básico</option>
+                                <option value="pro">Plano Pro</option>
+                                <option value="full">Plano Full</option>
                             </select>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 mb-6">
+                            <input 
+                                type="checkbox" 
+                                id="has_founder_badge"
+                                checked={memberForm.has_founder_badge} 
+                                onChange={e => setMemberForm({...memberForm, has_founder_badge: e.target.checked})}
+                                className="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <label htmlFor="has_founder_badge" className="text-[10px] font-black text-amber-700 uppercase tracking-widest cursor-pointer select-none">Selo Membro Fundador</label>
                         </div>
 
                         <div>
@@ -872,6 +934,37 @@ export const AdminCentral: React.FC = () => {
                 </form>
              </div>
           </div>
+      )}
+      {/* Modal de Confirmação de Exclusão */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-rose-500"></div>
+             <div className="flex flex-col items-center text-center space-y-6">
+                <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center">
+                   <AlertCircle className="w-10 h-10 text-rose-500" />
+                </div>
+                <div className="space-y-2">
+                   <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Confirmar Exclusão?</h3>
+                   <p className="text-slate-500 font-medium">Esta ação é irreversível. O membro perderá acesso total e todos os seus dados serão removidos.</p>
+                </div>
+                <div className="flex gap-4 w-full pt-4">
+                   <button 
+                      onClick={() => setIsDeleteModalOpen(false)}
+                      className="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 bg-gray-50 hover:bg-gray-100 transition-all border border-gray-100"
+                   >
+                      Cancelar
+                   </button>
+                   <button 
+                      onClick={confirmDeleteMember}
+                      className="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white bg-rose-500 hover:bg-rose-600 transition-all shadow-lg shadow-rose-200"
+                   >
+                      Excluir Agora
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabaseService } from '../services/supabaseService';
 import { Product, Profile, StoreCategory, BlogPost, VitrineComment } from '../types';
@@ -316,7 +316,7 @@ export const StoreView: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-xs tracking-widest text-slate-400">Carregando vitrine de elite...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black uppercase text-xs tracking-widest text-slate-400">Carregando vitrine graduada...</div>;
   if (!profile) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
       <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
@@ -423,7 +423,7 @@ export const StoreView: React.FC = () => {
                                 </div>
                             </section>
 
-                            {/* SOLUÃ‡Ã•ES E SERVIÃ‡OS */}
+                            {/* SOLUÇÕES E SERVIÇOS */}
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><ListTodo className="w-5 h-5" /></div>
@@ -439,7 +439,7 @@ export const StoreView: React.FC = () => {
                                 </div>
                             </section>
 
-                            {/* INTERESSES DE NEGÃ“CIO */}
+                            {/* INTERESSES DE NEGÓCIO */}
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><Handshake className="w-5 h-5" /></div>
@@ -505,7 +505,7 @@ export const StoreView: React.FC = () => {
                                 </div>
                             </section>
 
-                            {/* SEÃ‡ÃƒO BLOG (Apenas 3 últimos) */}
+                            {/* SEÇÃO BLOG (Apenas 3 últimos) */}
                             {blogPosts.length > 0 && (
                                 <section className="space-y-10">
                                     <div className="flex items-center justify-between">
@@ -729,7 +729,7 @@ export const StoreView: React.FC = () => {
                     <div className="space-y-6">
                         <div className="inline-flex items-center gap-3 px-5 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
                             <Sparkles className="w-4 h-4 text-brand-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Oportunidade de Elite</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Oportunidade Premium</span>
                         </div>
                         <h2 className="text-3xl lg:text-4xl font-black uppercase italic tracking-tighter leading-tight title-fix">
                             Fale com o <br/> <span className="text-brand-primary">Especialista</span>
@@ -768,7 +768,7 @@ export const StoreView: React.FC = () => {
                                 }]);
 
                                 // 2. Envia para o WhatsApp
-                                const message = `Olá! Vi seu perfil no Menu de Negócios e gostaria de mais informações. \n\nðŸ‘¤ Nome: ${leadForm.name} \nðŸ“§ Email: ${leadForm.email} \nðŸ“± WhatsApp: ${leadForm.whatsapp}`;
+                                const message = `Olá! Vi seu perfil no Menu de Negócios e gostaria de mais informações. \n\n👤 Nome: ${leadForm.name} \n📧 Email: ${leadForm.email} \n📱 WhatsApp: ${leadForm.whatsapp}`;
                                 const whatsappUrl = `https://wa.me/${profile.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
                                 window.open(whatsappUrl, '_blank');
 

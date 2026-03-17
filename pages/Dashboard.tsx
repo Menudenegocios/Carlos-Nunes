@@ -55,31 +55,50 @@ export const Dashboard: React.FC = () => {
   };
 
   const copyReferral = () => {
-    if (user?.referral_code) {
-      navigator.clipboard.writeText(`https://menunegocios.com/register?ref=${user.referral_code}`);
+    const refCode = userProfile?.display_id?.toString() || user?.referral_code;
+    if (refCode) {
+      navigator.clipboard.writeText(`https://menunegocios.com/register?ref=${refCode}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const getNextLevel = () => {
-    if (!user) return { name: tiers[1].name, points: tiers[1].points };
+  const getNextTierData = () => {
+    if (!user) return null;
+    const currentPoints = user.points || 0;
+    const currentReferrals = user.referrals_count || 0;
+    
+    // Encontrar o próximo nível que o usuário ainda não atingiu TOTALMENTE
+    // (Um nível é atingido se tiver pontos E indicações suficientes)
     for (let i = 0; i < tiers.length; i++) {
-       if (user.points < tiers[i].points) {
-          return { name: tiers[i].name, points: tiers[i].points };
-       }
+      const tier = tiers[i];
+      const nextTier = tiers[i + 1];
+      
+      // Se estamos no último nível
+      if (!nextTier) return null;
+
+      // Se o usuário ainda não atingiu o próximo nível
+      if (currentPoints < nextTier.points || currentReferrals < parseInt(nextTier.criteria.split(' ')[0] || '0')) {
+        return {
+          currentLevel: tier.name,
+          nextLevel: nextTier.name,
+          requiredPoints: nextTier.points,
+          requiredReferrals: parseInt(nextTier.criteria.split(' ')[0] || '0'),
+          progressPoints: Math.min(100, (currentPoints / nextTier.points) * 100),
+          progressReferrals: Math.min(100, (currentReferrals / parseInt(nextTier.criteria.split(' ')[0] || '0')) * 100)
+        };
+      }
     }
-    return { name: 'Lenda', points: tiers[tiers.length - 1].points * 2 };
+    return null;
   };
 
-  const nextLevel = getNextLevel();
-  const progress = user ? Math.min(100, (user.points / nextLevel.points) * 100) : 0;
+  const nextTierData = getNextTierData();
 
   const getCashbackPercent = () => {
     if (!user) return '0%';
     let currentTier = tiers[0];
     for (let i = tiers.length - 1; i >= 0; i--) {
-      if (user.points >= tiers[i].points) {
+      if ((user.points || 0) >= tiers[i].points) {
         currentTier = tiers[i];
         break;
       }
@@ -89,6 +108,7 @@ export const Dashboard: React.FC = () => {
   };
 
   const planNames: Record<string, string> = {
+    'pre-cadastro': 'Pré-cadastro',
     basic: 'Básico',
     pro: 'PRO',
     full: 'FULL'
@@ -126,7 +146,7 @@ export const Dashboard: React.FC = () => {
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
 
       {/* Header Premium SaaS */}
-      <div className="bg-white/70 backdrop-blur-2xl rounded-[3.5rem] p-8 md:p-12 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)],0,0,0.2)] border border-gray-200/50">
+      <div className="bg-white/70 backdrop-blur-2xl rounded-[3.5rem] p-8 md:p-12 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-200/50">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
@@ -137,7 +157,7 @@ export const Dashboard: React.FC = () => {
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase text-gray-900 overflow-visible">
                     Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 title-fix">{user.name.split(' ')[0]}!</span>
                 </h1>
-                 <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em]">Sua economia colaborativa em tempo real.</p>
+                 <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em]">Sua economia colaborativa em tempo real. • ID: {userProfile?.display_id || '...'}</p>
               </div>
             </div>
             
@@ -206,31 +226,57 @@ export const Dashboard: React.FC = () => {
       {/* Barra de Progressão de Nível */}
       <div className="bg-white/60 backdrop-blur-xl p-8 md:p-12 rounded-[3.5rem] border border-gray-200/50 shadow-xl relative overflow-hidden px-4 mx-4">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-brand-primary/5 pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-[2rem] bg-indigo-500/10 text-indigo-600 flex items-center justify-center shadow-xl border border-white/20">
-              <Rocket className="w-10 h-10 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">NÍVEL {(user.level || 'Base').toUpperCase()}</h3>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">Faltam {(nextLevel.points - user.points).toLocaleString()} pontos para se tornar {nextLevel.name}</p>
-            </div>
-          </div>
-          
-          <div className="flex-1 w-full max-w-xl space-y-4">
-            <div className="flex justify-between items-end">
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest italic">Crescimento Autoridade</span>
-              <span className="text-xl font-black text-gray-900 italic">{Math.round(progress)}%</span>
-            </div>
-            <div className="relative h-6 w-full bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/10 p-1">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-600 via-brand-primary to-orange-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(246,124,1,0.4)] relative" 
-                style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
-                <div className="absolute top-0 right-0 h-full w-8 bg-white/20 skew-x-[-20deg] animate-[shimmer_2s_infinite]"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 rounded-[2rem] bg-indigo-500/10 text-indigo-600 flex items-center justify-center shadow-xl border border-white/20">
+                <Rocket className="w-10 h-10 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">SEU N\u00cdVEL: {(user.level || 'N\u00edvel Base').toUpperCase()}</h3>
+                {nextTierData && (
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">
+                    Objetivo: {nextTierData.nextLevel}
+                  </p>
+                )}
               </div>
             </div>
+            
+            {nextTierData ? (
+              <div className="flex-1 w-full max-w-xl space-y-6">
+                {/* Progresso de Pontos */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest italic leading-none">Pontos: {user.points} / {nextTierData.requiredPoints}</span>
+                    <span className="text-sm font-black text-gray-900 italic">{Math.round(nextTierData.progressPoints)}%</span>
+                  </div>
+                  <div className="relative h-4 w-full bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/10 p-1">
+                    <div 
+                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]" 
+                      style={{ width: `${nextTierData.progressPoints}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Progresso de Indicações */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest italic leading-none">Indicações: {user.referrals_count || 0} / {nextTierData.requiredReferrals}</span>
+                    <span className="text-sm font-black text-gray-900 italic">{Math.round(nextTierData.progressReferrals)}%</span>
+                  </div>
+                  <div className="relative h-4 w-full bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/10 p-1">
+                    <div 
+                      className="h-full bg-gradient-to-r from-brand-primary to-orange-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(246,124,1,0.3)]" 
+                      style={{ width: `${nextTierData.progressReferrals}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 text-center py-4">
+                <span className="text-lg font-black text-brand-primary italic uppercase">Nível Máximo Atingido! 💎</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -310,26 +356,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Lado Direito: Insights & Acesso */}
+        {/* Lado Direito: Acesso */}
         <div className="lg:col-span-5 space-y-10">
-          <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden group hover:border-indigo-500/30 transition-colors duration-500">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative z-10">
-              <div className="w-14 h-14 bg-indigo-100/50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-inner border border-indigo-200/50 backdrop-blur-sm">
-                <Bot className="w-7 h-7 drop-shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 uppercase italic tracking-tight leading-tight title-fix">Insight Menu Flow</h3>
-                <p className="text-slate-600 text-base font-medium leading-relaxed">
-                  "Sua Bio Digital recebeu 15 cliques na última hora. Que tal criar um cupom de desconto exclusivo no Menu Club para converter esses visitantes?"
-                </p>
-              </div>
-              <Link to="/project-management" className="inline-flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:gap-3 transition-all pt-4 drop-shadow-sm">
-                TURBINAR NEGÓCIO AGORA <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-
           <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors duration-500">
             <div className="relative z-10">
               <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 mb-6">

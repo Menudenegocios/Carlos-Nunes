@@ -17,11 +17,13 @@ export interface User {
   email: string;
   plan: 'pre-cadastro' | 'basic' | 'pro' | 'full';
   points: number;
-  level: 'nível base' | 'bronze' | 'prata' | 'ouro' | 'diamante';
+  level: 'Nível Base' | 'Bronze' | 'Prata' | 'Ouro' | 'Diamante';
   menu_cash: number;
   referral_code: string;
   referrals_count: number;
+  display_id?: number;
   role?: 'user' | 'partner' | 'member' | 'client' | 'admin';
+  has_founder_badge?: boolean;
 }
 
 export interface PortfolioItem {
@@ -244,8 +246,10 @@ export interface Profile {
   menu_cash?: number;
   referral_code?: string;
   referrals_count?: number;
+  display_id?: number;
   subscriptions?: Subscription[] | Subscription;
   is_published?: boolean;
+  has_founder_badge?: boolean;
 }
 
 export interface Subscription {

@@ -72,7 +72,7 @@ export const Support: React.FC = () => {
            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm"><Clock className="w-6 h-6 text-brand-primary" /></div>
            <div>
               <p className="text-[10px] font-black text-brand-secondary uppercase tracking-widest">Horário de Atendimento</p>
-              <p className="text-brand-contrast font-bold">Segunda à Sexta, das 09h às 18h</p>
+              <p className="text-brand-contrast font-bold">Segunda \u00e0 Sexta, das 09h \u00e0s 18h</p>
            </div>
         </div>
         <div className="flex items-center gap-3 text-brand-contrast">

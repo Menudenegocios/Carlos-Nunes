@@ -75,7 +75,7 @@ const AI_AGENTS: AIAgent[] = [
     id: 'vendas-pro', 
     name: 'Vendas Mais Pro', 
     role: 'Alta Performance', 
-    description: 'Consultoria de elite para escala de vendas e fechamento agressivo focado em resultados rápidos.', 
+    description: 'Consultoria estratégica para escala de vendas e fechamento agressivo focado em resultados rápidos.', 
     icon: Zap, 
     color: 'text-orange-600 bg-orange-50', 
     url: 'https://chatgpt.com/g/g-67676238cdc88191a20b8bc0a15240f1-venda-mais-pro' 

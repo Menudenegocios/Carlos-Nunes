@@ -154,7 +154,7 @@ const ProfileCard: React.FC<{ profile: Profile, viewMode: 'grid' | 'list' }> = (
             </div>
           </div>
           <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter group-hover:text-brand-primary transition-colors">{profile.business_name}</h3>
-          <p className="text-sm font-bold text-slate-500 uppercase italic tracking-tight">{profile.store_config?.vitrine_niche || profile.category || 'Membro Elite'}</p>
+          <p className="text-sm font-bold text-slate-500 uppercase italic tracking-tight">{profile.store_config?.vitrine_niche || profile.category || `Nível ${profile.level || 'Base'}`}</p>
           <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400">
             <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
               <MapPin className="w-3 h-3" /> {profile.store_config?.vitrine_city || profile.city || 'Brasil'}
@@ -222,8 +222,8 @@ const ProfileCard: React.FC<{ profile: Profile, viewMode: 'grid' | 'list' }> = (
             <MapPin className="w-3 h-3" /> {profile.store_config?.vitrine_city || profile.city || 'LOCALIZAÇÃO SOB CONSULTA'}
           </div>
 
-          <p className="text-sm font-bold text-slate-400 uppercase italic tracking-tight line-clamp-2">
-            {profile.bio || `💎 CEO e Fundador do @menudenegocios. Não peça a...`}
+          <p className="text-sm font-bold text-slate-500 uppercase italic tracking-tight">
+            {profile.bio || `Especialista ${profile.level || 'Nível Base'} no ecossistema Menu de Negócios.`}
           </p>
         </div>
 

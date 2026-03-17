@@ -10,6 +10,10 @@ interface AuthContextType {
   isLoading: boolean;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  impersonateUser: (userId: string) => Promise<void>;
+  stopImpersonating: () => void;
+  isImpersonating: boolean;
+  adminUser: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +33,15 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       setTimeout(() => reject(new Error('TIMEOUT')), 10000)
     );
 
+    const mapLevel = (level: string): User['level'] => {
+      const lower = level?.toLowerCase() || '';
+      if (lower === 'bronze') return 'Bronze';
+      if (lower === 'prata') return 'Prata';
+      if (lower === 'ouro') return 'Ouro';
+      if (lower === 'diamante') return 'Diamante';
+      return 'Nível Base';
+    };
+
     try {
       const fetchPromise = supabase
         .from('profiles')
@@ -47,7 +60,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           email: data.email || email || '',
           plan: data.plan || 'pre-cadastro',
           points: data.points || 0,
-          level: data.level || 'consultor',
+          level: mapLevel(data.level),
           menu_cash: data.menu_cash || 0,
           referral_code: data.referral_code || '',
           referrals_count: data.referrals_count || 0,
@@ -61,7 +74,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           email: email || '',
           plan: 'pre-cadastro',
           points: 0,
-          level: 'consultor',
+          level: 'Nível Base',
           menu_cash: 0,
           referral_code: '',
           referrals_count: 0,
@@ -165,10 +178,79 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     }
   };
 
+  const [adminUser, setAdminUser] = useState<User | null>(null);
+  const [isImpersonating, setIsImpersonating] = useState(false);
+
+  const mapLevel = (level: string): User['level'] => {
+    const lower = level?.toLowerCase() || '';
+    if (lower === 'bronze') return 'Bronze';
+    if (lower === 'prata') return 'Prata';
+    if (lower === 'ouro') return 'Ouro';
+    if (lower === 'diamante') return 'Diamante';
+    return 'Nível Base';
+  };
+
+  const getProfileData = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: userId,
+      name: data.business_name || data.name || 'Usuário',
+      email: data.email || '',
+      plan: data.plan || 'pre-cadastro',
+      points: data.points || 0,
+      level: mapLevel(data.level),
+      menu_cash: data.menu_cash || 0,
+      referral_code: data.referral_code || '',
+      referrals_count: data.referrals_count || 0,
+      role: data.role as User['role'] || 'user'
+    };
+  };
+
+  const impersonateUser = async (userId: string) => {
+    if (!user || user.role !== 'admin') {
+      alert("Apenas administradores podem usar o modo personificação.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const targetUserProfile = await getProfileData(userId);
+      if (targetUserProfile) {
+        setAdminUser(user);
+        setUser(targetUserProfile);
+        setIsImpersonating(true);
+      } else {
+        alert("Não foi possível carregar o perfil do usuário.");
+      }
+    } catch (err) {
+      console.error("Erro ao personificar:", err);
+      alert("Erro ao entrar em modo personificação.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const stopImpersonating = () => {
+    if (adminUser) {
+      setUser(adminUser);
+      setAdminUser(null);
+      setIsImpersonating(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, logout, forgotPassword, 
-      isAuthenticated: !!user, isLoading 
+      isAuthenticated: !!user, isLoading,
+      impersonateUser, stopImpersonating, isImpersonating, adminUser
     }}>
       {children}
     </AuthContext.Provider>

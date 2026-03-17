@@ -4,13 +4,14 @@ import React from 'react';
 interface LogoProps {
   className?: string;
   variant?: 'full' | 'icon';
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   forceWhite?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'full', size = 'md', forceWhite = false }) => {
   const iconSizes = {
-    xs: 'h-8',
+    xxs: 'h-6',
+    xs: 'h-10',
     sm: 'h-20',
     md: 'h-32',
     lg: 'h-48',
@@ -18,7 +19,8 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'full', si
   };
 
   const fontSizes = {
-    xs: { top: 'text-[8px]', bottom: 'text-[18px]', spacing: 'mt-1', gap: 'gap-1' },
+    xxs: { top: 'text-[6px]', bottom: 'text-[12px]', spacing: 'mt-0.5', gap: 'gap-0.5' },
+    xs: { top: 'text-[9px]', bottom: 'text-[22px]', spacing: 'mt-1', gap: 'gap-1' },
     sm: { top: 'text-[14px]', bottom: 'text-[36px]', spacing: 'mt-2', gap: 'gap-2' },
     md: { top: 'text-[20px]', bottom: 'text-[52px]', spacing: 'mt-3', gap: 'gap-3' },
     lg: { top: 'text-[28px]', bottom: 'text-[76px]', spacing: 'mt-4', gap: 'gap-4' },

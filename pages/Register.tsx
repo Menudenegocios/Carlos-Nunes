@@ -1,17 +1,26 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { Logo } from '../components/Logo';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralId, setReferralId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralId(ref);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,13 +33,41 @@ export const Register: React.FC = () => {
     try {
       console.log("Register: Iniciando cadastro para", email);
       
+      let finalReferrerUuid = null;
+
+      // Se houver ID de indicação, buscar o UUID do usuário correspondente
+      if (referralId) {
+        // Tentar buscar por display_id (numero sequencial) ou referral_code (string)
+        const isNumeric = /^\d+$/.test(referralId);
+        
+        let query = supabase.from('profiles').select('id');
+        
+        if (isNumeric) {
+          query = query.eq('display_id', parseInt(referralId));
+        } else {
+          query = query.eq('referral_code', referralId);
+        }
+
+        const { data: referrerData, error: referrerError } = await query.maybeSingle();
+        
+        if (referrerError) {
+          console.error("Erro ao buscar indicador:", referrerError);
+        } else if (referrerData) {
+          finalReferrerUuid = referrerData.id;
+        } else {
+          // Se não encontrou, talvez avisar ou apenas seguir sem indicador
+          console.warn("Indicador não encontrado para o ID:", referralId);
+        }
+      }
+
       // Criar um timeout para evitar travamentos infinitos no front
       const signUpPromise = supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name: name
+            name: name,
+            referrer_id: finalReferrerUuid
           }
         }
       });
@@ -43,8 +80,7 @@ export const Register: React.FC = () => {
 
       if (signUpError) throw signUpError;
       
-      // Forçar logout imediato após o cadastro para seguir o fluxo de confirmação por e-mail + login manual
-      // Adicionamos um pequeno delay para garantir que a sessão local seja limpa pelo Supabase antes de navegar
+      // Forçar logout imediato após o cadastro
       await supabase.auth.signOut();
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -133,6 +169,23 @@ export const Register: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="referralId" className="block text-sm font-medium text-gray-700">
+                ID de Indicação / Código (Opcional)
+              </label>
+              <div className="mt-1">
+                <input
+                  id="referralId"
+                  name="referralId"
+                  type="text"
+                  placeholder="Ex: 1024 ou ABCXYZ"
+                  value={referralId}
+                  onChange={(e) => setReferralId(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
               </div>
