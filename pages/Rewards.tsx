@@ -24,10 +24,10 @@ export const Rewards: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab === 'referrals') {
-      setActiveTab('referrals');
+    if (tab && ['home', 'acceleration', 'missions', 'match', 'ranking', 'referrals'].includes(tab)) {
+      setActiveTab(tab as any);
     }
-  }, [location]);
+  }, [location.search]);
 
   useEffect(() => {
     if (activeTab === 'referrals' && user) {
@@ -90,11 +90,11 @@ export const Rewards: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                  { id: 'home', label: 'IN\u00cdCIO', desc: 'Destaques', icon: HomeIcon },
+                  { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
                   { id: 'missions', label: 'PONTOS', desc: 'Ganhar pontos', icon: ListTodo },
                   { id: 'match', label: 'MENU CASH', desc: 'Parcerias B2B', icon: Handshake },
-                  { id: 'acceleration', label: 'N\u00cdVEIS', desc: 'Sua autoridade', icon: Zap },
-                  { id: 'referrals', label: 'INDICA\u00c7\u00d5ES', desc: 'Seu time', icon: Users },
+                  { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
+                  { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Users },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
                   <button 
@@ -173,7 +173,7 @@ export const Rewards: React.FC = () => {
                                       <td className="px-6 py-6 text-sm font-medium text-gray-500">{new Date(ref.created_at).toLocaleDateString('pt-BR')}</td>
                                       <td className="px-6 py-6">
                                          <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'}`}>
-                                            {ref.plan?.toUpperCase() || 'PR\u00c9-CADASTRO'}
+                                            {ref.plan?.toUpperCase() || 'PRÉ-CADASTRO'}
                                          </span>
                                       </td>
                                       <td className="px-6 py-6 font-black text-gray-900">

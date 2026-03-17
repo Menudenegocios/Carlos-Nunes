@@ -1,4 +1,4 @@
-﻿
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
@@ -16,7 +16,7 @@ import {
   Calendar, Ticket, Search, BarChart, MessageSquare
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 // Helper para redimensionar imagem para economizar localStorage
 const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
@@ -50,7 +50,23 @@ const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promis
 export const MyCatalog: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeSubTab, setActiveSubTab] = useState<'home' | 'identity' | 'blog' | 'products' | 'landing'>('home');
+
+  // Sync tab with URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['home', 'identity', 'blog', 'products', 'landing'].includes(tab)) {
+      setActiveSubTab(tab as any);
+    }
+  }, [location.search]);
+
+  // Update URL when tab changes internally
+  const handleTabChange = (tabId: 'home' | 'identity' | 'blog' | 'products' | 'landing') => {
+    setActiveSubTab(tabId);
+    navigate(`/catalog?tab=${tabId}`, { replace: true });
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
@@ -375,11 +391,11 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'blog', label: 'BLOG', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
+            { id: 'blog', label: 'BLOG', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
+            <button key={tab.id} onClick={() => handleTabChange(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
               <div className="text-left">
                 <p className="font-black text-[10px] tracking-widest uppercase italic leading-none mb-1">{tab.label}</p>
@@ -392,7 +408,7 @@ export const MyCatalog: React.FC = () => {
 
       <div className="pt-4 px-2">
         {activeSubTab === 'home' && (
-          <SectionLanding title="Sua Vitrine é seu palco digital." subtitle="Ecossistema de Conteúdo" description="Gerencie seu catálogo de produtos, escreva artigos de autoridade e configure sua Landing Page em um único lugar." benefits={["Cadastro ilimitado de produtos", "Blog integrado ao diretório global", "Design focado em conversão mobile", "Sincronização instantânea"]} youtubeId="dQw4w9WgXcQ" ctaLabel="COMEÃ‡AR CONFIGURAÃ‡ÃƒO" onStart={() => setActiveSubTab('identity')} icon={LayoutGrid} accentColor="brand" />
+          <SectionLanding title="Sua Vitrine é seu palco digital." subtitle="Ecossistema de Conteúdo" description="Gerencie seu catálogo de produtos, escreva artigos de autoridade e configure sua Landing Page em um único lugar." benefits={["Cadastro ilimitado de produtos", "Blog integrado ao diretório global", "Design focado em conversão mobile", "Sincronização instantânea"]} youtubeId="dQw4w9WgXcQ" ctaLabel="COMEÇAR CONFIGURAÇÃO" onStart={() => handleTabChange('identity')} icon={LayoutGrid} accentColor="brand" />
         )}
 
         <div className={`${activeSubTab === 'home' ? 'hidden' : 'bg-white rounded-[3rem] p-8 md:p-12 border border-gray-100 shadow-xl min-h-[500px] animate-fade-in'}`}>
@@ -400,7 +416,7 @@ export const MyCatalog: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-10">
                    <div className="flex justify-between items-center">
                       <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight">Identidade Visual</h3>
-                      <button onClick={() => handleProfileSave(false)} disabled={isSaving} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÃ‡Ã•ES</button>
+                      <button onClick={() => handleProfileSave(false)} disabled={isSaving} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
                    </div>
                    
                    <div className="grid md:grid-cols-2 gap-10">
@@ -671,14 +687,14 @@ export const MyCatalog: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3 bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expor na Vitrine?</span>
-                          <button 
+                           <button 
                             onClick={() => setProfile(prev => ({ ...prev, is_published: !prev.is_published }))}
                             className={`w-12 h-6 rounded-full transition-all relative ${profile.is_published ? 'bg-emerald-500' : 'bg-slate-300'}`}
                           >
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${profile.is_published ? 'left-7' : 'left-1'}`} />
                           </button>
                         </div>
-                        <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÃ‡Ã•ES</button>
+                        <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
                       </div>
 
                    <div className="space-y-6 bg-gray-50 p-8 rounded-[2.5rem]">

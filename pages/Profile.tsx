@@ -151,13 +151,6 @@ export const Profile: React.FC = () => {
             <form onSubmit={handleSave} className="space-y-8">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">URL Personalizada (Slug)</label>
-                    <div className="flex items-center bg-gray-50 rounded-2xl p-2">
-                       <span className="text-gray-400 font-bold px-3">/</span>
-                       <input type="text" className="w-full bg-transparent border-none p-3 font-bold focus:ring-0 transition-all" value={profile.slug || ''} onChange={e => setProfile({...profile, slug: e.target.value})} placeholder="seu-nome" />
-                    </div>
-                  </div>
-                  <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome Completo / Pessoal</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.name || ''} onChange={e => setProfile({...profile, name: e.target.value})} placeholder="Seu nome" />
                   </div>
@@ -208,12 +201,12 @@ export const Profile: React.FC = () => {
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Plano Atual</p>
                          <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-gray-900 uppercase italic tracking-tight">
-                               {(profile as any).subscriptions?.plan?.toUpperCase() || profile.plan?.toUpperCase() || 'PRÉ-CADASTRO'}
+                               {((profile as any).subscriptions?.[0]?.plan || profile.plan || 'PRÉ-CADASTRO').toUpperCase()}
                             </span>
                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                               (profile as any).subscriptions?.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                               (profile as any).subscriptions?.[0]?.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                             }`}>
-                               {(profile as any).subscriptions?.status === 'active' ? 'Ativo' : 'Pendente/Inativo'}
+                               {(profile as any).subscriptions?.[0]?.status === 'active' ? 'Ativo' : 'Pendente/Inativo'}
                             </span>
                          </div>
                       </div>
@@ -223,8 +216,8 @@ export const Profile: React.FC = () => {
                          <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-300" />
                             <span className="text-lg font-black text-gray-900">
-                               {(profile as any).subscriptions?.current_period_end 
-                                  ? new Date((profile as any).subscriptions.current_period_end).toLocaleDateString('pt-BR') 
+                               {(profile as any).subscriptions?.[0]?.current_period_end 
+                                  ? new Date((profile as any).subscriptions[0].current_period_end).toLocaleDateString('pt-BR') 
                                   : '---'}
                             </span>
                          </div>

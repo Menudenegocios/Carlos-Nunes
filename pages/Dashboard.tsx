@@ -5,11 +5,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabaseService } from '../services/supabaseService';
 import { Profile, Product, PointsTransaction } from '../types';
-import { 
-  Trophy, Zap, Eye, Plus, 
-  ArrowRight, CheckCircle, 
-  LayoutDashboard, Wallet, Coins, 
-  History, Handshake, UserPlus, 
+import {
+  Trophy, Zap, Eye, Plus,
+  ArrowRight, CheckCircle,
+  LayoutDashboard, Wallet, Coins,
+  History, Handshake, UserPlus,
   ChevronRight, Bot, Rocket,
   Copy, Share2, Sparkles, Lock, Save
 } from 'lucide-react';
@@ -64,35 +64,46 @@ export const Dashboard: React.FC = () => {
   };
 
   const getNextTierData = () => {
-    if (!user) return null;
-    const currentPoints = user.points || 0;
-    const currentReferrals = user.referrals_count || 0;
-    
-    // Encontrar o próximo nível que o usuário ainda não atingiu TOTALMENTE
-    // (Um nível é atingido se tiver pontos E indicações suficientes)
+    const data = userProfile || user;
+    if (!data) return null;
+    const currentPoints = data.points || 0;
+    const currentReferrals = data.referrals_count || 0;
+
+    const extractNumber = (str: string) => {
+      const match = str.match(/\d+/);
+      return match ? parseInt(match[0]) : 0;
+    };
+
     for (let i = 0; i < tiers.length; i++) {
       const tier = tiers[i];
       const nextTier = tiers[i + 1];
-      
-      // Se estamos no último nível
+
       if (!nextTier) return null;
 
-      // Se o usuário ainda não atingiu o próximo nível
-      if (currentPoints < nextTier.points || currentReferrals < parseInt(nextTier.criteria.split(' ')[0] || '0')) {
+      const nextTierRequiredReferrals = extractNumber(nextTier.criteria);
+
+      if (currentPoints < nextTier.points || currentReferrals < nextTierRequiredReferrals) {
         return {
           currentLevel: tier.name,
           nextLevel: nextTier.name,
           requiredPoints: nextTier.points,
-          requiredReferrals: parseInt(nextTier.criteria.split(' ')[0] || '0'),
+          requiredReferrals: nextTierRequiredReferrals,
           progressPoints: Math.min(100, (currentPoints / nextTier.points) * 100),
-          progressReferrals: Math.min(100, (currentReferrals / parseInt(nextTier.criteria.split(' ')[0] || '0')) * 100)
+          progressReferrals: Math.min(100, (currentReferrals / (nextTierRequiredReferrals || 1)) * 100)
         };
       }
     }
     return null;
   };
 
-  const nextTierData = getNextTierData();
+  const nextTierData = getNextTierData() || {
+    currentLevel: user.level || 'Nível Base',
+    nextLevel: 'MÁXIMO',
+    requiredPoints: 0,
+    requiredReferrals: 0,
+    progressPoints: 100,
+    progressReferrals: 100
+  };
 
   const getCashbackPercent = () => {
     if (!user) return '0%';
@@ -140,7 +151,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out] relative">
-      
+
       {/* Global Background Glows */}
       <div className="fixed top-0 left-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
@@ -151,23 +162,23 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
               <div className="p-5 bg-gradient-to-br from-indigo-500/10 to-brand-primary/10 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-lg">
-                 <LayoutDashboard className="h-10 w-10 text-indigo-600 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
+                <LayoutDashboard className="h-10 w-10 text-indigo-600 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
               </div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase text-gray-900 overflow-visible">
-                    Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 title-fix">{user.name.split(' ')[0]}!</span>
+                  Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 title-fix">{user.name.split(' ')[0]}!</span>
                 </h1>
-                 <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em]">Sua economia colaborativa em tempo real. • ID: {userProfile?.display_id || '...'}</p>
+                <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em]">Sua economia colaborativa em tempo real. <br />ID: {userProfile?.display_id || '...'}</p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
-                <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
-                    <Plus className="w-4 h-4" /> NOVO ITEM
-                </Link>
-                <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-md text-gray-900 border border-gray-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/80 transition-all active:scale-95 shadow-sm">
-                    <Eye className="w-4 h-4" /> VER VITRINE
-                </Link>
+              <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
+                <Plus className="w-4 h-4" /> NOVO ITEM
+              </Link>
+              <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-md text-gray-900 border border-gray-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/80 transition-all active:scale-95 shadow-sm">
+                <Eye className="w-4 h-4" /> VER VITRINE
+              </Link>
             </div>
           </div>
         </div>
@@ -233,7 +244,7 @@ export const Dashboard: React.FC = () => {
                 <Rocket className="w-10 h-10 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
               </div>
               <div>
-                <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">SEU N\u00cdVEL: {(user.level || 'N\u00edvel Base').toUpperCase()}</h3>
+                <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">SEU NÍVEL: {(user.level || 'Nível Base').toUpperCase()}</h3>
                 {nextTierData && (
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">
                     Objetivo: {nextTierData.nextLevel}
@@ -241,7 +252,7 @@ export const Dashboard: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {nextTierData ? (
               <div className="flex-1 w-full max-w-xl space-y-6">
                 {/* Progresso de Pontos */}
@@ -251,8 +262,8 @@ export const Dashboard: React.FC = () => {
                     <span className="text-sm font-black text-gray-900 italic">{Math.round(nextTierData.progressPoints)}%</span>
                   </div>
                   <div className="relative h-4 w-full bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/10 p-1">
-                    <div 
-                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]" 
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
                       style={{ width: `${nextTierData.progressPoints}%` }}
                     />
                   </div>
@@ -262,11 +273,11 @@ export const Dashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between items-end">
                     <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest italic leading-none">Indicações: {user.referrals_count || 0} / {nextTierData.requiredReferrals}</span>
-                    <span className="text-sm font-black text-gray-900 italic">{Math.round(nextTierData.progressReferrals)}%</span>
+                    <span className="text-sm font-black text-gray-900 italic">{Math.round(nextTierData.progressReferrals || 0)}%</span>
                   </div>
                   <div className="relative h-4 w-full bg-slate-200/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/10 p-1">
-                    <div 
-                      className="h-full bg-gradient-to-r from-brand-primary to-orange-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(246,124,1,0.3)]" 
+                    <div
+                      className="h-full bg-gradient-to-r from-brand-primary to-orange-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(246,124,1,0.3)]"
                       style={{ width: `${nextTierData.progressReferrals}%` }}
                     />
                   </div>
@@ -285,34 +296,34 @@ export const Dashboard: React.FC = () => {
         {/* Lado Esquerdo: Ranking & Ações */}
         <div className="lg:col-span-7 space-y-10">
           <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden">
-             <div className="flex justify-between items-center mb-8">
-                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 italic">
-                  <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> RANKING
-                </h3>
-                <Link to="/rewards" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2">VER RANKING COMPLETO <ChevronRight className="w-4 h-4" /></Link>
-             </div>
-             
-             <div className="space-y-4">
-                {ranking.length === 0 ? (
-                  <div className="py-10 text-center bg-white/40 rounded-2xl border border-dashed border-gray-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum dado disponível</p>
-                  </div>
-                ) : (
-                  ranking.map((member, i) => (
-                    <div key={member.user_id || i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
-                       <div className="flex items-center gap-5">
-                          <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{i+1}</span>
-                          <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-10 h-10 rounded-xl shadow-md object-cover" alt="Avatar" />
-                          <div>
-                             <p className="text-sm font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</p>
-                             <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{member.city || member.level || ''}</p>
-                          </div>
-                       </div>
-                       <span className="font-black text-gray-900 italic text-sm">{member.points || 0} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 italic">
+                <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> RANKING
+              </h3>
+              <Link to="/rewards" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2">VER RANKING COMPLETO <ChevronRight className="w-4 h-4" /></Link>
+            </div>
+
+            <div className="space-y-4">
+              {ranking.length === 0 ? (
+                <div className="py-10 text-center bg-white/40 rounded-2xl border border-dashed border-gray-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum dado disponível</p>
+                </div>
+              ) : (
+                ranking.map((member, i) => (
+                  <div key={member.user_id || i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
+                    <div className="flex items-center gap-5">
+                      <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{i + 1}</span>
+                      <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-10 h-10 rounded-xl shadow-md object-cover" alt="Avatar" />
+                      <div>
+                        <p className="text-sm font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</p>
+                        <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{member.city || member.level || ''}</p>
+                      </div>
                     </div>
-                  ))
-                )}
-             </div>
+                    <span className="font-black text-gray-900 italic text-sm">{member.points || 0} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -324,11 +335,11 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Indicar Amigos</h4>
                 <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">Ganhe até +{pointsRules.indicacaoPro} pontos por cada indicação.</p>
-                <button 
+                <button
                   onClick={copyReferral}
                   className="w-full py-4 bg-gray-900 text-white border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg"
                 >
-                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />} 
+                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                   {copied ? 'COPIADO!' : 'COPIAR LINK'}
                 </button>
               </div>
@@ -366,22 +377,22 @@ export const Dashboard: React.FC = () => {
               <form onSubmit={handleUpdateAuth} className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">E-mail de Login</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     placeholder={user?.email || ''}
-                    className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400" 
-                    value={newEmail} 
-                    onChange={e => setNewEmail(e.target.value)} 
+                    className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nova Senha</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     placeholder="••••••••"
-                    className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400" 
-                    value={newPassword} 
-                    onChange={e => setNewPassword(e.target.value)} 
+                    className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
                   />
                 </div>
                 {authMessage && <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest px-1">{authMessage}</p>}

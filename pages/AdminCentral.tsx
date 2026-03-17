@@ -11,12 +11,21 @@ import {
   Package, BookOpen, Briefcase, GraduationCap, Trophy, CreditCard,
   UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const AdminCentral: React.FC = () => {
   const { user, impersonateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'membros' | 'agenda' | 'marketplace' | 'parceiros'>('membros');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['membros', 'agenda', 'marketplace', 'parceiros'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [location.search]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [events, setEvents] = useState<PlatformEvent[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -483,11 +492,16 @@ export const AdminCentral: React.FC = () => {
                                     (p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())) || 
                                     (p.email?.toLowerCase().includes(searchTerm.toLowerCase()))
                                 ).map(profile => {
-                                     const subscription = (profile as any).subscriptions?.[0] || (profile as any).subscriptions;
-                                     const plan = subscription?.plan || profile.plan || 'pre-cadastro';
+                                     const subscription = Array.isArray((profile as any).subscriptions) 
+                                       ? (profile as any).subscriptions[0] 
+                                       : (profile as any).subscriptions;
+                                     const plan = profile.plan || subscription?.plan || 'pre-cadastro';
                                      
                                      // Se tem plano e não é pré-cadastro, está Ativo, exceto se cancelado explicitamente
-                                     let status = subscription?.status || (plan !== 'pre-cadastro' ? 'active' : 'inactive');
+                                     let status = subscription?.status;
+                                     if (!status || status === 'inactive') {
+                                         status = (plan !== 'pre-cadastro' && plan !== 'free') ? 'active' : 'inactive';
+                                     }
                                      
                                      const statusColors: Record<string, string> = {
                                          active: 'bg-emerald-50 text-emerald-600',

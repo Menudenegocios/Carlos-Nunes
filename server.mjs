@@ -214,6 +214,17 @@ async function handleSubscriptionCreated(session) {
 
     await supabase.from('profiles').update(updateData).eq('user_id', user_id);
 
+    // Filter points and log history
+    if (rewardPoints > 0) {
+        await supabase.from('points_history').insert({
+            user_id: user_id,
+            points: rewardPoints,
+            action: `Ativação Plano ${plan_id.toUpperCase()}`,
+            category: 'plano',
+            date: new Date().toISOString()
+        });
+    }
+
     // --- REFERRAL REWARDS LOGIC ---
     try {
         // Get subscriber's profile to find the referrer
@@ -267,15 +278,16 @@ async function handleSubscriptionCreated(session) {
                     menu_cash: (referrer.menu_cash || 0) + cashAwarded,
                     referrals_count: (referrer.referrals_count || 0) + 1
                 }).eq('id', referrerId);
-                
-                // Add entry to points_history
+
+                // Log Referrer Reward
                 await supabase.from('points_history').insert({
-                    user_id: referrerId,
-                    action: `Indicação Plano ${plan_id.toUpperCase()} (Bônus)`,
+                    user_id: referrer.user_id || referrerId, // Use user_id if available on profile
                     points: pointsAwarded,
+                    action: `Indicação de Membro (${plan_id.toUpperCase()})`,
                     category: 'indicacao',
                     date: new Date().toISOString()
                 });
+                
                 
                 console.log(`Referral reward applied: Referrer ${referrerId} awarded ${pointsAwarded} pts and M$ ${cashAwarded}`);
             }
@@ -295,6 +307,45 @@ async function handleInvoicePaid(invoice) {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString()
         })
         .eq('stripe_subscription_id', invoice.subscription);
+
+    // --- RENEWAL REWARDS ---
+    // If it's a renewal (not the first invoice)
+    if (invoice.billing_reason === 'subscription_cycle') {
+        const { data: subData } = await supabase.from('subscriptions')
+            .select('user_id, plan')
+            .eq('stripe_subscription_id', invoice.subscription)
+            .single();
+
+        if (subData) {
+            const plan_id = subData.plan;
+            let rewardPoints = 0;
+            if (plan_id === 'basic') rewardPoints = 50;
+            else if (plan_id === 'pro') rewardPoints = 150;
+            else if (plan_id === 'full') rewardPoints = 250;
+
+            if (rewardPoints > 0) {
+                // Update profile
+                const { data: profile } = await supabase.from('profiles')
+                    .select('points')
+                    .eq('user_id', subData.user_id)
+                    .single();
+                
+                if (profile) {
+                    await supabase.from('profiles')
+                        .update({ points: (profile.points || 0) + rewardPoints })
+                        .eq('user_id', subData.user_id);
+
+                    await supabase.from('points_history').insert({
+                        user_id: subData.user_id,
+                        points: rewardPoints,
+                        action: `Renovação Plano ${plan_id.toUpperCase()}`,
+                        category: 'plano',
+                        date: new Date().toISOString()
+                    });
+                }
+            }
+        }
+    }
 }
 
 // Admin: Update User (Password, Email, Profile)

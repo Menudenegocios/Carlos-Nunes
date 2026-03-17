@@ -11,11 +11,20 @@ import {
   Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export const BusinessSuite: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'home' | 'crm' | 'finance' | 'menuzap_pro'>('home');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['home', 'crm', 'finance', 'menuzap_pro'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [location.search]);
 
   if (!user) return null;
 

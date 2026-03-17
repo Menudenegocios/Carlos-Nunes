@@ -31,8 +31,20 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
   const isPreRegistration = user.plan === 'pre-cadastro';
 
   const menuItems = [
-    { label: 'Vis\u00e3o Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
-    ...(isAdmin ? [{ label: 'Central Admin', icon: Settings2, to: '/admin-central', locked: false, minPlan: 'admin' }] : []),
+    { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
+    ...(isAdmin ? [{ 
+      label: 'Central Admin', 
+      icon: Settings2, 
+      to: '/admin-central', 
+      locked: false, 
+      minPlan: 'admin',
+      subItems: [
+        { label: 'Membros', to: '/admin-central?tab=membros' },
+        { label: 'Agenda', to: '/admin-central?tab=agenda' },
+        { label: 'Marketplace', to: '/admin-central?tab=marketplace' },
+        { label: 'Parceiros', to: '/admin-central?tab=parceiros' }
+      ]
+    }] : []),
     { 
       label: 'Minha Vitrine', 
       icon: Globe, 
@@ -40,30 +52,34 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       locked: isPreRegistration && !isAdmin, 
       minPlan: 'basic',
       subItems: [
-        { label: 'Ver Minha Vitrine', to: `/store/${user.id}` },
-        { label: 'Configurar Catálogo', to: '/catalog' }
+        { label: 'Identidade', to: '/catalog?tab=identity' },
+        { label: 'Blog', to: '/catalog?tab=blog' },
+        { label: 'Produtos', to: '/catalog?tab=products' },
+        { label: 'Configurações', to: '/catalog?tab=landing' },
+        { label: 'Ver Minha Vitrine', to: `/store/${user.id}` }
       ]
     },
     { 
       label: 'Menu Club', 
       icon: Trophy, 
-      to: '/rewards', 
-      locked: isPreRegistration && !isAdmin, 
-      minPlan: 'basic',
+      to: '/rewards',
       subItems: [
-        { label: 'Recompensas', to: '/rewards' },
-        { label: 'Indica\u00e7\u00f5es', to: '/rewards?tab=referrals' }
+        { label: 'Pontos', to: '/rewards?tab=missions' },
+        { label: 'Menu Cash', to: '/rewards?tab=match' },
+        { label: 'Níveis', to: '/rewards?tab=acceleration' },
+        { label: 'Indicações', to: '/rewards?tab=referrals' },
+        { label: 'Ranking', to: '/rewards?tab=ranking' }
       ]
     },
     { 
       label: 'CRM & Vendas', 
       icon: Briefcase, 
-      to: '/business-suite', 
-      locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, 
+      to: '/business-suite',
+      locked: (user.plan === 'basic' || isPreRegistration) && !isAdmin,
       minPlan: 'pro',
       subItems: [
-        { label: 'CRM & Vendas', to: '/business-suite' },
-        { label: 'Financeiro', to: '/business-suite' }
+        { label: 'CRM (Pipeline)', to: '/business-suite?tab=crm' },
+        { label: 'Financeiro (Caixa)', to: '/business-suite?tab=finance' }
       ]
     },
     { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },

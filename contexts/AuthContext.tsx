@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, PropsWithChildre
 import { User } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { Session } from '@supabase/supabase-js';
+import { pointsRules } from '../config/gamificationConfig';
 
 interface AuthContextType {
   user: User | null;
@@ -54,12 +55,40 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       if (error) throw error;
 
       if (data) {
+        // --- GAMIFICATION: DAILY LOGIN POINTS ---
+        const lastLoginAt = data.last_login_at;
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const lastLoginStr = lastLoginAt ? new Date(lastLoginAt).toISOString().split('T')[0] : null;
+
+        let currentPoints = data.points || 0;
+
+        if (lastLoginStr !== todayStr) {
+          const pointsToAdd = pointsRules.loginDiario || 5;
+          currentPoints += pointsToAdd;
+
+          // Update profile and log history (fire and forget for UI snappiness)
+          Promise.all([
+            supabase.from('profiles').update({ 
+              points: currentPoints, 
+              last_login_at: now.toISOString() 
+            }).eq('user_id', user_id),
+            supabase.from('points_history').insert({
+              user_id: user_id,
+              points: pointsToAdd,
+              action: 'Login Diário',
+              category: 'login',
+              date: now.toISOString()
+            })
+          ]).catch(err => console.error("Error updating login points:", err));
+        }
+
         setUser({
           id: user_id,
           name: data.business_name || data.name || name || 'Usuário',
           email: data.email || email || '',
           plan: data.plan || 'pre-cadastro',
-          points: data.points || 0,
+          points: currentPoints,
           level: mapLevel(data.level),
           menu_cash: data.menu_cash || 0,
           referral_code: data.referral_code || '',
