@@ -947,6 +947,20 @@ export const supabaseService = {
     }
   },
 
+  updateNote: async (id: string, note: Partial<any>): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ ...note, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating note:", error);
+      throw error;
+    }
+  },
+
   // --- LEADS ---
   getLeads: async (user_id: string): Promise<any[]> => {
     try {

@@ -8,7 +8,8 @@ import {
   Zap, Crown, ChevronRight,
   CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
-  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield, MessageCircle
+  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield, MessageCircle,
+  Share2, Copy, Save, Trash2, Edit3, Target
 } from 'lucide-react';
 import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
@@ -19,7 +20,9 @@ export const Rewards: React.FC = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'missions' | 'match' | 'ranking' | 'referrals'>('home');
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [loadingReferrals, setLoadingReferrals] = useState(false);
+  const [loadingReferrals, setLoadingReferrals] = useState(true); // Changed initial state to true
+  const [copied, setCopied] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -30,20 +33,34 @@ export const Rewards: React.FC = () => {
   }, [location.search]);
 
   useEffect(() => {
-    if (activeTab === 'referrals' && user) {
-      loadReferrals();
+    if (user) {
+      loadData();
     }
-  }, [activeTab, user]);
+  }, [user]);
 
-  const loadReferrals = async () => {
-    setLoadingReferrals(true);
+  const loadData = async () => {
     try {
-      const data = await supabaseService.getReferrals(user!.id);
-      setReferrals(data);
+      setLoadingReferrals(true);
+      const [referralsData, profile] = await Promise.all([
+        supabaseService.getReferrals(user!.id),
+        supabaseService.getProfile(user!.id)
+      ]);
+      setReferrals(referralsData);
+      setUserProfile(profile);
     } catch (error) {
-      console.error("Erro ao carregar indicações:", error);
+      console.error("Error loading rewards data:", error);
     } finally {
       setLoadingReferrals(false);
+    }
+  };
+
+  const copyReferralLink = () => {
+    const refCode = userProfile?.display_id?.toString() || user?.referral_code;
+    if (refCode) {
+      const url = `https://menudenegocios.com/#/register?ref=${refCode}`;
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -120,15 +137,29 @@ export const Rewards: React.FC = () => {
              <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-gray-100 shadow-xl relative overflow-hidden">
                 <div className="relative z-10">
                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-                      <div className="space-y-2">
-                        <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tight leading-none title-fix">Minhas Indicações</h2>
-                        <p className="text-slate-500 text-sm font-medium">Acompanhe o status e ganhos gerados por quem você trouxe para o ecossistema.</p>
-                      </div>
-                      <div className="bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Total de Indicados</span>
-                        <span className="text-2xl font-black text-gray-900">{referrals.length} membros</span>
-                      </div>
-                   </div>
+                      <div className="space-y-4">
+                         <div className="space-y-2">
+                            <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tight leading-none title-fix">Minhas Indicações</h2>
+                            <p className="text-slate-500 text-sm font-medium">Acompanhe o status e ganhos gerados por quem você trouxe para o ecossistema.</p>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-dashed border-slate-200 text-xs font-mono text-slate-500 flex items-center gap-3">
+                                <span className="text-[10px] font-black uppercase text-slate-400">Seu Link:</span>
+                                <span>https://menudenegocios.com/#/register?ref={userProfile?.display_id || '---'}</span>
+                            </div>
+                            <button 
+                                onClick={copyReferralLink}
+                                className={`p-2.5 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-black'}`}
+                            >
+                                {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                         </div>
+                       </div>
+                       <div className="bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100 h-fit">
+                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Total de Indicados</span>
+                         <span className="text-2xl font-black text-gray-900">{referrals.length} membros</span>
+                       </div>
+                    </div>
 
                    {loadingReferrals ? (
                      <div className="flex justify-center py-20">
@@ -138,7 +169,12 @@ export const Rewards: React.FC = () => {
                      <div className="text-center py-20 bg-gray-50 rounded-[2.5rem] border border-dashed border-gray-300">
                         <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Você ainda não possui indicações diretas.</p>
-                        <button onClick={() => setActiveTab('home')} className="mt-6 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:underline">Começar a indicar agora</button>
+                        <button 
+                          onClick={copyReferralLink} 
+                          className={`mt-6 font-black text-[10px] uppercase tracking-widest transition-all px-6 py-3 rounded-xl border flex items-center gap-2 mx-auto ${copied ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'text-indigo-600 border-indigo-200 hover:bg-indigo-50'}`}
+                         >
+                           {copied ? <><CheckCircle className="w-3 h-3" /> Link Copiado!</> : <><Copy className="w-3 h-3" /> Começar a indicar agora</>}
+                         </button>
                      </div>
                    ) : (
                      <div className="overflow-x-auto">

@@ -42,9 +42,20 @@ const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promis
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx?.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.7)); // Comprime para JPEG 70%
+      resolve(canvas.toDataURL('image/jpeg', 0.8)); // Comprime para JPEG 80% para melhor qualidade/tamanho
     };
   });
+};
+
+const base64ToBlob = (base64: string): Blob => {
+  const parts = base64.split(';base64,');
+  const contentType = parts[0].split(':')[1];
+  const decodedData = window.atob(parts[1]);
+  const uInt8Array = new Uint8Array(decodedData.length);
+  for (let i = 0; i < decodedData.length; ++i) {
+    uInt8Array[i] = decodedData.charCodeAt(i);
+  }
+  return new Blob([uInt8Array], { type: contentType });
 };
 
 export const MyCatalog: React.FC = () => {
@@ -236,40 +247,43 @@ export const MyCatalog: React.FC = () => {
     } finally { setIsSaving(false); }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo_url' | 'cover_url' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2' | 'og_image' | 'botAvatar') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo_url' | 'cover_url' | 'productUrl' | 'blogUrl' | 'banner0' | 'banner1' | 'banner2' | 'og_image' | 'botAvatar') => {
     const file = e.target.files?.[0];
     if (file && field) {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const result = reader.result as string;
-        
+        setIsSaving(true);
         try {
-            if (field === 'logo_url' || field === 'botAvatar' || field === 'productUrl' || field === 'blogUrl' || (field && field.startsWith('banner'))) {
-              const fileName = `${Date.now()}_${file.name}`;
-              const path = `uploads/${user?.id}/${fileName}`;
-              const publicUrl = await supabaseService.uploadImage(file, path);
-              
-              if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: publicUrl }));
-              else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: publicUrl, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
-              else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: publicUrl }));
-              else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: publicUrl }));
-              else if (field && field.startsWith('banner')) {
-                  const index = parseInt(field.replace('banner', ''));
-                  const currentBanners = [...(profile.store_config?.banner_images || [])];
-                  currentBanners[index] = publicUrl;
-                  setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
-              }
-            } else {
-              // Para outros, ainda usamos o resize (pode ser otimizado futuramente)
-              const isWide = field === 'cover_url' || field === 'og_image';
-              const compressed = await resizeImage(result, isWide ? 1000 : 500, isWide ? 600 : 500);
-  
-              if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: compressed } }));
-              else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: compressed } } }));
+            // Todos os campos agora passam pelo redimensionamento e upload para storage
+            const isWide = field === 'cover_url' || field === 'og_image' || field.startsWith('banner');
+            const maxWidth = isWide ? 1200 : 800; // Um pouco maior para qualidade
+            const maxHeight = isWide ? 800 : 800;
+            
+            const compressedBase64 = await resizeImage(result, maxWidth, maxHeight);
+            const blob = base64ToBlob(compressedBase64);
+            
+            const fileName = `${field}_${Date.now()}.jpg`;
+            const path = `uploads/${user?.id}/${fileName}`;
+            const publicUrl = await supabaseService.uploadImage(blob as any, path);
+            
+            if (field === 'logo_url') setProfile(prev => ({ ...prev, logo_url: publicUrl }));
+            else if (field === 'cover_url') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, cover_url: publicUrl } }));
+            else if (field === 'og_image') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, seo: { ...prev.store_config?.seo, og_image: publicUrl } } }));
+            else if (field === 'botAvatar') setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, avatar_url: publicUrl, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false } } }));
+            else if (field === 'productUrl') setProductForm(prev => ({ ...prev, image_url: publicUrl }));
+            else if (field === 'blogUrl') setBlogForm(prev => ({ ...prev, image_url: publicUrl }));
+            else if (field.startsWith('banner')) {
+                const index = parseInt(field.replace('banner', ''));
+                const currentBanners = [...(profile.store_config?.banner_images || [])];
+                currentBanners[index] = publicUrl;
+                setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, banner_images: currentBanners } }));
             }
         } catch (error) {
           console.error('Error uploading image:', error);
-          alert('Erro ao carregar a imagem. Tente novamente.');
+          alert('Erro ao carregar a imagem. Verifique sua conexão e tente novamente.');
+        } finally {
+          setIsSaving(false);
         }
       };
       reader.readAsDataURL(file);
@@ -289,6 +303,7 @@ export const MyCatalog: React.FC = () => {
       setIsProductModalOpen(false);
       setEditingProduct(null);
       setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5 });
+      alert("Item salvo com sucesso!");
       loadData();
     } catch (error) {
       console.error("Error saving product:", error);
@@ -330,6 +345,7 @@ export const MyCatalog: React.FC = () => {
             } as any);
         }
         setIsBlogModalOpen(false);
+        alert("Artigo publicado com sucesso!");
         loadData();
     } finally { setIsSaving(false); }
   };
@@ -391,8 +407,8 @@ export const MyCatalog: React.FC = () => {
           {[
             { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
-            { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'blog', label: 'BLOG', desc: 'Gerar Autoridade', icon: BookOpen },
+            { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
             { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => handleTabChange(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>

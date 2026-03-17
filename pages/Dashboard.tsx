@@ -33,19 +33,21 @@ export const Dashboard: React.FC = () => {
     if (user) loadDashboardData();
   }, [user]);
 
+  if (!user) return null;
+
   const loadDashboardData = async () => {
     try {
       const [profile, history, rankingData] = await Promise.all([
-        supabaseService.getProfile(user!.id),
-        supabaseService.getPointsHistory(user!.id),
+        supabaseService.getProfile(user.id),
+        supabaseService.getPointsHistory(user.id),
         supabaseService.getRanking(3)
       ]);
       setUserProfile(profile || null);
       setRanking(rankingData || []);
       setActivity(history && history.length > 0 ? history.slice(0, 4) : [
-        { id: '1', user_id: user!.id, action: 'Indicação Validada', points: 200, created_at: Date.now() - 86400000, category: 'indicacao' },
-        { id: '2', user_id: user!.id, action: 'Cashback Compra Store', points: 15, created_at: Date.now() - 172800000, category: 'engajamento' },
-        { id: '3', user_id: user!.id, action: 'Negócio B2B Confirmado', points: 100, created_at: Date.now() - 259200000, category: 'engajamento' }
+        { id: '1', user_id: user.id, action: 'Indicação Validada', points: 200, created_at: Date.now() - 86400000, category: 'indicacao' },
+        { id: '2', user_id: user.id, action: 'Cashback Compra Store', points: 15, created_at: Date.now() - 172800000, category: 'engajamento' },
+        { id: '3', user_id: user.id, action: 'Negócio B2B Confirmado', points: 100, created_at: Date.now() - 259200000, category: 'engajamento' }
       ] as PointsTransaction[]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -57,7 +59,7 @@ export const Dashboard: React.FC = () => {
   const copyReferral = () => {
     const refCode = userProfile?.display_id?.toString() || user?.referral_code;
     if (refCode) {
-      navigator.clipboard.writeText(`https://menunegocios.com/register?ref=${refCode}`);
+      navigator.clipboard.writeText(`https://menudenegocios.com/#/register?ref=${refCode}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -80,18 +82,21 @@ export const Dashboard: React.FC = () => {
 
       if (!nextTier) return null;
 
-      const nextTierRequiredReferrals = extractNumber(nextTier.criteria);
+    const nextTierRequiredReferrals = extractNumber(nextTier.criteria || '0');
+    const referralsProgress = nextTierRequiredReferrals > 0 
+      ? Math.min(100, (currentReferrals / nextTierRequiredReferrals) * 100)
+      : 100;
 
-      if (currentPoints < nextTier.points || currentReferrals < nextTierRequiredReferrals) {
-        return {
-          currentLevel: tier.name,
-          nextLevel: nextTier.name,
-          requiredPoints: nextTier.points,
-          requiredReferrals: nextTierRequiredReferrals,
-          progressPoints: Math.min(100, (currentPoints / nextTier.points) * 100),
-          progressReferrals: Math.min(100, (currentReferrals / (nextTierRequiredReferrals || 1)) * 100)
-        };
-      }
+    if (currentPoints < nextTier.points || currentReferrals < nextTierRequiredReferrals) {
+      return {
+        currentLevel: tier.name,
+        nextLevel: nextTier.name,
+        requiredPoints: nextTier.points,
+        requiredReferrals: nextTierRequiredReferrals,
+        progressPoints: Math.min(100, (currentPoints / (nextTier.points || 1)) * 100),
+        progressReferrals: referralsProgress
+      };
+    }
     }
     return null;
   };
@@ -146,8 +151,6 @@ export const Dashboard: React.FC = () => {
       setIsSavingAuth(false);
     }
   };
-
-  if (!user) return null;
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out] relative">

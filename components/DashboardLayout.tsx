@@ -53,8 +53,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       minPlan: 'basic',
       subItems: [
         { label: 'Identidade', to: '/catalog?tab=identity' },
-        { label: 'Blog', to: '/catalog?tab=blog' },
         { label: 'Produtos', to: '/catalog?tab=products' },
+        { label: 'Blog', to: '/catalog?tab=blog' },
         { label: 'Configurações', to: '/catalog?tab=landing' },
         { label: 'Ver Minha Vitrine', to: `/store/${user.id}` }
       ]
@@ -79,13 +79,53 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       minPlan: 'pro',
       subItems: [
         { label: 'CRM (Pipeline)', to: '/business-suite?tab=crm' },
-        { label: 'Financeiro (Caixa)', to: '/business-suite?tab=finance' }
+        { label: 'Financeiro', to: '/business-suite?tab=finance' }
       ]
     },
-    { label: 'Gestão de Projetos', icon: LayoutGrid, to: '/project-management', locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, minPlan: 'pro' },
-    { label: 'Mentoria Full', icon: Rocket, to: '/mentoria', locked: false, minPlan: 'full' },
-    { label: 'Menu Academy', icon: GraduationCap, to: '/academy', locked: false, minPlan: 'pre-cadastro' },
-    { label: 'Planos de Adesão', icon: CreditCard, to: '/plans', locked: false, minPlan: 'pre-cadastro' },
+    { 
+      label: 'Gestão de Projetos', 
+      icon: LayoutGrid, 
+      to: '/project-management', 
+      locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, 
+      minPlan: 'pro',
+      subItems: [
+        { label: 'Meus Projetos', to: '/project-management' },
+        { label: 'Quadro Kanban', to: '/project-management' }
+      ]
+    },
+    { 
+      label: 'Mentoria Full', 
+      icon: Rocket, 
+      to: '/mentoria', 
+      locked: false, 
+      minPlan: 'full',
+      subItems: [
+        { label: 'Agenda Mentor', to: '/mentoria' },
+        { label: 'Materiais', to: '/mentoria' }
+      ]
+    },
+    { 
+      label: 'Menu Academy', 
+      icon: GraduationCap, 
+      to: '/academy', 
+      locked: false, 
+      minPlan: 'pre-cadastro',
+      subItems: [
+        { label: 'Treinamentos', to: '/academy' },
+        { label: 'Certificados', to: '/academy' }
+      ]
+    },
+    { 
+      label: 'Planos de Adesão', 
+      icon: CreditCard, 
+      to: '/plans', 
+      locked: false, 
+      minPlan: 'pre-cadastro',
+      subItems: [
+        { label: 'Trocar Plano', to: '/plans' },
+        { label: 'Minhas Faturas', to: '/plans' }
+      ]
+    },
   ];
 
   const toggleSubItems = (e: React.MouseEvent, item: any) => {

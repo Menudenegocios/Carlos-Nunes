@@ -93,6 +93,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           menu_cash: data.menu_cash || 0,
           referral_code: data.referral_code || '',
           referrals_count: data.referrals_count || 0,
+          display_id: data.display_id,
           role: data.role as User['role'] || 'user'
         });
       } else {

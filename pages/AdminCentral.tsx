@@ -490,7 +490,8 @@ export const AdminCentral: React.FC = () => {
                             <div className="grid gap-4">
                                 {profiles.filter(p => 
                                     (p.business_name?.toLowerCase().includes(searchTerm.toLowerCase())) || 
-                                    (p.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    (p.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                                    (p.display_id?.toString().includes(searchTerm))
                                 ).map(profile => {
                                      const subscription = Array.isArray((profile as any).subscriptions) 
                                        ? (profile as any).subscriptions[0] 
@@ -499,8 +500,13 @@ export const AdminCentral: React.FC = () => {
                                      
                                      // Se tem plano e não é pré-cadastro, está Ativo, exceto se cancelado explicitamente
                                      let status = subscription?.status;
-                                     if (!status || status === 'inactive') {
-                                         status = (plan !== 'pre-cadastro' && plan !== 'free') ? 'active' : 'inactive';
+                                     if (!status || status === 'inactive' || status === 'incomplete') {
+                                         const hasActivePlan = plan && !['pre-cadastro', 'free', 'none'].includes(plan.toLowerCase());
+                                         if (hasActivePlan) {
+                                             status = 'active';
+                                         } else if (!status) {
+                                             status = 'inactive';
+                                         }
                                      }
                                      
                                      const statusColors: Record<string, string> = {
@@ -533,7 +539,7 @@ export const AdminCentral: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-3">
-                                                        <h4 className="font-black text-gray-900 text-lg">{profile.business_name || profile.name || 'Membro sem nome'}</h4>
+                                                        <h4 className="font-black text-gray-900 text-lg">{profile.business_name || profile.name || 'Membro sem nome'} <span className="text-slate-300 font-medium ml-2 text-sm">#{profile.display_id || '---'}</span></h4>
                                                         <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase ${statusColors[status] || 'bg-slate-50 text-slate-600'}`}>
                                                             {statusLabels[status] || status}
                                                         </span>
@@ -920,8 +926,8 @@ export const AdminCentral: React.FC = () => {
 
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria / Permissão</label>
-                            <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                                {['user', 'partner', 'member', 'client', 'admin'].map(role => (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {['user', 'partner', 'client', 'admin'].map(role => (
                                     <button
                                         key={role}
                                         type="button"
@@ -934,7 +940,6 @@ export const AdminCentral: React.FC = () => {
                                     >
                                         {role === 'user' ? 'Usuário' : 
                                          role === 'partner' ? 'Parceiro' : 
-                                         role === 'member' ? 'Membro' : 
                                          role === 'client' ? 'Cliente' : 'Admin'}
                                     </button>
                                 ))}
@@ -959,8 +964,8 @@ export const AdminCentral: React.FC = () => {
                    <AlertCircle className="w-10 h-10 text-rose-500" />
                 </div>
                 <div className="space-y-2">
-                   <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Confirmar Exclusão?</h3>
-                   <p className="text-slate-500 font-medium">Esta ação é irreversível. O membro perderá acesso total e todos os seus dados serão removidos.</p>
+                   <h3 className="text-2xl font-black uppercase italic tracking-tighter">Confirmar Exclusão?</h3>
+                   <p className="text-xs font-bold text-slate-500 mt-2 tracking-tight">Esta ação é irreversível. O membro perderá acesso total e todos os seus dados serão removidos.</p>
                 </div>
                 <div className="flex gap-4 w-full pt-4">
                    <button 

@@ -15,12 +15,33 @@ export const Register: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
       setReferralId(ref);
+      checkReferrer(ref);
     }
   }, [searchParams]);
+
+  const checkReferrer = async (id: string) => {
+    try {
+      const isNumeric = /^\d+$/.test(id);
+      let query = supabase.from('profiles').select('name, business_name');
+      if (isNumeric) {
+        query = query.eq('display_id', parseInt(id));
+      } else {
+        query = query.eq('referral_code', id);
+      }
+      const { data, error } = await query.maybeSingle();
+      if (data) {
+        setReferrerName(data.business_name || data.name);
+      }
+    } catch (e) {
+      console.error("Erro checkReferrer:", e);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +130,11 @@ export const Register: React.FC = () => {
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Crie sua conta
         </h2>
+        {referrerName && (
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">
+             Você foi indicado por: <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-md">{referrerName}</span>
+          </div>
+        )}
         <p className="mt-2 text-center text-sm text-gray-600">
           Já tem uma conta?{' '}
           <Link to="/login" className="font-medium text-[#F67C01] hover:opacity-80">

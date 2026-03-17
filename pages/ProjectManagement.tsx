@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, Zap, Search,
   ArrowRight, Save, Trash2, Edit3,
   Lightbulb, Shield, HelpCircle,
-  Briefcase, PieChart, Layers,
+  Briefcase, PieChart, Layers, RefreshCw,
   Handshake, Globe, Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -250,6 +250,7 @@ export const ProjectManagement: React.FC = () => {
 const NotesView = ({ user_id }: { user_id: string }) => {
   const [notes, setNotes] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
+  const [editingNote, setEditingNote] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
@@ -261,14 +262,30 @@ const NotesView = ({ user_id }: { user_id: string }) => {
     if (!newNote.trim()) return;
     setIsSaving(true);
     try {
-      const note = await supabaseService.addNote({ user_id, content: newNote });
-      setNotes([note, ...notes]);
+      if (editingNote) {
+        await supabaseService.updateNote(editingNote.id, { content: newNote });
+        setNotes(notes.map(n => n.id === editingNote.id ? { ...n, content: newNote } : n));
+        setEditingNote(null);
+      } else {
+        const note = await supabaseService.addNote({ user_id, content: newNote });
+        setNotes([note, ...notes]);
+      }
       setNewNote('');
     } catch (e) {
       console.error(e);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const startEditNote = (note: any) => {
+    setEditingNote(note);
+    setNewNote(note.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingNote(null);
+    setNewNote('');
   };
 
   const deleteNote = async (id: string) => {
@@ -284,22 +301,31 @@ const NotesView = ({ user_id }: { user_id: string }) => {
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
       <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm">
         <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight mb-6">Anotações Rápidas</h3>
-        <div className="flex gap-4">
-          <input 
-            type="text" 
+        <div className="flex flex-col gap-4">
+          <textarea 
             value={newNote}
             onChange={e => setNewNote(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAddNote()}
             placeholder="No que você está pensando?"
-            className="flex-1 bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all"
+            className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium focus:ring-2 focus:ring-brand-primary transition-all min-h-[120px] resize-none"
           />
-          <button 
-            onClick={handleAddNote}
-            disabled={isSaving}
-            className="bg-brand-primary text-white p-5 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg"
-          >
-            {isSaving ? <Plus className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
-          </button>
+          <div className="flex gap-3 justify-end">
+            {editingNote && (
+              <button 
+                onClick={cancelEdit}
+                className="px-8 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all"
+              >
+                Cancelar
+              </button>
+            )}
+            <button 
+              onClick={handleAddNote}
+              disabled={isSaving}
+              className="px-8 py-4 bg-brand-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+            >
+              {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : editingNote ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {editingNote ? 'Salvar Alteração' : 'Criar Anotação'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -312,9 +338,14 @@ const NotesView = ({ user_id }: { user_id: string }) => {
                 {new Date(note.created_at).toLocaleDateString('pt-BR')}
               </p>
             </div>
-            <button onClick={() => deleteNote(note.id)} className="p-3 text-slate-200 hover:text-rose-500 transition-colors">
-              <Trash2 className="w-5 h-5" />
-            </button>
+            <div className="flex gap-1">
+              <button onClick={() => startEditNote(note)} className="p-3 text-slate-300 hover:text-indigo-600 transition-colors">
+                <Edit3 className="w-5 h-5" />
+              </button>
+              <button onClick={() => deleteNote(note.id)} className="p-3 text-slate-300 hover:text-rose-500 transition-colors">
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         )) : (
           <div className="text-center py-24 opacity-30">

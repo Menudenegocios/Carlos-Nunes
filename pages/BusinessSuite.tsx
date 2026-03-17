@@ -76,7 +76,7 @@ export const BusinessSuite: React.FC = () => {
               {[
                 { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                 { id: 'crm', label: 'CRM & VENDAS', desc: 'Gestão de leads', icon: Briefcase },
-                { id: 'finance', label: 'CAIXA', desc: 'Financeiro', icon: DollarSign },
+                { id: 'finance', label: 'FINANCEIRO', desc: 'Financeiro', icon: DollarSign },
                 // { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
                 <button 

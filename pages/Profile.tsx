@@ -95,12 +95,6 @@ export const Profile: React.FC = () => {
                  </p>
               </div>
             </div>
-            <div className="flex gap-4">
-               <div className="text-center bg-black/20 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/5">
-                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Cód. Indicação</p>
-                  <p className="text-xl font-black font-mono tracking-wider">{profile.display_id || '...'}</p>
-               </div>
-            </div>
         </div>
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
       </div>
