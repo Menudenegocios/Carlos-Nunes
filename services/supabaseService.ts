@@ -1412,11 +1412,19 @@ export const supabaseService = {
   confirmB2BTransaction: async (id: string, userId: string, isBuyer: boolean): Promise<void> => {
     try {
       const updateData = isBuyer ? { buyer_confirmed: true } : { seller_confirmed: true };
-      const { data: tx, error: fetchError } = await supabase
+      // Update confirmation
+      const { error: updateError } = await supabase
         .from('b2b_transactions')
         .update(updateData)
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Fetch updated record
+      const { data: tx, error: fetchError } = await supabase
+        .from('b2b_transactions')
+        .select('*')
         .eq('id', id)
-        .select()
         .single();
 
       if (fetchError) throw fetchError;
@@ -1425,7 +1433,7 @@ export const supabaseService = {
       if (tx.buyer_confirmed && tx.seller_confirmed) {
         await supabase
           .from('b2b_transactions')
-          .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+          .update({ status: 'confirmed' })
           .eq('id', id);
         
         // Finalize Menu Cash transfer to seller
@@ -1462,7 +1470,7 @@ export const supabaseService = {
 
       const { error } = await supabase
         .from('b2b_transactions')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ status })
         .eq('id', id);
       
       if (error) throw error;

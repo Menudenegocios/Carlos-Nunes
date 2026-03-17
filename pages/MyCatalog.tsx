@@ -1,8 +1,8 @@
-
+﻿
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
-import { Product, Profile, StoreCategory, BlogPost, Coupon } from '../types';
+import { Product, Profile, StoreCategory, BlogPost } from '../types';
 import { 
   Store, LayoutGrid, Package, CheckCircle, 
   Plus, Trash2, Edit2, 
@@ -56,12 +56,12 @@ export const MyCatalog: React.FC = () => {
   const [storeCategories, setStoreCategories] = useState<StoreCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
+
   
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,9 +74,7 @@ export const MyCatalog: React.FC = () => {
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
 
-  const [couponForm, setCouponForm] = useState<Partial<Coupon>>({
-    code: '', title: '', discount: '', type: 'percentage', points_reward: 0, description: '', expiry_date: '', active: true
-  });
+
 
   // Blog Form State
   const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
@@ -100,7 +98,7 @@ export const MyCatalog: React.FC = () => {
     if (!videoUrlInput) return;
     const currentVideos = profile.store_config?.video_portfolio || [];
     if (currentVideos.length >= 9) {
-      alert('Máximo de 9 vídeos permitido.');
+      alert('MÃ¡ximo de 9 vÃ­deos permitido.');
       return;
     }
     setProfile(prev => ({
@@ -134,12 +132,11 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-        const [prof, cats, prods, allPosts, allCoupons] = await Promise.all([
+        const [prof, cats, prods, allPosts] = await Promise.all([
             supabaseService.getProfile(user.id),
             supabaseService.getStoreCategories(user.id),
             supabaseService.getProducts(user.id),
-            supabaseService.getBlogPosts(),
-            supabaseService.getCoupons()
+            supabaseService.getBlogPosts()
         ]);
         
         if (prof) {
@@ -177,7 +174,6 @@ export const MyCatalog: React.FC = () => {
         setStoreCategories(cats);
         setProducts(prods || []);
         setBlogPosts(allPosts.filter(p => p.user_id === user.id));
-        setCoupons(allCoupons.filter(c => c.user_id === user.id));
     } finally { setIsLoading(false); }
   };
 
@@ -189,7 +185,7 @@ export const MyCatalog: React.FC = () => {
               </div>
               <h2 className="text-4xl font-black text-gray-900 uppercase italic tracking-tighter mb-4">Recurso do Plano PRO</h2>
               <p className="text-gray-500 max-w-md text-lg font-medium leading-relaxed mb-10">
-                  A gestão de Catálogo, Blog e Loja Virtual está disponível apenas para membros nos níveis <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
+                  A gestÃ£o de CatÃ¡logo, Blog e Loja Virtual estÃ¡ disponÃ­vel apenas para membros nos nÃ­veis <span className="text-indigo-600 font-bold">PRO</span> e <span className="text-emerald-600 font-bold">Business</span>.
               </p>
               <Link to="/plans" className="bg-[#F67C01] text-white px-12 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all flex items-center gap-3">
                   <Crown className="w-5 h-5" /> FAZER UPGRADE AGORA
@@ -203,24 +199,24 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      // Limpa dados que não pertencem à tabela profiles
+      // Limpa dados que nÃ£o pertencem Ã  tabela profiles
       const { subscriptions, id, created_at, ...profileToSave } = profile as any;
 
       console.log('Saving profile:', profileToSave);
       await supabaseService.saveProfile(user.id, profileToSave);
       console.log('Profile updated successfully');
       
-      // Atualiza o estado local para refletir a mudança
+      // Atualiza o estado local para refletir a mudanÃ§a
       if (redirect) {
         setProfile({ ...profile, ...profileToSave });
         console.log('Redirecting to vitrine...');
         navigate('/vitrine');
       } else {
-        alert('Configurações salvas com sucesso!');
+        alert('ConfiguraÃ§Ãµes salvas com sucesso!');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Erro ao salvar configurações. Por favor, tente novamente.');
+      alert('Erro ao salvar configuraÃ§Ãµes. Por favor, tente novamente.');
     } finally { setIsSaving(false); }
   };
 
@@ -345,34 +341,12 @@ export const MyCatalog: React.FC = () => {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if(!user || !window.confirm('Excluir esta categoria? Os itens vinculados a ela ficarão como "Sem Categoria".')) return;
+    if(!user || !window.confirm('Excluir esta categoria? Os itens vinculados a ela ficarÃ£o como "Sem Categoria".')) return;
     await supabaseService.deleteStoreCategory(id);
     loadData();
   };
 
-  const handleCouponSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setIsSaving(true);
-    try {
-        await supabaseService.createCoupon({
-            ...couponForm,
-            user_id: user.id
-        } as any);
-        setIsCouponModalOpen(false);
-        setCouponForm({ code: '', title: '', discount: '', type: 'percentage', points_reward: 0, description: '', expiry_date: '', active: true });
-        loadData();
-    } catch (error) {
-        console.error("Error creating coupon:", error);
-        alert("Erro ao criar cupom. Verifique os dados e tente novamente.");
-    } finally { setIsSaving(false); }
-  };
 
-  const handleDeleteCoupon = async (id: string) => {
-    if(!user || !window.confirm('Excluir este cupom?')) return;
-    await supabaseService.deleteCoupon(id, user.id);
-    loadData();
-  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
@@ -399,11 +373,11 @@ export const MyCatalog: React.FC = () => {
 
         <div className="bg-white/5 rounded-[2.5rem] p-1 mt-10 flex gap-0.5 overflow-x-auto scrollbar-hide border border-white/5">
           {[
-            { id: 'home', label: 'Início', desc: 'Resumo', icon: HomeIcon },
+            { id: 'home', label: 'InÃ­cio', desc: 'Resumo', icon: HomeIcon },
             { id: 'identity', label: 'Identidade', desc: 'Marca e Logo', icon: Store },
             { id: 'blog', label: 'BLOG', desc: 'Gerar Autoridade', icon: BookOpen },
             { id: 'products', label: 'Produtos', desc: 'Itens & Categorias', icon: Package },
-            { id: 'landing', label: 'Configurações', desc: 'Especialista', icon: Smartphone },
+            { id: 'landing', label: 'ConfiguraÃ§Ãµes', desc: 'Especialista', icon: Smartphone },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveSubTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-3.5 rounded-[1.8rem] transition-all min-w-[160px] ${activeSubTab === tab.id ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-500 hover:bg-white/5'}`}>
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
@@ -418,7 +392,7 @@ export const MyCatalog: React.FC = () => {
 
       <div className="pt-4 px-2">
         {activeSubTab === 'home' && (
-          <SectionLanding title="Sua Vitrine é seu palco digital." subtitle="Ecossistema de Conteúdo" description="Gerencie seu catálogo de produtos, escreva artigos de autoridade e configure sua Landing Page em um único lugar." benefits={["Cadastro ilimitado de produtos", "Blog integrado ao diretório global", "Design focado em conversão mobile", "Sincronização instantânea"]} youtubeId="dQw4w9WgXcQ" ctaLabel="COMEÇAR CONFIGURAÇÃO" onStart={() => setActiveSubTab('identity')} icon={LayoutGrid} accentColor="brand" />
+          <SectionLanding title="Sua Vitrine Ã© seu palco digital." subtitle="Ecossistema de ConteÃºdo" description="Gerencie seu catÃ¡logo de produtos, escreva artigos de autoridade e configure sua Landing Page em um Ãºnico lugar." benefits={["Cadastro ilimitado de produtos", "Blog integrado ao diretÃ³rio global", "Design focado em conversÃ£o mobile", "SincronizaÃ§Ã£o instantÃ¢nea"]} youtubeId="dQw4w9WgXcQ" ctaLabel="COMEÃ‡AR CONFIGURAÃ‡ÃƒO" onStart={() => setActiveSubTab('identity')} icon={LayoutGrid} accentColor="brand" />
         )}
 
         <div className={`${activeSubTab === 'home' ? 'hidden' : 'bg-white rounded-[3rem] p-8 md:p-12 border border-gray-100 shadow-xl min-h-[500px] animate-fade-in'}`}>
@@ -426,13 +400,13 @@ export const MyCatalog: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-10">
                    <div className="flex justify-between items-center">
                       <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight">Identidade Visual</h3>
-                      <button onClick={() => handleProfileSave(false)} disabled={isSaving} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
+                      <button onClick={() => handleProfileSave(false)} disabled={isSaving} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÃ‡Ã•ES</button>
                    </div>
                    
                    <div className="grid md:grid-cols-2 gap-10">
                       <div className="space-y-6">
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de ExibiÃ§Ã£o</label>
                             <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={profile.business_name || ''} onChange={e => setProfile({...profile, business_name: e.target.value})} />
                          </div>
                          <div>
@@ -451,7 +425,7 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* SEÇÃO BOT WHATSAPP */}
+                   {/* SEÃ‡ÃƒO BOT WHATSAPP */}
                    <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl mt-12">
                       <div className="flex items-center gap-4 mb-8">
                           <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600">
@@ -468,7 +442,7 @@ export const MyCatalog: React.FC = () => {
                       </div>
 
                       <div className="grid lg:grid-cols-2 gap-12">
-                          {/* Configurações */}
+                          {/* ConfiguraÃ§Ãµes */}
                           <div className="space-y-6">
                               <div className="flex items-center justify-between bg-gray-50 p-6 rounded-2xl">
                                   <span className="font-black text-sm uppercase text-gray-700">Ativar Bot Vendedor?</span>
@@ -521,7 +495,7 @@ export const MyCatalog: React.FC = () => {
                                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mensagem de Boas-vindas</label>
                                   <textarea 
                                       className="w-full p-4 rounded-2xl bg-gray-50 font-bold h-24 resize-none" 
-                                      placeholder="Ex: Olá! Bem-vindo à nossa loja. Como posso ajudar você hoje?" 
+                                      placeholder="Ex: OlÃ¡! Bem-vindo Ã  nossa loja. Como posso ajudar vocÃª hoje?" 
                                       value={profile.store_config?.whatsapp_bot?.welcome_message || ''}
                                       onChange={e => setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false, welcome_message: e.target.value } } }))}
                                   />
@@ -537,7 +511,7 @@ export const MyCatalog: React.FC = () => {
                               {/* Widget Flutuante */}
                               {profile.store_config?.whatsapp_bot?.enabled && (
                                   <div className="animate-bounce-in flex flex-col items-end gap-4">
-                                      {/* Balão de Mensagem */}
+                                      {/* BalÃ£o de Mensagem */}
                                       <div className="bg-white p-4 rounded-2xl rounded-br-none shadow-xl max-w-[250px] border border-gray-100">
                                           <div className="flex items-center gap-3 mb-2 border-b border-gray-100 pb-2">
                                               <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden">
@@ -555,11 +529,11 @@ export const MyCatalog: React.FC = () => {
                                               </div>
                                           </div>
                                           <p className="text-xs text-slate-500 leading-relaxed">
-                                              {profile.store_config?.whatsapp_bot?.welcome_message || 'Olá! Bem-vindo à nossa loja. Como posso ajudar você hoje?'}
+                                              {profile.store_config?.whatsapp_bot?.welcome_message || 'OlÃ¡! Bem-vindo Ã  nossa loja. Como posso ajudar vocÃª hoje?'}
                                           </p>
                                       </div>
 
-                                      {/* Botão WhatsApp */}
+                                      {/* BotÃ£o WhatsApp */}
                                       <div className="w-14 h-14 bg-[#25D366] rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer">
                                           <MessageSquare className="w-7 h-7" />
                                       </div>
@@ -578,7 +552,7 @@ export const MyCatalog: React.FC = () => {
                             <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight flex items-center gap-2">
                                 <BookOpen className="w-6 h-6 text-indigo-600" /> Meus Artigos do Blog
                             </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Publique conteúdos educativos e ganhe autoridade no seu nicho.</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Publique conteÃºdos educativos e ganhe autoridade no seu nicho.</p>
                         </div>
                         <button 
                             onClick={() => {
@@ -630,7 +604,7 @@ export const MyCatalog: React.FC = () => {
                             <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight flex items-center gap-2">
                                <LayoutGrid className="w-6 h-6 text-indigo-600" /> Categorias de Itens
                             </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Organize seus produtos para facilitar na navegação.</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Organize seus produtos para facilitar na navegaÃ§Ã£o.</p>
                          </div>
                          <button onClick={() => setIsCategoryModalOpen(true)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all">+ NOVA CATEGORIA</button>
                       </div>
@@ -651,98 +625,49 @@ export const MyCatalog: React.FC = () => {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                          <div>
                             <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight flex items-center gap-2">
-                               <Package className="w-6 h-6 text-[#F67C01]" /> Itens do Catálogo
+                               <Package className="w-6 h-6 text-[#F67C01]" /> Itens do CatÃ¡logo
                             </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos ou serviços que aparecem na sua Vitrine.</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos ou serviÃ§os que aparecem na sua Vitrine.</p>
                          </div>
                          <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 transition-all">
                             <Plus className="w-5 h-5" /> ADICIONAR ITEM
                          </button>
                       </div>
 
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-6">
                          {products.map(prod => (
-                            <div key={prod.id} className="group bg-gray-50 rounded-[2.5rem] border border-gray-100 flex items-center gap-6 p-6 transition-all hover:bg-white hover:shadow-2xl relative overflow-hidden">
-                               <div className="w-24 h-24 rounded-[1.8rem] bg-white shadow-md overflow-hidden flex-shrink-0 border border-white">
-                                  <img src={prod.image_url} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                            <div key={prod.id} className="group bg-gray-50 rounded-[2.5rem] border border-gray-100 flex flex-col md:flex-row items-center gap-6 p-6 transition-all hover:bg-white hover:shadow-2xl relative overflow-hidden">
+                               <div className="w-full md:w-32 h-32 rounded-[1.8rem] bg-white shadow-md overflow-hidden flex-shrink-0 border border-white">
+                                  <img src={prod.image_url} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" />
                                </div>
                                <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-3 mb-1">
-                                    <h5 className="font-black text-gray-900 text-xl uppercase italic tracking-tight truncate">{prod.name}</h5>
+                                    <h5 className="font-black text-gray-900 text-xl uppercase italic tracking-tighter truncate">{prod.name}</h5>
                                     {prod.accepts_menu_cash && (
                                         <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100">
                                             M$ {prod.menu_cash_percentage}%
                                         </span>
                                     )}
                                   </div>
-                                  <p className="text-sm font-medium text-gray-400 line-clamp-1 mb-2">{prod.description}</p>
-                                  <p className="text-xl font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
+                                  <p className="text-sm font-medium text-slate-500 line-clamp-1 mb-2">{prod.description}</p>
+                                  <p className="text-2xl font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
                                </div>
-                               <div className="flex flex-row gap-2 relative z-10">
-                                  <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-4 bg-white rounded-2xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-5 h-5" /></button>
-                                  <button onClick={() => handleDeleteProduct(prod.id)} className="p-4 bg-white rounded-2xl text-rose-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-5 h-5" /></button>
+                               <div className="flex items-center gap-3 shrink-0">
+                                  <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-5 bg-white rounded-2xl text-indigo-600 border border-gray-100 shadow-lg hover:scale-110 transition-transform"><Edit2 className="w-5 h-5" /></button>
+                                  <button onClick={() => handleDeleteProduct(prod.id)} className="p-5 bg-white rounded-2xl text-rose-500 border border-gray-100 shadow-lg hover:scale-110 transition-transform"><Trash2 className="w-5 h-5" /></button>
                                </div>
                             </div>
                          ))}
                       </div>
                    </section>
 
-                   {/* CUPONS */}
-                   <section className="space-y-8 bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                         <div>
-                            <h3 className="text-2xl font-black text-gray-900 italic uppercase tracking-tight flex items-center gap-2">
-                               <Ticket className="w-6 h-6 text-emerald-600" /> Cupons de Desconto
-                            </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Crie promoções para atrair mais clientes.</p>
-                         </div>
-                         <button onClick={() => setIsCouponModalOpen(true)} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all">
-                            <Plus className="w-4 h-4" /> NOVO CUPOM
-                         </button>
-                      </div>
-                      
-                      {coupons.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {coupons.map(coupon => (
-                                <div key={coupon.id} className="bg-white p-6 rounded-[2rem] border border-gray-200 shadow-sm flex flex-col justify-between relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
-                                        {coupon.active ? 'Ativo' : 'Inativo'}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
-                                                <Ticket className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-black text-gray-900 text-lg uppercase italic">{coupon.code}</h4>
-                                                <p className="text-xs text-slate-500 font-bold">{coupon.title}</p>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2 mb-6">
-                                            <p className="text-2xl font-black text-emerald-600">{coupon.type === 'percentage' ? `${coupon.discount}% OFF` : `R$ ${coupon.discount} OFF`}</p>
-                                            {coupon.description && <p className="text-xs text-slate-400">{coupon.description}</p>}
-                                            {coupon.expiry_date && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3" /> Validade: {new Date(coupon.expiry_date).toLocaleDateString('pt-BR')}</p>}
-                                        </div>
-                                    </div>
-                                    <button onClick={() => handleDeleteCoupon(coupon.id)} className="w-full py-3 bg-gray-50 rounded-xl text-rose-500 font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 transition-colors flex items-center justify-center gap-2">
-                                        <Trash2 className="w-3 h-3" /> Excluir Cupom
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 opacity-40">
-                            <Ticket className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">Nenhum cupom ativo no momento.</p>
-                        </div>
-                      )}
-                   </section>
+
                 </div>
             )}
 
             {activeSubTab === 'landing' && (
                 <div className="max-w-4xl mx-auto space-y-12">
-                      <h3 className="text-2xl font-black text-gray-900 italic uppercase">Configurações da Vitrine</h3>
+                      <h3 className="text-2xl font-black text-gray-900 italic uppercase">ConfiguraÃ§Ãµes da Vitrine</h3>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3 bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expor na Vitrine?</span>
@@ -753,11 +678,11 @@ export const MyCatalog: React.FC = () => {
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${profile.is_published ? 'left-7' : 'left-1'}`} />
                           </button>
                         </div>
-                        <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
+                        <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÃ‡Ã•ES</button>
                       </div>
 
                    <div className="space-y-6 bg-gray-50 p-8 rounded-[2.5rem]">
-                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><ImageIcon className="w-5 h-5" /> Banner Rotativo (Até 3 fotos)</h4>
+                      <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><ImageIcon className="w-5 h-5" /> Banner Rotativo (AtÃ© 3 fotos)</h4>
                       <div className="grid grid-cols-3 gap-4">
                          {[0,1,2].map(idx => (
                             <div key={idx} className="aspect-video bg-white rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden relative group cursor-pointer" onClick={() => bannerInputRefs[idx].current?.click()}>
@@ -783,7 +708,7 @@ export const MyCatalog: React.FC = () => {
                             />
                          </div>
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Instagram className="w-3 h-3" /> Instagram (Usuário)</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Instagram className="w-3 h-3" /> Instagram (UsuÃ¡rio)</label>
                             <div className="flex bg-white rounded-2xl overflow-hidden">
                                <div className="bg-gray-100 px-4 flex items-center text-slate-400 font-bold text-sm">@</div>
                                <input 
@@ -818,11 +743,11 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* PORTFÓLIO DE VÍDEOS */}
+                   {/* PORTFÃ“LIO DE VÃDEOS */}
                    <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-8">
                       <div className="flex justify-between items-center">
-                         <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Youtube className="w-5 h-5" /> Portfólio de vídeos</h4>
-                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{(profile.store_config?.video_portfolio?.length || 0)} / 9 vídeos</span>
+                         <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Youtube className="w-5 h-5" /> PortfÃ³lio de vÃ­deos</h4>
+                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{(profile.store_config?.video_portfolio?.length || 0)} / 9 vÃ­deos</span>
                       </div>
                       
                       <div className="flex gap-4">
@@ -838,7 +763,7 @@ export const MyCatalog: React.FC = () => {
                             className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 transition-all disabled:opacity-50"
                             disabled={(profile.store_config?.video_portfolio?.length || 0) >= 9}
                          >
-                            <Plus className="w-4 h-4" /> ADICIONAR VÍDEO
+                            <Plus className="w-4 h-4" /> ADICIONAR VÃDEO
                          </button>
                       </div>
 
@@ -869,21 +794,21 @@ export const MyCatalog: React.FC = () => {
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><User className="w-3 h-3" /> Sobre Mim</label>
-                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.about_me || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, about_me: e.target.value}})} placeholder="Conte sua trajetória e formação..." />
+                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.about_me || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, about_me: e.target.value}})} placeholder="Conte sua trajetÃ³ria e formaÃ§Ã£o..." />
                          </div>
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ListChecks className="w-3 h-3" /> Soluções e Serviços</label>
-                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.solutions || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, solutions: e.target.value}})} placeholder="Quais serviços ou produtos você oferece?" />
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ListChecks className="w-3 h-3" /> SoluÃ§Ãµes e ServiÃ§os</label>
+                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.solutions || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, solutions: e.target.value}})} placeholder="Quais serviÃ§os ou produtos vocÃª oferece?" />
                          </div>
                       </div>
                       <div className="space-y-6">
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Target className="w-3 h-3" /> Problemas que resolvo</label>
-                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.problems_solved || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, problems_solved: e.target.value}})} placeholder="Quais dores ou necessidades do cliente você elimina?" />
+                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.problems_solved || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, problems_solved: e.target.value}})} placeholder="Quais dores ou necessidades do cliente vocÃª elimina?" />
                          </div>
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Heart className="w-3 h-3" /> Interesses de Negócio</label>
-                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.business_interests || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, business_interests: e.target.value}})} placeholder="Com que tipo de parceiro ou cliente você quer se conectar?" />
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Heart className="w-3 h-3" /> Interesses de NegÃ³cio</label>
+                            <textarea rows={5} className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-medium resize-none" value={profile.store_config?.business_interests || ''} onChange={e => setProfile({...profile, store_config: {...profile.store_config, business_interests: e.target.value}})} placeholder="Com que tipo de parceiro ou cliente vocÃª quer se conectar?" />
                          </div>
                       </div>
                    </div>
@@ -899,7 +824,7 @@ export const MyCatalog: React.FC = () => {
                   <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
                       <div>
                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingBlogPost ? 'Editar Artigo' : 'Novo Artigo de Autoridade'}</h3>
-                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Este conteúdo será publicado no blog global e na sua vitrine.</p>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Este conteÃºdo serÃ¡ publicado no blog global e na sua vitrine.</p>
                       </div>
                       <button onClick={() => setIsBlogModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                   </div>
@@ -908,7 +833,7 @@ export const MyCatalog: React.FC = () => {
                       <div className="grid lg:grid-cols-12 gap-10">
                          <div className="lg:col-span-7 space-y-8">
                             <div>
-                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> Título Impactante</label>
+                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> TÃ­tulo Impactante</label>
                                <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} placeholder="Ex: Por que investir em consultoria local?" />
                             </div>
 
@@ -917,21 +842,21 @@ export const MyCatalog: React.FC = () => {
                                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria Principal</label>
                                   <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={blogForm.category} onChange={e => setBlogForm({...blogForm, category: e.target.value})}>
                                      <option>Marketing</option>
-                                     <option>Estratégia</option>
+                                     <option>EstratÃ©gia</option>
                                      <option>Dicas</option>
                                      <option>Novidades</option>
                                      <option>Gastronomia</option>
                                   </select>
                                </div>
                                <div>
-                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Autor Responsável</label>
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Autor ResponsÃ¡vel</label>
                                   <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold opacity-50" value={profile.business_name || user?.name} readOnly />
                                </div>
                             </div>
 
                             <div>
                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><AlignLeft className="w-3 h-3" /> Resumo Curto</label>
-                               <textarea rows={2} required className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" value={blogForm.summary} onChange={e => setBlogForm({...blogForm, summary: e.target.value})} placeholder="Breve introdução do tema..." />
+                               <textarea rows={2} required className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" value={blogForm.summary} onChange={e => setBlogForm({...blogForm, summary: e.target.value})} placeholder="Breve introduÃ§Ã£o do tema..." />
                             </div>
                          </div>
 
@@ -944,7 +869,7 @@ export const MyCatalog: React.FC = () => {
                          </div>
 
                          <div className="lg:col-span-12">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ConteÃºdo Completo</label>
                             <textarea rows={12} required className="w-full bg-gray-50 border-none rounded-[2.5rem] p-10 text-lg font-medium leading-relaxed" value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} placeholder="Escreva seu conhecimento aqui..." />
                          </div>
                       </div>
@@ -966,14 +891,14 @@ export const MyCatalog: React.FC = () => {
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">Nova Categoria</h3>
-                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Organize seus itens para facilitar a navegação dos clientes.</p>
+                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Organize seus itens para facilitar a navegaÃ§Ã£o dos clientes.</p>
                     </div>
                     <button onClick={() => setIsCategoryModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
                 <form onSubmit={handleCategorySubmit} className="p-10 space-y-8">
                     <div>
                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome da Categoria</label>
-                       <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} placeholder="Ex: Hamburgueres Artesanais, Serviços de Design..." />
+                       <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all" value={categoryForm.name} onChange={e => setCategoryForm({name: e.target.value})} placeholder="Ex: Hamburgueres Artesanais, ServiÃ§os de Design..." />
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
                         {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CRIAR CATEGORIA AGORA'}
@@ -1004,7 +929,7 @@ export const MyCatalog: React.FC = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Preço (R$)</label>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">PreÃ§o (R$)</label>
                                 <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
                              </div>
                              <div>
@@ -1054,58 +979,15 @@ export const MyCatalog: React.FC = () => {
                         </div>
                     </div>
                     <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR ITEM NO CATÁLOGO'}
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'SALVAR ITEM NO CATÃLOGO'}
                     </button>
                 </form>
             </div>
          </div>
       )}
 
-      {/* MODAL: CUPOM */}
-      {isCouponModalOpen && (
-         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
-                    <div>
-                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Novo Cupom</h3>
-                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Ofereça descontos exclusivos.</p>
-                    </div>
-                    <button onClick={() => setIsCouponModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
-                </div>
-                <form onSubmit={handleCouponSubmit} className="p-10 space-y-6 overflow-y-auto scrollbar-hide flex-1">
-                    <div>
-                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Código do Cupom</label>
-                       <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold uppercase" value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})} placeholder="Ex: BEMVINDO10" />
-                    </div>
-                    <div>
-                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Promoção</label>
-                       <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={couponForm.title} onChange={e => setCouponForm({...couponForm, title: e.target.value})} placeholder="Ex: 10% OFF na primeira compra" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo de Desconto</label>
-                           <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={couponForm.type} onChange={e => setCouponForm({...couponForm, type: e.target.value as any})}>
-                              <option value="percentage">Porcentagem (%)</option>
-                              <option value="fixed">Valor Fixo (R$)</option>
-                           </select>
-                        </div>
-                        <div>
-                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Desconto</label>
-                           <input required type="number" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={couponForm.discount} onChange={e => setCouponForm({...couponForm, discount: e.target.value})} placeholder="Ex: 10 ou 50" />
-                        </div>
-                    </div>
-                    <div>
-                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Validade (Opcional)</label>
-                       <input type="date" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={couponForm.expiry_date} onChange={e => setCouponForm({...couponForm, expiry_date: e.target.value})} />
-                    </div>
-                     <button type="submit" disabled={isSaving} className="w-full bg-emerald-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CRIAR CUPOM'}
-                    </button>
-                </form>
-            </div>
-         </div>
-      )}
-      {/* MODAL: CONFIRMAÇÃO DE EXCLUSÃO */}
+
+      {/* MODAL: CONFIRMAÃ‡ÃƒO DE EXCLUSÃƒO */}
       {isDeleteModalOpen && (
          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
@@ -1114,7 +996,7 @@ export const MyCatalog: React.FC = () => {
                         <Trash2 className="w-10 h-10 text-rose-500" />
                     </div>
                     <h3 className="text-2xl font-black uppercase italic tracking-tighter text-gray-900">Excluir Produto?</h3>
-                    <p className="text-slate-500 font-medium">Esta ação é irreversível e o item será removido permanentemente da sua vitrine.</p>
+                    <p className="text-slate-500 font-medium">Esta aÃ§Ã£o Ã© irreversÃ­vel e o item serÃ¡ removido permanentemente da sua vitrine.</p>
                     <div className="flex gap-4 pt-4">
                         <button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 py-4 bg-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-gray-200 transition-all">CANCELAR</button>
                         <button onClick={confirmDeleteProduct} className="flex-1 py-4 bg-rose-500 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-lg shadow-rose-200 hover:bg-rose-600 transition-all">EXCLUIR AGORA</button>
