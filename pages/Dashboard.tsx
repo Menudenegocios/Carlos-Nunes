@@ -25,6 +25,8 @@ export const Dashboard: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [cpfCnpj, setCpfCnpj] = useState('');
   const [isSavingAuth, setIsSavingAuth] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
   const [ranking, setRanking] = useState<any[]>([]);
@@ -43,6 +45,10 @@ export const Dashboard: React.FC = () => {
         supabaseService.getRanking(3)
       ]);
       setUserProfile(profile || null);
+      if (profile) {
+        setBusinessName(profile.business_name || '');
+        setCpfCnpj(profile.cpf_cnpj || '');
+      }
       setRanking(rankingData || []);
       setActivity(history && history.length > 0 ? history.slice(0, 4) : [
         { id: '1', user_id: user.id, action: 'Indicação Validada', points: 200, created_at: Date.now() - 86400000, category: 'indicacao' },
@@ -143,6 +149,14 @@ export const Dashboard: React.FC = () => {
       if (newPassword) {
         await supabase.auth.updateUser({ password: newPassword });
       }
+
+      // Update Profile
+      await supabase.from('profiles').update({
+        business_name: businessName,
+        cpf_cnpj: cpfCnpj,
+        updated_at: new Date().toISOString()
+      }).eq('user_id', currentUser.id);
+
       setAuthMessage('Dados atualizados com sucesso!');
       setNewPassword('');
     } catch (error: any) {
@@ -378,6 +392,27 @@ export const Dashboard: React.FC = () => {
                 <Lock className="text-indigo-600" /> IDENTIDADE & ACESSO
               </h3>
               <form onSubmit={handleUpdateAuth} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Nome do Negócio</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400"
+                      value={businessName}
+                      onChange={e => setBusinessName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">CPF / CNPJ</label>
+                    <input
+                      type="text"
+                      className="w-full bg-slate-50 border border-gray-100 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-400"
+                      value={cpfCnpj}
+                      onChange={e => setCpfCnpj(e.target.value)}
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">E-mail de Login</label>
                   <input

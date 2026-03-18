@@ -63,6 +63,8 @@ export interface B2BTransaction {
   status: 'pending' | 'confirmed' | 'rejected';
   buyer_confirmed?: boolean;
   seller_confirmed?: boolean;
+  buyer_phone?: string;
+  seller_phone?: string;
   created_at: number;
 }
 
@@ -250,6 +252,8 @@ export interface Profile {
   subscriptions?: Subscription[] | Subscription;
   is_published?: boolean;
   has_founder_badge?: boolean;
+  asaas_customer_id?: string;
+  cpf_cnpj?: string;
 }
 
 export interface Subscription {
@@ -257,9 +261,12 @@ export interface Subscription {
   user_id: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
+  asaas_customer_id?: string;
+  asaas_subscription_id?: string;
+  asaas_payment_id?: string;
   plan?: string;
   status?: string;
-  current_period_end?: number;
+  current_period_end?: string | number;
   created_at?: number;
 }
 
@@ -341,6 +348,7 @@ export interface Product {
   is_local?: boolean;
   accepts_menu_cash?: boolean;
   menu_cash_percentage?: number;
+  product_type?: 'Produto' | 'Serviço' | 'Mentoria';
 }
 
 export interface BlogPost {

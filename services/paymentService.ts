@@ -1,52 +1,57 @@
 import { supabase } from './supabaseClient';
 
 export const paymentService = {
-  createCheckoutSession: async (planId: string, billingCycle: 'mensal' | 'anual') => {
+  createAsaasCustomer: async (customerData: { name: string, email: string, cpfCnpj: string, phone?: string }) => {
     const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('Usuário não autenticado. Por favor, faça login.');
-    }
+    if (!session) throw new Error('Usuário não autenticado.');
 
-    // Call our backend to create a Stripe Checkout session
-    let response: Response;
-    try {
-      response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          planId,
-          billingCycle
-        })
-      });
-    } catch (networkError) {
-      throw new Error('Servidor de pagamento indisponível. Verifique se o servidor backend está rodando (node server.mjs).');
-    }
+    const response = await fetch('/api/asaas/create-customer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(customerData)
+    });
 
-    // Handle empty or non-JSON responses
-    const text = await response.text();
-    
-    if (!text) {
-      throw new Error('Servidor de pagamento não respondeu. Verifique se o servidor backend está rodando na porta 3000 (node server.mjs).');
-    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao cadastrar cliente no Asaas');
+    return data;
+  },
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      if (text.trim().startsWith('<!DOCTYPE html>')) {
-        throw new Error('O servidor retornou uma página HTML em vez de JSON. Isso geralmente indica um erro de roteamento no servidor ou que o backend (node server.mjs) não está respondendo corretamente na rota /api.');
-      }
-      throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`);
-    }
+  createAsaasSubscription: async (planId: string, billingType: 'PIX' | 'CREDIT_CARD', cycle: 'MONTHLY' | 'YEARLY' = 'MONTHLY') => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Usuário não autenticado.');
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Falha ao criar sessão de checkout');
-    }
+    const response = await fetch('/api/asaas/create-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ planId, billingType, cycle })
+    });
 
-    return data; // Expecting { id: 'cs_test_...', url: '...' }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao criar assinatura no Asaas');
+    return data;
+  },
+
+  createAsaasPayment: async (paymentData: { value: number, billingType: 'PIX' | 'CREDIT_CARD', description: string }) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Usuário não autenticado.');
+
+    const response = await fetch('/api/asaas/create-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify(paymentData)
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao criar pagamento no Asaas');
+    return data;
   }
 };

@@ -243,14 +243,21 @@ export const MyBlog: React.FC = () => {
       <div className="pt-4 px-2">
         {activeSubTab === 'home' ? (
           <SectionLanding 
-            title="Gere autoridade e eduque seu bairro."
-            subtitle="Blog & Artigos"
-            description="Escreva artigos sobre seu nicho de atuação para atrair clientes qualificados. Conteúdos educativos ajudam seu perfil a aparecer melhor no Google."
-            benefits={["Publicação direta no blog principal", "SEO regional otimizado", "Aumento do índice de confiança", "Compartilhamento fácil"]}
-            youtubeId="dQw4w9WgXcQ"
-            ctaLabel="GERENCIAR MEUS ARTIGOS"
+            title="Domine as buscas e construa sua Autoridade."
+            subtitle="Blog & SEO PRO"
+            description="Transforme seu conhecimento em artigos estratégicos que atraem clientes qualificados. Use ferramentas avançadas de SEO e Social Media para garantir que sua mensagem chegue às pessoas certas no Google e nas Redes Sociais."
+            summaryText="O Blog de Autoridade é o seu portal de conteúdo estratégico. Aqui você cria artigos otimizados para o Google, compartilha seu conhecimento especializado e atrai novos clientes através de informações que resolvem problemas reais do seu público."
+            benefits={[
+              "Editor PRO: Crie artigos com formatação rica e imagens de impacto.",
+              "SEO Avançado: Personalize títulos, descrições e meta tags para o Google.",
+              "Redes Sociais: Configure como seu link aparece no Instagram e WhatsApp.",
+              "Tráfego Local: Seja encontrado por pessoas da sua região buscando serviços.",
+              "Análise: Acompanhe visualizações e o engajamento de cada artigo."
+            ]}
+            ctaLabel="GESTÃO DE ARTIGOS"
             onStart={() => setActiveSubTab('manage')}
             icon={BookOpen}
+            accentColor="brand"
           />
         ) : (
           <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-8 min-h-[500px]">

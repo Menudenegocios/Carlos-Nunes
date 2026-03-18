@@ -8,11 +8,10 @@ import {
   ArrowRight, Save, Trash2, Edit3,
   Lightbulb, Shield, HelpCircle,
   Briefcase, PieChart, Layers, RefreshCw,
-  Handshake, Globe, Coins
+  Handshake, Globe, Coins, Columns, UserPlus, Smartphone, X, Sparkles, TrendingDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseService } from '../services/supabaseService';
-import { SectionLanding } from '../components/SectionLanding';
 import { useAuth } from '../contexts/AuthContext';
 
 type TabType = 'inicio' | 'swot' | 'smart' | 'canva' | 'projects';
@@ -22,7 +21,7 @@ export const ProjectManagement: React.FC = () => {
   const user_id = user?.id || 'user-123'; // Fallback to placeholder if user not loaded
   const [newProjectCategory, setNewProjectCategory] = useState('Outros');
   const [newProjectTool, setNewProjectTool] = useState('Outros');
-  const [activeTab, setActiveTab] = useState<'projects' | 'notes'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'tasks' | 'canva' | 'notes'>('projects');
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -103,6 +102,8 @@ export const ProjectManagement: React.FC = () => {
 
   const tabs = [
     { id: 'projects', label: 'Projetos', icon: Briefcase },
+    { id: 'tasks', label: 'Tarefas (Kanban)', icon: LayoutGrid },
+    { id: 'canva', label: 'Business Canva', icon: PieChart },
     { id: 'notes', label: 'Anotações', icon: Edit3 },
   ];
 
@@ -233,11 +234,10 @@ export const ProjectManagement: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'projects' ? (
-              <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />
-            ) : (
-              <NotesView user_id={user_id} />
-            )}
+            {activeTab === 'projects' && <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
+            {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} />}
+            {activeTab === 'canva' && <BusinessCanvaView user_id={user_id} />}
+            {activeTab === 'notes' && <NotesView user_id={user_id} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -404,6 +404,257 @@ const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], de
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">Nenhum projeto iniciado.</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] }) => {
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [formData, setFormData] = useState({ title: '', description: '', status: 'A Fazer', project_id: '' });
+
+  React.useEffect(() => {
+    loadTasks();
+  }, [user_id]);
+
+  const loadTasks = async () => {
+    try {
+       const data = await supabaseService.getTasks(user_id);
+       setTasks(data.map(t => ({ ...t, status: ['A Fazer', 'Em Progresso', 'Concluído'].includes(t.status) ? t.status : 'A Fazer' })));
+    } catch(e) { console.error(e) }
+  };
+
+  const handleSave = async () => {
+    if (!formData.title) return;
+    try {
+      if (editingTask) {
+        await supabaseService.updateTask(editingTask.id, formData);
+      } else {
+        await supabaseService.addTask({ user_id, ...formData, due_date: Date.now(), type: 'other' });
+      }
+      loadTasks();
+      setIsModalOpen(false);
+      setEditingTask(null);
+      setFormData({ title: '', description: '', status: 'A Fazer', project_id: '' });
+    } catch(e) { console.error(e) }
+  };
+
+  const openEdit = (task: any) => {
+     setEditingTask(task);
+     setFormData({ title: task.title, description: task.description || '', status: task.status, project_id: task.project_id || '' });
+     setIsModalOpen(true);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, status } : t));
+    await supabaseService.updateTask(id, { status });
+  };
+
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('taskId', id);
+  }
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  }
+
+  const onDrop = (e: React.DragEvent, status: string) => {
+    const taskId = e.dataTransfer.getData('taskId');
+    if (taskId) {
+      updateStatus(taskId, status);
+    }
+  }
+
+  const columns = ['A Fazer', 'Em Progresso', 'Concluído'];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+       <div className="flex justify-between items-center px-4">
+         <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Quadro Kanban</h3>
+         <button onClick={() => { setFormData({ title: '', description: '', status: 'A Fazer', project_id: '' }); setEditingTask(null); setIsModalOpen(true); }} className="px-6 py-3 bg-brand-primary text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex gap-2 items-center">
+            <Plus className="w-4 h-4" /> Nova Tarefa
+         </button>
+       </div>
+
+       <div className="flex gap-6 overflow-x-auto pb-4 snap-x px-4" style={{ minHeight: '600px' }}>
+         {columns.map(col => (
+           <div 
+             key={col} 
+             onDragOver={onDragOver} 
+             onDrop={e => onDrop(e, col)} 
+             className="flex-1 min-w-[320px] max-w-[400px] bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col gap-4 snap-center shrink-0"
+           >
+             <div className="flex items-center justify-between mb-2">
+               <h4 className={`font-black text-xs uppercase tracking-widest ${col === 'Concluído' ? 'text-emerald-500' : col === 'Em Progresso' ? 'text-indigo-500' : 'text-slate-400'}`}>{col}</h4>
+               <span className="bg-gray-50 text-slate-400 font-black px-3 py-1 rounded-xl text-[10px] shadow-inner">
+                 {tasks.filter(t => t.status === col).length}
+               </span>
+             </div>
+             
+             {tasks.filter(t => t.status === col).map(task => (
+                <div 
+                  key={task.id} 
+                  draggable 
+                  onDragStart={e => onDragStart(e, task.id)}
+                  onClick={() => openEdit(task)}
+                  className="bg-gray-50 p-5 rounded-2xl border border-transparent cursor-grab hover:shadow-md hover:border-brand-primary/30 transition-all hover:-translate-y-1 active:scale-95"
+                >
+                  <h5 className="font-bold text-gray-900 leading-snug mb-2">{task.title}</h5>
+                  {task.project_id && (
+                     <span className="inline-block bg-brand-primary/10 text-brand-primary text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg mb-2">
+                        {projects.find(p => p.id === task.project_id)?.name || 'Projeto Oculto'}
+                     </span>
+                  )}
+                  {task.description && <p className="text-xs text-slate-500 line-clamp-3 font-medium leading-relaxed">{task.description}</p>}
+                </div>
+             ))}
+
+             <button onClick={() => { setFormData({...formData, title: '', description: '', status: col, project_id: ''}); setEditingTask(null); setIsModalOpen(true); }} className="w-full py-4 text-slate-400 hover:text-brand-primary font-black text-[10px] uppercase tracking-widest border-2 border-dashed border-gray-100 rounded-2xl hover:border-brand-primary/30 hover:bg-brand-primary/5 transition-all mt-auto">
+                + Adicionar Cartão
+             </button>
+           </div>
+         ))}
+       </div>
+
+       {isModalOpen && (
+          <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+             <div className="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl border border-gray-100 animate-scale-in">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-xl font-black text-gray-900 uppercase italic">Tarefa Kanban</h3>
+                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-gray-900 p-2"><X className="w-5 h-5" /></button>
+                </div>
+                <div className="space-y-4">
+                  <input type="text" placeholder="O que precisa ser feito?" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-gray-50 rounded-xl p-5 text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary" />
+                  <textarea placeholder="Detalhes da tarefa..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 rounded-xl p-5 text-sm font-medium border-none resize-none focus:ring-2 focus:ring-brand-primary h-32" />
+                  <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Progresso</label>
+                       <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-medium border-none focus:ring-2 focus:ring-brand-primary">
+                          <option value="A Fazer">A Fazer</option>
+                          <option value="Em Progresso">Em Progresso</option>
+                          <option value="Concluído">Concluído</option>
+                       </select>
+                     </div>
+                     <div>
+                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Projeto Relacionado</label>
+                       <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-medium border-none focus:ring-2 focus:ring-brand-primary">
+                          <option value="">Sem Projeto</option>
+                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                       </select>
+                     </div>
+                  </div>
+                  <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
+                     {editingTask ? (
+                        <button onClick={async () => { await supabaseService.deleteTask(editingTask.id); loadTasks(); setIsModalOpen(false); }} className="text-rose-500 font-black p-4 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors"><Trash2 className="w-5 h-5" /></button>
+                     ) : <div></div>}
+                     <button onClick={handleSave} className="px-8 bg-brand-primary text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg shadow-brand-primary/30 hover:-translate-y-1 transition-all">
+                        {editingTask ? 'Salvar Edição' : 'Criar Tarefa'}
+                     </button>
+                  </div>
+                </div>
+             </div>
+          </div>
+       )}
+    </div>
+  );
+};
+
+const BusinessCanvaView = ({ user_id }: { user_id: string }) => {
+  const [canvaData, setCanvaData] = useState<any>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    supabaseService.getBusinessCanva(user_id).then((data) => {
+      if (data) setCanvaData(data);
+    });
+  }, [user_id]);
+
+  const handleChange = (field: string, value: string) => {
+    const newData = { ...canvaData, [field]: value };
+    setCanvaData(newData);
+    
+    if (saveTimeout) clearTimeout(saveTimeout);
+    setSaveTimeout(setTimeout(() => {
+      setIsSaving(true);
+      supabaseService.saveBusinessCanva(user_id, newData)
+        .finally(() => setIsSaving(false));
+    }, 1000));
+  };
+
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6 animate-fade-in px-4">
+      <div className="flex items-center justify-between mb-8">
+         <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Business Canva</h3>
+         {isSaving ? (
+            <span className="flex items-center gap-2 text-indigo-500 font-bold text-xs uppercase bg-indigo-50 px-4 py-2 rounded-full"><RefreshCw className="w-3 h-3 animate-spin" /> Salvando Automático...</span>
+         ) : (
+            <span className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase bg-emerald-50 px-4 py-2 rounded-full"><CheckCircle2 className="w-3 h-3" /> Na Nuvem</span>
+         )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 md:grid-rows-2 gap-4 h-auto md:h-[600px]">
+        {/* Parcerias */}
+        <div className="md:col-span-1 md:row-span-2 bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col hover:border-indigo-100 transition-colors group">
+          <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Handshake className="w-5 h-5" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Parcerias</h4></div>
+          <textarea value={canvaData.key_partners || ''} onChange={e => handleChange('key_partners', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Quem são seus principais parceiros e fornecedores?" />
+        </div>
+
+        {/* Atividades e Recursos */}
+        <div className="md:col-span-1 flex flex-col gap-4">
+           <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col flex-1 hover:border-indigo-100 transition-colors group">
+             <div className="flex items-center gap-3 mb-4 bg-slate-50 p-2.5 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Target className="w-4 h-4" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Atividades</h4></div>
+             <textarea value={canvaData.key_activities || ''} onChange={e => handleChange('key_activities', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Ações essenciais para rodar..." />
+           </div>
+           <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col flex-1 hover:border-indigo-100 transition-colors group">
+             <div className="flex items-center gap-3 mb-4 bg-slate-50 p-2.5 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Layers className="w-4 h-4" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Recursos</h4></div>
+             <textarea value={canvaData.key_resources || ''} onChange={e => handleChange('key_resources', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Físicos, humanos, etc..." />
+           </div>
+        </div>
+
+        {/* Centro - Proposta Valor */}
+        <div className="md:col-span-1 md:row-span-2 bg-[#F67C01] rounded-[2.5rem] p-6 border border-orange-400 shadow-xl shadow-brand-primary/20 flex flex-col text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-orange-600 opacity-50 pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-6 bg-white/20 backdrop-blur-md p-3 rounded-2xl w-fit text-white"><Sparkles className="w-5 h-5" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Proposta de Valor</h4></div>
+            <textarea value={canvaData.value_propositions || ''} onChange={e => handleChange('value_propositions', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-white font-bold placeholder:text-white/50" placeholder="Qual o problema você resolve e o valor que você entrega?" />
+          </div>
+        </div>
+
+        {/* Relacionamento e Canais */}
+        <div className="md:col-span-1 flex flex-col gap-4">
+           <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col flex-1 hover:border-indigo-100 transition-colors group">
+             <div className="flex items-center gap-3 mb-4 bg-slate-50 p-2.5 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Users className="w-4 h-4" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Relacionamento</h4></div>
+             <textarea value={canvaData.customer_relationships || ''} onChange={e => handleChange('customer_relationships', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Como você se comunica..." />
+           </div>
+           <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col flex-1 hover:border-indigo-100 transition-colors group">
+             <div className="flex items-center gap-3 mb-4 bg-slate-50 p-2.5 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><Smartphone className="w-4 h-4" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Canais</h4></div>
+             <textarea value={canvaData.channels || ''} onChange={e => handleChange('channels', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Como você chega neles..." />
+           </div>
+        </div>
+
+        {/* Segmentos */}
+        <div className="md:col-span-1 md:row-span-2 bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col hover:border-indigo-100 transition-colors group">
+          <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-2xl w-fit text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors"><UserPlus className="w-5 h-5" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Segmentos</h4></div>
+          <textarea value={canvaData.customer_segments || ''} onChange={e => handleChange('customer_segments', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Para quem você gera valor? Descreva seu público." />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:h-[250px]">
+        {/* Custos */}
+        <div className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm flex flex-col hover:border-rose-100 transition-colors group">
+          <div className="flex items-center gap-3 mb-6 bg-rose-50 p-3 rounded-2xl w-fit text-rose-500"><TrendingDown className="w-5 h-5" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Estrutura de Custos</h4></div>
+          <textarea value={canvaData.cost_structure || ''} onChange={e => handleChange('cost_structure', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-600 font-medium placeholder:opacity-40" placeholder="Descreva as despesas e investimentos constantes da sua operação..." />
+        </div>
+        
+        {/* Receita */}
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-[2.5rem] p-6 border border-emerald-100 shadow-sm flex flex-col group">
+          <div className="flex items-center gap-3 mb-6 bg-white p-3 rounded-2xl w-fit text-emerald-600 shadow-sm"><TrendingUp className="w-5 h-5" /> <h4 className="font-black text-[10px] tracking-widest uppercase">Fontes de Receita</h4></div>
+          <textarea value={canvaData.revenue_streams || ''} onChange={e => handleChange('revenue_streams', e.target.value)} className="w-full flex-1 resize-none bg-transparent border-none outline-none text-sm text-emerald-900 font-bold placeholder:opacity-40" placeholder="Como a sua empresa gera fluxo de caixa? Descreva aqui..." />
+        </div>
       </div>
     </div>
   );

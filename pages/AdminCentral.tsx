@@ -9,8 +9,9 @@ import {
   Save, X, ShieldCheck, Eye, EyeOff, CheckCircle, 
   Search, User, ArrowRight, RefreshCw, Layout, Smartphone, 
   Package, BookOpen, Briefcase, GraduationCap, Trophy, CreditCard,
-  UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag
+  UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag, Phone
 } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const AdminCentral: React.FC = () => {
@@ -48,7 +49,8 @@ export const AdminCentral: React.FC = () => {
     menu_cash: 0,
     role: 'user' as any,
     has_founder_badge: false,
-    display_id: undefined as number | undefined
+    display_id: undefined as number | undefined,
+    cpf_cnpj: ''
   });
 
   // Event Modal State
@@ -142,7 +144,8 @@ export const AdminCentral: React.FC = () => {
         menu_cash: 0,
         role: 'user',
         has_founder_badge: false,
-        display_id: undefined
+        display_id: undefined,
+        cpf_cnpj: ''
     });
     setIsModalOpen(true);
   };
@@ -159,7 +162,8 @@ export const AdminCentral: React.FC = () => {
       menu_cash: (profile as any).menu_cash || 0,
       role: (profile as any).role || 'user',
       has_founder_badge: (profile as any).has_founder_badge || false,
-      display_id: profile.display_id
+      display_id: profile.display_id,
+      cpf_cnpj: profile.cpf_cnpj || ''
     });
     setIsModalOpen(true);
   };
@@ -181,7 +185,9 @@ export const AdminCentral: React.FC = () => {
           points: memberForm.points,
           menu_cash: memberForm.menu_cash,
           role: memberForm.role,
-          display_id: memberForm.display_id
+          has_founder_badge: memberForm.has_founder_badge,
+          display_id: memberForm.display_id,
+          cpf_cnpj: memberForm.cpf_cnpj
         });
         setIsModalOpen(false);
         await loadAdminData();
@@ -717,8 +723,12 @@ export const AdminCentral: React.FC = () => {
                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.subtitle} onChange={e => setPartnerForm({...partnerForm, subtitle: e.target.value})} />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Telefone WhatsApp</label>
-                            <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={partnerForm.whatsapp} onChange={e => setPartnerForm({...partnerForm, whatsapp: e.target.value})} placeholder="(00) 00000-0000" />
+                            <PhoneInput
+                            label="Telefone WhatsApp"
+                            value={partnerForm.whatsapp}
+                            onChange={val => setPartnerForm({...partnerForm, whatsapp: val})}
+                            className="w-full"
+                         />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Link de Redirecionamento</label>
@@ -856,30 +866,35 @@ export const AdminCentral: React.FC = () => {
           </div>
       )}
       {isModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-             <div className="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in overflow-y-auto">
+             <div className="bg-white rounded-[2.5rem] w-full max-w-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in my-auto">
+                <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
                     <div>
-                        <h3 className="text-2xl font-black uppercase italic">{editingProfile ? 'Configurações do Membro' : 'Novo Cadastro Manual'}</h3>
-                        <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-1">Defina credenciais e nível de acesso</p>
+                        <h3 className="text-xl font-black uppercase italic">{editingProfile ? 'Configurações' : 'Novo Cadastro'}</h3>
+                        <p className="text-[10px] font-black text-brand-primary tracking-widest uppercase mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">Gestão de nível e acesso</p>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
                 </div>
-                <form onSubmit={handleSaveMember} className="p-6 space-y-6">
+                <form onSubmit={handleSaveMember} className="p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome do Negócio / Usuário</label>
                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.business_name} onChange={e => setMemberForm({...memberForm, business_name: e.target.value})} />
                         </div>
-                        
+
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Mail className="w-3 h-3" /> E-mail (Login)</label>
-                            <input required type="email" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.email} onChange={e => setMemberForm({...memberForm, email: e.target.value})} placeholder="exemplo@login.com" />
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">CPF / CNPJ</label>
+                            <input type="text" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm" value={memberForm.cpf_cnpj} onChange={e => setMemberForm({...memberForm, cpf_cnpj: e.target.value})} placeholder="000.000.000-00" />
                         </div>
                         
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Lock className="w-3 h-3" /> Senha</label>
-                            <input required={!editingProfile} type="password" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={memberForm.password} onChange={e => setMemberForm({...memberForm, password: e.target.value})} placeholder={editingProfile ? "•••••••• (deixe em branco para manter)" : "Senha inicial"} />
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2"><Mail className="w-3 h-3" /> E-mail</label>
+                            <input required type="email" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm" value={memberForm.email} onChange={e => setMemberForm({...memberForm, email: e.target.value})} placeholder="exemplo@login.com" />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2"><Lock className="w-3 h-3" /> Senha</label>
+                            <input required={!editingProfile} type="password" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm" value={memberForm.password} onChange={e => setMemberForm({...memberForm, password: e.target.value})} placeholder={editingProfile ? "••••" : "Senha"} />
                         </div>
 
                         <div>

@@ -7,7 +7,8 @@ interface SectionLandingProps {
   subtitle: string;
   description: string;
   benefits: string[];
-  youtubeId: string;
+  youtubeId?: string;
+  summaryText?: string;
   ctaLabel: string;
   onStart: () => void;
   icon: React.ElementType;
@@ -20,6 +21,7 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
   description,
   benefits,
   youtubeId,
+  summaryText,
   ctaLabel,
   onStart,
   icon: Icon,
@@ -53,20 +55,34 @@ export const SectionLanding: React.FC<SectionLandingProps> = ({
         </p>
       </div>
 
-      {/* Vídeo Central e Flutuante */}
-      <div className="relative group mb-20">
-        <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-brand-primary/20 to-purple-500/20 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
-        <div className="relative aspect-video rounded-[2.5rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border border-white/10 bg-black">
-          <iframe 
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
-            title="Explicação da Funcionalidade"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+      {/* Summary Text (New) */}
+      {summaryText && (
+        <div className="relative group mb-20">
+          <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 via-brand-primary/10 to-purple-500/10 rounded-[3rem] blur-2xl opacity-50"></div>
+          <div className="relative p-10 bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-gray-100 shadow-xl">
+             <p className="text-gray-700 text-lg md:text-xl font-medium leading-relaxed italic text-center">
+                "{summaryText}"
+             </p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Vídeo Central e Flutuante - Opcional, only if summaryText is NOT present */}
+      {youtubeId && !summaryText && (
+        <div className="relative group mb-20">
+          <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-brand-primary/20 to-purple-500/20 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
+          <div className="relative aspect-video rounded-[2.5rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border border-white/10 bg-black">
+            <iframe 
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+              title="Explicação da Funcionalidade"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
 
       {/* Grid de Benefícios */}
       <div className="grid md:grid-cols-2 gap-8 mb-16">

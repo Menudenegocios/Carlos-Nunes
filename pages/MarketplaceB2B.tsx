@@ -132,7 +132,8 @@ export const MarketplaceB2B: React.FC = () => {
             <SectionLanding 
                 title="Aumente seu lucro com parcerias inteligentes."
                 subtitle="Business to Business Connect"
-                description="O Marketplace B2B é o espaço exclusivo onde membros do ecossistema Menu ADS se conectam. Encontre oportunidades de crescimento mútuo."
+                description="O Marketplace B2B é o espaço exclusivo onde membros do ecossistema Menu ADS se conectam. Encontre oportunidades de crescimento mútuo e feche acordos estratégicos com outros empresários locais."
+                summaryText="Conecte-se com outros empresários e gere novos negócios. O Marketplace B2B permite que você ofereça descontos exclusivos para membros da rede e acesse ofertas agressivas em serviços e insumos essenciais para o seu crescimento."
                 benefits={[
                 "Acesse oportunidades agressivas em serviços essenciais.",
                 "Crie redes de networking real com outros empresários.",
@@ -140,7 +141,6 @@ export const MarketplaceB2B: React.FC = () => {
                 "Fortaleça a circulação de valor dentro da sua cidade.",
                 "Exclusividade garantida: acordos visíveis apenas para membros."
                 ]}
-                youtubeId="dQw4w9WgXcQ"
                 ctaLabel="BUSCAR MEU MATCH"
                 onStart={() => setActiveTab('browse')}
                 icon={Handshake}

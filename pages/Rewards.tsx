@@ -246,20 +246,20 @@ export const Rewards: React.FC = () => {
 
         {activeTab === 'home' && (
             <SectionLanding 
-                title="O motor da economia colaborativa"
+                title="O motor da Economia Colaborativa."
                 subtitle="Menu Club"
-                description="O Menu Club é o núcleo da movimentação econômica do ecossistema. Aqui, quanto mais o empreendedor se movimenta, mais oportunidades ele gera dentro da comunidade."
+                description="Acumule pontos, Menu Cash e expanda seu networking através de indicações e conexões estratégicas."
+                summaryText="O Menu Club é o coração da nossa comunidade. Aqui você transforma suas conexões em recompensas reais, acompanhando suas indicações, saldo de Menu Cash e transações B2B em um só lugar."
                 benefits={[
-                "Realizam negócios B2B dentro da rede",
-                "Geram oportunidades por meio de indicações",
-                "Utilizam e acumulam Menu Cash (moeda interna)",
-                "Aumentam visibilidade e autoridade pela participação ativa"
+                    "Ganhe pontos por cada indicação ativada",
+                    "Receba Menu Cash para utilizar em parceiros",
+                    "Acompanhe suas transações B2B em tempo real",
+                    "Aumente seu nível e desbloqueie benefícios exclusivos"
                 ]}
-                youtubeId="dQw4w9WgXcQ"
-                ctaLabel="VER MEUS PONTOS"
-                onStart={() => setActiveTab('missions')}
-                icon={Trophy}
-                accentColor="brand"
+                ctaLabel="VER MINHAS INDICAÇÕES"
+                onStart={() => setActiveTab('referrals')}
+                icon={Star}
+                accentColor="indigo"
             />
         )}
 
@@ -716,14 +716,19 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                   </div>
                 </div>
               </div>
-              <div className="text-right flex items-center gap-6">
+                <div className="text-right flex items-center gap-6">
                 <div className="space-y-1">
                   <div className="flex flex-col">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total</span>
-                    <p className="text-lg font-black text-gray-900">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.total_amount || tx.amount)}
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Líquido</span>
+                    <p className="text-xl font-black text-emerald-600">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.amount)}
                     </p>
                   </div>
+                  {tx.total_amount && tx.total_amount !== tx.amount && (
+                    <p className="text-[10px] font-bold text-slate-400">
+                      Total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.total_amount)}
+                    </p>
+                  )}
                   {tx.menu_cash_amount && tx.menu_cash_amount > 0 && (
                     <div className="flex flex-col">
                       <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">M$ {tx.menu_cash_amount.toFixed(2)}</span>
@@ -732,15 +737,31 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                   <p className={`text-[10px] font-black uppercase tracking-widest ${tx.status === 'confirmed' ? 'text-emerald-500' : tx.status === 'rejected' ? 'text-red-500' : 'text-orange-500'}`}>
                     {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Aprovação'}
                   </p>
+                  
+                  {/* Botão de WhatsApp direto na lista para transações pendentes */}
+                  {tx.status === 'pending' && (tx.buyer_id === user?.id ? tx.seller_phone : tx.buyer_phone) && (
+                    <button
+                      onClick={() => {
+                        const isUserBuyer = tx.buyer_id === user?.id;
+                        const targetPhone = isUserBuyer ? tx.seller_phone : tx.buyer_phone;
+                        const msg = `Olá! Referente à proposta de compra via Menu Cash no item: ${tx.description}. \n\n💎 *Valor Total*: R$ ${(tx.total_amount || tx.amount).toFixed(2)} \n💎 *Menu Cash utilizado*: M$ ${(tx.menu_cash_amount || 0).toFixed(2)} \n💎 *Valor Líquido a Pagar*: R$ ${tx.amount.toFixed(2)}`;
+                        window.open(`https://wa.me/${targetPhone!.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                      }}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] rounded-full hover:bg-[#25D366]/20 transition-all group mx-auto"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">WhatsApp</span>
+                    </button>
+                  )}
                 </div>
                 
                 {tx.status === 'pending' && (
                   <div className="flex flex-col gap-2">
                     {/* Botão de Confirmação Individual */}
-                    {((tx.buyer_id === user.id && !tx.buyer_confirmed) || (tx.seller_id === user.id && !tx.seller_confirmed)) ? (
+                    {((tx.buyer_id === user?.id && !tx.buyer_confirmed) || (tx.seller_id === user?.id && !tx.seller_confirmed)) ? (
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => handleConfirm(tx.id, tx.buyer_id === user.id)}
+                          onClick={() => handleConfirm(tx.id, tx.buyer_id === user?.id)}
                           className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-100 transition-all flex items-center gap-2"
                         >
                           <CheckCircle className="w-4 h-4" /> EFETIVAR
@@ -753,8 +774,23 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                         </button>
                       </div>
                     ) : (
-                      <div className="px-4 py-2 bg-gray-50 text-slate-400 rounded-xl font-black text-[10px] uppercase italic">
-                        Aguardando outro lado...
+                      <div className="flex flex-col gap-2">
+                        <div className="px-4 py-2 bg-gray-50 text-slate-400 rounded-xl font-black text-[10px] uppercase italic">
+                          Aguardando outro lado...
+                        </div>
+                        {/* Botão de WhatsApp para cobrar o outro lado */}
+                        <button
+                          onClick={() => {
+                            const isUserBuyer = tx.buyer_id === user?.id;
+                            const targetPhone = isUserBuyer ? tx.seller_phone : tx.buyer_phone;
+                            const msg = `Olá! Referente à proposta de compra via Menu Cash no item: ${tx.description}. \n\n💎 *Valor Total*: R$ ${(tx.total_amount || tx.amount).toFixed(2)} \n💎 *Menu Cash utilizado*: M$ ${(tx.menu_cash_amount || 0).toFixed(2)} \n💎 *Valor Líquido a Pagar*: R$ ${tx.amount.toFixed(2)}`;
+                            window.open(`https://wa.me/${targetPhone!.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                          }}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366]/20 transition-all group"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">Cobrar via Whats</span>
+                        </button>
                       </div>
                     )}
                   </div>

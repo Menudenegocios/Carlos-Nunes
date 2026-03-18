@@ -798,7 +798,8 @@ export const supabaseService = {
     role: string,
     menu_cash: number,
     has_founder_badge?: boolean,
-    display_id?: number
+    display_id?: number,
+    cpf_cnpj?: string
   }): Promise<void> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -814,8 +815,16 @@ export const supabaseService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update user');
+        const text = await response.text();
+        try {
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.error || 'Failed to update user');
+        } catch (e) {
+          if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+            throw new Error('O servidor retornou uma página HTML em vez de JSON. Verifique se o backend (node server.mjs) está rodando e se a rota /api está configurada corretamente.');
+          }
+          throw new Error('Erro na resposta do servidor.');
+        }
       }
     } catch (error) {
       console.error("Error in adminUpdateUser:", error);
@@ -1426,22 +1435,7 @@ export const supabaseService = {
       
       if (error) throw error;
 
-      // 2. Temporarily deduct Menu Cash from buyer if present
-      if (transaction.menu_cash_amount > 0) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('menu_cash')
-          .eq('user_id', transaction.buyer_id)
-          .single();
-        
-        if (profile) {
-          await supabase
-            .from('profiles')
-            .update({ menu_cash: (profile.menu_cash || 0) - transaction.menu_cash_amount })
-            .eq('user_id', transaction.buyer_id);
-        }
-      }
-
+      if (error) throw error;
       return data;
     } catch (error) {
       console.error("Error creating B2B transaction:", error);
@@ -1451,49 +1445,16 @@ export const supabaseService = {
 
   confirmB2BTransaction: async (id: string, userId: string, isBuyer: boolean): Promise<void> => {
     try {
-      const updateData = isBuyer ? { buyer_confirmed: true } : { seller_confirmed: true };
-      // Update confirmation
-      const { error: updateError } = await supabase
-        .from('b2b_transactions')
-        .update(updateData)
-        .eq('id', id);
+      const { error } = await supabase.rpc('confirm_and_transfer_b2b_transaction', {
+        p_tx_id: id,
+        p_user_id: userId,
+        p_is_buyer: isBuyer
+      });
 
-      if (updateError) throw updateError;
-
-      // Fetch updated record
-      const { data: tx, error: fetchError } = await supabase
-        .from('b2b_transactions')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Check if both confirmed
-      if (tx.buyer_confirmed && tx.seller_confirmed) {
-        await supabase
-          .from('b2b_transactions')
-          .update({ status: 'confirmed' })
-          .eq('id', id);
-        
-        // Finalize Menu Cash transfer to seller
-        if (tx.menu_cash_amount > 0) {
-          const { data: sellerProfile } = await supabase
-            .from('profiles')
-            .select('menu_cash')
-            .eq('user_id', tx.seller_id)
-            .single();
-          
-          if (sellerProfile) {
-            await supabase
-              .from('profiles')
-              .update({ menu_cash: (sellerProfile.menu_cash || 0) + tx.menu_cash_amount })
-              .eq('user_id', tx.seller_id);
-          }
-        }
-      }
+      if (error) throw error;
+      console.log("RPC Transaction confirmation/transfer completed successfully.");
     } catch (error) {
-      console.error("Error confirming transaction:", error);
+      console.error("Error confirming transaction via RPC:", error);
       throw error;
     }
   },
@@ -1515,21 +1476,7 @@ export const supabaseService = {
       
       if (error) throw error;
 
-      // Handle refund if rejected
-      if (status === 'rejected' && tx.menu_cash_amount > 0) {
-        const { data: buyerProfile } = await supabase
-          .from('profiles')
-          .select('menu_cash')
-          .eq('user_id', tx.buyer_id)
-          .single();
-        
-        if (buyerProfile) {
-          await supabase
-            .from('profiles')
-            .update({ menu_cash: (buyerProfile.menu_cash || 0) + tx.menu_cash_amount })
-            .eq('user_id', tx.buyer_id);
-        }
-      }
+      if (error) throw error;
     } catch (error) {
       console.error("Error updating B2B transaction status:", error);
       throw error;

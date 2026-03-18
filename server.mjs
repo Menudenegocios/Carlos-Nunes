@@ -13,340 +13,289 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const stripe = stripePackage(process.env.STRIPE_SECRET_KEY);
+// Configuração Asaas
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
+const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
+
 const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+// Helper para chamadas Asaas
+async function asaasFetch(endpoint, method = 'GET', body = null) {
+  const url = `${ASAAS_API_URL}${endpoint}`;
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'access_token': ASAAS_API_KEY
+    }
+  };
+  if (body) options.body = JSON.stringify(body);
+  const response = await fetch(url, options);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.errors?.[0]?.description || 'Erro na API do Asaas');
+  return data;
+}
 
-// Webhook endpoint needs raw body
-app.post('/api/webhooks/stripe', bodyParser.raw({type: 'application/json'}), async (request, response) => {
-  const sig = request.headers['stripe-signature'];
+// Asaas Webhook Endpoint
+app.post('/api/webhooks/asaas', async (req, res) => {
+  const event = req.body;
+  const token = req.headers['asaas-access-token'];
 
-  let event;
+  // Verificação simples se o token for configurado
+  if (process.env.ASAAS_WEBHOOK_TOKEN && token !== process.env.ASAAS_WEBHOOK_TOKEN) {
+    console.warn("Webhook Asaas: Token inválido recebido.");
+    return res.status(401).send('Unauthorized');
+  }
+  
+  console.log(`Recebendo webhook Asaas: ${event.event}`);
 
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    const payment = event.payment;
+    
+    // Identificar usuário pelo externalReference (que passamos na criação) ou metadata
+    const user_id = payment.externalReference;
+    if (!user_id) return res.status(200).send('No external reference');
+
+    switch (event.event) {
+      case 'PAYMENT_RECEIVED':
+      case 'PAYMENT_CONFIRMED':
+        await handlePaymentSuccess(payment, user_id);
+        break;
+      case 'PAYMENT_OVERDUE':
+        // Marcar como inadimplente no banco se necessário
+        console.log(`Pagamento em atraso para usuário ${user_id}`);
+        await supabase.from('subscriptions').update({ status: 'overdue' }).eq('user_id', user_id);
+        break;
+      case 'PAYMENT_DELETED':
+        console.log(`Pagamento removido para usuário ${user_id}`);
+        await supabase.from('subscriptions').update({ status: 'canceled' }).eq('user_id', user_id);
+        break;
+      default:
+        console.log(`Evento não tratado: ${event.event}`);
+    }
+
+    res.json({ received: true });
   } catch (err) {
-    console.error(`Webhook Error: ${err.message}`);
-    return response.status(400).send(`Webhook Error: ${err.message}`);
+    console.error(`Erro no processamento do webhook: ${err.message}`);
+    res.status(500).send(`Erro no servidor`);
   }
-
-  // Handle the event
-  switch (event.type) {
-    case 'checkout.session.completed':
-      const session = event.data.object;
-      await handleSubscriptionCreated(session);
-      break;
-    case 'invoice.paid':
-      const invoice = event.data.object;
-      await handleInvoicePaid(invoice);
-      break;
-    case 'customer.subscription.deleted':
-      const subscription = event.data.object;
-      await handleSubscriptionDeleted(subscription);
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  response.json({received: true});
 });
 
 // JSON parsing for other routes
 app.use(express.json());
 
-// Create Checkout Session
-app.post('/api/create-checkout-session', async (req, res) => {
-  const { planId, billingCycle } = req.body;
+// Asaas: Criar Cliente
+app.post('/api/asaas/create-customer', async (req, res) => {
+  const { name, email, cpfCnpj, phone } = req.body;
   const authHeader = req.headers.authorization;
-  
   if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
 
   const token = authHeader.split(' ')[1];
   const { data: { user }, error } = await supabase.auth.getUser(token);
-
   if (error || !user) return res.status(401).json({ error: 'Invalid token' });
 
   try {
-    // Get profile to check for stripe_customer_id
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('user_id', user.id)
-      .single();
-
-    let customerId = profile?.stripe_customer_id;
-
-    if (!customerId) {
-        const customer = await stripe.customers.create({
-            email: user.email,
-            metadata: { supabase_user_id: user.id }
-        });
-        customerId = customer.id;
-        
-        await supabase
-            .from('profiles')
-            .update({ stripe_customer_id: customerId })
-            .eq('user_id', user.id);
-    }
-
-    let planName = 'Plano Comunidade';
-    let planId_technical = 'basic';
-    
-    // Price IDs for mapping names in metadata
-    const basicoPriceIds = [
-      process.env.STRIPE_PRICE_BASICO_MONTHLY, 
-      process.env.VITE_STRIPE_PRICE_BASICO_MONTHLY,
-      process.env.STRIPE_PRICE_BASICO_YEARLY,
-      process.env.VITE_STRIPE_PRICE_BASICO_YEARLY,
-      'price_1TBpx2F7zhqZwXmj7Vn1Gift'
-    ].filter(id => !!id);
-
-    const proPriceIds = [
-      process.env.STRIPE_PRICE_PRO_MONTHLY, 
-      process.env.VITE_STRIPE_PRICE_PRO_MONTHLY,
-      process.env.STRIPE_PRICE_PRO_YEARLY,
-      process.env.VITE_STRIPE_PRICE_PRO_YEARLY,
-      'price_1TBpx5F7zhqZwXmj1cKWRqjd'
-    ].filter(id => !!id);
-
-    const fullPriceIds = [
-      process.env.STRIPE_PRICE_FULL_MONTHLY,
-      process.env.VITE_STRIPE_PRICE_FULL_MONTHLY,
-      process.env.STRIPE_PRICE_FULL_YEARLY,
-      process.env.VITE_STRIPE_PRICE_FULL_YEARLY,
-      'price_1TBpx7F7zhqZwXmjQXqEq1Aq'
-    ].filter(id => !!id);
-
-    if (proPriceIds.includes(planId)) {
-      planName = 'Plano Pro';
-      planId_technical = 'pro';
-    } else if (fullPriceIds.includes(planId)) {
-      planName = 'Plano Full';
-      planId_technical = 'full';
-    } else {
-      planName = 'Plano Básico';
-      planId_technical = 'basic';
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{
-        price: planId,
-        quantity: 1,
-      }],
-      mode: 'subscription',
-      success_url: `${process.env.APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_URL}/plans`,
-      metadata: {
-        user_id: user.id,
-        plan_name: planName,
-        plan_id: planId_technical
-      }
+    const customer = await asaasFetch('/customers', 'POST', {
+      name,
+      email,
+      cpfCnpj,
+      phone,
+      externalReference: user.id
     });
 
-    res.json({ id: session.id, url: session.url });
+    // Salvar asaas_customer_id no perfil
+    await supabase.from('profiles').update({ 
+      asaas_customer_id: customer.id,
+      cpf_cnpj: cpfCnpj 
+    }).eq('user_id', user.id);
+
+    res.json(customer);
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao criar cliente Asaas:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Helper functions to update Supabase
-async function handleSubscriptionCreated(session) {
-    const { user_id, plan_id } = session.metadata;
-    const stripe_subscription_id = session.subscription;
-    const stripe_customer_id = session.customer;
+// Asaas: Criar Cobrança (PIX/Cartão avulso)
+app.post('/api/asaas/create-payment', async (req, res) => {
+  const { value, billingType, description, dueDate } = req.body;
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Get subscription details from stripe
-    const subscription = await stripe.subscriptions.retrieve(stripe_subscription_id);
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
 
-    await supabase.from('subscriptions').upsert({
-        user_id,
-        stripe_customer_id,
-        stripe_subscription_id,
-        plan: plan_id,
-        status: subscription.status,
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString()
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('asaas_customer_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile?.asaas_customer_id) throw new Error("Cliente não cadastrado no Asaas");
+
+    const payment = await asaasFetch('/payments', 'POST', {
+      customer: profile.asaas_customer_id,
+      billingType,
+      value,
+      dueDate: dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0], // 1 dia
+      description: description || 'Pagamento Menu de Negócios',
+      externalReference: user.id
     });
 
-    // Define rewards based on plan
+    res.json(payment);
+  } catch (err) {
+    console.error("Erro ao criar pagamento Asaas:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Asaas: Criar Assinatura (Planos SaaS)
+app.post('/api/asaas/create-subscription', async (req, res) => {
+  const { planId, billingType, cycle } = req.body;
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) return res.status(401).json({ error: 'Invalid token' });
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('asaas_customer_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile?.asaas_customer_id) throw new Error("Cliente não cadastrado no Asaas");
+
+    // Mapeamento de valores por plano
+    const planValues = {
+      'basic': cycle === 'YEARLY' ? 2490 : 249, // Exemplo
+      'pro': cycle === 'YEARLY' ? 5990 : 599,
+      'full': cycle === 'YEARLY' ? 14970 : 1497
+    };
+    
+    // Corrigido para valores da campanha se existirem (basico mensal = 249)
+    const value = planValues[planId] || 249;
+
+    const subscription = await asaasFetch('/subscriptions', 'POST', {
+      customer: profile.asaas_customer_id,
+      billingType,
+      value,
+      nextDueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      cycle: cycle || 'MONTHLY',
+      description: `Assinatura Plano ${planId.toUpperCase()}`,
+      externalReference: user.id
+    });
+
+    // Buscar a primeira fatura da assinatura para pegar a invoiceUrl
+    const payments = await asaasFetch(`/subscriptions/${subscription.id}/payments`);
+    const invoiceUrl = payments.data?.[0]?.invoiceUrl || subscription.invoiceUrl;
+
+    res.json({ ...subscription, invoiceUrl });
+  } catch (err) {
+    console.error("Erro ao criar assinatura Asaas:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Compatibilidade com endpoint antigo de Checkout (Redirecionando para asaas se necessário)
+app.post('/api/create-checkout-session', async (req, res) => {
+    // Redireciona lógica para manter compatibilidade frontend enquanto migra
+    res.status(400).json({ error: 'Este endpoint foi desativado. Use /api/asaas/create-subscription' });
+});
+
+// Helper centralizado para sucesso de pagamento (Unificado de Stripe e Asaas)
+async function handlePaymentSuccess(payment, user_id) {
+    // Determinar o plano pelo valor ou descrição da assinatura do Asaas
+    let plan_id = 'basic';
+    const value = payment.value;
+    
+    if (value >= 1497) plan_id = 'full';
+    else if (value >= 599) plan_id = 'pro';
+
+    const asaas_customer_id = payment.customer;
+    const asaas_subscription_id = payment.subscription;
+
+    // Atualizar tabela subscriptions
+    await supabase.from('subscriptions').upsert({
+        user_id,
+        asaas_customer_id,
+        asaas_subscription_id,
+        asaas_payment_id: payment.id,
+        plan: plan_id,
+        status: 'active',
+        current_period_end: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString() // Aproximadamente 1 mês
+    }, { onConflict: 'user_id' });
+
+    // Lógica de recompensas (mantida de stripe para asaas)
     let rewardPoints = 0;
     let rewardCash = 0;
 
-    if (plan_id === 'basic') {
-        rewardPoints = 100;
-        rewardCash = 50;
-    } else if (plan_id === 'pro') {
-        rewardPoints = 300;
-        rewardCash = 100;
-    } else if (plan_id === 'full') {
-        rewardPoints = 500;
-        rewardCash = 200;
-    }
+    if (plan_id === 'basic') { rewardPoints = 100; rewardCash = 50; }
+    else if (plan_id === 'pro') { rewardPoints = 300; rewardCash = 100; }
+    else if (plan_id === 'full') { rewardPoints = 500; rewardCash = 200; }
 
-    // Check for Founder Badge period (until March 31, 2026)
     const now = new Date();
-    const deadline = new Date('2026-04-01'); // First second of April
+    const deadline = new Date('2026-04-01');
     const getFounderBadge = now < deadline;
 
-    // Update profile with Plan, Rewards and Badge
-    const updateData = { 
-        plan: plan_id,
-        level: 'Nível Base' // All start at base level as requested
-    };
-
-    // Get current profile to add rewards
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('points, menu_cash')
-        .eq('user_id', user_id)
-        .single();
+    const updateData = { plan: plan_id, level: 'Nível Base' };
+    const { data: profile } = await supabase.from('profiles').select('points, menu_cash').eq('user_id', user_id).single();
 
     if (profile) {
         updateData.points = (profile.points || 0) + rewardPoints;
         updateData.menu_cash = (profile.menu_cash || 0) + rewardCash;
-        if (getFounderBadge) {
-            updateData.has_founder_badge = true;
-        }
+        if (getFounderBadge) updateData.has_founder_badge = true;
     }
 
     await supabase.from('profiles').update(updateData).eq('user_id', user_id);
 
-    // Filter points and log history
     if (rewardPoints > 0) {
         await supabase.from('points_history').insert({
-            user_id: user_id,
-            points: rewardPoints,
-            action: `Ativação Plano ${plan_id.toUpperCase()}`,
-            category: 'plano',
-            date: new Date().toISOString()
+            user_id, points: rewardPoints,
+            action: `Ativação Plano ${plan_id.toUpperCase()} (Asaas)`,
+            category: 'plano', date: new Date().toISOString()
         });
     }
 
-    // --- REFERRAL REWARDS LOGIC ---
+    // --- LOGICA DE INDICAÇÃO ---
     try {
-        // Get subscriber's profile to find the referrer
-        const { data: subscriberProfile } = await supabase
-            .from('profiles')
-            .select('referrer_id')
-            .eq('user_id', user_id)
-            .single();
-
-        if (subscriberProfile?.referrer_id) {
-            const referrerId = subscriberProfile.referrer_id;
-            
-            // Get Referrer Profile
-            const { data: referrer } = await supabase
-                .from('profiles')
-                .select('points, menu_cash, level, referrals_count')
-                .eq('id', referrerId)
-                .single();
+        const { data: subProfile } = await supabase.from('profiles').select('referrer_id').eq('user_id', user_id).single();
+        if (subProfile?.referrer_id) {
+            const referrerId = subProfile.referrer_id;
+            const { data: referrer } = await supabase.from('profiles').select('id, user_id, points, menu_cash, level, referrals_count').eq('id', referrerId).single();
             
             if (referrer) {
-                // Points based on subscriber plan (Values matches gamificationConfig)
-                let pointsAwarded = 0;
-                if (plan_id === 'basic') pointsAwarded = 100;
-                else if (plan_id === 'pro') pointsAwarded = 300;
-                else if (plan_id === 'full') pointsAwarded = 500;
-                
-                // Menu Cash % based on referrer level
-                const levelPercents = {
-                    'nível base': 0,
-                    'bronze': 0.05,
-                    'prata': 0.10,
-                    'ouro': 0.15,
-                    'diamante': 0.20
-                };
-                
+                let pointsAwarded = (plan_id === 'basic' ? 100 : (plan_id === 'pro' ? 300 : 500));
+                const levelPercents = {'nível base':0, 'bronze':0.05, 'prata':0.10, 'ouro':0.15, 'diamante':0.20};
                 const percent = levelPercents[referrer.level?.toLowerCase()] || 0;
-                
-                // Plan values (Campaign prices)
-                const planValues = {
-                    'basic': 249,
-                    'pro': 599,
-                    'full': 1497
-                };
-                
-                const subsValue = planValues[plan_id] || 0;
-                const cashAwarded = subsValue * percent;
-                
-                // Update Referrer Profile
+                const planValues = {'basic': 249, 'pro': 599, 'full': 1497};
+                const cashAwarded = (planValues[plan_id] || 0) * percent;
+
                 await supabase.from('profiles').update({
                     points: (referrer.points || 0) + pointsAwarded,
                     menu_cash: (referrer.menu_cash || 0) + cashAwarded,
                     referrals_count: (referrer.referrals_count || 0) + 1
                 }).eq('id', referrerId);
 
-                // Log Referrer Reward
                 await supabase.from('points_history').insert({
-                    user_id: referrer.user_id || referrerId, // Use user_id if available on profile
+                    user_id: referrer.user_id || referrerId,
                     points: pointsAwarded,
                     action: `Indicação de Membro (${plan_id.toUpperCase()})`,
-                    category: 'indicacao',
-                    date: new Date().toISOString()
+                    category: 'indicacao', date: new Date().toISOString()
                 });
-                
-                
-                console.log(`Referral reward applied: Referrer ${referrerId} awarded ${pointsAwarded} pts and M$ ${cashAwarded}`);
             }
         }
-    } catch (refError) {
-        console.error("Error processing referral rewards:", refError);
-    }
+    } catch (e) { console.error("Referral rewards error:", e); }
 }
 
-async function handleInvoicePaid(invoice) {
-    if (!invoice.subscription) return;
-    const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-    
-    await supabase.from('subscriptions')
-        .update({ 
-            status: subscription.status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString()
-        })
-        .eq('stripe_subscription_id', invoice.subscription);
-
-    // --- RENEWAL REWARDS ---
-    // If it's a renewal (not the first invoice)
-    if (invoice.billing_reason === 'subscription_cycle') {
-        const { data: subData } = await supabase.from('subscriptions')
-            .select('user_id, plan')
-            .eq('stripe_subscription_id', invoice.subscription)
-            .single();
-
-        if (subData) {
-            const plan_id = subData.plan;
-            let rewardPoints = 0;
-            if (plan_id === 'basic') rewardPoints = 50;
-            else if (plan_id === 'pro') rewardPoints = 150;
-            else if (plan_id === 'full') rewardPoints = 250;
-
-            if (rewardPoints > 0) {
-                // Update profile
-                const { data: profile } = await supabase.from('profiles')
-                    .select('points')
-                    .eq('user_id', subData.user_id)
-                    .single();
-                
-                if (profile) {
-                    await supabase.from('profiles')
-                        .update({ points: (profile.points || 0) + rewardPoints })
-                        .eq('user_id', subData.user_id);
-
-                    await supabase.from('points_history').insert({
-                        user_id: subData.user_id,
-                        points: rewardPoints,
-                        action: `Renovação Plano ${plan_id.toUpperCase()}`,
-                        category: 'plano',
-                        date: new Date().toISOString()
-                    });
-                }
-            }
-        }
-    }
-}
+// Remover funções Stripe obsoletas
+async function handleSubscriptionCreated(session) {}
+async function handleInvoicePaid(invoice) {}
+async function handleSubscriptionDeleted(subscription) {}
 
 // Admin: Update User (Password, Email, Profile)
 app.post('/api/admin/update-user', async (req, res) => {
@@ -369,9 +318,12 @@ app.post('/api/admin/update-user', async (req, res) => {
         return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
-    const { userId, business_name, email, password, plan, level, points, role, menu_cash, has_founder_badge } = req.body;
-
+    const { userId, business_name, email, password, plan, level, points: newPoints, role, menu_cash: newMenuCash, has_founder_badge, display_id, cpf_cnpj } = req.body;
+    
     try {
+        // Fetch current profile to check for activation
+        const { data: oldProfile } = await supabase.from('profiles').select('plan, points, menu_cash, referrer_id').eq('user_id', userId).single();
+        
         const updateData = {};
         if (password) updateData.password = password;
         if (email) updateData.email = email;
@@ -382,7 +334,6 @@ app.post('/api/admin/update-user', async (req, res) => {
             if (updateAuthError) throw updateAuthError;
         }
 
-        // 2. Update Profile
         const { error: updateProfileError } = await supabase
             .from('profiles')
             .update({
@@ -390,15 +341,68 @@ app.post('/api/admin/update-user', async (req, res) => {
                 email,
                 plan,
                 level,
-                points,
+                points: newPoints,
                 role,
-                menu_cash,
+                menu_cash: newMenuCash,
                 has_founder_badge,
+                display_id,
+                cpf_cnpj,
                 updated_at: new Date().toISOString()
             })
             .eq('user_id', userId);
 
         if (updateProfileError) throw updateProfileError;
+
+        // --- Lógica de Ativação Manual (Recompensas) ---
+        if (oldProfile && oldProfile.plan === 'pre-cadastro' && plan && plan !== 'pre-cadastro') {
+            console.log(`Manual activation detected for ${userId}. Applying rewards...`);
+            
+            let rewardPoints = 0;
+            let rewardCash = 0;
+            if (plan === 'basic') { rewardPoints = 100; rewardCash = 50; }
+            else if (plan === 'pro') { rewardPoints = 300; rewardCash = 100; }
+            else if (plan === 'full') { rewardPoints = 500; rewardCash = 200; }
+
+            // 1. Recompensa para o Usuário que ativou (Soma ao que o admin já enviou)
+            if (rewardPoints > 0) {
+                await supabase.from('profiles').update({
+                    points: (newPoints || 0) + rewardPoints,
+                    menu_cash: (newMenuCash || 0) + rewardCash
+                }).eq('user_id', userId);
+
+                await supabase.from('points_history').insert({
+                    user_id: userId, points: rewardPoints,
+                    action: `Ativação de Plano ${plan.toUpperCase()} (Manual)`,
+                    category: 'plano', date: new Date().toISOString()
+                });
+            }
+
+            // 2. Recompensa para quem Indicou (Referrer)
+            if (oldProfile.referrer_id) {
+                const { data: referrer } = await supabase.from('profiles').select('id, user_id, points, menu_cash, level, referrals_count').eq('id', oldProfile.referrer_id).single();
+                if (referrer) {
+                    const levelPercents = {'nível base':0, 'bronze':0.05, 'prata':0.10, 'ouro':0.15, 'diamante':0.20};
+                    const percent = levelPercents[referrer.level?.toLowerCase()] || 0;
+                    const planValues = {'basic': 249, 'pro': 599, 'full': 1497};
+                    
+                    const pointsAwarded = rewardPoints;
+                    const cashAwarded = (planValues[plan] || 0) * percent;
+
+                    await supabase.from('profiles').update({
+                        points: (referrer.points || 0) + pointsAwarded,
+                        menu_cash: (referrer.menu_cash || 0) + cashAwarded,
+                        referrals_count: (referrer.referrals_count || 0) + 1
+                    }).eq('id', referrer.id);
+
+                    await supabase.from('points_history').insert({
+                        user_id: referrer.user_id,
+                        points: pointsAwarded,
+                        action: `Indicação de Membro (${plan.toUpperCase()}) - Ativação Manual`,
+                        category: 'indicacao', date: new Date().toISOString()
+                    });
+                }
+            }
+        }
 
         // 3. Update or Create Subscription Validity if plan is not pre-cadastro
         if (plan && plan !== 'pre-cadastro') {
@@ -458,13 +462,10 @@ app.delete('/api/admin/delete-user', async (req, res) => {
     }
 });
 
-async function handleSubscriptionDeleted(subscription) {
-    await supabase.from('subscriptions')
-        .update({ status: 'canceled' })
-        .eq('stripe_subscription_id', subscription.id);
-        
-    // Optionally update profile to free plan
-}
+// Catch-all for undefined /api routes to return JSON instead of HTML
+app.all(/\/api\/.*/, (req, res) => {
+    res.status(404).json({ error: `Route ${req.method} ${req.url} not found` });
+});
 
 // Serve static files from production build
 app.use(express.static(path.join(__dirname, 'dist')));

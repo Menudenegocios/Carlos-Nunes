@@ -143,17 +143,17 @@ export const Academy: React.FC = () => {
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'home' && (
             <SectionLanding 
-                title="Conhecimento que faz seu negócio crescer."
+                title="Sua jornada para a Maestria em Negócios."
                 subtitle="Menu Academy"
-                description="Explore nossa biblioteca exclusiva de treinamentos focados no empreendedor local. Aprenda estratégias práticas para dominar o mercado regional."
+                description="O conhecimento que transforma pequenos negócios em referências regionais. Explore treinamentos práticos, trilhas de sucesso validadas e ferramentas de IA que funcionam como sua consultoria 24h por dia."
+                summaryText="A Menu Academy é o seu centro de treinamento estratégico. Aqui você encontra cursos práticos de tráfego pago, scripts de vendas e gestão financeira, além de agentes de IA especializados que funcionam como sua consultoria de negócios 24 horas por dia."
                 benefits={[
-                "Treinamentos rápidos focados em implementação imediata.",
-                "Estratégias de tráfego pago para atrair clientes do bairro.",
-                "Consultoria com agentes de IA treinados em vendas.",
-                "Caminho validado do zero ao sucesso comercial.",
-                "Conteúdo atualizado semanalmente com tendências de mercado."
+                "Aulas Práticas: Aprenda Tráfego Pago, Vendas e Gestão de forma direta.",
+                "Trilha do Sucesso: Siga um caminho lógico do zero ao topo do mercado.",
+                "Agentes de IA: Consultores especializados em scripts e quebra de objeções.",
+                "Biblioteca de Prompts: Copie e cole estratégias de alta conversão.",
+                "Atualizações: Conteúdo focado no que há de mais moderno no mercado local."
                 ]}
-                youtubeId="dQw4w9WgXcQ"
                 ctaLabel="VER CURSOS DISPONÍVEIS"
                 onStart={() => setActiveTab('treinamentos')}
                 icon={GraduationCap}

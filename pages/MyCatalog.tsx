@@ -15,6 +15,7 @@ import {
   Share2, Link as LinkIcon, Tag, BookOpen, FileText, Send, AlignLeft, Type,
   Calendar, Ticket, Search, BarChart, MessageSquare
 } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -96,7 +97,7 @@ export const MyCatalog: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
     name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', store_category_id: '', external_link: '',
-    accepts_menu_cash: false, menu_cash_percentage: 5
+    accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto'
   });
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -302,7 +303,7 @@ export const MyCatalog: React.FC = () => {
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5 });
+      setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto' });
       alert("Item salvo com sucesso!");
       loadData();
     } catch (error) {
@@ -424,7 +425,23 @@ export const MyCatalog: React.FC = () => {
 
       <div className="pt-4 px-2">
         {activeSubTab === 'home' && (
-          <SectionLanding title="Sua Vitrine é seu palco digital." subtitle="Ecossistema de Conteúdo" description="Gerencie seu catálogo de produtos, escreva artigos de autoridade e configure sua Landing Page em um único lugar." benefits={["Cadastro ilimitado de produtos", "Blog integrado ao diretório global", "Design focado em conversão mobile", "Sincronização instantânea"]} youtubeId="dQw4w9WgXcQ" ctaLabel="COMEÇAR CONFIGURAÇÃO" onStart={() => handleTabChange('identity')} icon={LayoutGrid} accentColor="brand" />
+          <SectionLanding 
+            title="Sua Presença Digital Completa em um só lugar." 
+            subtitle="Vitrine & Catálogo" 
+            description="Centralize a gestão da sua autoridade online. Aqui você configura sua identidade visual, gerencia seu catálogo de ofertas e publica conteúdo estratégico para atrair e converter clientes no ecossistema global." 
+            summaryText="Gerencie sua vitrine local com facilidade. Configure sua marca, cadastre seus produtos e serviços, e publique conteúdos que geram autoridade. Tudo o que você faz aqui é refletido instantaneamente no Marketplace do Menu ADS."
+            benefits={[
+              "Identidade: Defina sua marca, logo e cores da vitrine.",
+              "Catálogo: Cadastre seus produtos, serviços e mentorias.",
+              "Autoridade: Publique artigos e estudos de caso no seu blog.",
+              "Landing Page: Configure sua página de vendas exclusiva.",
+              "Sincronização: Tudo o que você faz aqui reflete no Marketplace."
+            ]} 
+            ctaLabel="COMEÇAR CONFIGURAÇÃO" 
+            onStart={() => handleTabChange('identity')} 
+            icon={LayoutGrid} 
+            accentColor="brand" 
+          />
         )}
 
         <div className={`${activeSubTab === 'home' ? 'hidden' : 'bg-white rounded-[3rem] p-8 md:p-12 border border-gray-100 shadow-xl min-h-[500px] animate-fade-in'}`}>
@@ -661,7 +678,7 @@ export const MyCatalog: React.FC = () => {
                             </h3>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos ou serviços que aparecem na sua Vitrine.</p>
                          </div>
-                         <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 transition-all">
+                         <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', product_type: 'Produto' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 transition-all">
                             <Plus className="w-5 h-5" /> ADICIONAR ITEM
                          </button>
                       </div>
@@ -730,13 +747,11 @@ export const MyCatalog: React.FC = () => {
                       <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><MessageCircle className="w-5 h-5" /> Contato & Redes Sociais</h4>
                       <div className="grid md:grid-cols-2 gap-8">
                          <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Phone className="w-3 h-3" /> WhatsApp Comercial</label>
-                            <input 
-                               type="text" 
-                               className="w-full bg-white border-none rounded-2xl p-4 font-bold" 
-                               value={profile.phone || ''} 
-                               onChange={e => setProfile({...profile, phone: e.target.value})} 
-                               placeholder="Ex: 5511999999999" 
+                            <PhoneInput
+                               label="WhatsApp Comercial"
+                               value={profile.phone || ''}
+                               onChange={val => setProfile({...profile, phone: val})}
+                               className="w-full"
                             />
                          </div>
                          <div>
@@ -785,7 +800,7 @@ export const MyCatalog: React.FC = () => {
                       <div className="flex gap-4">
                          <input 
                             type="url" 
-                            className="flex-1 bg-white border-none rounded-2xl p-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500" 
+                            className="flex-1 bg-white border-none rounded-2xl p-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500/10" 
                             value={videoUrlInput} 
                             onChange={e => setVideoUrlInput(e.target.value)} 
                             placeholder="Link do Reel do Instagram (ex: https://www.instagram.com/reels/...)" 
@@ -959,26 +974,35 @@ export const MyCatalog: React.FC = () => {
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Link de Redirecionamento (Opcional)</label>
                              <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.external_link || ''} onChange={e => setProductForm({...productForm, external_link: e.target.value})} placeholder="https://..." />
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Preço (R$)</label>
-                                <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
-                             </div>
-                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
-                                <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.store_category_id} onChange={e => setProductForm({...productForm, store_category_id: e.target.value})}>
-                                   <option value="">Nenhuma</option>
-                                   {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
-                                </select>
-                             </div>
-                          </div>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo de Item</label>
+                                 <select required className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.product_type} onChange={e => setProductForm({...productForm, product_type: e.target.value as any})}>
+                                    <option value="Produto">PRODUTO</option>
+                                    <option value="Serviço">SERVIÇO</option>
+                                    <option value="Mentoria">MENTORIA</option>
+                                 </select>
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Subcategoria (Vitrine)</label>
+                                 <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.store_category_id} onChange={e => setProductForm({...productForm, store_category_id: e.target.value})}>
+                                    <option value="">Nenhuma</option>
+                                    {storeCategories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
+                                 </select>
+                              </div>
+                           </div>
                        </div>
                        <div className="space-y-6">
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Imagem</label>
-                          <div className="aspect-square bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 relative overflow-hidden group cursor-pointer" onClick={() => fileInputProductRef.current?.click()}>
-                             {productForm.image_url ? <img src={productForm.image_url} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase">Upload</span></div>}
-                             <input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} />
-                          </div>
+                           <div className="aspect-square bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 relative overflow-hidden group cursor-pointer" onClick={() => fileInputProductRef.current?.click()}>
+                              {productForm.image_url ? <img src={productForm.image_url} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase">Upload</span></div>}
+                              <input type="file" ref={fileInputProductRef} hidden onChange={e => handleImageUpload(e, 'productUrl')} />
+                           </div>
+
+                           <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Preço Sugerido (R$)</label>
+                              <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
+                           </div>
                           
                           <div className="bg-gray-50 p-6 rounded-2xl space-y-4">
                              <div className="flex items-center justify-between">

@@ -8,8 +8,9 @@ import {
   X, Trash2, CheckCircle, Clock, Briefcase, 
   Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical,
   Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle,
-  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid
+  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid, Phone
 } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -99,17 +100,17 @@ export const BusinessSuite: React.FC = () => {
       <div className="animate-[fade-in_0.4s_ease-out]">
         {activeTab === 'home' && (
             <SectionLanding 
-                title="Sua central de operações do dia a dia."
+                title="Sua central de inteligência e gestão."
                 subtitle="CRM & Vendas"
-                description="Organize leads, controle as finanças e gerencie sua agenda em um só lugar. A produtividade que seu negócio precisa para crescer sem perder o controle."
+                description="O painel de controle definitivo para o seu negócio. No módulo de Gestão Business, você organiza seu funil de vendas, controla finanças pessoais e empresariais, e gerencia sua agenda de forma profissional e integrada."
+                summaryText="A Gestão Business é a espinha dorsal da sua operação. Aqui você gerencia o relacionamento com seus clientes através do CRM, controla seu fluxo de caixa e organiza sua agenda profissional, tudo em uma interface integrada e simplificada."
                 benefits={[
-                "CRM & Vendas Kanban: visualize sua receita futura.",
-                "Fluxo de caixa: saiba exatamente o lucro do seu mês.",
-                "Biblioteca de Agentes de IA para automatizar tarefas.",
-                "Sincronização com nuvem para acesso em qualquer lugar.",
-                "Relatórios simplificados de performance comercial."
+                "CRM Kanban: Movimente seus leads e visualize sua previsão de receita.",
+                "Carteira de Clientes: Centralize o histórico e dados de quem confia em você.",
+                "Fluxo de Caixa: Separe suas contas PF e PJ com lançamentos simplificados.",
+                "Agenda Pro: Organize horários de serviços e reuniões em um calendário único.",
+                "Menuzap Pro: Conecte seu WhatsApp diretamente ao seu funil de vendas."
                 ]}
-                youtubeId="dQw4w9WgXcQ"
                 ctaLabel="ABRIR MEU CRM & VENDAS"
                 onStart={() => setActiveTab('crm')}
                 icon={Briefcase}
@@ -310,10 +311,12 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
                           <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                        </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
-                          <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                       </div>
+                       <PhoneInput
+                          label="WhatsApp"
+                          value={formData.phone || ''}
+                          onChange={val => setFormData({...formData, phone: val})}
+                          className="w-full"
+                       />
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Negócio</label>
                           <input type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
@@ -348,10 +351,12 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                               <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.name} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} />
                            </div>
                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">WhatsApp</label>
-                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
-                              </div>
+                              <PhoneInput
+                                  label="WhatsApp"
+                                  value={clientFormData.phone || ''}
+                                  onChange={val => setClientFormData({...clientFormData, phone: val})}
+                                  className="w-full"
+                               />
                               <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email (Opcional)</label>
                                  <input type="email" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.email} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />

@@ -7,7 +7,7 @@ import {
   MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight, ArrowUpRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
-  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store
+  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store, RefreshCw
 } from 'lucide-react';
 
 // Componente do Bot de WhatsApp
@@ -167,6 +167,8 @@ export const StoreView: React.FC = () => {
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isPurchaseSuccess, setIsPurchaseSuccess] = useState(false);
+  const [purchaseWhatsappUrl, setPurchaseWhatsappUrl] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [menuCashToUse, setMenuCashToUse] = useState<number>(0);
   const [isProcessingPurchase, setIsProcessingPurchase] = useState(false);
@@ -288,29 +290,33 @@ export const StoreView: React.FC = () => {
 
     setIsProcessingPurchase(true);
     try {
+        const amountToPay = selectedProduct.price - menuCashToUse;
+        const message = `Olá! Acabo de enviar uma proposta de compra via Menu Cash no produto: ${selectedProduct.name}. \n\n💎 *Valor Total*: R$ ${selectedProduct.price.toFixed(2)} \n💎 *Menu Cash utilizado*: M$ ${menuCashToUse.toFixed(2)} \n💎 *Valor Líquido a Pagar*: R$ ${amountToPay.toFixed(2)}`;
+        const sellerPhoneClean = profile!.phone?.replace(/\D/g, '');
+        const whatsappUrl = `https://wa.me/${sellerPhoneClean}?text=${encodeURIComponent(message)}`;
+
         await supabaseService.createB2BTransaction({
             buyer_id: user.id,
+            buyer_name: user.name,
+            buyer_phone: currentUserProfile?.phone || '',
             seller_id: profile!.user_id,
+            seller_name: profile!.business_name || profile!.name || 'Vendedor',
+            seller_phone: profile!.phone || '',
             product_id: selectedProduct.id,
-            amount: selectedProduct.price,
+            total_amount: selectedProduct.price,
             menu_cash_amount: menuCashToUse,
-            cash_amount: selectedProduct.price - menuCashToUse,
+            amount: amountToPay,
+            description: `Compra do item: ${selectedProduct.name}`,
             status: 'pending'
         });
 
-        alert("Interesse enviado com sucesso! A transação está disponível no seu painel de Menu Club.");
-        setIsPurchaseModalOpen(false);
-        setSelectedProduct(null);
-        setMenuCashToUse(0);
-        
-        // Redirecionar para WhatsApp do vendedor com info da transação
-        const message = `Olá! Acabo de enviar uma proposta de compra via Menu Cash no produto: ${selectedProduct.name}. \nValor Total: R$ ${selectedProduct.price.toFixed(2)} \nMenu Cash utilizado: M$ ${menuCashToUse.toFixed(2)}`;
-        const whatsappUrl = `https://wa.me/${profile!.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        setPurchaseWhatsappUrl(whatsappUrl);
+        setIsPurchaseSuccess(true);
         window.open(whatsappUrl, '_blank');
 
-    } catch (err) {
+    } catch (err: any) {
         console.error("Erro ao processar compra:", err);
-        alert("Erro ao processar transação. Tente novamente.");
+        alert(`Erro ao processar compra: ${err.message || 'Erro desconhecido'}`);
     } finally {
         setIsProcessingPurchase(false);
     }
@@ -356,7 +362,14 @@ export const StoreView: React.FC = () => {
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                             <span className="bg-[#0F172A] text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">ESPECIALISTA</span>
                         </div>
-                         <h1 className="text-5xl lg:text-7xl font-black text-[#0F172A] uppercase italic tracking-tighter leading-tight title-fix">{profile.business_name}</h1>
+                         <div className="flex items-center gap-3">
+                            <h1 className="text-5xl lg:text-7xl font-black text-[#0F172A] uppercase italic tracking-tighter leading-tight title-fix">{profile.business_name}</h1>
+                            {profile.has_founder_badge && (
+                                <div className="bg-amber-100 text-amber-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse mb-4">
+                                    Membro Fundador
+                                </div>
+                            )}
+                         </div>
                          <p className="text-2xl font-bold text-[#0F172A] uppercase italic tracking-tight title-fix">{profile.category || 'VENDAS'}</p>
                    </div>
                 </div>
@@ -413,14 +426,9 @@ export const StoreView: React.FC = () => {
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><Target className="w-5 h-5" /></div>
                                      <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Problemas que resolvo</h2>
                                 </div>
-                                <div className="space-y-4">
-                                    {(profile.store_config?.problems_solved || 'Soluções estratégicas para seu negócio.').split('\n').map((item, i) => (
-                                        <div key={i} className="flex items-start gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                            <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-1" />
-                                            <p className="text-base font-bold text-gray-700 leading-tight italic">{item}</p>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p className="text-lg text-gray-600 font-medium leading-relaxed italic">
+                                    "{profile.store_config?.problems_solved || 'Soluções estratégicas para seu negócio.'}"
+                                </p>
                             </section>
 
                             {/* SOLUÇÕES E SERVIÇOS */}
@@ -429,14 +437,9 @@ export const StoreView: React.FC = () => {
                                     <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><ListTodo className="w-5 h-5" /></div>
                                      <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Soluções & Serviços</h2>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {(profile.store_config?.solutions || 'Consultoria, Gestão, Treinamento.').split(',').map((item, i) => (
-                                        <div key={i} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-4 group hover:bg-slate-100 transition-all">
-                                            <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-[#0F172A] shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
-                                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-600">{item.trim()}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p className="text-lg text-gray-600 font-medium leading-relaxed italic">
+                                    "{profile.store_config?.solutions || 'Consultoria, Gestão, Treinamento.'}"
+                                </p>
                             </section>
 
                             {/* INTERESSES DE NEGÓCIO */}
@@ -712,8 +715,11 @@ export const StoreView: React.FC = () => {
                         </div>
                     </div>
                     <div className="bg-[#0F172A] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
-                        <Award className="w-12 h-12 mx-auto text-brand-primary" />
-                        <h4 className="text-xl font-black uppercase italic tracking-tighter title-fix">Membro Verificado <br/>Menu de Negócios</h4>
+                        <Award className={`w-12 h-12 mx-auto ${profile.has_founder_badge ? 'text-brand-primary' : 'text-slate-400'}`} />
+                        <h4 className="text-xl font-black uppercase italic tracking-tighter title-fix">
+                            {profile.has_founder_badge ? 'Membro Fundador' : 'Membro Verificado'} <br/>
+                            Menu de Negócios
+                        </h4>
                         <ShieldCheck className="absolute top-0 right-0 w-24 h-24 text-white/10 -mr-8 -mt-8" />
                     </div>
                 </div>
@@ -826,83 +832,123 @@ export const StoreView: React.FC = () => {
         {/* 5. WHATSAPP BOT WIDGET */}
         <WhatsappBotWidget profile={profile} />
 
-        {/* 6. MENU CASH PURCHASE MODAL */}
+        {/* 6. MODAL: COMPRA DE PRODUTO (SYNC COM REWARDS.TSX) */}
         {isPurchaseModalOpen && selectedProduct && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-sm" onClick={() => setIsPurchaseModalOpen(false)}></div>
-                <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                    <div className="p-8">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">Comprar com Menu Cash</h3>
-                            <button onClick={() => setIsPurchaseModalOpen(false)} className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+                <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+                    <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
+                        <div>
+                            <h3 className="text-xl font-black uppercase italic tracking-tighter">
+                                {isPurchaseSuccess ? 'Pedido Enviado!' : 'Finalizar Compra'}
+                            </h3>
+                            <p className="text-[9px] font-black text-emerald-400 tracking-widest mt-0.5 uppercase">
+                                {isPurchaseSuccess ? 'Agora fale com o vendedor' : 'Use seu saldo Menu Cash'}
+                            </p>
                         </div>
+                        <button onClick={() => { setIsPurchaseModalOpen(false); setIsPurchaseSuccess(false); }} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
+                    </div>
+                    
+                    <div className="p-8 space-y-6">
+                        {isPurchaseSuccess ? (
+                            <div className="text-center space-y-6 py-4">
+                                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                    <CheckCircle className="w-10 h-10" />
+                                </div>
+                                <h4 className="text-2xl font-black text-gray-900 uppercase italic">Proposta Enviada!</h4>
+                                <p className="text-slate-500 font-medium">Sua proposta foi registrada. Para agilizar a aprovação, chame o vendedor agora mesmo no WhatsApp.</p>
+                                
+                                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 flex flex-col gap-3">
+                                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                                        <span>Valor a pagar</span>
+                                        <span className="text-gray-900 font-black text-sm">R$ {(selectedProduct.price - menuCashToUse).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                                        <span>Desconto Menu Cash</span>
+                                        <span className="text-indigo-600 font-black text-sm">M$ {menuCashToUse.toFixed(2)}</span>
+                                    </div>
+                                </div>
 
-                        <div className="space-y-6">
-                            {/* Produto Info */}
-                            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
+                                <div className="space-y-3">
+                                    <a 
+                                        href={purchaseWhatsappUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full bg-[#25D366] text-white font-black py-6 rounded-[2.5rem] shadow-xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <MessageSquare className="w-5 h-5" /> FALAR NO WHATSAPP
+                                    </a>
+                                    <button 
+                                        onClick={() => { setIsPurchaseModalOpen(false); setIsPurchaseSuccess(false); }}
+                                        className="w-full text-slate-400 font-black py-2 uppercase tracking-widest text-[10px] hover:text-slate-600 transition-all"
+                                    >
+                                        VOLTAR PARA A VITRINE
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Produto Info */}
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                  <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white shadow-sm shrink-0">
                                     <img src={selectedProduct.image_url} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-lg font-black text-gray-900 uppercase italic line-clamp-1 leading-tight">{selectedProduct.name}</h4>
+                                    <p className="text-xl font-black text-brand-primary">R$ {selectedProduct.price.toFixed(2)}</p>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <h4 className="font-black text-gray-900 uppercase italic tracking-tighter truncate">{selectedProduct.name}</h4>
-                                    <p className="text-lg font-black text-emerald-600">R$ {selectedProduct.price.toFixed(2)}</p>
-                                </div>
-                            </div>
 
-                            {/* Saldo Info */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 text-center">
-                                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Seu Saldo</p>
-                                    <p className="text-xl font-black text-indigo-600">M$ {currentUserProfile?.menu_cash?.toFixed(2) || '0.00'}</p>
+                                {/* Info de Saldo e Limite */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">Meu Saldo</p>
+                                        <p className="text-xl font-black text-indigo-900">M$ {currentUserProfile?.menu_cash?.toFixed(2) || '0.00'}</p>
+                                    </div>
+                                    <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Limite de Uso</p>
+                                        <p className="text-xl font-black text-emerald-900">{selectedProduct.menu_cash_percentage}% (R$ {(selectedProduct.price * (selectedProduct.menu_cash_percentage || 0) / 100).toFixed(2)})</p>
+                                    </div>
                                 </div>
-                                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                                    <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Limite Aceito</p>
-                                    <p className="text-xl font-black text-emerald-600">{selectedProduct.menu_cash_percentage}%</p>
-                                </div>
-                            </div>
 
-                            {/* Input de Valor */}
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Valor em Menu Cash a usar</label>
-                                <div className="relative">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-indigo-400">M$</div>
+                                {/* Input de Valor */}
+                                <div>
+                                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-left">Quanto Menu Cash deseja usar?</label>
                                     <input 
+                                        required 
                                         type="number" 
-                                        value={menuCashToUse}
-                                        onChange={(e) => setMenuCashToUse(Number(e.target.value))}
-                                        max={(selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100}
-                                        className="w-full pl-12 pr-6 py-5 bg-gray-50 border border-gray-100 rounded-2xl font-black text-xl text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500/20"
-                                        placeholder="0.00"
+                                        step="0.01" 
+                                        max={(selectedProduct.price * (selectedProduct.menu_cash_percentage || 0) / 100)}
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-base" 
+                                        value={menuCashToUse} 
+                                        onChange={e => setMenuCashToUse(Number(e.target.value))} 
+                                        placeholder="M$ 0.00" 
                                     />
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-400 italic px-1">
-                                    Máximo permitido: M$ {((selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100).toFixed(2)}
-                                </p>
-                            </div>
 
-                            {/* Resumo */}
-                            <div className="p-6 bg-[#0F172A] rounded-2xl space-y-3">
-                                <div className="flex justify-between text-white/60 text-xs font-bold uppercase tracking-widest">
-                                    <span>Valor Final em R$</span>
-                                    <span>R$ {(selectedProduct.price - menuCashToUse).toFixed(2)}</span>
+                                {/* Card de Valor Final */}
+                                <div className="bg-indigo-600 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
+                                    <div className="relative z-10 flex justify-between items-center">
+                                        <div>
+                                            <span className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.2em] block mb-1">Total com Desconto</span>
+                                            <span className="text-2xl font-black text-white italic">R$ {(selectedProduct.price - menuCashToUse).toFixed(2)}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.2em] block mb-1">Economia</span>
+                                            <span className="text-lg font-black text-emerald-400">- M$ {menuCashToUse.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                                 </div>
-                                <div className="h-px bg-white/10"></div>
-                                <div className="flex justify-between text-white font-black text-sm uppercase tracking-widest">
-                                    <span>Pagamento Total</span>
-                                    <span className="text-brand-primary">R$ {selectedProduct.price.toFixed(2)}</span>
-                                </div>
-                            </div>
 
-                            <button 
-                                onClick={handleMenuCashPurchase}
-                                disabled={isProcessingPurchase || menuCashToUse <= 0}
-                                className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-3"
-                            >
-                                {isProcessingPurchase ? 'PROCESSANDO...' : 'CONFIRMAR INTERESSE'} <Zap className="w-5 h-5" />
-                            </button>
-                        </div>
+                                <button 
+                                    onClick={handleMenuCashPurchase} 
+                                    disabled={isProcessingPurchase || menuCashToUse <= 0} 
+                                    className="w-full bg-gray-900 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-brand-primary transition-all active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    {isProcessingPurchase ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'CONFIRMAR COMPRA'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

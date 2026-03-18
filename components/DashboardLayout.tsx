@@ -166,6 +166,15 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <div className="flex flex-col h-screen bg-brand-surface overflow-hidden transition-colors duration-300 font-sans">
+      <style>{`
+        @keyframes shimmerSidebar {
+          0% { transform: translateX(-150%) skewX(-12deg); }
+          100% { transform: translateX(150%) skewX(-12deg); }
+        }
+        .animate-shimmer-sidebar {
+          animation: shimmerSidebar 2.5s infinite ease-in-out;
+        }
+      `}</style>
       
       {/* BANNER MODO PERSONIFICAÇÃO */}
       {isImpersonating && (
@@ -190,58 +199,50 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
       <div className="flex flex-1 overflow-hidden">
         <aside 
-          className={`hidden lg:flex flex-col bg-white/70 backdrop-blur-xl border border-white/5 h-[calc(100vh-2.5rem)] my-5 ml-5 rounded-[2.5rem] flex-shrink-0 transition-all duration-500 ease-in-out shadow-2xl overflow-hidden ${
-            isExpanded ? 'w-72' : 'w-24'
+          className={`hidden lg:flex flex-col relative flex-shrink-0 transition-all duration-500 ease-in-out my-5 ml-5 h-[calc(100vh-2.5rem)] z-40 ${
+            isExpanded ? 'w-72' : 'w-[5.5rem]'
           }`}
         >
-          <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
-            <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-between px-2' : 'justify-center'}`}>
-              <div className="flex items-center gap-3 overflow-hidden">
-                <Link to="/" className="flex items-center">
-                   <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "xs" : "xxs"} />
-                </Link>
+          {/* Fundo Glassmorphism */}
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl border border-white/60 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] overflow-hidden flex flex-col pointer-events-auto">
+            <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
+              <div className={`flex items-center mb-10 transition-all ${isExpanded ? 'justify-start px-2' : 'justify-center'}`}>
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <Link to="/" className="flex items-center">
+                     <Logo variant={isExpanded ? 'full' : 'icon'} size={isExpanded ? "xs" : "xxs"} />
+                  </Link>
+                </div>
               </div>
-              
-              {isExpanded && (
-                <button 
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-1.5 rounded-lg border border-brand-secondary/10 text-brand-secondary hover:bg-brand-surface hover:text-brand-primary transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              )}
-            </div>
 
-            <nav className="space-y-1">
+              <nav className="space-y-2">
               {menuItems.map((item) => (
                 <div key={item.label}>
                   <Link
                     to={item.to}
                     onClick={(e) => handleItemClick(e, item)}
-                    className={`flex items-center rounded-xl transition-all group overflow-hidden relative ${
+                    className={`flex items-center rounded-2xl transition-all duration-300 group overflow-hidden relative ${
                       isActive(item.to) 
-                        ? 'bg-indigo-50 text-indigo-600' 
-                        : 'text-slate-500 hover:bg-brand-surface hover:text-brand-dark'
-                    } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center'}`}
+                        ? 'text-white shadow-lg shadow-indigo-500/30' 
+                        : 'text-slate-500 hover:bg-white/60 hover:text-indigo-600'
+                    } ${isExpanded ? 'px-4 py-3.5 gap-4' : 'p-3.5 justify-center mx-auto w-12 h-12'}`}
                   >
                     {isActive(item.to) && (
-                      <motion.div 
-                        layoutId="activeSideTab"
-                        className="absolute inset-0 bg-indigo-50 rounded-xl" 
-                      />
-                    )}
-                    {isActive(item.to) && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#F67C01] rounded-r-full shadow-[0_0_15px_rgba(246,124,1,0.6)]"></div>
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl"></div>
+                        <div className="absolute inset-0 w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-sidebar"></div>
+                      </>
                     )}
                     
-                    <item.icon className={`w-5 h-5 transition-all duration-300 relative z-10 ${isActive(item.to) ? 'text-indigo-600 scale-110' : 'text-slate-400 group-hover:text-brand-dark group-hover:scale-110'}`} />
+                    <item.icon className={`w-5 h-5 transition-transform duration-300 relative z-10 ${isActive(item.to) ? 'text-white scale-110' : 'text-slate-400 group-hover:text-indigo-600 group-hover:scale-110'}`} />
                     {isExpanded && (
                       <div className="flex items-center justify-between flex-1 overflow-hidden relative z-10">
-                        <span className="animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic">{item.label}</span>
+                        <span className={`animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>
+                          {item.label}
+                        </span>
                         {item.subItems && (
                           <div 
                             onClick={(e) => toggleSubItems(e, item)}
-                            className="p-1 hover:bg-black/10 rounded-lg transition-all"
+                            className={`p-1 rounded-lg transition-all ${isActive(item.to) ? 'hover:bg-white/20 text-white' : 'hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600'}`}
                           >
                             <ChevronRight className={`w-4 h-4 transition-transform ${expandedItems.includes(item.label) ? 'rotate-90' : ''}`} />
                           </div>
@@ -272,15 +273,24 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
             </nav>
           </div>
 
-          <div className="mt-auto p-5 border-t border-brand-secondary/5">
-            <button 
-              onClick={logout}
-              className={`flex items-center gap-4 px-5 py-5 rounded-2xl font-black text-[10px] tracking-widest bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 w-full group shadow-sm ${!isExpanded ? 'justify-center p-3.5' : ''}`}
-            >
-              <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
-              {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">SAIR DA CONTA</span>}
-            </button>
+            <div className="mt-auto p-5 border-t border-white/50 relative z-10">
+              <button 
+                onClick={logout}
+                className={`flex items-center gap-4 py-4 rounded-2xl font-black text-[10px] tracking-widest bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 w-full group shadow-sm border border-rose-100/50 ${!isExpanded ? 'justify-center p-3.5 mx-auto w-12 h-12' : 'px-5'}`}
+              >
+                <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
+                {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">SAIR DA CONTA</span>}
+              </button>
+            </div>
           </div>
+          
+          {/* Floating Expand/Collapse Button */}
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="absolute -right-3.5 top-16 p-2 bg-white border border-indigo-100 shadow-[0_4px_16px_rgba(31,38,135,0.12)] text-slate-400 hover:text-indigo-600 hover:scale-110 hover:shadow-[0_4px_20px_rgba(79,70,229,0.3)] rounded-full transition-all duration-300 z-50 flex items-center justify-center cursor-pointer"
+          >
+             <ChevronLeft className={`w-4 h-4 transition-transform duration-500 ${!isExpanded ? 'rotate-180' : ''}`} />
+          </button>
         </aside>
 
         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -354,35 +364,40 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100] lg:hidden animate-fade-in">
-           <div className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-           <aside className="absolute top-0 left-0 bottom-0 w-[280px] bg-brand-surface shadow-2xl flex flex-col animate-slide-in-left">
+           <div className="absolute inset-0 bg-brand-dark/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+           <aside className="absolute top-0 left-0 bottom-0 w-[280px] bg-white/70 backdrop-blur-3xl border-r border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] flex flex-col animate-slide-in-left">
               <div className="p-6 border-b border-brand-secondary/10 flex justify-between items-center">
                  <Logo size="sm" />
-                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-brand-secondary"><X className="w-6 h-6" /></button>
+                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X className="w-6 h-6" /></button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                  {menuItems.map((item) => (
                     <Link
                       key={item.label}
                       to={item.to}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center gap-4 p-4 rounded-xl transition-all relative ${
-                        isActive(item.to) ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white'
+                      className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group overflow-hidden relative ${
+                        isActive(item.to) ? 'text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-white/80 hover:text-indigo-600 hover:shadow-sm'
                       }`}
                     >
-                      {isActive(item.to) && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-primary rounded-r-full"></div>}
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-sm font-black tracking-tight">{item.label}</span>
+                      {isActive(item.to) && (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl"></div>
+                          <div className="absolute inset-0 w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-sidebar"></div>
+                        </>
+                      )}
+                      <item.icon className={`w-5 h-5 relative z-10 transition-transform duration-300 ${isActive(item.to) ? 'scale-110' : 'group-hover:scale-110 group-hover:text-indigo-600'}`} />
+                      <span className={`text-xs font-black tracking-widest uppercase italic relative z-10 transition-colors ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>{item.label}</span>
                     </Link>
                  ))}
               </div>
               <div className="p-6 border-t border-brand-secondary/10">
                  <button 
                    onClick={logout}
-                   className="flex items-center gap-4 w-full p-4 rounded-xl text-rose-600 hover:bg-rose-50 transition-all"
+                   className="flex items-center gap-4 w-full p-4 rounded-2xl bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white shadow-sm border border-rose-100/50 transition-all duration-300 group"
                  >
-                   <LogOut className="w-5 h-5 flex-shrink-0" />
-                   <span className="text-sm font-black tracking-tight tracking-widest uppercase">Sair</span>
+                   <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
+                   <span className="text-xs font-black tracking-widest uppercase italic">Sair da Conta</span>
                  </button>
               </div>
            </aside>

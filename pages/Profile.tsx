@@ -4,8 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
 import { Profile as ProfileType } from '../types';
 import { 
-  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, CreditCard, Clock
+  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, CreditCard, Clock, Phone
 } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 
 export const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -89,7 +90,14 @@ export const Profile: React.FC = () => {
                  </label>
               </div>
               <div>
-                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-2">{user?.name}</h1>
+                 <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none mb-2 flex items-center gap-4">
+                    {user?.name}
+                    {profile.has_founder_badge && (
+                      <div className="bg-brand-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
+                        FUNDADOR
+                      </div>
+                    )}
+                 </h1>
                  <p className="text-emerald-200 text-lg font-medium flex items-center gap-2">
                     <Crown className="w-5 h-5 text-emerald-400 fill-current" /> Status {user?.level.toUpperCase()}
                  </p>
@@ -109,7 +117,9 @@ export const Profile: React.FC = () => {
                      <span className="text-[9px] font-black tracking-[0.2em] opacity-60 uppercase">Menu ADS Premium</span>
                   </div>
                   <div>
-                     <p className="text-[8px] font-black opacity-40 uppercase tracking-widest mb-0.5">Membro Verificado</p>
+                     <p className="text-[8px] font-black opacity-40 uppercase tracking-widest mb-0.5">
+                        {profile.has_founder_badge ? 'Membro Fundador' : 'Membro Verificado'}
+                     </p>
                      <p className="font-mono text-base uppercase font-bold tracking-wider truncate">{user?.name}</p>
                   </div>
                   <div className="flex justify-between items-end">
@@ -152,10 +162,12 @@ export const Profile: React.FC = () => {
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição / Empresa</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.business_name || ''} onChange={e => setProfile({...profile, business_name: e.target.value})} />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Telefone WhatsApp</label>
-                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.phone || ''} onChange={e => setProfile({...profile, phone: e.target.value})} />
-                  </div>
+                  <PhoneInput
+                    label="Telefone WhatsApp"
+                    value={profile.phone || ''}
+                    onChange={val => setProfile({...profile, phone: val})}
+                    className="md:col-span-1"
+                  />
                   <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.category || ''} onChange={e => setProfile({...profile, category: e.target.value})} placeholder="Ex: Tecnologia, Vendas..." />

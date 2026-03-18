@@ -1,50 +1,19 @@
 
-import React, { useState } from 'react';
-import { Check, Sparkles, Zap, Shield, Rocket, User, Users, Star, Clock, Trophy, GraduationCap, Package, Briefcase, Globe, LayoutGrid, Crown } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Check, Sparkles, Zap, Rocket, User, Trophy } from 'lucide-react';
 
 export const Plans: React.FC = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState<string | null>(null);
 
-  const stripePrices = {
-    comunidade: {
-      anual: 'price_1TBpx2F7zhqZwXmj7Vn1Gift'   // R$ 249 (Promo)
-    },
-    fundador: {
-      anual: 'price_1TBpx5F7zhqZwXmj1cKWRqjd'   // R$ 599
-    },
-    fundador_pro: {
-      anual: 'price_1TBpx7F7zhqZwXmjQXqEq1Aq'   // R$ 1497
-    }
+  const externalLinks = {
+    comunidade: 'https://loja.infinitepay.io/menu_de_negocios/led4355-plano-basico',
+    fundador: 'https://loja.infinitepay.io/menu_de_negocios/flw2040-plano-pro',
+    fundador_pro: 'https://loja.infinitepay.io/menu_de_negocios/mkx2016-plano-full'
   };
 
-  const handleSubscribe = async (planKey: 'comunidade' | 'fundador' | 'fundador_pro') => {
-    if (!user) {
-      alert('Por favor, faça login para assinar um plano.');
-      navigate('/login');
-      return;
-    }
-
-    setLoading(planKey);
-    try {
-      const { paymentService } = await import('../services/paymentService');
-      const priceId = (stripePrices as any)[planKey].anual;
-
-      console.log(`Iniciando checkout para ${planKey} (${priceId})`);
-      
-      const { url } = await paymentService.createCheckoutSession(priceId, 'anual');
-      
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error: any) {
-      console.error('Erro no checkout:', error);
-      alert(`Erro no processamento: ${error.message || 'Verifique sua conexão ou tente novamente.'}`);
-    } finally {
-      setLoading(null);
+  const handleSubscribe = (planKey: 'comunidade' | 'fundador' | 'fundador_pro') => {
+    const link = externalLinks[planKey];
+    if (link) {
+      window.open(link, '_blank');
     }
   };
 
@@ -75,7 +44,7 @@ export const Plans: React.FC = () => {
             <span className="text-4xl font-black tracking-tighter italic">R$ {installments}</span>
           </div>
           <span className={`text-[10px] font-bold uppercase tracking-[0.2em] mt-1 ${recommended ? 'text-emerald-400' : 'text-emerald-600'}`}>
-            ou R$ {pixPrice} \u00e0 vista
+            ou R$ {pixPrice} &agrave; vista
           </span>
         </div>
 
@@ -112,12 +81,11 @@ export const Plans: React.FC = () => {
       
       <button
         onClick={() => handleSubscribe(planKey)}
-        disabled={loading !== null}
         className={`w-full py-5 rounded-[2rem] font-black text-xs tracking-widest transition-all shadow-xl active:scale-95 uppercase ${
           recommended ? 'bg-brand-primary text-white hover:bg-orange-600 shadow-brand-primary/20' : 'bg-gray-900 text-white hover:opacity-90 shadow-indigo-600/20'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
+        }`}
       >
-        {loading === planKey ? 'PROCESSANDO...' : btnText}
+        {btnText}
       </button>
     </div>
   );
@@ -207,22 +175,6 @@ export const Plans: React.FC = () => {
         />
       </div>
 
-      {/* Footer Info */}
-      <div className="text-center space-y-4 px-4">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-          Ao assinar durante o período de lançamento (até 31/03), todos os usuários recebem automaticamente o Selo Membro Fundador vitalício em seu perfil.
-        </p>
-        <div className="flex items-center justify-center gap-8">
-            <div className="flex items-center gap-2 text-slate-400 grayscale opacity-50">
-               <Shield className="w-4 h-4" />
-               <span className="text-[9px] font-black uppercase tracking-widest">Pagamento Seguro</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400 grayscale opacity-50">
-               <Clock className="w-4 h-4" />
-               <span className="text-[9px] font-black uppercase tracking-widest">Ativação Imediata</span>
-            </div>
-        </div>
-      </div>
     </div>
   );
 };

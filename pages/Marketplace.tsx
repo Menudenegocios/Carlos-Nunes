@@ -20,6 +20,7 @@ const MARKETPLACE_SUBCATEGORIES = [
     { id: 'Todas', label: 'Todas', icon: Package },
     { id: 'Produtos', label: 'Produtos', icon: ShoppingBag },
     { id: 'Serviços', label: 'Serviços', icon: Wrench },
+    { id: 'Mentorias', label: 'Mentorias', icon: Award },
     { id: 'Oportunidades', label: 'Oportunidades', icon: Handshake },
 ];
 
@@ -55,11 +56,26 @@ export const Marketplace: React.FC = () => {
       // Fetch user roles for products to identify admin products
       const productsWithRoles = prods.map(p => {
         const profile = profileData.find(pr => pr.user_id === p.user_id);
-        return { ...p, user_role: profile?.role || 'user' };
+        return { 
+          ...p, 
+          user_role: profile?.role || 'user',
+          business_name: profile?.business_name,
+          business_logo: profile?.logo_url,
+          businessPhone: profile?.phone
+        };
       });
 
       setProducts(productsWithRoles);
-      setAllOffers(offers);
+      const enrichedOffers = offers.map(o => {
+        const profile = profileData.find(pr => pr.user_id === o.user_id);
+        return {
+          ...o,
+          business_name: profile?.business_name,
+          business_logo: profile?.logo_url,
+          businessPhone: profile?.phone
+        };
+      });
+      setAllOffers(enrichedOffers);
       setProfiles(profileData);
       setPartners(partnerData);
     } catch (error) {
@@ -78,14 +94,46 @@ export const Marketplace: React.FC = () => {
     const subCat = activeSubCategory;
     
     if (activeTab === 'vitrines') {
+        if (subCat === 'Produtos' || subCat === 'Serviços' || subCat === 'Mentorias') {
+            const publishedUserIds = profiles.filter(pr => pr.is_published).map(pr => pr.user_id);
+            // Mapeamos a subcategoria para o tipo de produto no banco
+            const typeMap: Record<string, string> = {
+                'Produtos': 'Produto',
+                'Serviços': 'Serviço',
+                'Mentorias': 'Mentoria'
+            };
+            const targetType = typeMap[subCat];
+
+            return products.filter(p => 
+                p.user_role !== 'admin' &&
+                publishedUserIds.includes(p.user_id) &&
+                (p.product_type === targetType || (!p.product_type && subCat === 'Produtos')) &&
+                (p.name.toLowerCase().includes(term) || 
+                 p.category?.toLowerCase().includes(term) ||
+                 p.description?.toLowerCase().includes(term))
+            ).map(p => ({ ...p, type: 'product' }));
+        }
+
+        if (subCat === 'Oportunidades') {
+            const publishedUserIds = profiles.filter(pr => pr.is_published).map(pr => pr.user_id);
+            return allOffers.filter(o => 
+                publishedUserIds.includes(o.user_id) &&
+                (o.title.toLowerCase().includes(term) || o.description.toLowerCase().includes(term))
+            ).map(o => ({ ...o, type: 'offer' }));
+        }
+
         let filteredProfiles = profiles.filter(p => 
             p.is_published === true &&
-            (p.business_name?.toLowerCase().includes(term) || 
-            p.category?.toLowerCase().includes(term) ||
-            p.store_config?.vitrine_niche?.toLowerCase().includes(term))
+            (
+              (p.business_name || '').toLowerCase().includes(term) || 
+              (p.category || '').toLowerCase().includes(term) ||
+              (p.city || '').toLowerCase().includes(term) ||
+              ((p.store_config?.vitrine_niche || '').toLowerCase().includes(term)) ||
+              ((p.store_config?.vitrine_city || '').toLowerCase().includes(term))
+            )
         );
         
-        if (subCat !== 'Todas') {
+        if (subCat !== 'Todas' && subCat !== 'Produtos' && subCat !== 'Oportunidades') {
             filteredProfiles = filteredProfiles.filter(p => p.vitrine_category === subCat || p.category === subCat);
         }
 
@@ -108,7 +156,8 @@ export const Marketplace: React.FC = () => {
         let filteredPartners = partners.filter(p => 
             p.title?.toLowerCase().includes(term) || 
             p.subtitle?.toLowerCase().includes(term) ||
-            p.category?.toLowerCase().includes(term)
+            p.category?.toLowerCase().includes(term) ||
+            p.city?.toLowerCase().includes(term)
         );
 
         if (subCat !== 'Todas') {
@@ -200,7 +249,7 @@ export const Marketplace: React.FC = () => {
             <div className="text-center py-32 bg-white rounded-[4rem] border-2 border-dashed border-gray-100">
                 <ImageIcon className="w-16 h-16 text-gray-200 mx-auto mb-6" />
                 <h3 className="text-2xl font-black text-gray-900">Nada encontrado em "{activeSubCategory}"</h3>
-                <p className="text-gray-50 mt-2 font-medium">Tente buscar por termos mais genéricos ou mude a categoria.</p>
+                <p className="text-slate-500 mt-2 font-medium">Tente buscar por termos mais genéricos ou mude a categoria.</p>
                 <button 
                     onClick={() => setActiveSubCategory('Todas')}
                     className="mt-6 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all"
@@ -231,7 +280,12 @@ export const Marketplace: React.FC = () => {
                                    </div>
                                 )}
                             </div>
-                            <h3 className="font-black text-gray-900 text-xl mb-2 line-clamp-1">{item.business_name}</h3>
+                            <h3 className="font-black text-gray-900 text-xl mb-1 line-clamp-1">{item.business_name}</h3>
+                            {item.has_founder_badge && (
+                                <div className="mb-2 bg-amber-100 text-amber-600 text-[8px] font-black px-3 py-1 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse">
+                                    Membro Fundador
+                                </div>
+                            )}
                             <p className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-6 bg-brand-primary/5 px-4 py-1.5 rounded-full">{item.store_config?.vitrine_niche || item.category || 'Negócio Local'}</p>
                             <div className="mt-auto w-full pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-slate-400 group-hover:text-brand-primary transition-colors">
                                 <span className="text-[10px] font-black uppercase tracking-widest">Acessar Vitrine</span>

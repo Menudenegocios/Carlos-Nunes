@@ -448,13 +448,19 @@ export const BioBuilder: React.FC = () => {
       </div>
 
       <div className="pt-4 px-2">
-        {activeEditorTab === 'home' ? (
+         {activeEditorTab === 'home' ? (
           <SectionLanding 
             title="Sua presença profissional em um único link."
             subtitle="Cartão Digital Inteligente"
-            description="Crie uma vitrine premium que reúne contatos, depoimentos e seu catálogo em uma interface elegante feita para converter."
-            benefits={["Design mobile-first", "Integração direta com catálogo", "Bloco de depoimentos", "SEO Otimizado"]}
-            youtubeId="dQw4w9WgXcQ"
+            description="Transforme sua bio em uma central de conversão premium. O BioBuilder permite que você reúna seus contatos, exiba depoimentos de clientes e destaque seus melhores produtos ou serviços em um design mobile-first extremamente elegante."
+            summaryText="O BioBuilder é a ferramenta definitiva para o seu cartão de visitas digital. Reúna todos os seus links importantes, exiba depoimentos que geram confiança e destaque seus principais produtos em um único lugar, com um design otimizado para celulares."
+            benefits={[
+              "Perfil e URL: Crie um link personalizado e fácil de lembrar.",
+              "Vitrine Digital: Destaque seus principais produtos em um carrossel.",
+              "Prova Social: Exiba depoimentos e avaliações para gerar confiança.",
+              "Design de Elite: Escolha temas, fontes e efeitos de gradientes fluidos.",
+              "Ativação Rápida: Gere seu QR Code e comece a compartilhar em segundos."
+            ]}
             ctaLabel="TURBINAR MINHA BIO"
             onStart={() => setActiveEditorTab('content')}
             icon={Smartphone}

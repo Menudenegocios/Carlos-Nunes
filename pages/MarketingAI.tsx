@@ -105,17 +105,17 @@ export const MarketingAI: React.FC = () => {
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
          {activeTab === 'home' && (
             <SectionLanding 
-                title="Sua Própria Agência de Marketing com o Menu Flow."
-                subtitle="Menu Flow Creative Studio"
-                description="Produza conteúdos que param o feed. Use a potência do Gemini para criar textos persuasivos e fotos de produtos cinematográficas em segundos."
+                title="Produção de Conteúdo com IA" 
+                subtitle="Studio Menu Flow" 
+                description="Produza conteúdos de nível profissional sem precisar de designers ou redatores. O Studio Menu Flow utiliza inteligência artificial de ponta para criar textos persuasivos e imagens cinematográficas exclusivas para o seu negócio."
+                summaryText="Transforme suas ideias em marketing de alta conversão. Use nossa inteligência artificial para gerar textos persuasivos para posts e anúncios, além de criar imagens realistas de produtos em segundos. É como ter uma agência de publicidade completa dentro da sua vitrine."
                 benefits={[
-                "Geração de Copys focadas em vendas locais.",
-                "Criação de Imagens realistas para Instagram e Catálogo.",
-                "Escolha de enquadramentos (Stories, Post ou Capa).",
-                "Brainstorm de ideias para promoções do bairro.",
-                "IA treinada nas melhores práticas de varejo local."
+                "Copywriter Pro: Crie legendas, anúncios e roteiros que vendem.",
+                "IA Image Studio: Gere fotos realistas de produtos em segundos.",
+                "Enquadramentos: Formatos prontos para Stories, Posts e Banners.",
+                "Personalização: IA treinada nas melhores práticas do varejo local.",
+                "Economia: Tenha uma agência completa dentro do seu dashboard."
                 ]}
-                youtubeId="dQw4w9WgXcQ"
                 ctaLabel="ABRIR FERRAMENTAS"
                 onStart={() => setActiveTab('text')}
                 icon={Wand2}
