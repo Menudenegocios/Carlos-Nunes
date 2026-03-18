@@ -245,11 +245,7 @@ async function handlePaymentSuccess(payment, user_id) {
     const updateData = { plan: plan_id, level: 'Nível Base' };
     const { data: profile } = await supabase.from('profiles').select('points, menu_cash').eq('user_id', user_id).single();
 
-    if (profile) {
-        updateData.points = (profile.points || 0) + rewardPoints;
-        updateData.menu_cash = (profile.menu_cash || 0) + rewardCash;
-        if (getFounderBadge) updateData.has_founder_badge = true;
-    }
+    if (profile && getFounderBadge) updateData.has_founder_badge = true;
 
     await supabase.from('profiles').update(updateData).eq('user_id', user_id);
 
@@ -261,35 +257,7 @@ async function handlePaymentSuccess(payment, user_id) {
         });
     }
 
-    // --- LOGICA DE INDICAÇÃO ---
-    try {
-        const { data: subProfile } = await supabase.from('profiles').select('referrer_id').eq('user_id', user_id).single();
-        if (subProfile?.referrer_id) {
-            const referrerId = subProfile.referrer_id;
-            const { data: referrer } = await supabase.from('profiles').select('id, user_id, points, menu_cash, level, referrals_count').eq('id', referrerId).single();
-            
-            if (referrer) {
-                let pointsAwarded = (plan_id === 'basic' ? 100 : (plan_id === 'pro' ? 300 : 500));
-                const levelPercents = {'nível base':0, 'bronze':0.05, 'prata':0.10, 'ouro':0.15, 'diamante':0.20};
-                const percent = levelPercents[referrer.level?.toLowerCase()] || 0;
-                const planValues = {'basic': 249, 'pro': 599, 'full': 1497};
-                const cashAwarded = (planValues[plan_id] || 0) * percent;
-
-                await supabase.from('profiles').update({
-                    points: (referrer.points || 0) + pointsAwarded,
-                    menu_cash: (referrer.menu_cash || 0) + cashAwarded,
-                    referrals_count: (referrer.referrals_count || 0) + 1
-                }).eq('id', referrerId);
-
-                await supabase.from('points_history').insert({
-                    user_id: referrer.user_id || referrerId,
-                    points: pointsAwarded,
-                    action: `Indicação de Membro (${plan_id.toUpperCase()})`,
-                    category: 'indicacao', date: new Date().toISOString()
-                });
-            }
-        }
-    } catch (e) { console.error("Referral rewards error:", e); }
+    // --- LOGICA DE INDICAÇÃO REMOVIDA (MANIPULADA POR TRIGGER DB) ---
 }
 
 // Remover funções Stripe obsoletas
@@ -353,56 +321,7 @@ app.post('/api/admin/update-user', async (req, res) => {
 
         if (updateProfileError) throw updateProfileError;
 
-        // --- Lógica de Ativação Manual (Recompensas) ---
-        if (oldProfile && oldProfile.plan === 'pre-cadastro' && plan && plan !== 'pre-cadastro') {
-            console.log(`Manual activation detected for ${userId}. Applying rewards...`);
-            
-            let rewardPoints = 0;
-            let rewardCash = 0;
-            if (plan === 'basic') { rewardPoints = 100; rewardCash = 50; }
-            else if (plan === 'pro') { rewardPoints = 300; rewardCash = 100; }
-            else if (plan === 'full') { rewardPoints = 500; rewardCash = 200; }
-
-            // 1. Recompensa para o Usuário que ativou (Soma ao que o admin já enviou)
-            if (rewardPoints > 0) {
-                await supabase.from('profiles').update({
-                    points: (newPoints || 0) + rewardPoints,
-                    menu_cash: (newMenuCash || 0) + rewardCash
-                }).eq('user_id', userId);
-
-                await supabase.from('points_history').insert({
-                    user_id: userId, points: rewardPoints,
-                    action: `Ativação de Plano ${plan.toUpperCase()} (Manual)`,
-                    category: 'plano', date: new Date().toISOString()
-                });
-            }
-
-            // 2. Recompensa para quem Indicou (Referrer)
-            if (oldProfile.referrer_id) {
-                const { data: referrer } = await supabase.from('profiles').select('id, user_id, points, menu_cash, level, referrals_count').eq('id', oldProfile.referrer_id).single();
-                if (referrer) {
-                    const levelPercents = {'nível base':0, 'bronze':0.05, 'prata':0.10, 'ouro':0.15, 'diamante':0.20};
-                    const percent = levelPercents[referrer.level?.toLowerCase()] || 0;
-                    const planValues = {'basic': 249, 'pro': 599, 'full': 1497};
-                    
-                    const pointsAwarded = rewardPoints;
-                    const cashAwarded = (planValues[plan] || 0) * percent;
-
-                    await supabase.from('profiles').update({
-                        points: (referrer.points || 0) + pointsAwarded,
-                        menu_cash: (referrer.menu_cash || 0) + cashAwarded,
-                        referrals_count: (referrer.referrals_count || 0) + 1
-                    }).eq('id', referrer.id);
-
-                    await supabase.from('points_history').insert({
-                        user_id: referrer.user_id,
-                        points: pointsAwarded,
-                        action: `Indicação de Membro (${plan.toUpperCase()}) - Ativação Manual`,
-                        category: 'indicacao', date: new Date().toISOString()
-                    });
-                }
-            }
-        }
+        // --- Lógica de Ativação Manual (REMOVIDA: AGORA HANDLED BY DATABASE TRIGGER) ---
 
         // 3. Update or Create Subscription Validity if plan is not pre-cadastro
         if (plan && plan !== 'pre-cadastro') {
