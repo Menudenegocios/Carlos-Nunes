@@ -802,29 +802,29 @@ export const supabaseService = {
     cpf_cnpj?: string
   }): Promise<void> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No active session");
-
-      const response = await fetch(`/api/admin/update-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(data)
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || 'Erro ao atualizar usuário no backend');
-      } else {
-          const text = await response.text();
-          console.error("Non-JSON response from server during update:", text.substring(0, 100));
-          throw new Error(`O servidor retornou uma resposta inválida (Status ${response.status}). Verifique se o servidor backend está rodando na Hostinger e se a rota /api/admin/update-user está ativa.`);
-      }
+      // Revertido para comunicação direta como solicitado pelo usuário (sem rota de API).
+      // Nota: Alteração de senha e e-mail no Auth.users não funcionará sem um backend seguro (Service Role).
+      // Mas a atualização de metadados no perfil (plano, nível, pontos) funcionará via RLS se o usuário for admin.
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          business_name: data.business_name,
+          email: data.email,
+          plan: data.plan,
+          level: data.level,
+          points: data.points,
+          role: data.role,
+          menu_cash: data.menu_cash,
+          has_founder_badge: data.has_founder_badge,
+          display_id: data.display_id,
+          cpf_cnpj: data.cpf_cnpj,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', data.userId);
+      
+      if (error) throw error;
     } catch (error: any) {
-      console.error("Error in adminUpdateUser:", error);
+      console.error("Error in adminUpdateUser (Direct):", error);
       throw error;
     }
   },
@@ -1730,30 +1730,17 @@ export const supabaseService = {
 
   adminDeleteUser: async (userId: string): Promise<void> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No active session");
-
-      const response = await fetch(`/api/admin/delete-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ userId })
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Erro ao excluir usuário no backend');
-      } else {
-        // Se não for JSON, provavelmente é erro de rota (HTML 404/500)
-        const text = await response.text();
-        console.error("Non-JSON response from server:", text.substring(0, 100));
-        throw new Error(`O servidor retornou uma resposta inválida (Status ${response.status}). Verifique se as variáveis de ambiente e o servidor backend estão ativos na Hostinger.`);
-      }
+      // Revertido para comunicação direta como solicitado pelo usuário (sem rota de API).
+      // Nota: Remover do Auth (auth.users) não é possível diretamente do frontend (Service Role).
+      // Mas deletar o PERFIL (tabela profiles) funcionará via RLS se o usuário for admin.
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (error) throw error;
     } catch (error: any) {
-      console.error("Error admin delete user:", error);
+      console.error("Error admin delete user (Direct):", error);
       throw error;
     }
   },
