@@ -343,7 +343,9 @@ app.post('/api/admin/update-user', async (req, res) => {
 
 // Admin: Delete User
 app.all('/api/admin/delete-user', async (req, res) => {
-    // Apenas permitir DELETE ou POST para exclusão
+    console.log(`[Admin] Request ${req.method} /api/admin/delete-user`);
+    
+    // Garantir que aceitamos POST ou DELETE
     if (req.method !== 'DELETE' && req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -355,7 +357,10 @@ app.all('/api/admin/delete-user', async (req, res) => {
     
     try {
         const { data: { user: adminUser }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !adminUser) return res.status(401).json({ error: 'Invalid token' });
+        if (authError || !adminUser) {
+            console.error("Auth error:", authError);
+            return res.status(401).json({ error: 'Invalid token or session expired' });
+        }
 
         // Check if requester is admin
         const { data: adminProfile } = await supabase
@@ -368,19 +373,25 @@ app.all('/api/admin/delete-user', async (req, res) => {
             return res.status(403).json({ error: 'Forbidden: Admin access required' });
         }
 
+        // Aceitar tanto via query (DELETE antigo) quanto via body (POST novo)
         const userId = req.query.userId || req.body.userId;
 
         if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
         }
 
+        console.log(`[Admin] Deleting user: ${userId}`);
+
         // Delete from Auth (this also deletes from public tables if there are CASCADE foreign keys)
         const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+            console.error("Supabase Admin Delete Error:", deleteError);
+            throw deleteError;
+        }
 
         res.json({ success: true, message: 'User deleted successfully from Auth and Profiles' });
     } catch (err) {
-        console.error("Admin delete error:", err);
+        console.error("Admin delete route error:", err);
         res.status(500).json({ error: err.message || 'Erro interno ao excluir usuário' });
     }
 });
