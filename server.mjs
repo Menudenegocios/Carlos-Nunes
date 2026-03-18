@@ -423,42 +423,46 @@ app.post('/api/admin/update-user', async (req, res) => {
 });
 
 // Admin: Delete User
-app.delete('/api/admin/delete-user', async (req, res) => {
+app.all('/api/admin/delete-user', async (req, res) => {
+    // Apenas permitir DELETE ou POST para exclusão
+    if (req.method !== 'DELETE' && req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
 
     const token = authHeader.split(' ')[1];
-    const { data: { user: adminUser }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !adminUser) return res.status(401).json({ error: 'Invalid token' });
-
-    // Check if requester is admin
-    const { data: adminProfile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', adminUser.id)
-        .single();
-
-    if (adminProfile?.role !== 'admin') {
-        return res.status(403).json({ error: 'Forbidden: Admin access required' });
-    }
-
-    const userId = req.query.userId || req.body.userId;
-
-    if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
-
+    
     try {
-        // Delete from Auth (this also deletes from public tables if there are CASCADE foreign keys, 
-        // but it's safer to delete profile first depending on schema)
+        const { data: { user: adminUser }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !adminUser) return res.status(401).json({ error: 'Invalid token' });
+
+        // Check if requester is admin
+        const { data: adminProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', adminUser.id)
+            .single();
+
+        if (adminProfile?.role !== 'admin') {
+            return res.status(403).json({ error: 'Forbidden: Admin access required' });
+        }
+
+        const userId = req.query.userId || req.body.userId;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Delete from Auth (this also deletes from public tables if there are CASCADE foreign keys)
         const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
         if (deleteError) throw deleteError;
 
-        res.json({ success: true, message: 'User deleted successfully' });
+        res.json({ success: true, message: 'User deleted successfully from Auth and Profiles' });
     } catch (err) {
         console.error("Admin delete error:", err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message || 'Erro interno ao excluir usuário' });
     }
 });
 
