@@ -805,27 +805,99 @@ export const supabaseService = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No active session");
 
-      const response = await fetch('/api/admin/update-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(data)
-      });
+      const { data: adminProfile } = await supabase.from('profiles').select('role').eq('user_id', session.user.id).single();
+      if (adminProfile?.role !== 'admin') throw new Error("Acesso negado. Requer permissão de administrador.");
 
-      if (!response.ok) {
-        const text = await response.text();
-        try {
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.error || 'Failed to update user');
-        } catch (e) {
-          if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
-            throw new Error('O servidor retornou uma página HTML em vez de JSON. Verifique se o backend (node server.mjs) está rodando e se a rota /api está configurada corretamente.');
-          }
-          throw new Error('Erro na resposta do servidor.');
-        }
+      if (data.password || data.email !== data.email) {
+        console.warn("Edição de E-mail ou Senha diretamente pelo painel ignorada. Isso requer um Backend NodeJS ou Server functions. Atualizando apenas dados focados no perfil.");
       }
+
+      // Fetch current profile to check for activation
+      const { data: oldProfile } = await supabase.from('profiles').select('plan, points, menu_cash, referrer_id').eq('user_id', data.userId).single();
+      
+      const { error: updateProfileError } = await supabase
+          .from('profiles')
+          .update({
+              business_name: data.business_name,
+              plan: data.plan,
+              level: data.level,
+              points: data.points,
+              role: data.role,
+              menu_cash: data.menu_cash,
+              has_founder_badge: data.has_founder_badge,
+              display_id: data.display_id,
+              cpf_cnpj: data.cpf_cnpj,
+              updated_at: new Date().toISOString()
+          })
+          .eq('user_id', data.userId);
+
+      if (updateProfileError) throw updateProfileError;
+
+      // --- Lógica de Ativação Manual (Recompensas) ---
+      if (oldProfile && oldProfile.plan === 'pre-cadastro' && data.plan && data.plan !== 'pre-cadastro') {
+          console.log(`Manual activation detected for ${data.userId}. Applying rewards...`);
+          
+          let rewardPoints = 0;
+          let rewardCash = 0;
+          if (data.plan === 'basic') { rewardPoints = 100; rewardCash = 50; }
+          else if (data.plan === 'pro') { rewardPoints = 300; rewardCash = 100; }
+          else if (data.plan === 'full') { rewardPoints = 500; rewardCash = 200; }
+
+          // 1. Recompensa para o Usuário que ativou
+          if (rewardPoints > 0) {
+              await supabase.from('profiles').update({
+                  points: (data.points || 0) + rewardPoints,
+                  menu_cash: (data.menu_cash || 0) + rewardCash
+              }).eq('user_id', data.userId);
+
+              await supabase.from('points_history').insert({
+                  user_id: data.userId, 
+                  points: rewardPoints,
+                  action: `Ativação de Plano ${data.plan.toUpperCase()} (Manual)`,
+                  category: 'plano', 
+                  date: new Date().toISOString()
+              });
+          }
+
+          // 2. Recompensa para quem Indicou (Referrer)
+          if (oldProfile.referrer_id) {
+              const { data: referrer } = await supabase.from('profiles').select('id, user_id, points, menu_cash, level, referrals_count').eq('id', oldProfile.referrer_id).single();
+              if (referrer) {
+                  const levelPercents: Record<string, number> = {'nível base':0, 'bronze':0.05, 'prata':0.10, 'ouro':0.15, 'diamante':0.20};
+                  const percent = levelPercents[referrer.level?.toLowerCase()] || 0;
+                  const planValues: Record<string, number> = {'basic': 249, 'pro': 599, 'full': 1497};
+                  
+                  const pointsAwarded = rewardPoints;
+                  const cashAwarded = (planValues[data.plan] || 0) * percent;
+
+                  await supabase.from('profiles').update({
+                      points: (referrer.points || 0) + pointsAwarded,
+                      menu_cash: (referrer.menu_cash || 0) + cashAwarded,
+                      referrals_count: (referrer.referrals_count || 0) + 1
+                  }).eq('id', referrer.id);
+
+                  await supabase.from('points_history').insert({
+                      user_id: referrer.user_id,
+                      points: pointsAwarded,
+                      action: `Indicação de Membro (${data.plan.toUpperCase()}) - Ativação Manual`,
+                      category: 'indicacao', 
+                      date: new Date().toISOString()
+                  });
+              }
+          }
+      }
+
+      // 3. Update or Create Subscription Validity if plan is not pre-cadastro
+      if (data.plan && data.plan !== 'pre-cadastro') {
+          await supabase.from('subscriptions').upsert({
+              user_id: data.userId,
+              plan: data.plan,
+              status: 'active',
+              current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+      }
+
     } catch (error) {
       console.error("Error in adminUpdateUser:", error);
       throw error;

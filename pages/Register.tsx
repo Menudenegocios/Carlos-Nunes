@@ -27,12 +27,13 @@ export const Register: React.FC = () => {
 
   const checkReferrer = async (id: string) => {
     try {
-      const isNumeric = /^\d+$/.test(id);
+      const cleanRef = id.trim().replace(/[^a-zA-Z0-9]/g, '');
+      const isNumeric = /^\d+$/.test(cleanRef);
       let query = supabase.from('profiles').select('name, business_name');
       if (isNumeric) {
-        query = query.eq('display_id', parseInt(id));
+        query = query.eq('display_id', parseInt(cleanRef));
       } else {
-        query = query.eq('referral_code', id);
+        query = query.eq('referral_code', cleanRef);
       }
       const { data, error } = await query.maybeSingle();
       if (data) {
@@ -58,15 +59,16 @@ export const Register: React.FC = () => {
 
       // Se houver ID de indicação, buscar o UUID do usuário correspondente
       if (referralId) {
-        // Tentar buscar por display_id (numero sequencial) ou referral_code (string)
-        const isNumeric = /^\d+$/.test(referralId);
+        // Limpar possíveis "/" ou caracteres especiais adicionados por apps de mensagem
+        const cleanRef = referralId.trim().replace(/[^a-zA-Z0-9]/g, '');
+        const isNumeric = /^\d+$/.test(cleanRef);
         
         let query = supabase.from('profiles').select('id');
         
         if (isNumeric) {
-          query = query.eq('display_id', parseInt(referralId));
+          query = query.eq('display_id', parseInt(cleanRef));
         } else {
-          query = query.eq('referral_code', referralId);
+          query = query.eq('referral_code', cleanRef);
         }
 
         const { data: referrerData, error: referrerError } = await query.maybeSingle();
@@ -77,7 +79,7 @@ export const Register: React.FC = () => {
           finalReferrerUuid = referrerData.id;
         } else {
           // Se não encontrou, talvez avisar ou apenas seguir sem indicador
-          console.warn("Indicador não encontrado para o ID:", referralId);
+          console.warn("Indicador não encontrado para o ID:", cleanRef);
         }
       }
 

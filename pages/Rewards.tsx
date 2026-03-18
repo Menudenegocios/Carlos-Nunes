@@ -197,7 +197,7 @@ export const Rewards: React.FC = () => {
                                       <td className="px-6 py-6 rounded-l-2xl">
                                          <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black">
-                                               {ref.name?.[0].toUpperCase()}
+                                               {ref.name?.[0]?.toUpperCase() || '-'}
                                             </div>
                                             <div>
                                                <p className="text-sm font-black text-gray-900">{ref.name}</p>

@@ -222,17 +222,22 @@ export const AdminCentral: React.FC = () => {
        const { data: { session } } = await supabase.auth.getSession();
        if (!session) throw new Error("No active session");
 
-        const response = await fetch(`/api/admin/delete-user?userId=${memberToDelete}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
+        const { data: adminProfile } = await supabase.from('profiles').select('role').eq('user_id', session.user.id).single();
+        if (adminProfile?.role !== 'admin') throw new Error("Acesso negado. Requer permissão de administrador.");
 
-       if (!response.ok) {
-         const errorData = await response.json();
-         throw new Error(errorData.error || 'Failed to delete user');
-       }
+        // Notifica o admin que a exclusão plena de autenticação (Email/Senha) requer painel Supabase
+        const confirmTotalDelete = window.confirm("Atenção: Como o backend NodeJS não está conectado, esta ação apagará APENAS O PERFIL do usuário da plataforma. O login dele continuará existindo no banco de dados Auth, mas sem acesso aos dados do perfil. Deseja prosseguir?");
+        
+        if (!confirmTotalDelete) {
+           setIsLoading(false);
+           return;
+        }
+
+        const { error: deleteError } = await supabase.from('profiles').delete().eq('user_id', memberToDelete);
+        
+        if (deleteError) {
+          throw deleteError;
+        }
 
        setIsDeleteModalOpen(false);
        setMemberToDelete(null);
