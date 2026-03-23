@@ -432,7 +432,7 @@ const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] })
       if (editingTask) {
         await supabaseService.updateTask(editingTask.id, formData);
       } else {
-        await supabaseService.addTask({ user_id, ...formData, due_date: Date.now(), type: 'other' });
+        await supabaseService.addTask({ user_id, ...formData, due_date: new Date().toISOString(), type: 'other' });
       }
       loadTasks();
       setIsModalOpen(false);
@@ -564,24 +564,36 @@ const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] })
 const BusinessCanvaView = ({ user_id }: { user_id: string }) => {
   const [canvaData, setCanvaData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
-    supabaseService.getBusinessCanva(user_id).then((data) => {
-      if (data) setCanvaData(data);
-    });
+    if (!user_id || user_id === 'user-123') return;
+    
+    supabaseService.getBusinessCanva(user_id)
+      .then((data) => {
+        if (data) setCanvaData(data);
+      })
+      .catch(err => console.error("Error loading Business Canva:", err));
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
   }, [user_id]);
 
   const handleChange = (field: string, value: string) => {
+    if (user_id === 'user-123') return;
+
     const newData = { ...canvaData, [field]: value };
     setCanvaData(newData);
     
-    if (saveTimeout) clearTimeout(saveTimeout);
-    setSaveTimeout(setTimeout(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
+    saveTimeoutRef.current = setTimeout(() => {
       setIsSaving(true);
       supabaseService.saveBusinessCanva(user_id, newData)
+        .catch(err => console.error("Error autosaving Business Canva:", err))
         .finally(() => setIsSaving(false));
-    }, 1000));
+    }, 1000);
   };
 
 

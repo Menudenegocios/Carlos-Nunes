@@ -1248,7 +1248,10 @@ export const supabaseService = {
     try {
       const { error } = await supabase
         .from('smart_goals')
-        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
+        .upsert(
+          { ...data, user_id: user_id, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
       
       if (error) throw error;
     } catch (error) {
@@ -1278,7 +1281,10 @@ export const supabaseService = {
     try {
       const { error } = await supabase
         .from('swot_analysis')
-        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
+        .upsert(
+          { ...data, user_id: user_id, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
       
       if (error) throw error;
     } catch (error) {
@@ -1308,7 +1314,10 @@ export const supabaseService = {
     try {
       const { error } = await supabase
         .from('business_canva')
-        .upsert({ ...data, user_id: user_id, updated_at: new Date().toISOString() });
+        .upsert(
+          { ...data, user_id: user_id, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
       
       if (error) throw error;
     } catch (error) {
