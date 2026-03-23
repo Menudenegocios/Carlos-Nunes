@@ -730,6 +730,27 @@ export const MyCatalog: React.FC = () => {
                         <button onClick={() => handleProfileSave(false)} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase shadow-xl flex items-center gap-2"><Save className="w-4 h-4" /> SALVAR ALTERAÇÕES</button>
                       </div>
 
+                      {/* URL PERSONALIZADA (SLUG) */}
+                      <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
+                         <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><LinkIcon className="w-5 h-5" /> URL Personalizada (Slug)</h4>
+                         <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Seu Link Exclusivo</label>
+                            <div className="flex bg-white rounded-2xl overflow-hidden border border-gray-200 focus-within:ring-2 focus-within:ring-indigo-500">
+                               <div className="bg-gray-100 px-4 flex items-center text-slate-400 font-bold text-sm border-r border-gray-200">
+                                  menudenegocios.com/
+                               </div>
+                               <input 
+                                  type="text" 
+                                  className="flex-1 bg-transparent border-none p-4 font-bold outline-none text-gray-900" 
+                                  value={profile.slug || ''} 
+                                  onChange={e => setProfile({...profile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')})} 
+                                  placeholder="sua-marca" 
+                               />
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-2 ml-1">Use apenas letras minúsculas, números e hífens. Ex: <strong>minha-loja</strong></p>
+                         </div>
+                      </div>
+
                    <div className="space-y-6 bg-gray-50 p-8 rounded-[2.5rem]">
                       <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><ImageIcon className="w-5 h-5" /> Banner Rotativo (Até 3 fotos)</h4>
                       <div className="grid grid-cols-3 gap-4">
