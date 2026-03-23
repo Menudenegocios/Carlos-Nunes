@@ -385,6 +385,15 @@ export interface LeadTimelineEvent {
   created_at: number;
 }
 
+export interface FollowUp {
+  id: string;
+  user_id: string;
+  entity_type: 'lead' | 'client';
+  entity_id: string;
+  content: string;
+  created_at: string;
+}
+
 export interface Client {
   id: string;
   user_id: string;
@@ -398,6 +407,19 @@ export interface Client {
   tags?: string[];
   totalValue?: number;
   birthDate?: string;
+  razao_social?: string;
+  cnpj?: string;
+  tipo?: string;
+  rua_av?: string;
+  endereco?: string;
+  numero?: string;
+  bairro?: string;
+  complemento?: string;
+  cidade?: string;
+  uf?: string;
+  site?: string;
+  responsavel?: string;
+  ultimo_follow_up?: string;
 }
 
 export interface Lead {
@@ -413,6 +435,7 @@ export interface Lead {
   created_at?: number;
   timeline?: LeadTimelineEvent[];
   client_id?: string; // Link opcional para um cliente convertido
+  ultimo_follow_up?: string;
 }
 
 export interface FinancialEntry {

@@ -1181,6 +1181,53 @@ export const supabaseService = {
     }
   },
 
+  // --- FOLLOW UPS ---
+  getFollowUps: async (entity_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('follow_ups')
+        .select('*')
+        .eq('entity_id', entity_id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting follow ups:", error);
+      return [];
+    }
+  },
+
+  addFollowUp: async (followUp: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('follow_ups')
+        .insert({ ...followUp, created_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding follow up:", error);
+      throw error;
+    }
+  },
+
+  deleteFollowUp: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('follow_ups')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting follow up:", error);
+      throw error;
+    }
+  },
+
   // --- FINANCIAL ENTRIES ---
   getFinancialEntries: async (user_id: string): Promise<any[]> => {
     try {

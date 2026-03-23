@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
-import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate } from '../types';
+import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate, FollowUp } from '../types';
 import { 
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
   X, Trash2, CheckCircle, Clock, Briefcase, 
   Home as HomeIcon, RefreshCw, Zap, ArrowRight, User, Layout, GripVertical,
   Filter, CalendarDays, Wallet, ArrowUpCircle, ArrowDownCircle,
-  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid, Phone
+  Lock, Crown, Smartphone, MessageSquare, CreditCard, Link as LinkIcon, FileText, ExternalLink, LayoutGrid, Phone, UserCheck
 } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useLocation } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 export const BusinessSuite: React.FC = () => {
   const { user } = useAuth();
@@ -138,6 +139,10 @@ const CRMView = ({ user_id }: { user_id: string }) => {
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Lead>>({ name: '', phone: '', source: 'manual', stage: 'new', value: 0, notes: '' });
   const [clientFormData, setClientFormData] = useState<Partial<Client>>({ name: '', phone: '', email: '', notes: '' });
+  const [followUpModal, setFollowUpModal] = useState<{isOpen: boolean, entityId: string, entityType: 'lead'|'client', entityName: string}>({isOpen: false, entityId: '', entityType: 'lead', entityName: ''});
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [newFollowUp, setNewFollowUp] = useState('');
+  const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
 
   useEffect(() => { 
     loadLeads(); 
@@ -170,6 +175,49 @@ const CRMView = ({ user_id }: { user_id: string }) => {
     } finally { setIsSaving(false); }
   };
 
+  const handleDeleteLead = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este lead?')) return;
+    try {
+      await supabaseService.deleteLead(id);
+      setIsModalOpen(false);
+      await loadLeads();
+    } catch (e) { console.error(e); }
+  };
+
+  const handlePromoteLead = async (lead: Lead) => {
+    if (!window.confirm(`Deseja promover ${lead.name} para cliente?`)) return;
+    setIsSaving(true);
+    try {
+      await supabaseService.addClient({
+        name: lead.name,
+        phone: lead.phone,
+        user_id: user_id,
+        notes: `Promovido de Lead. Origem: ${lead.source}. ${lead.notes || ''}`
+      } as Client);
+      
+      // Perguntar se deseja manter o lead no pipeline ou removê-lo
+      if (window.confirm('Deseja remover este lead do pipeline agora que ele é um cliente?')) {
+        await supabaseService.deleteLead(lead.id);
+      } else {
+        // Apenas atualizar para fechado se já não estiver
+        if (lead.stage !== 'closed') {
+          await supabaseService.updateLead(lead.id, { stage: 'closed' });
+        }
+      }
+
+      setIsModalOpen(false);
+      await loadLeads();
+      await loadClients();
+      setActiveSubTab('clients');
+      alert('Lead promovido a cliente com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao promover lead.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user_id) return;
@@ -187,6 +235,183 @@ const CRMView = ({ user_id }: { user_id: string }) => {
     if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
     await supabaseService.deleteClient(id);
     await loadClients();
+  };
+
+  const openFollowUpModal = async (id: string, type: 'lead'|'client', name: string) => {
+    setFollowUpModal({ isOpen: true, entityId: id, entityType: type, entityName: name });
+    setIsLoadingFollowUps(true);
+    try {
+      const data = await supabaseService.getFollowUps(id);
+      setFollowUps(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingFollowUps(false);
+    }
+  };
+
+  const handleSaveFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFollowUp.trim() || !user_id) return;
+    setIsSaving(true);
+    try {
+      const saved = await supabaseService.addFollowUp({
+        user_id,
+        entity_id: followUpModal.entityId,
+        entity_type: followUpModal.entityType,
+        content: newFollowUp
+      });
+      setFollowUps([saved, ...followUps]);
+      setNewFollowUp('');
+
+      const lines = newFollowUp.split('\n');
+      const short = lines[0].length > 50 ? lines[0].substring(0, 50) + '...' : lines[0];
+      if (followUpModal.entityType === 'lead') {
+        setLeads(prev => prev.map(l => l.id === followUpModal.entityId ? {...l, ultimo_follow_up: short} : l));
+        await supabaseService.updateLead(followUpModal.entityId, { ultimo_follow_up: short });
+      } else {
+        setClients(prev => prev.map(c => c.id === followUpModal.entityId ? {...c, ultimo_follow_up: short} : c));
+        await supabaseService.updateClient(followUpModal.entityId, { ultimo_follow_up: short });
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao salvar follow up');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteFollowUp = async (id: string) => {
+    if (!window.confirm('Excluir esta ação?')) return;
+    try {
+      await supabaseService.deleteFollowUp(id);
+      setFollowUps(prev => prev.filter(f => f.id !== id));
+      
+      if (followUps.length === 1) { 
+        if (followUpModal.entityType === 'lead') {
+          setLeads(prev => prev.map(l => l.id === followUpModal.entityId ? {...l, ultimo_follow_up: ''} : l));
+          await supabaseService.updateLead(followUpModal.entityId, { ultimo_follow_up: '' });
+        } else {
+          setClients(prev => prev.map(c => c.id === followUpModal.entityId ? {...c, ultimo_follow_up: ''} : c));
+          await supabaseService.updateClient(followUpModal.entityId, { ultimo_follow_up: '' });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleExportClients = () => {
+    if (clients.length === 0) {
+      alert("Não há clientes para exportar.");
+      return;
+    }
+
+    const data = clients.map(client => ({
+      "RAZÃO SOCIAL": client.razao_social || "",
+      "NOME": client.name || "",
+      "CNPJ": client.cnpj || "",
+      "TIPO": client.tipo || "",
+      "RUA/AV": client.rua_av || "",
+      "ENDEREÇO": client.endereco || "",
+      "Nº": client.numero || "",
+      "BAIRRO": client.bairro || "",
+      "COMPLEMENTO": client.complemento || "",
+      "CIDADE": client.cidade || "",
+      "UF": client.uf || "",
+      "Telefones": client.phone || "",
+      "Obs": client.notes || "",
+      "Site": client.site || "",
+      "Responsável": client.responsavel || "",
+      "EMAIL": client.email || ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Clientes");
+    XLSX.writeFile(workbook, "clientes.xlsx");
+  };
+
+  const handleImportClients = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        setIsSaving(true);
+        let importedCount = 0;
+
+        for (const row of (data as any[])) {
+          const nome = row['NOME'] || row['Nome'] || '';
+          if (!nome) continue;
+
+          const newClient: Partial<Client> = {
+            user_id,
+            razao_social: row['RAZÃO SOCIAL'] || row['Razão Social'] || '',
+            name: nome,
+            cnpj: row['CNPJ'] || '',
+            tipo: row['TIPO'] || row['Tipo'] || '',
+            rua_av: row['RUA/AV'] || row['Rua/Av'] || '',
+            endereco: row['ENDEREÇO'] || row['Endereço'] || '',
+            numero: String(row['Nº'] || row['Número'] || ''),
+            bairro: row['BAIRRO'] || row['Bairro'] || '',
+            complemento: row['COMPLEMENTO'] || row['Complemento'] || '',
+            cidade: row['CIDADE'] || row['Cidade'] || '',
+            uf: String(row['UF'] || ''),
+            phone: String(row['Telefones'] || row['Telefone'] || ''),
+            notes: row['Obs'] || row['Observação'] || '',
+            site: row['Site'] || '',
+            responsavel: row['Responsável'] || row['Responsavel'] || '',
+            email: row['EMAIL'] || row['Email'] || ''
+          };
+
+          await supabaseService.addClient(newClient as Client);
+          importedCount++;
+        }
+
+        alert(`${importedCount} clientes importados com sucesso!`);
+        await loadClients();
+      } catch (err) {
+        console.error("Erro na importação:", err);
+        alert("Ocorreu um erro ao importar os clientes. Verifique o formato do arquivo.");
+      } finally {
+        setIsSaving(false);
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
+  };
+
+  const handleDownloadTemplate = () => {
+    const data = [{
+      "RAZÃO SOCIAL": "Empresa Fictícia LTDA",
+      "NOME": "João da Silva",
+      "CNPJ": "00.000.000/0001-00",
+      "TIPO": "Fornecedor",
+      "RUA/AV": "Avenida",
+      "ENDEREÇO": "Paulista",
+      "Nº": "1000",
+      "BAIRRO": "Bela Vista",
+      "COMPLEMENTO": "Sala 101",
+      "CIDADE": "São Paulo",
+      "UF": "SP",
+      "Telefones": "(11) 99999-9999",
+      "Obs": "Cliente VIP",
+      "Site": "www.empresa.com.br",
+      "Responsável": "Maria",
+      "EMAIL": "contato@empresa.com.br"
+    }];
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Modelo_Importacao");
+    XLSX.writeFile(workbook, "modelo_clientes_importacao.xlsx");
   };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -242,11 +467,26 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                      <div key={lead.id} draggable onDragStart={(e) => handleDragStart(e, lead.id)} className={`bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing ${draggedLeadId === lead.id ? 'opacity-40' : ''}`} onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}>
                         <div className="flex justify-between items-start mb-4">
                            <GripVertical className="w-3.5 h-3.5 text-slate-300" />
-                           <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg uppercase">{lead.source}</span>
                         </div>
                         <h4 className="font-black text-gray-900 text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase">{lead.phone}</p>
-                        {Number(lead.value) > 0 && <p className="mt-4 text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p>}
+                        <p className="text-[11px] font-bold text-slate-400 uppercase">{lead.source}</p>
+                        <div className="flex justify-between items-center mt-4">
+                           {Number(lead.value) > 0 ? <p className="text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p> : <div></div>}
+                           <div className="flex gap-2">
+                              {lead.phone && (
+                                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-[10px] items-center flex gap-1 font-bold hover:bg-emerald-100 transition-all shadow-sm">
+                                  <Smartphone className="w-3 h-3" /> ZAP
+                                </a>
+                              )}
+                              <button onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }} className="text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-[10px] items-center flex gap-1 font-bold hover:bg-indigo-100 transition-all shadow-sm"><Plus className="w-3 h-3" /> FUP</button>
+                           </div>
+                        </div>
+                        {lead.ultimo_follow_up && (
+                          <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-all" onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }}>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> ÚLTIMA AÇÃO</p>
+                             <p className="text-[11px] font-bold text-gray-700 line-clamp-2">{lead.ultimo_follow_up}</p>
+                          </div>
+                        )}
                      </div>
                   ))}
                   <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
@@ -260,11 +500,27 @@ const CRMView = ({ user_id }: { user_id: string }) => {
 
       {activeSubTab === 'clients' && (
         <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
-           <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Carteira de Clientes</h3>
-              <button onClick={() => { setEditingClient(null); setClientFormData({ name: '', phone: '', email: '', notes: '' }); setIsClientModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
-                <Plus className="w-4 h-4" /> NOVO CLIENTE
-              </button>
+           <div className="flex justify-between items-center flex-wrap gap-4">
+              <div>
+                 <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Carteira de Clientes</h3>
+                 <div className="flex gap-2 mt-2">
+                    <button onClick={handleDownloadTemplate} className="text-[9px] font-bold text-slate-500 underline hover:text-indigo-600 uppercase tracking-widest">
+                      Baixar Modelo XLSX
+                    </button>
+                 </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                 <label className="bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer flex items-center gap-2 shadow-sm">
+                   <ArrowDownCircle className="w-4 h-4" /> IMPORTAR
+                   <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImportClients} />
+                 </label>
+                 <button onClick={handleExportClients} className="bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center gap-2 shadow-sm">
+                   <ArrowUpCircle className="w-4 h-4" /> EXPORTAR
+                 </button>
+                 <button onClick={() => { setEditingClient(null); setClientFormData({ name: '', phone: '', email: '', notes: '' }); setIsClientModalOpen(true); }} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+                   <Plus className="w-4 h-4" /> NOVO CLIENTE
+                 </button>
+              </div>
            </div>
 
            <div className="space-y-4">
@@ -276,11 +532,24 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                        </div>
                        <div>
                           <h4 className="font-black text-gray-900 text-base tracking-tight">{client.name}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{client.phone}</p>
+                          {client.tipo && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{client.tipo}</p>}
+                          {client.ultimo_follow_up && (
+                             <p className="text-[11px] font-medium text-slate-500 line-clamp-1 mt-1">
+                               <span className="font-bold text-indigo-500">Ação:</span> {client.ultimo_follow_up}
+                             </p>
+                          )}
                        </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                       <button onClick={() => { setEditingClient(client); setClientFormData(client); setIsClientModalOpen(true); }} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                       {client.phone && (
+                         <a href={`https://wa.me/${client.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors flex items-center gap-1">
+                            <Smartphone className="w-3 h-3" /> ZAP
+                         </a>
+                       )}
+                       <button onClick={() => openFollowUpModal(client.id, 'client', client.name)} className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors flex items-center gap-1">
+                          <Plus className="w-3 h-3" /> FUP
+                       </button>
+                       <button onClick={() => { setEditingClient(client); setClientFormData(client); setIsClientModalOpen(true); }} className="px-4 py-2 bg-sky-50 text-sky-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-sky-100 transition-colors">
                           Editar
                        </button>
                        <button onClick={() => handleDeleteClient(client.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
@@ -303,7 +572,19 @@ const CRMView = ({ user_id }: { user_id: string }) => {
             <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[95vh]">
                 <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
                     <div><h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingLead ? 'Detalhes do Lead' : 'Capturar Lead'}</h3></div>
-                    <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                    <div className="flex items-center gap-2">
+                        {editingLead && (
+                            <button 
+                                type="button"
+                                onClick={() => handleDeleteLead(editingLead.id)}
+                                className="p-3 hover:bg-rose-500/20 text-rose-400 rounded-2xl transition-all"
+                                title="Excluir Lead"
+                            >
+                                <Trash2 className="w-6 h-6" />
+                            </button>
+                        )}
+                        <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                    </div>
                 </div>
                 <form onSubmit={handleSaveLead} className="p-10 space-y-8 overflow-y-auto scrollbar-hide flex-1">
                     <div className="grid grid-cols-2 gap-6">
@@ -311,20 +592,33 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
                           <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                        </div>
-                       <PhoneInput
-                          label="WhatsApp"
-                          value={formData.phone || ''}
-                          onChange={val => setFormData({...formData, phone: val})}
-                          className="w-full"
-                       />
+                       <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                             <Phone className="w-3 h-3" /> Telefones
+                          </label>
+                          <input type="text" placeholder="Ex: (11) 9999-9999, (11) 8888-8888" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                       </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Negócio</label>
                           <input type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
                        </div>
                     </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Lead'}
-                    </button>
+                    <div className="flex flex-col gap-4">
+                        <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
+                            {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : (editingLead ? 'Atualizar Lead' : 'Salvar Lead')}
+                        </button>
+                        
+                        {editingLead && (
+                            <button 
+                                type="button"
+                                onClick={() => handlePromoteLead(editingLead)}
+                                disabled={isSaving}
+                                className="w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all flex items-center justify-center gap-3"
+                            >
+                                <UserCheck className="w-5 h-5" /> PROMOVER PARA CLIENTE
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
          </div>
@@ -346,31 +640,134 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                 <div className="flex-1 overflow-y-auto scrollbar-hide p-10">
                     <form onSubmit={handleSaveClient} className="space-y-6">
                         <div className="space-y-6">
-                           <div>
-                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome completo</label>
-                              <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.name} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} />
-                           </div>
-                           <div className="grid grid-cols-2 gap-4">
-                              <PhoneInput
-                                  label="WhatsApp"
-                                  value={clientFormData.phone || ''}
-                                  onChange={val => setClientFormData({...clientFormData, phone: val})}
-                                  className="w-full"
-                               />
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email (Opcional)</label>
-                                 <input type="email" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.email} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nome / Fantasia (*)</label>
+                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.name || ''} onChange={e => setClientFormData({...clientFormData, name: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Razão Social</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.razao_social || ''} onChange={e => setClientFormData({...clientFormData, razao_social: e.target.value})} />
                               </div>
                            </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">CNPJ / CPF</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.cnpj || ''} onChange={e => setClientFormData({...clientFormData, cnpj: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Tipo</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="Ex: Fornecedor, Cliente..." value={clientFormData.tipo || ''} onChange={e => setClientFormData({...clientFormData, tipo: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Responsável</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.responsavel || ''} onChange={e => setClientFormData({...clientFormData, responsavel: e.target.value})} />
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
+                                    <Phone className="w-3 h-3" /> Telefones
+                                 </label>
+                                 <input type="text" placeholder="Ex: (11) 9999-9999, (11) 8888-8888" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone || ''} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email</label>
+                                 <input type="email" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.email || ''} onChange={e => setClientFormData({...clientFormData, email: e.target.value})} />
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="md:col-span-2">
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Rua / Av / Endereço</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={(clientFormData.rua_av ? clientFormData.rua_av + ' ' : '') + (clientFormData.endereco || '')} onChange={e => setClientFormData({...clientFormData, endereco: e.target.value, rua_av: ''})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Número</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.numero || ''} onChange={e => setClientFormData({...clientFormData, numero: e.target.value})} />
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Complemento</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.complemento || ''} onChange={e => setClientFormData({...clientFormData, complemento: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Bairro</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.bairro || ''} onChange={e => setClientFormData({...clientFormData, bairro: e.target.value})} />
+                              </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="md:col-span-2">
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.cidade || ''} onChange={e => setClientFormData({...clientFormData, cidade: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">UF</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.uf || ''} onChange={e => setClientFormData({...clientFormData, uf: e.target.value})} />
+                              </div>
+                           </div>
+
                            <div>
-                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Anotações</label>
-                              <textarea className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-24 resize-none" value={clientFormData.notes} onChange={e => setClientFormData({...clientFormData, notes: e.target.value})}></textarea>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Site</label>
+                              <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.site || ''} onChange={e => setClientFormData({...clientFormData, site: e.target.value})} />
+                           </div>
+
+                           <div>
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Anotações / Obs</label>
+                              <textarea className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold h-24 resize-none" value={clientFormData.notes || ''} onChange={e => setClientFormData({...clientFormData, notes: e.target.value})}></textarea>
                            </div>
                         </div>
                         <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
                             {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'Salvar Cliente'}
                         </button>
                     </form>
+                </div>
+            </div>
+         </div>
+      )}
+
+      {followUpModal.isOpen && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-lg shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[90vh] md:max-h-[80vh]">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">Follow Ups</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">{followUpModal.entityName}</p>
+                    </div>
+                    <button onClick={() => setFollowUpModal({isOpen: false, entityId: '', entityType: 'lead', entityName: ''})} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+
+                <div className="p-8 border-b border-gray-100 bg-gray-50/50">
+                   <form onSubmit={handleSaveFollowUp} className="flex flex-col gap-4">
+                      <textarea required className="w-full bg-white border border-gray-200 rounded-2xl p-4 font-medium text-sm h-24 resize-none shadow-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all" placeholder="Adicione uma nova anotação, ligação, reunião..." value={newFollowUp} onChange={e => setNewFollowUp(e.target.value)}></textarea>
+                      <button type="submit" disabled={isSaving} className="self-end bg-[#F67C01] text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-orange-600 transition-all flex items-center gap-2">
+                        {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : <><Plus className="w-4 h-4" /> ADICIONAR FUP</>}
+                      </button>
+                   </form>
+                </div>
+
+                <div className="flex-1 overflow-y-auto scrollbar-hide p-8 space-y-4 bg-white">
+                   {isLoadingFollowUps ? (
+                      <div className="flex justify-center p-10"><RefreshCw className="w-8 h-8 text-brand-primary animate-spin" /></div>
+                   ) : followUps.length > 0 ? (
+                      followUps.map(fup => (
+                         <div key={fup.id} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 relative group">
+                            <button onClick={() => handleDeleteFollowUp(fup.id)} className="absolute top-4 right-4 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4" /></button>
+                            <p className="text-[9px] font-black uppercase text-indigo-400 tracking-widest mb-2 flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(fup.created_at).toLocaleString('pt-BR')}</p>
+                            <p className="text-sm font-medium text-gray-700 whitespace-pre-wrap">{fup.content}</p>
+                         </div>
+                      ))
+                   ) : (
+                      <div className="text-center py-12 opacity-50">
+                         <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nenhum follow up registrado.</p>
+                      </div>
+                   )}
                 </div>
             </div>
          </div>
