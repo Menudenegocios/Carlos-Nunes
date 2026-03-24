@@ -398,9 +398,14 @@ export const MyCatalog: React.FC = () => {
           </div>
           
           <div className="flex gap-3">
-            <Link to={`/store/${user?.id}`} className="bg-white/5 text-white border border-white/10 px-8 py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all flex items-center gap-3">
+            <a 
+              href={profile?.slug ? `#/${profile.slug}` : `#/store/${user?.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white/5 text-white border border-white/10 px-8 py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all flex items-center gap-3"
+            >
               <Eye className="w-5 h-5" /> VER MINHA VITRINE
-            </Link>
+            </a>
           </div>
         </div>
 

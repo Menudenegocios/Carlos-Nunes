@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabaseService } from '../services/supabaseService';
 import { Profile, BlogPost } from '../types';
-import { 
-  ArrowRight, Globe, Settings, TrendingUp, 
+import {
+  ArrowRight, Globe, Settings, TrendingUp,
   CheckCircle, Star, ArrowUpRight, BookOpen,
   Search, MapPin, Store, Users, Calendar, Briefcase, Award,
   HelpCircle, ChevronDown
@@ -29,7 +29,7 @@ export const Home: React.FC = () => {
         supabaseService.getBlogPosts(),
         supabaseService.getPartners()
       ]);
-      
+
       // Get top 4 profiles (e.g., just the first 4 published)
       const sortedProfiles = profiles.slice(0, 4);
       setFeaturedProfiles(sortedProfiles);
@@ -49,58 +49,58 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col transition-colors duration-500"
       style={{ backgroundColor: 'var(--bg-main)' }}
     >
-      
+
       {/* 1. HERO SECTION */}
-      <section className="relative pt-20 pb-20 overflow-hidden">
+      <section className="relative pt-8 pb-20 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/5 rounded-full blur-[120px]"></div>
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/5 rounded-full blur-[120px]"></div>
         </div>
 
         <div className="max-w-5xl mx-auto px-6 relative z-10 text-center">
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100">
-                <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
+              <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
             </div>
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-              A Plataforma <span className="text-brand-primary italic">All-in-One</span> <br className="hidden md:block"/> para conectar, gerenciar e escalar o seu negócio.
+              A Plataforma <span className="text-brand-primary italic">All-in-One</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
             </h1>
             <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Abandone as planilhas e dezenas de aplicativos. Tenha sua vitrine digital, CRM, agenda, controle financeiro e networking B2B em um único ecossistema.
             </p>
-            
+
             {/* Smart Search Bar */}
             <div className="max-w-4xl mx-auto pt-8">
-                <div className="bg-white p-3 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col md:flex-row gap-2 ring-8 ring-brand-primary/5">
-                    <div className="flex-1 relative flex items-center px-6">
-                        <Search className="w-6 h-6 text-brand-primary absolute left-8" />
-                        <input 
-                            type="text" 
-                            placeholder="O que você precisa hoje? (Ex: Pizzaria, Mentor...)" 
-                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
-                            value={filters.search}
-                            onChange={(e) => setFilters({...filters, search: e.target.value})}
-                        />
-                    </div>
-                    <div className="w-px h-10 bg-gray-100 hidden md:block self-center"></div>
-                    <div className="flex-1 relative flex items-center px-6">
-                        <MapPin className="w-6 h-6 text-indigo-600 absolute left-8" />
-                        <input 
-                            type="text" 
-                            placeholder="Sua Cidade ou Região" 
-                            className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
-                            value={filters.city}
-                            onChange={(e) => setFilters({...filters, city: e.target.value})}
-                        />
-                    </div>
-                    <button className="bg-brand-dark text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl active:scale-95">
-                        EXPLORAR
-                    </button>
+              <div className="bg-white p-3 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col md:flex-row gap-2 ring-8 ring-brand-primary/5">
+                <div className="flex-1 relative flex items-center px-6">
+                  <Search className="w-6 h-6 text-brand-primary absolute left-8" />
+                  <input
+                    type="text"
+                    placeholder="O que você precisa hoje? (Ex: Pizzaria, Mentor...)"
+                    className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  />
                 </div>
+                <div className="w-px h-10 bg-gray-100 hidden md:block self-center"></div>
+                <div className="flex-1 relative flex items-center px-6">
+                  <MapPin className="w-6 h-6 text-indigo-600 absolute left-8" />
+                  <input
+                    type="text"
+                    placeholder="Sua Cidade ou Região"
+                    className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
+                    value={filters.city}
+                    onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                  />
+                </div>
+                <button className="bg-brand-dark text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl active:scale-95">
+                  EXPLORAR
+                </button>
+              </div>
             </div>
 
           </div>
@@ -161,7 +161,7 @@ export const Home: React.FC = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProfiles.map((profile) => (
-              <Link 
+              <Link
                 key={profile.id}
                 to={profile.slug ? `/${profile.slug}` : `/store/${profile.user_id}`}
                 className="bg-white rounded-[2rem] p-6 border border-gray-100 hover:shadow-xl transition-all group flex flex-col items-center text-center"
@@ -195,12 +195,12 @@ export const Home: React.FC = () => {
                 Nossos <span className="text-brand-primary">Parceiros</span>
               </h2>
             </div>
-            
+
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70">
               {partners.map((partner) => (
-                <a 
-                  key={partner.id} 
-                  href={partner.link || '#'} 
+                <a
+                  key={partner.id}
+                  href={partner.link || '#'}
                   target={partner.link ? "_blank" : "_self"}
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-2 hover:opacity-100 transition-all transform hover:scale-110"
@@ -301,7 +301,7 @@ export const Home: React.FC = () => {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                <HelpCircle className="w-4 h-4" /> Dúvidas Comuns
+              <HelpCircle className="w-4 h-4" /> Dúvidas Comuns
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase italic">
               Perguntas <span className="text-brand-primary">Frequentes</span>
@@ -317,7 +317,7 @@ export const Home: React.FC = () => {
               { q: "Posso cancelar quando quiser?", a: "Sim, não temos fidelidade. Você tem total liberdade sobre sua assinatura." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden transition-all hover:shadow-lg">
-                <button 
+                <button
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full flex items-center justify-between p-6 text-left"
                 >
@@ -341,7 +341,7 @@ export const Home: React.FC = () => {
           <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000" alt="Equipe trabalhando" className="w-full h-full object-cover opacity-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-brand-surface/80 to-transparent"></div>
         </div>
-        
+
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10 space-y-10">
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-white shadow-xl rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-gray-100">
             <CheckCircle className="w-4 h-4 text-emerald-500" /> O Próximo Passo

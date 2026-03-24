@@ -84,7 +84,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'biblioteca'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'biblioteca' | 'connect'>('home');
   const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
@@ -121,7 +121,8 @@ export const Academy: React.FC = () => {
                   { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
                   { id: 'treinamentos', label: 'CURSOS', desc: 'Vídeo aulas', icon: Video },
                   { id: 'trilha', label: 'TRILHA', desc: 'Passo a passo', icon: Map },
-                  { id: 'biblioteca', label: 'BIBLIOTECA DE PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
+                  { id: 'biblioteca', label: 'PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
+                  { id: 'connect', label: 'CONNECT', desc: 'Mentorias ao vivo', icon: Users },
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -349,6 +350,38 @@ export const Academy: React.FC = () => {
                           </a>
                        </div>
                     ))}
+                 </div>
+               </div>
+            </div>
+         )}
+
+         {activeTab === 'connect' && (
+           <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-8 px-4 mx-4 text-center animate-[fade-in_0.4s_ease-out]">
+              <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner mb-6">
+                 <Users className="w-10 h-10" />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 italic uppercase tracking-tighter mb-4">Menu Connect</h2>
+              <p className="text-lg text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
+                 Nossas mentorias online acontecem todas as quartas-feiras às 19h30 no Google Meet. Um espaço exclusivo para tirar dúvidas, fazer networking e acelerar seus resultados.
+              </p>
+              
+              <div className="bg-gray-50 border border-gray-200 rounded-[3rem] p-10 max-w-xl mx-auto mt-12 flex flex-col items-center">
+                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" /> Próxima Mentoria
+                 </p>
+                 <h3 className="text-3xl font-black text-gray-900 uppercase italic mb-10">Quarta-feira, 19:30</h3>
+                 
+                 <a 
+                    href="https://meet.google.com/uuh-ffht-tvu" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full bg-[#F67C01] text-white px-10 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-orange-600 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+                 >
+                    <Video className="w-6 h-6" /> ENTRAR NA SALA DO MEETING
+                 </a>
+                 
+                 <div className="mt-6 text-xs text-slate-400 font-bold bg-white px-6 py-3 rounded-xl border border-gray-100 w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                    Link oficial: <a href="https://meet.google.com/uuh-ffht-tvu" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">https://meet.google.com/uuh-ffht-tvu</a>
                  </div>
               </div>
            </div>
