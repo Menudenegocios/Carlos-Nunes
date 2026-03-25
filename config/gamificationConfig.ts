@@ -1,7 +1,7 @@
 export const pointsRules = {
-  indicacaoBasico: 100,
-  indicacaoPro: 300,
-  indicacaoFull: 500,
+  indicacaoBasico: 50,
+  indicacaoPro: 100,
+  indicacaoFull: 200,
   compraMenuStore: 1, // 1 ponto a cada R$1 gasto
   loginDiario: 5,
   pontosExtras: 50,
@@ -70,11 +70,10 @@ export const tiers = [
 
 export const plans = {
   comunidade: {
-    mensal: 89.00,
-    anual: 799.00,
+    anual: 249.00,
   },
   fundador: {
-    anual: 599.00,
+    anual: 549.00,
   },
   fundador_pro: {
     anual: 1497.00,

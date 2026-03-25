@@ -96,13 +96,13 @@ export const AdminCentral: React.FC = () => {
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
 
   const planNames: Record<string, string> = {
-    basic: 'Plano Básico',
+    basic: 'Plano Start',
     pro: 'Plano Pro',
     full: 'Plano Full'
   };
 
   const plansConfig = [
-    { name: 'Plano Básico', color: 'border-slate-300', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
+    { name: 'Plano Start', color: 'border-slate-300', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] },
     { name: 'Plano Pro', color: 'border-brand-primary', modules: [{ name: 'Visão Geral', icon: Layout }, { name: 'Bio Digital', icon: Smartphone }, { name: 'Catálogo & Lojas', icon: Package }, { name: 'Blog & Artigos', icon: BookOpen }, { name: 'CRM & Vendas', icon: Briefcase }, { name: 'Menu Academy', icon: GraduationCap }, { name: 'Clube de Vantagens', icon: Trophy }, { name: 'Planos de Adesão', icon: CreditCard }] }
   ];
 
@@ -895,9 +895,9 @@ export const AdminCentral: React.FC = () => {
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Plano Ativo</label>
                             <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
                                 <option value="pre-cadastro">Pré-cadastro</option>
-                                <option value="basic">Plano Básico</option>
-                                <option value="pro">Plano Pro</option>
-                                <option value="full">Plano Full</option>
+                                <option value="basic">Plano Start</option>
+                                <option value="pro">Plano PRO</option>
+                                <option value="full">Plano FULL</option>
                             </select>
                         </div>
 

@@ -159,9 +159,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const planNames: Record<string, string> = {
     'pre-cadastro': 'Pré-cadastro',
-    basic: 'Plano Básico',
-    pro: 'Plano Pro',
-    full: 'Plano Full'
+    basic: 'Plano Start',
+    pro: 'Plano PRO',
+    full: 'Plano FULL'
   };
 
   return (
