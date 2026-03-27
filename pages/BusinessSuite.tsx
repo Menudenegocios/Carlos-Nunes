@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
-import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate, FollowUp } from '../types';
+import { Lead, PipelineStage, FinancialEntry, ScheduleItem, Client, CRMTask, QuickMessageTemplate, FollowUp, CRMFunnel, CRMStage } from '../types';
 import { 
   DollarSign, Calendar, Plus, TrendingUp, TrendingDown, 
   X, Trash2, CheckCircle, Clock, Briefcase, 
@@ -127,7 +127,31 @@ export const BusinessSuite: React.FC = () => {
   );
 };
 
+const DEFAULT_FUNNEL: CRMFunnel = {
+  id: 'default',
+  title: 'Funil Principal',
+  stages: [
+    { id: 'new', label: 'Novo Lead', bg: 'bg-blue-500' },
+    { id: 'contacted', label: 'Contato', bg: 'bg-amber-500' },
+    { id: 'negotiation', label: 'Proposta', bg: 'bg-purple-500' },
+    { id: 'closed', label: 'Fechamento', bg: 'bg-emerald-600' },
+  ]
+};
+
+const PRESET_COLORS = [
+  'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500', 
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 
+  'bg-emerald-500', 'bg-cyan-500', 'bg-slate-500', 'bg-black'
+];
+
 const CRMView = ({ user_id }: { user_id: string }) => {
+  const [funnels, setFunnels] = useState<CRMFunnel[]>([DEFAULT_FUNNEL]);
+  const [activeFunnelId, setActiveFunnelId] = useState<string>('default');
+  const [isFunnelsModalOpen, setIsFunnelsModalOpen] = useState(false);
+  const [editingFunnel, setEditingFunnel] = useState<CRMFunnel | null>(null);
+  const [openColorPicker, setOpenColorPicker] = useState<string | null>(null);
+
+
   const [activeSubTab, setActiveSubTab] = useState<'pipeline' | 'clients'>('pipeline');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -147,7 +171,17 @@ const CRMView = ({ user_id }: { user_id: string }) => {
   useEffect(() => { 
     loadLeads(); 
     loadClients();
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      const profile = await supabaseService.getProfileByUserId(user_id);
+      if (profile?.store_config?.crm_funnels && profile.store_config.crm_funnels.length > 0) {
+        setFunnels(profile.store_config.crm_funnels);
+      }
+    } catch(e) { console.error(e); }
+  };
 
   const loadLeads = async () => { 
       try {
@@ -182,6 +216,18 @@ const CRMView = ({ user_id }: { user_id: string }) => {
       setIsModalOpen(false);
       await loadLeads();
     } catch (e) { console.error(e); }
+  };
+
+  const handleSaveFunnels = async () => {
+    setIsSaving(true);
+    try {
+      const profile = await supabaseService.getProfileByUserId(user_id);
+      const newConfig = { ...(profile?.store_config || {}), crm_funnels: funnels };
+      await supabaseService.updateProfile(user_id, { store_config: newConfig });
+      alert('Configurações de funil salvas com sucesso!');
+      setIsFunnelsModalOpen(false);
+    } catch(e) { console.error(e); }
+    finally { setIsSaving(false); }
   };
 
   const handlePromoteLead = async (lead: Lead) => {
@@ -436,12 +482,8 @@ const CRMView = ({ user_id }: { user_id: string }) => {
     setDraggedLeadId(null);
   };
 
-  const stages: { id: PipelineStage; label: string; bg: string }[] = [
-    { id: 'new', label: 'Novo Lead', bg: 'bg-blue-500' },
-    { id: 'contacted', label: 'Contato', bg: 'bg-amber-500' },
-    { id: 'negotiation', label: 'Proposta', bg: 'bg-purple-500' },
-    { id: 'closed', label: 'Fechamento', bg: 'bg-emerald-600' },
-  ];
+  const activeFunnel = funnels.find(f => f.id === activeFunnelId) || funnels[0] || DEFAULT_FUNNEL;
+  const currentStages = activeFunnel.stages;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -451,50 +493,69 @@ const CRMView = ({ user_id }: { user_id: string }) => {
       </div>
 
       {activeSubTab === 'pipeline' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-8 px-2 max-w-full">
-          {stages.map(stage => (
-            <div key={stage.id} className="flex flex-col gap-4" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage.id)}>
-               <div className="flex items-center justify-between px-6">
-                  <h3 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-3 italic">
-                     <span className={`w-3 h-3 rounded-full ${stage.bg} shadow-sm`}></span> {stage.label}
-                  </h3>
-                  <span className="bg-white px-4 py-1.5 rounded-full text-[10px] font-black text-slate-400 border border-gray-100">
-                     {leads.filter(l => l.stage === stage.id).length}
-                  </span>
-               </div>
-               <div className={`bg-gray-50/50 rounded-[3.5rem] p-4 space-y-4 min-h-[550px] border border-gray-100 shadow-inner`}>
-                  {leads.filter(l => l.stage === stage.id).map(lead => (
-                     <div key={lead.id} draggable onDragStart={(e) => handleDragStart(e, lead.id)} className={`bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing ${draggedLeadId === lead.id ? 'opacity-40' : ''}`} onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}>
-                        <div className="flex justify-between items-start mb-4">
-                           <GripVertical className="w-3.5 h-3.5 text-slate-300" />
-                        </div>
-                        <h4 className="font-black text-gray-900 text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase">{lead.source}</p>
-                        <div className="flex flex-col items-start gap-3 mt-4">
-                           <div className="flex gap-2 justify-start">
-                              {lead.phone && (
-                                <a href={`https://wa.me/${lead.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-all shadow-sm">
-                                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-                                </a>
-                              )}
-                              <button onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }} className="text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-[10px] items-center flex gap-1 font-bold hover:bg-indigo-100 transition-all shadow-sm"><Plus className="w-3 h-3" /> FUP</button>
-                           </div>
-                           {Number(lead.value) > 0 && <p className="text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p>}
-                        </div>
-                        {lead.ultimo_follow_up && (
-                          <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-all" onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }}>
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> ÚLTIMA AÇÃO</p>
-                             <p className="text-[11px] font-bold text-gray-700 line-clamp-2">{lead.ultimo_follow_up}</p>
-                          </div>
-                        )}
-                     </div>
-                  ))}
-                  <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
-                     <Plus className="w-4 h-4" /> Novo lead
-                  </button>
-               </div>
-            </div>
-          ))}
+        <div className="space-y-4 max-w-full">
+           <div className="flex items-center justify-between mb-4">
+              <div className="flex bg-white rounded-xl border border-gray-100 shadow-sm p-1 gap-1">
+                 {funnels.map(funnel => (
+                   <button 
+                     key={funnel.id}
+                     onClick={() => setActiveFunnelId(funnel.id)}
+                     className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeFunnelId === funnel.id ? 'bg-[#F67C01] text-white shadow-sm' : 'text-slate-400 hover:bg-gray-50'}`}
+                   >
+                     {funnel.title}
+                   </button>
+                 ))}
+              </div>
+              <button onClick={() => setIsFunnelsModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors">
+                 <LayoutGrid className="w-4 h-4" /> Configurar Funis
+              </button>
+           </div>
+           
+            <div className="flex gap-6 pb-8 px-2 overflow-x-auto snap-x custom-scrollbar">
+              {currentStages.map(stage => (
+                <div key={stage.id} className="flex flex-col gap-4 min-w-[300px] md:min-w-[320px] snap-start" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage.id)}>
+                   <div className="flex items-center justify-between px-6">
+                      <h3 className="font-black text-[10px] uppercase tracking-widest flex items-center gap-3 italic">
+                         <span className={`w-3 h-3 rounded-full ${stage.bg} shadow-sm`}></span> {stage.label}
+                      </h3>
+                      <span className="bg-white px-4 py-1.5 rounded-full text-[10px] font-black text-slate-400 border border-gray-100">
+                         {leads.filter(l => l.stage === stage.id).length}
+                      </span>
+                   </div>
+                   <div className={`bg-gray-50/50 rounded-[3.5rem] p-4 space-y-4 min-h-[550px] border border-gray-100 shadow-inner`}>
+                      {leads.filter(l => l.stage === stage.id).map(lead => (
+                         <div key={lead.id} draggable onDragStart={(e) => handleDragStart(e, lead.id)} className={`bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 group hover:border-brand-primary/30 transition-all cursor-grab active:cursor-grabbing ${draggedLeadId === lead.id ? 'opacity-40' : ''}`} onClick={() => { setEditingLead(lead); setFormData(lead); setIsModalOpen(true); }}>
+                            <div className="flex justify-between items-start mb-4">
+                               <GripVertical className="w-3.5 h-3.5 text-slate-300" />
+                            </div>
+                            <h4 className="font-black text-gray-900 text-base mb-1 tracking-tight leading-tight">{lead.name}</h4>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase">{lead.source}</p>
+                            <div className="flex flex-col items-start gap-3 mt-4">
+                               <div className="flex gap-2 justify-start">
+                                  {lead.phone && (
+                                    <a href={`https://wa.me/${lead.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-all shadow-sm">
+                                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                    </a>
+                                  )}
+                                  <button onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }} className="text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-[10px] items-center flex gap-1 font-bold hover:bg-indigo-100 transition-all shadow-sm"><Plus className="w-3 h-3" /> FUP</button>
+                               </div>
+                               {Number(lead.value) > 0 && <p className="text-sm font-black text-[#F67C01]">R$ {Number(lead.value).toFixed(2)}</p>}
+                            </div>
+                            {lead.ultimo_follow_up && (
+                              <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-all" onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }}>
+                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> ÚLTIMA AÇÃO</p>
+                                 <p className="text-[11px] font-bold text-gray-700 line-clamp-2">{lead.ultimo_follow_up}</p>
+                              </div>
+                            )}
+                         </div>
+                      ))}
+                      <button onClick={() => { setEditingLead(null); setFormData({ name: '', phone: '', source: 'manual', stage: stage.id, value: 0 }); setIsModalOpen(true); }} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
+                         <Plus className="w-4 h-4" /> Novo lead
+                      </button>
+                   </div>
+                </div>
+              ))}
+           </div>
         </div>
       )}
 
@@ -602,6 +663,25 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Negócio</label>
                           <input type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.value} onChange={e => setFormData({...formData, value: Number(e.target.value)})} />
                        </div>
+                       <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Funil</label>
+                           <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-[#F67C01]/30 transition-all custom-select text-gray-700" value={funnels.find(f => f.stages.find(s => s.id === formData.stage))?.id || activeFunnelId} onChange={e => {
+                              const newFunnel = funnels.find(f => f.id === e.target.value);
+                              if (newFunnel && newFunnel.stages.length > 0) {
+                                 setFormData({...formData, stage: newFunnel.stages[0].id});
+                              }
+                           }}>
+                              {funnels.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
+                           </select>
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Etapa</label>
+                           <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-2 focus:ring-[#F67C01]/30 transition-all custom-select text-gray-700" value={formData.stage} onChange={e => setFormData({...formData, stage: e.target.value})}>
+                              {(funnels.find(f => f.stages.find(s => s.id === formData.stage)) || funnels.find(f => f.id === activeFunnelId) || funnels[0]).stages.map(s => (
+                                 <option key={s.id} value={s.id}>{s.label}</option>
+                              ))}
+                           </select>
+                        </div>
                     </div>
                     <div className="flex flex-col gap-4">
                         <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
@@ -751,7 +831,7 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                    </form>
                 </div>
 
-                <div className="flex-1 overflow-y-auto scrollbar-hide p-8 space-y-4 bg-white">
+                 <div className="flex-1 overflow-y-auto scrollbar-hide p-8 space-y-4 bg-white">
                    {isLoadingFollowUps ? (
                       <div className="flex justify-center p-10"><RefreshCw className="w-8 h-8 text-brand-primary animate-spin" /></div>
                    ) : followUps.length > 0 ? (
@@ -768,6 +848,123 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nenhum follow up registrado.</p>
                       </div>
                    )}
+                </div>
+            </div>
+         </div>
+      )}
+
+      {isFunnelsModalOpen && (
+         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in flex flex-col max-h-[90vh]">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">Gerenciar Funis</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Crie e edite seus funis de vendas</p>
+                    </div>
+                    <button onClick={() => setIsFunnelsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto scrollbar-hide p-10 space-y-8">
+                   {funnels.map(funnel => (
+                      <div key={funnel.id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 mb-4 relative">
+                         <div className="flex justify-between items-center mb-4">
+                            {editingFunnel?.id === funnel.id ? (
+                               <input type="text" className="bg-white border text-sm border-gray-200 rounded-xl px-4 py-2 font-bold w-1/2" value={editingFunnel.title} onChange={e => setEditingFunnel({...editingFunnel, title: e.target.value})} />
+                            ) : (
+                               <h4 className="font-black text-gray-900 text-lg">{funnel.title}</h4>
+                            )}
+                            <div className="flex gap-2">
+                               {editingFunnel?.id === funnel.id ? (
+                                  <>
+                                     <button onClick={() => {
+                                        setFunnels(funnels.map(f => f.id === funnel.id ? editingFunnel : f));
+                                        setEditingFunnel(null);
+                                     }} className="text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg text-[10px] font-bold">Salvar</button>
+                                     <button onClick={() => setEditingFunnel(null)} className="text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg text-[10px] font-bold">Cancelar</button>
+                                  </>
+                               ) : (
+                                  <>
+                                     <button onClick={() => setEditingFunnel(funnel)} className="text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-[10px] font-bold">Editar Funil</button>
+                                     {funnel.id !== 'default' && (
+                                        <button onClick={() => setFunnels(funnels.filter(f => f.id !== funnel.id))} className="text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg text-[10px] font-bold">Excluir</button>
+                                     )}
+                                  </>
+                               )}
+                            </div>
+                         </div>
+                         <div className="space-y-2 pl-4 border-l-2 border-slate-200">
+                             {(editingFunnel?.id === funnel.id ? editingFunnel.stages : funnel.stages).map((stage, idx) => (
+                                <div key={stage.id} className="flex gap-2 items-center">
+                                   <div className={`w-3 h-3 rounded-full ${stage.bg}`}></div>
+                                   {editingFunnel?.id === funnel.id ? (
+                                      <>
+                                          <input type="text" className="bg-white border text-xs border-gray-200 rounded-lg px-2 py-1 flex-1 font-medium" value={stage.label} onChange={e => {
+                                             const newStages = [...editingFunnel.stages];
+                                             newStages[idx].label = e.target.value;
+                                             setEditingFunnel({...editingFunnel, stages: newStages});
+                                         }} />
+                                         <div className="relative">
+                                            <button 
+                                               type="button"
+                                               onClick={() => setOpenColorPicker(openColorPicker === `${funnel.id}-${stage.id}` ? null : `${funnel.id}-${stage.id}`)}
+                                               className={`w-6 h-6 rounded-full ${stage.bg} border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+                                            />
+                                            {openColorPicker === `${funnel.id}-${stage.id}` && (
+                                               <>
+                                                  <div className="fixed inset-0 z-[60]" onClick={() => setOpenColorPicker(null)}></div>
+                                                  <div className="absolute top-full left-0 mt-2 p-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-[70] grid grid-cols-4 gap-1 w-[116px] animate-scale-in">
+                                                     {PRESET_COLORS.map(color => (
+                                                        <button 
+                                                           key={color}
+                                                           type="button"
+                                                           onClick={() => {
+                                                              const newStages = [...editingFunnel.stages];
+                                                              newStages[idx].bg = color;
+                                                              setEditingFunnel({...editingFunnel, stages: newStages});
+                                                              setOpenColorPicker(null);
+                                                           }}
+                                                           className={`w-5 h-5 rounded-full ${color} ${stage.bg === color ? 'ring-2 ring-offset-1 ring-gray-400' : 'opacity-60 hover:opacity-100'} transition-all`}
+                                                        />
+                                                     ))}
+                                                  </div>
+                                               </>
+                                            )}
+                                         </div>
+                                         <button onClick={() => {
+                                             const newStages = editingFunnel.stages.filter((_, i) => i !== idx);
+                                             setEditingFunnel({...editingFunnel, stages: newStages});
+                                         }} className="p-1 text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                                      </>
+                                   ) : (
+                                      <span className="text-sm font-medium text-slate-600">{stage.label}</span>
+                                   )}
+                                </div>
+                             ))}
+                             {editingFunnel?.id === funnel.id && (
+                                <button onClick={() => {
+                                   setEditingFunnel({
+                                      ...editingFunnel,
+                                      stages: [...editingFunnel.stages, { id: `custom_${Date.now()}`, label: 'Nova Etapa', bg: 'bg-indigo-500' }]
+                                   });
+                                }} className="text-[10px] font-bold text-indigo-500 flex items-center gap-1 mt-2">
+                                   <Plus className="w-3 h-3"/> Adicionar Etapa
+                                </button>
+                             )}
+                         </div>
+                      </div>
+                   ))}
+                   <button onClick={() => {
+                      const newFunnel: CRMFunnel = { id: `funnel_${Date.now()}`, title: 'Novo Funil', stages: [{ id: `stage_${Date.now()}`, label: 'Nova Etapa', bg: 'bg-blue-500' }] };
+                      setFunnels([...funnels, newFunnel]);
+                      setEditingFunnel(newFunnel);
+                   }} className="w-full py-5 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2">
+                      <Plus className="w-4 h-4" /> CRIAR NOVO FUNIL
+                   </button>
+                </div>
+                <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-[3.5rem] flex gap-4">
+                   <button onClick={handleSaveFunnels} disabled={isSaving} className="flex-1 bg-[#F67C01] text-white font-black py-4 rounded-[2rem] shadow-xl uppercase tracking-widest text-xs hover:bg-[#F67C01]/90 transition-all flex justify-center items-center gap-2">
+                      {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : 'SALVAR CONFIGURAÇÕES'}
+                   </button>
                 </div>
             </div>
          </div>

@@ -161,6 +161,18 @@ export interface SeoConfig {
   og_image?: string;
 }
 
+export interface CRMStage {
+  id: string;
+  label: string;
+  bg: string;
+}
+
+export interface CRMFunnel {
+  id: string;
+  title: string;
+  stages: CRMStage[];
+}
+
 export interface WhatsappBotConfig {
   enabled: boolean;
   name?: string;
@@ -209,6 +221,7 @@ export interface StoreConfig {
     website?: string;
   };
   calendar_link?: string;
+  crm_funnels?: CRMFunnel[];
 }
 
 export interface StoreCategory {
@@ -376,7 +389,7 @@ export interface BlogPost {
   og_image?: string;
 }
 
-export type PipelineStage = 'new' | 'contacted' | 'negotiation' | 'closed' | 'lost';
+export type PipelineStage = string; // Permitir IDs dinâmicos de etapas
 
 export interface LeadTimelineEvent {
   id: string;
