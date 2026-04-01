@@ -48,8 +48,8 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Categories />} />} path="/categories" />
       <Route element={<Navigate to="/vitrine" replace />} path="/stores" />
       <Route element={<Layout children={<Vitrine />} />} path="/vitrine" />
-      <Route element={<Layout children={<StoreView />} />} path="/store/:user_id" />
-      <Route element={<Layout children={<BioView />} />} path="/bio/:user_id" />
+      <Route element={<StoreView />} path="/store/:user_id" />
+      <Route element={<BioView />} path="/bio/:user_id" />
       <Route element={<Layout children={<Coupons />} />} path="/coupons" />
       <Route element={<Layout children={<Login />} />} path="/login" />
       <Route element={<Layout children={<Register />} />} path="/register" />
@@ -59,6 +59,8 @@ const AppRoutes = () => {
       <Route element={<Layout children={<AboutUs />} />} path="/quem-somos" />
       <Route element={<Layout children={<Partners />} />} path="/partners" />
       <Route element={<Layout children={<Events />} />} path="/eventos" />
+      <Route element={<Layout children={<Plans />} />} path="/plans" />
+      <Route element={<Layout children={<Plans />} />} path="/planos" />
       <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacy" />
       <Route element={<Layout children={<TermsOfUse />} />} path="/terms" />
 
@@ -75,14 +77,13 @@ const AppRoutes = () => {
       <Route path="/quotes" element={<ProtectedRoute><DashboardLayout><Quotes /></DashboardLayout></ProtectedRoute>} />
        <Route path="/reviews" element={<ProtectedRoute><DashboardLayout><Reviews /></DashboardLayout></ProtectedRoute>} />
        <Route path="/support" element={<ProtectedRoute><DashboardLayout><Support /></DashboardLayout></ProtectedRoute>} />
-       <Route path="/plans" element={<ProtectedRoute><DashboardLayout><Plans /></DashboardLayout></ProtectedRoute>} />
        <Route path="/mentoria" element={<ProtectedRoute><DashboardLayout><Mentoria /></DashboardLayout></ProtectedRoute>} />
       
       {/* Admin Route - Admin restriction */}
       <Route path="/admin-central" element={<ProtectedRoute requireAdmin={true}><DashboardLayout><AdminCentral /></DashboardLayout></ProtectedRoute>} />
       
       {/* Vanity URL / Slug - Must be last */}
-      <Route element={<Layout children={<StoreView />} />} path="/:slug" />
+      <Route element={<StoreView />} path="/:slug" />
     </Routes>
   );
 };

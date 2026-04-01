@@ -1,20 +1,12 @@
-
 import React from 'react';
-import { Check, Sparkles, Zap, Rocket, User, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Check, Sparkles, Zap, Rocket, User, Trophy, CreditCard } from 'lucide-react';
 
 export const Plans: React.FC = () => {
-
-  const externalLinks = {
-    start: 'https://loja.infinitepay.io/menu_de_negocios/bcc7247-plano-start',
-    pro: 'https://loja.infinitepay.io/menu_de_negocios/flw2040-plano-pro',
-    full: 'https://loja.infinitepay.io/menu_de_negocios/puo6518-plano-full---1-licenca'
-  };
+  const navigate = useNavigate();
 
   const handleSubscribe = (planKey: 'start' | 'pro' | 'full') => {
-    const link = externalLinks[planKey];
-    if (link) {
-      window.open(link, '_blank');
-    }
+    navigate(`/register?plan=${planKey}`);
   };
 
   const PlanCard = ({

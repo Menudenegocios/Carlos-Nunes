@@ -97,7 +97,7 @@ export const MyCatalog: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({ 
     name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', store_category_id: '', external_link: '',
-    accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto'
+    accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto', price_on_request: false
   });
 
   const [categoryForm, setCategoryForm] = useState({ name: '' });
@@ -303,7 +303,7 @@ export const MyCatalog: React.FC = () => {
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto' });
+      setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', accepts_menu_cash: false, menu_cash_percentage: 5, product_type: 'Produto', price_on_request: false });
       alert("Item salvo com sucesso!");
       loadData();
     } catch (error) {
@@ -683,7 +683,7 @@ export const MyCatalog: React.FC = () => {
                             </h3>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos ou serviços que aparecem na sua Vitrine.</p>
                          </div>
-                         <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', product_type: 'Produto' }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 transition-all">
+                         <button onClick={() => { setEditingProduct(null); setProductForm({ name: '', description: '', price: 0, category: 'Geral', available: true, image_url: '', external_link: '', product_type: 'Produto', price_on_request: false }); setIsProductModalOpen(true); }} className="bg-[#F67C01] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 transition-all">
                             <Plus className="w-5 h-5" /> ADICIONAR ITEM
                          </button>
                       </div>
@@ -703,8 +703,8 @@ export const MyCatalog: React.FC = () => {
                                         </span>
                                     )}
                                   </div>
-                                  <p className="text-sm font-medium text-slate-500 line-clamp-1 mb-2">{prod.description}</p>
-                                  <p className="text-2xl font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
+                                  <p className="text-sm font-medium text-slate-500 line-clamp-2 mb-2 leading-relaxed">{prod.description || 'Sem descrição'}</p>
+                                  <p className="text-2xl font-black text-emerald-600">{prod.price_on_request ? 'Sob Consulta' : `R$ ${prod.price.toFixed(2)}`}</p>
                                </div>
                                <div className="flex items-center gap-3 shrink-0">
                                   <button onClick={() => { setEditingProduct(prod); setProductForm(prod); setIsProductModalOpen(true); }} className="p-5 bg-white rounded-2xl text-indigo-600 border border-gray-100 shadow-lg hover:scale-110 transition-transform"><Edit2 className="w-5 h-5" /></button>
@@ -997,6 +997,10 @@ export const MyCatalog: React.FC = () => {
                              <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
                           </div>
                           <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Breve Descrição</label>
+                             <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 font-medium resize-none text-sm" value={productForm.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} placeholder="Ex: Produto artesanal feito com..." />
+                          </div>
+                          <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Link de Redirecionamento (Opcional)</label>
                              <input type="url" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.external_link || ''} onChange={e => setProductForm({...productForm, external_link: e.target.value})} placeholder="https://..." />
                           </div>
@@ -1026,8 +1030,21 @@ export const MyCatalog: React.FC = () => {
                            </div>
 
                            <div>
-                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Preço Sugerido (R$)</label>
-                              <input required type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
+                              <div className="flex items-center justify-between mb-3 px-1">
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Preço Sugerido (R$)</label>
+                                 <label className="flex items-center gap-2 cursor-pointer group">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">Sob Consulta</span>
+                                    <div className={`w-10 h-5 rounded-full transition-all relative ${productForm.price_on_request ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                       <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${productForm.price_on_request ? 'left-5' : 'left-0.5'}`} />
+                                    </div>
+                                    <input type="checkbox" className="hidden" checked={productForm.price_on_request || false} onChange={e => {
+                                      setProductForm({...productForm, price_on_request: e.target.checked, price: e.target.checked ? 0 : productForm.price})
+                                    }} />
+                                 </label>
+                              </div>
+                              {!productForm.price_on_request && (
+                                <input required={!productForm.price_on_request} type="number" step="0.01" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} />
+                              )}
                            </div>
                           
                           <div className="bg-gray-50 p-6 rounded-2xl space-y-4">

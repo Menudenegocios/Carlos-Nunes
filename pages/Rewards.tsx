@@ -18,7 +18,7 @@ import { pointsRules, tiers, rankingRules } from '../config/gamificationConfig';
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'home' | 'acceleration' | 'missions' | 'match' | 'ranking' | 'referrals'>('home');
+  const [activeTab, setActiveTab] = useState<'rules' | 'match' | 'ranking' | 'referrals'>('rules');
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loadingReferrals, setLoadingReferrals] = useState(true); // Changed initial state to true
   const [copied, setCopied] = useState(false);
@@ -27,7 +27,7 @@ export const Rewards: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && ['home', 'acceleration', 'missions', 'match', 'ranking', 'referrals'].includes(tab)) {
+    if (tab && ['rules', 'match', 'ranking', 'referrals'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [location.search]);
@@ -107,10 +107,8 @@ export const Rewards: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                  { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
-                  { id: 'missions', label: 'PONTOS', desc: 'Ganhar pontos', icon: ListTodo },
-                  { id: 'match', label: 'MENU CASH', desc: 'Parcerias B2B', icon: Handshake },
-                  { id: 'acceleration', label: 'NÍVEIS', desc: 'Sua autoridade', icon: Zap },
+                  { id: 'rules', label: 'REGRAS', desc: 'Guia do Ecossistema', icon: ListTodo },
+                  { id: 'match', label: 'MENU CASH', desc: 'Oportunidades', icon: Handshake },
                   { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Users },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
@@ -244,187 +242,53 @@ export const Rewards: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'home' && (
-            <SectionLanding 
-                title="O motor da Economia Colaborativa."
-                subtitle="Menu Club"
-                description="Acumule pontos, Menu Cash e expanda seu networking através de indicações e conexões estratégicas."
-                summaryText="O Menu Club é o coração da nossa comunidade. Aqui você transforma suas conexões em recompensas reais, acompanhando suas indicações, saldo de Menu Cash e transações B2B em um só lugar."
-                benefits={[
-                    "Ganhe pontos por cada indicação ativada",
-                    "Receba Menu Cash para utilizar em parceiros",
-                    "Acompanhe suas transações B2B em tempo real",
-                    "Aumente seu nível e desbloqueie benefícios exclusivos"
-                ]}
-                ctaLabel="VER MINHAS INDICAÇÕES"
-                onStart={() => setActiveTab('referrals')}
-                icon={Star}
-                accentColor="indigo"
-            />
-        )}
-
-        {activeTab === 'acceleration' && <LevelsView user={user} />}
-        {activeTab === 'missions' && (
-          <div className="space-y-12 animate-fade-in">
-             <MissionsView />
-          </div>
-        )}
+        {activeTab === 'rules' && <RulesView user={user} />}
         {activeTab === 'match' && <B2BMatchView user={user} />}
-        {activeTab === 'ranking' && <RankingView />}
+        {activeTab === 'ranking' && <RankingView user={user} />}
       </div>
     </div>
   );
 };
 
-const B2BMatchView = ({ user }: { user: User }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions' | 'rules'>('rules');
-  const [menuCashProducts, setMenuCashProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [menuCashToUse, setMenuCashToUse] = useState<number>(0);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => { 
-    loadData(); 
-  }, []);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const productsData = await supabaseService.getAllProducts();
-      setMenuCashProducts(productsData.filter(p => p.accepts_menu_cash));
-    } finally { 
-      setIsLoading(false); 
-    }
-  };
-
-  const handlePurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProduct || !user) return;
-
-    const maxMenuCash = (selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100;
-    if (menuCashToUse > maxMenuCash) {
-      alert(`Você só pode usar até ${maxMenuCash.toFixed(2)} em Menu Cash para este produto.`);
-      return;
-    }
-
-    if (menuCashToUse > (user.menu_cash || 0)) {
-      alert("Saldo de Menu Cash insuficiente.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await supabaseService.createB2BTransaction({
-        buyer_id: user.id,
-        buyer_name: user.name,
-        seller_id: selectedProduct.user_id,
-        seller_name: 'Vendedor', // Idealmente buscar nome do perfil
-        product_id: selectedProduct.id,
-        total_amount: selectedProduct.price,
-        menu_cash_amount: menuCashToUse,
-        amount: selectedProduct.price - menuCashToUse,
-        description: `Compra do item: ${selectedProduct.name}`,
-        status: 'pending'
-      });
-      setIsPurchaseModalOpen(false);
-      setSelectedProduct(null);
-      setMenuCashToUse(0);
-      setActiveSubTab('transactions');
-    } catch (err) {
-      console.error("Erro ao realizar compra:", err);
-      alert("Erro ao processar compra.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const filteredProducts = menuCashProducts.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+const RulesView = ({ user }: { user: User }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'points' | 'levels' | 'menucash'>('points');
+  
   return (
     <div className="space-y-10 animate-fade-in">
        <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-xl mb-12">
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
              <div className="space-y-4 max-w-xl">
-                <p className="text-indigo-100 font-medium pt-4">Descubra ofertas exclusivas que aceitam Menu Cash e movimente a economia colaborativa.</p>
+                <p className="text-indigo-100 font-medium pt-4">Entenda as regras da comunidade, ganhe pontos e escale seus níveis.</p>
              </div>
-             <div className="flex gap-4">
+             <div className="flex flex-wrap gap-4">
                 <button 
-                   onClick={() => setActiveSubTab('rules')}
-                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'rules' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                   onClick={() => setActiveSubTab('points')}
+                   className={`px-6 py-3 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'points' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
-                   REGRAS
+                   PONTOS
                 </button>
                 <button 
-                   onClick={() => setActiveSubTab('offers')}
-                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'offers' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                   onClick={() => setActiveSubTab('levels')}
+                   className={`px-6 py-3 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'levels' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
-                   OPORTUNIDADES
+                   NÍVEIS
                 </button>
                 <button 
-                   onClick={() => setActiveSubTab('transactions')}
-                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'transactions' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                   onClick={() => setActiveSubTab('menucash')}
+                   className={`px-6 py-3 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'menucash' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
-                   MINHAS TRANSAÇÕES
+                   REGRAS MENU CASH
                 </button>
              </div>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
        </div>
 
-       {activeSubTab === 'offers' ? (
-         <>
-            <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-              <div className="w-full relative">
-                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                 <input 
-                    type="text" 
-                    placeholder="Filtrar por nome do produto..." 
-                    className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-               {isLoading ? (
-                  [1,2,3,4].map(i => <div key={i} className="h-64 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)
-               ) : filteredProducts.length === 0 ? (
-                  <div className="col-span-full py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
-                     <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                     <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhum produto com Menu Cash encontrado.</p>
-                  </div>
-               ) : filteredProducts.map(prod => (
-                  <div key={prod.id} className="group bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col items-center text-center">
-                    <div className="w-24 h-24 rounded-3xl bg-gray-50 overflow-hidden mb-6 border border-gray-100">
-                      <img src={prod.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                    </div>
-                    <h4 className="font-black text-gray-900 text-lg uppercase italic mb-1 truncate w-full">{prod.name}</h4>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Aceita {prod.menu_cash_percentage}% Menu Cash</p>
-                    
-                    <div className="w-full pt-4 border-t border-gray-50 flex justify-between items-center mb-6">
-                       <span className="text-[10px] font-black uppercase text-slate-400">Preço</span>
-                       <span className="text-xl font-black text-brand-primary">R$ {prod.price.toFixed(2)}</span>
-                    </div>
-
-                    <button 
-                      onClick={() => { setSelectedProduct(prod); setIsPurchaseModalOpen(true); }}
-                      className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-primary transition-all active:scale-95 shadow-lg"
-                    >
-                       COMPRAR AGORA <ArrowRight className="w-3 h-3" />
-                    </button>
-                  </div>
-               ))}
-            </div>
-         </>
-       ) : activeSubTab === 'transactions' ? (
-         <B2BTransactionsView user={user} />
-       ) : (
+       {activeSubTab === 'points' && (
+          <div className="space-y-12 animate-fade-in"><MissionsView /></div>
+       )}
+       {activeSubTab === 'levels' && <LevelsView user={user} />}
+       {activeSubTab === 'menucash' && (
          <div className="bg-white rounded-[3.5rem] shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
              <div className="bg-[#0F172A] p-10 text-white">
                  <h3 className="text-3xl font-black uppercase italic tracking-tighter">💰 REGRAS MENU CASH</h3>
@@ -519,6 +383,153 @@ const B2BMatchView = ({ user }: { user: User }) => {
                  </div>
              </div>
          </div>
+       )}
+    </div>
+  );
+};
+
+const B2BMatchView = ({ user }: { user: User }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions'>('offers');
+  const [menuCashProducts, setMenuCashProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [menuCashToUse, setMenuCashToUse] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => { 
+    loadData(); 
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const productsData = await supabaseService.getAllProducts();
+      setMenuCashProducts(productsData.filter(p => p.accepts_menu_cash));
+    } finally { 
+      setIsLoading(false); 
+    }
+  };
+
+  const handlePurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || !user) return;
+
+    const maxMenuCash = (selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100;
+    if (menuCashToUse > maxMenuCash) {
+      alert(`Você só pode usar até ${maxMenuCash.toFixed(2)} em Menu Cash para este produto.`);
+      return;
+    }
+
+    if (menuCashToUse > (user.menu_cash || 0)) {
+      alert("Saldo de Menu Cash insuficiente.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await supabaseService.createB2BTransaction({
+        buyer_id: user.id,
+        buyer_name: user.name,
+        seller_id: selectedProduct.user_id,
+        seller_name: 'Vendedor', // Idealmente buscar nome do perfil
+        product_id: selectedProduct.id,
+        total_amount: selectedProduct.price,
+        menu_cash_amount: menuCashToUse,
+        amount: selectedProduct.price - menuCashToUse,
+        description: `Compra do item: ${selectedProduct.name}`,
+        status: 'pending'
+      });
+      setIsPurchaseModalOpen(false);
+      setSelectedProduct(null);
+      setMenuCashToUse(0);
+      setActiveSubTab('transactions');
+    } catch (err) {
+      console.error("Erro ao realizar compra:", err);
+      alert("Erro ao processar compra.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const filteredProducts = menuCashProducts.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-10 animate-fade-in">
+       <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-xl mb-12">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="space-y-4 max-w-xl">
+                <p className="text-indigo-100 font-medium pt-4">Descubra ofertas exclusivas que aceitam Menu Cash e movimente a economia colaborativa.</p>
+             </div>
+              <div className="flex gap-4">
+                <button 
+                   onClick={() => setActiveSubTab('offers')}
+                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'offers' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                   OPORTUNIDADES
+                </button>
+                <button 
+                   onClick={() => setActiveSubTab('transactions')}
+                   className={`px-8 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'transactions' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                   MINHAS TRANSAÇÕES
+                </button>
+             </div>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+       </div>
+
+       {activeSubTab === 'offers' ? (
+         <>
+            <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+              <div className="w-full relative">
+                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                 <input 
+                    type="text" 
+                    placeholder="Filtrar por nome do produto..." 
+                    className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-3xl font-bold shadow-sm focus:ring-4 focus:ring-indigo-50 outline-none transition-all"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+               {isLoading ? (
+                  [1,2,3,4].map(i => <div key={i} className="h-64 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)
+               ) : filteredProducts.length === 0 ? (
+                  <div className="col-span-full py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+                     <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                     <p className="text-gray-400 font-bold uppercase tracking-widest">Nenhum produto com Menu Cash encontrado.</p>
+                  </div>
+               ) : filteredProducts.map(prod => (
+                  <div key={prod.id} className="group bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col items-center text-center">
+                    <div className="w-24 h-24 rounded-3xl bg-gray-50 overflow-hidden mb-6 border border-gray-100">
+                      <img src={prod.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                    </div>
+                    <h4 className="font-black text-gray-900 text-lg uppercase italic mb-1 truncate w-full">{prod.name}</h4>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Aceita {prod.menu_cash_percentage}% Menu Cash</p>
+                    
+                    <div className="w-full pt-4 border-t border-gray-50 flex justify-between items-center mb-6">
+                       <span className="text-[10px] font-black uppercase text-slate-400">Preço</span>
+                       <span className="text-xl font-black text-brand-primary">R$ {prod.price.toFixed(2)}</span>
+                    </div>
+
+                    <button 
+                      onClick={() => { setSelectedProduct(prod); setIsPurchaseModalOpen(true); }}
+                      className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-primary transition-all active:scale-95 shadow-lg"
+                    >
+                       COMPRAR AGORA <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               ))}
+            </div>
+         </>
+       ) : (
+         <B2BTransactionsView user={user} />
        )}
 
         {/* MODAL: COMPRA DE PRODUTO */}
@@ -980,8 +991,9 @@ const MissionsView = () => {
   );
 };
 
-const RankingView = () => {
+const RankingView = ({ user }: { user: User }) => {
   const [ranking, setRanking] = useState<any[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -991,8 +1003,12 @@ const RankingView = () => {
   const loadRanking = async () => {
     setIsLoading(true);
     try {
-      const data = await supabaseService.getRanking(10);
+      const [data, userPos] = await Promise.all([
+        supabaseService.getRanking(10),
+        supabaseService.getUserRankingPosition(user.points || 0)
+      ]);
       setRanking(data);
+      setUserRank(userPos);
     } catch (error) {
       console.error("Error loading ranking:", error);
     } finally {
@@ -1059,7 +1075,7 @@ const RankingView = () => {
              </div>
           </div>
 
-          <div className="space-y-4">
+           <div className="space-y-4">
              {isLoading ? (
                <div className="space-y-4">
                  {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-3xl animate-pulse"></div>)}
@@ -1069,22 +1085,51 @@ const RankingView = () => {
                  <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum dado de ranking disponível.</p>
                </div>
              ) : (
-               ranking.map((member, i) => (
-                   <div key={member.user_id || i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : 'bg-gray-50/50 border-gray-100'}`}>
-                      <div className="flex items-center gap-6">
-                         <span className="font-black text-xl italic text-slate-300 w-6">#{i+1}</span>
-                         <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-12 h-12 rounded-xl shadow-md object-cover" alt="Avatar" />
-                         <div>
-                            <h4 className="font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</h4>
-                            <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{member.city || member.level || ''}</p>
-                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                         <span className="font-black text-gray-900">{member.points || 0} <span className="text-[10px] text-slate-400">PTS</span></span>
-                         {i < 3 && <Crown className="w-4 h-4 text-yellow-500 fill-current" />}
-                      </div>
-                   </div>
-                ))
+               <>
+                 {ranking.map((member, i) => {
+                   const isCurrentUser = member.user_id === user.id;
+                   return (
+                     <div key={member.user_id || i} className={`flex items-center justify-between p-6 rounded-[2rem] border ${i === 0 ? 'bg-yellow-50/50 border-yellow-100 scale-105 shadow-lg' : isCurrentUser ? 'bg-indigo-50 border-indigo-200 shadow-md ring-2 ring-indigo-500/20' : 'bg-gray-50/50 border-gray-100'}`}>
+                        <div className="flex items-center gap-6">
+                           <span className={`font-black text-xl italic w-6 ${i === 0 ? 'text-yellow-500' : isCurrentUser ? 'text-indigo-600' : 'text-slate-300'}`}>#{i+1}</span>
+                           <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-12 h-12 rounded-xl shadow-md object-cover" alt="Avatar" />
+                           <div>
+                              <h4 className={`font-black leading-none ${isCurrentUser ? 'text-indigo-900' : 'text-gray-900'}`}>
+                                {member.business_name || member.name || 'Membro'} {isCurrentUser ? '(Você)' : ''}
+                              </h4>
+                              <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{member.city || member.level || ''}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <span className="font-black text-gray-900">{member.points || 0} <span className="text-[10px] text-slate-400">PTS</span></span>
+                           {i < 3 && <Crown className="w-4 h-4 text-yellow-500 fill-current" />}
+                        </div>
+                     </div>
+                   );
+                 })}
+                 
+                 {/* Mostrar a posição do usuário atual se ele não estiver no TOP 10 */}
+                 {userRank !== null && userRank > 10 && (
+                   <>
+                     <div className="flex justify-center py-2">
+                       <div className="w-1 h-8 border-l-2 border-dashed border-gray-300"></div>
+                     </div>
+                     <div className="flex items-center justify-between p-6 rounded-[2rem] border bg-indigo-50 border-indigo-200 shadow-md ring-2 ring-indigo-500/20 opacity-90">
+                        <div className="flex items-center gap-6">
+                           <span className="font-black text-xl italic w-12 text-indigo-600">#{userRank}</span>
+                           <img src={user?.photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.business_name || user?.name || 'U'}`} className="w-12 h-12 rounded-xl shadow-md object-cover" alt="Você" />
+                           <div>
+                              <h4 className="font-black text-indigo-900 leading-none">{user?.business_name || user?.name || 'Você'} (Você)</h4>
+                              <p className="text-[10px] font-black text-indigo-600 uppercase mt-1">{user?.city || user?.level || ''}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <span className="font-black text-indigo-900">{user?.points || 0} <span className="text-[10px] text-indigo-500">PTS</span></span>
+                        </div>
+                     </div>   
+                   </>
+                 )}
+               </>
              )}
           </div>
        </div>

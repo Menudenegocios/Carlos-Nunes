@@ -362,6 +362,7 @@ export interface Product {
   accepts_menu_cash?: boolean;
   menu_cash_percentage?: number;
   product_type?: 'Produto' | 'Serviço' | 'Mentoria';
+  price_on_request?: boolean;
 }
 
 export interface BlogPost {
@@ -537,6 +538,7 @@ export interface PlatformEvent {
   description: string;
   type: 'Online' | 'Presencial';
   image?: string;
+  external_link?: string;
 }
 
 export interface CRMTask {

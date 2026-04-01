@@ -562,8 +562,8 @@ export const StoreView: React.FC = () => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-slate-500 font-medium line-clamp-1 mb-2">{prod.description}</p>
-                                            <p className="text-2xl font-black text-emerald-600">R$ {prod.price.toFixed(2)}</p>
+                                            <p className="text-sm text-slate-500 font-medium line-clamp-3 mb-2 whitespace-pre-line">{prod.description}</p>
+                                            <p className="text-2xl font-black text-emerald-600">{prod.price_on_request ? 'Sob Consulta' : `R$ ${prod.price.toFixed(2)}`}</p>
                                         </div>
                                         <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
                                             {prod.accepts_menu_cash && (

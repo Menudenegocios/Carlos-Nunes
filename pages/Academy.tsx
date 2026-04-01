@@ -41,6 +41,17 @@ const MOCK_COURSES: Course[] = [
   { id: 4, title: 'Finanças Lucrativas', instructor: 'Carlos Eduardo', category: 'Finanças', duration: '4h 15m', rating: 4.9, students: 850, image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800', description: 'Organize seu fluxo de caixa e entenda a margem real de lucro do seu negócio regional.' },
   { id: 5, title: "Treinamento: 8 P'S do Marketing - 1 Produto", instructor: 'Menu Academy', category: 'Vendas', duration: '1h 20m', rating: 5.0, students: 150, image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=800', description: 'Aprenda a aplicar os 8 P\'s do marketing focados em um único produto para maximizar suas vendas.', youtubeEmbed: 'https://www.youtube.com/embed/g5j95hnnWOc?list=PLZ9PlCqw0n_1cu9qXfjj5-bWBzY42rfrX' },
   { id: 6, title: '10 formas de Fechamentos em Vendas', instructor: 'Menu Academy', category: 'Vendas', duration: '45m', rating: 4.9, students: 320, image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800', description: 'Conheça 10 técnicas infalíveis para contornar objeções e fechar mais vendas todos os dias.', youtubeEmbed: 'https://www.youtube.com/embed/fP3SujZ2olQ?list=PLZ9PlCqw0n_2oqrwT3nwbNz3yFxVHrZUr' },
+  { 
+    id: 7, 
+    title: 'Pitch de Vendas de Impacto', 
+    instructor: 'Menu Academy', 
+    category: 'Vendas', 
+    duration: '15m', 
+    rating: 5.0, 
+    students: 120, 
+    image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&q=80&w=800', 
+    description: `Domine a arte de se apresentar e vender sua ideia em segundos com este roteiro de 5 passos:\n\n1. Quem é você?\nEx: "Meu nome é Paula, sou fundadora da BioVida Cosméticos Naturais…"\n\n2. Que problema você resolve?\nEx: "Ajudamos mulheres com pele sensível a cuidarem da pele sem alergias ou substâncias tóxicas."\n\n3. Como você resolve?\nEx: "Criamos produtos 100% naturais, com fórmulas exclusivas, feitas por especialistas."\n\n4. Prova ou resultado\nEx: "Já atendemos mais de 800 clientes com 97% de satisfação."\n\n5. Chamada para ação e Agradecimento\nEx: "Quer experimentar nosso kit de entrada com 15% de desconto?"` 
+  },
 ];
 
 const AI_AGENTS: AIAgent[] = [
@@ -268,7 +279,7 @@ export const Academy: React.FC = () => {
 
                     <div className="prose max-w-none">
                        <h3 className="text-lg font-black uppercase italic tracking-tight text-gray-900 mb-4">Sobre este treinamento</h3>
-                       <p className="text-slate-600 leading-relaxed font-medium">
+                       <p className="text-slate-600 leading-relaxed font-medium whitespace-pre-line">
                           {selectedCourse.description}
                        </p>
                     </div>

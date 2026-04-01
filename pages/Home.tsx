@@ -67,7 +67,7 @@ export const Home: React.FC = () => {
               <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
             </div>
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-              A Plataforma <span className="text-brand-primary italic">All-in-One</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
+              A Plataforma <span className="text-brand-primary italic">Menu de Negócios</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
             </h1>
             <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Abandone as planilhas e dezenas de aplicativos. Tenha sua vitrine digital, CRM, agenda, controle financeiro e networking B2B em um único ecossistema.

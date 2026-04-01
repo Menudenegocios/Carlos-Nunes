@@ -353,9 +353,14 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 <div className="flex items-center gap-2">
                    <Logo size="sm" />
                 </div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-                  &copy; {new Date().getFullYear()} MENU DE NEGÓCIOS INC.
-                </p>
+                <div className="flex flex-col gap-1 items-center md:items-end">
+                  <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 text-center md:text-right">
+                    &copy; 2026 MENU MENU DE NEGÓCIOS ALL-IN-ONE
+                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 text-center md:text-right">
+                    CNPJ 34.718.659/0001-08
+                  </p>
+                </div>
               </div>
             </footer>
           </div>

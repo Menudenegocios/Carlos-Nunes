@@ -757,6 +757,21 @@ export const supabaseService = {
     }
   },
 
+  getUserRankingPosition: async (points: number): Promise<number> => {
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gt('points', points);
+      
+      if (error) throw error;
+      return (count || 0) + 1;
+    } catch (error) {
+      console.error("Error getting user ranking position:", error);
+      return 0;
+    }
+  },
+
   getReferrals: async (referrerId: string): Promise<any[]> => {
     try {
       const { data, error } = await supabase

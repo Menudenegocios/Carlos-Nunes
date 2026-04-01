@@ -62,7 +62,8 @@ export const AdminCentral: React.FC = () => {
     location: '',
     description: '',
     type: 'Online' as 'Online' | 'Presencial',
-    image: ''
+    image: '',
+    external_link: ''
   });
   const [selectedEventFile, setSelectedEventFile] = useState<File | null>(null);
 
@@ -250,7 +251,8 @@ export const AdminCentral: React.FC = () => {
         location: event.location,
         description: event.description,
         type: event.type,
-        image: event.image || ''
+        image: event.image || '',
+        external_link: event.external_link || ''
       });
     } else {
       setEditingEvent(null);
@@ -260,7 +262,8 @@ export const AdminCentral: React.FC = () => {
         location: '',
         description: '',
         type: 'Online',
-        image: ''
+        image: '',
+        external_link: ''
       });
     }
     setIsEventModalOpen(true);
@@ -849,6 +852,10 @@ export const AdminCentral: React.FC = () => {
                                     setSelectedEventFile(file);
                                 }
                             }} />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Link Externo (Sympla, Meeting, etc)</label>
+                            <input type="url" placeholder="https://..." className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-indigo-600" value={eventForm.external_link} onChange={e => setEventForm({...eventForm, external_link: e.target.value})} />
                         </div>
                     </div>
 

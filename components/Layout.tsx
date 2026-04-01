@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, Store, LogOut, ArrowRight } from 'lucide-react';
+import { Menu, X, Store, LogOut, ArrowRight, Instagram, CreditCard } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,6 +83,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 Elevando a conexão entre negócios locais e consumidores através de tecnologia inteligente e design funcional.
               </p>
+              <div className="flex gap-4">
+                <a href="https://instagram.com/menudenegocios" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-all">
+                  <Instagram className="w-5 h-5" />
+                </a>
+              </div>
             </div>
 
             <div>
@@ -103,19 +108,28 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </ul>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-4">
               <h4 className="font-black text-xs uppercase tracking-[0.2em] text-brand-primary">Comece Hoje</h4>
               <Link to="/register" className="group flex items-center justify-between bg-brand-dark text-white p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-primary">
                 CADASTRAR NEGÓCIO
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
+              <Link to="/plans" className="group flex items-center justify-between border-2 border-brand-dark text-brand-dark p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-dark hover:text-white">
+                PLANOS DE ADESÃO
+                <CreditCard className="w-4 h-4" />
+              </Link>
             </div>
           </div>
 
           <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} MENU PAGES. Sua vitrine inteligente.
-            </p>
+            <div className="flex flex-col gap-2 text-center md:text-left">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                &copy; 2026 MENU MENU DE NEGÓCIOS ALL-IN-ONE
+              </p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                CNPJ 34.718.659/0001-08
+              </p>
+            </div>
             <div className="flex gap-8 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
               <Link to="/privacy" className="hover:text-brand-primary transition-colors">Privacidade</Link>
               <Link to="/terms" className="hover:text-brand-primary transition-colors">Termos</Link>
