@@ -29,23 +29,6 @@ const MOCK_MEDIA = [
     duration: "45m",
     youtubeEmbed: "https://www.youtube.com/embed/fP3SujZ2olQ?si=eScDroQosOKRNVm2",
     description: "Neste episódio de estreia, discutimos as melhores estratégias para dominar o mercado local usando tráfego pago e relacionamento."
-  },
-  {
-    id: 'treinamento-vendas',
-    title: "10 formas de Fechamentos em Vendas",
-    category: "Treinamentos",
-    image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800",
-    duration: "1h 20m",
-    youtubeEmbed: "https://www.youtube.com/embed/fP3SujZ2olQ?list=PLZ9PlCqw0n_2oqrwT3nwbNz3yFxVHrZUr",
-    description: "Conheça 10 técnicas infalíveis para contornar objeções e fechar mais vendas todos os dias."
-  },
-  {
-    id: 'ferramenta-planilha',
-    title: "Planilha de Precificação Inteligente",
-    category: "Ferramentas",
-    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800",
-    link: "#",
-    description: "Baixe nossa planilha exclusiva para calcular a margem de lucro correta dos seus produtos e serviços."
   }
 ];
 
@@ -53,8 +36,6 @@ const CATEGORIES = [
     { id: 'Todos', label: 'Todos', icon: Sparkles },
     { id: 'Eventos', label: 'Eventos', icon: Calendar },
     { id: 'MenuCast', label: 'MenuCast', icon: Mic },
-    { id: 'Ferramentas', label: 'Ferramentas', icon: Wrench },
-    { id: 'Treinamentos', label: 'Treinamentos', icon: GraduationCap },
 ];
 
 export const Events: React.FC = () => {
@@ -198,10 +179,19 @@ export const Events: React.FC = () => {
                           </div>
                         )}
 
-                        <div className="absolute top-4 left-4">
-                            <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md ${item.category === 'Eventos' ? 'bg-orange-500/80' : item.category === 'MenuCast' ? 'bg-purple-600/80' : item.category === 'Treinamentos' ? 'bg-indigo-600/80' : 'bg-emerald-600/80'}`}>
+                        <div className="absolute top-4 left-4 flex gap-2">
+                            <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md ${item.category === 'Eventos' ? 'bg-orange-500/80' : 'bg-purple-600/80'}`}>
                                 {item.category}
                             </span>
+                            {item.category === 'Eventos' && item.date && (() => {
+                                const eventDate = new Date(item.date);
+                                const isPast = eventDate < new Date() && !isNaN(eventDate.getTime());
+                                return (
+                                   <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md ${isPast ? 'bg-slate-500/80' : 'bg-emerald-500/80'}`}>
+                                       {isPast ? 'Já Realizado' : 'Novo Evento'}
+                                   </span>
+                                );
+                            })()}
                         </div>
                         
                         {item.duration && (

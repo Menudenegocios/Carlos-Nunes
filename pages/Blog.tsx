@@ -87,7 +87,22 @@ export const Blog: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-8 text-gray-900">
                           <p className="font-bold flex items-center gap-2 text-lg"><Calendar className="w-5 h-5 text-indigo-600" /> {selectedPost.date}</p>
-                          <button className="p-4 bg-gray-50 rounded-2xl text-gray-500 hover:text-indigo-600 transition-all">
+                          <button 
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: selectedPost.title,
+                                  text: selectedPost.summary,
+                                  url: window.location.href,
+                                }).catch(console.error);
+                              } else {
+                                navigator.clipboard.writeText(window.location.href);
+                                alert('Link copiado para a área de transferência!');
+                              }
+                            }}
+                            className="p-4 bg-gray-50 rounded-2xl text-gray-500 hover:text-indigo-600 transition-all"
+                            title="Compartilhar"
+                          >
                               <Share2 className="w-6 h-6" />
                           </button>
                       </div>

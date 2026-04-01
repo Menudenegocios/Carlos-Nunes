@@ -297,10 +297,10 @@ export const Academy: React.FC = () => {
 
               <div className="space-y-8 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-1 before:bg-indigo-50">
                  {[
-                    { step: '01', title: 'Fundação Digital', desc: 'Configure sua Bio Digital Pro e seu Catálogo para começar a ser visto.', icon: Smartphone },
-                    { step: '02', title: 'Atração de Leads', desc: 'Aprenda a rodar seus primeiros anúncios focados no seu bairro.', icon: Target },
-                    { step: '03', title: 'Maestria em Vendas', desc: 'Use nossos scripts de IA para fechar negócios pelo WhatsApp.', icon: MessageSquare },
-                    { step: '04', title: 'Escala & Fidelidade', desc: 'Ative o Clube de Vantagens e multiplique suas recomendações.', icon: Zap }
+                    { step: '01', title: 'Diagnóstico de Estruturação de Negócio', desc: 'Configure sua base para começar a ser visto.', icon: Smartphone },
+                    { step: '02', title: 'Diagnóstico Digital Completo', desc: 'Aprenda a alinhar seu posicionamento digital.', icon: Target },
+                    { step: '03', title: 'Treinamento de Pitch de Vendas', desc: 'Domine a arte de se apresentar e vender sua ideia.', icon: MessageSquare },
+                    { step: '04', title: 'Treinamento de Inteligência Emocional em Vendas', desc: 'Aprenda a lidar com objeções e ter controle nas negociações.', icon: Zap }
                  ].map((item, idx) => (
                     <div key={idx} className="relative flex gap-8 pl-14 items-start group">
                        <div className="absolute left-0 w-14 h-14 rounded-2xl bg-white border-2 border-indigo-600 flex items-center justify-center text-indigo-600 z-10 shadow-lg group-hover:scale-110 transition-transform">
