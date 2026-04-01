@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Video, Ticket, ArrowRight, Sparkles, Filter, Clock, ExternalLink, Search, Play, X, Wrench, GraduationCap, Mic, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Video, Ticket, ArrowRight, Sparkles, Filter, Clock, ExternalLink, Search, Play, X, Wrench, GraduationCap, Mic, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabaseService } from '../services/supabaseService';
 import { Media } from '../types';
@@ -97,6 +97,76 @@ export const Events: React.FC = () => {
 
   const displayMedia = getDisplayMedia();
 
+  if (selectedItem && selectedItem.category === 'Eventos') {
+    return (
+       <div className="max-w-4xl mx-auto pb-32 pt-8 px-6 animate-fade-in">
+          <button 
+            onClick={() => setSelectedItem(null)}
+            className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest mb-12 hover:bg-indigo-50 w-fit px-6 py-3 rounded-2xl transition-all border border-indigo-100 shadow-sm"
+          >
+            <ChevronLeft className="w-4 h-4" /> VOLTAR PARA A AGENDA
+          </button>
+          
+          <article className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100 relative">
+              <div className="relative h-[450px] w-full">
+                  <img src={selectedItem.image || 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=1200'} className="w-full h-full object-cover" alt={selectedItem.title} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent"></div>
+                  <div className="absolute bottom-16 left-16 right-16">
+                      <div className="flex gap-2 mb-6">
+                        <span className="bg-orange-500 text-white text-[9px] font-black uppercase px-4 py-2 rounded-full inline-block tracking-widest border border-white/20 backdrop-blur-md">
+                            Eventos
+                        </span>
+                        {selectedItem.date && (() => {
+                            const eventDate = new Date(selectedItem.date);
+                            const isPast = eventDate < new Date() && !isNaN(eventDate.getTime());
+                            return (
+                                <span className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/20 backdrop-blur-md inline-block ${isPast ? 'bg-slate-500/80' : 'bg-emerald-500/80'}`}>
+                                    {isPast ? 'Já Realizado' : 'Novo Evento'}
+                                </span>
+                            );
+                        })()}
+                      </div>
+                      <h1 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                          {selectedItem.title}
+                      </h1>
+                  </div>
+              </div>
+
+              <div className="p-12 md:p-16">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 pb-10 border-b border-gray-100">
+                      <div className="flex flex-wrap items-center gap-8 text-gray-900">
+                          {selectedItem.date && <p className="font-bold flex items-center gap-2 text-lg"><Calendar className="w-5 h-5 text-indigo-600" /> {selectedItem.date}</p>}
+                          {selectedItem.time && <p className="font-bold flex items-center gap-2 text-lg"><Clock className="w-5 h-5 text-indigo-600" /> {selectedItem.time}</p>}
+                          {selectedItem.location && <p className="font-bold flex items-center gap-2 text-lg"><MapPin className="w-5 h-5 text-indigo-600" /> {selectedItem.location}</p>}
+                          {selectedItem.price && <p className="font-bold flex items-center gap-2 text-lg"><Ticket className="w-5 h-5 text-indigo-600" /> {selectedItem.price}</p>}
+                          {selectedItem.attendees && <p className="font-bold flex items-center gap-2 text-lg"><Users className="w-5 h-5 text-indigo-600" /> {selectedItem.attendees} confirmados</p>}
+                      </div>
+                  </div>
+
+                  <div className="prose prose-xl max-w-none mb-12">
+                      <div className="text-gray-700 leading-relaxed text-lg font-medium whitespace-pre-wrap">
+                          {selectedItem.description}
+                      </div>
+                  </div>
+
+                  {(selectedItem.link || selectedItem.external_link) && (
+                      <div className="flex justify-center mt-12 pt-12 border-t border-gray-100">
+                          <a 
+                              href={selectedItem.link || selectedItem.external_link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="bg-brand-primary text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-3"
+                          >
+                              ACESSAR EVENTO <ExternalLink className="w-5 h-5" />
+                          </a>
+                      </div>
+                  )}
+              </div>
+          </article>
+       </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-32 pt-8 px-6">
       
@@ -164,7 +234,7 @@ export const Events: React.FC = () => {
                 {displayMedia.map(item => (
                     <div 
                       key={item.id} 
-                      onClick={() => item.category === 'Eventos' || item.category === 'Ferramentas' ? (item.link ? window.open(item.link, '_blank') : null) : setSelectedItem(item)}
+                      onClick={() => item.category === 'Ferramentas' ? (item.link ? window.open(item.link, '_blank') : null) : setSelectedItem(item)}
                       className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer"
                     >
                     <div className="relative h-48 overflow-hidden bg-black">
