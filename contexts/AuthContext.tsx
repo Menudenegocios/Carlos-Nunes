@@ -25,12 +25,12 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   const fetchUserProfile = async (user_id: string, email: string | undefined, name: string | undefined) => {
     if (!user_id) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
 
     // Timeout de 10s para evitar travamento infinito no loading
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT')), 10000)
     );
 
@@ -69,9 +69,9 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
           // Update profile and log history (fire and forget for UI snappiness)
           Promise.all([
-            supabase.from('profiles').update({ 
-              points: currentPoints, 
-              last_login_at: now.toISOString() 
+            supabase.from('profiles').update({
+              points: currentPoints,
+              last_login_at: now.toISOString()
             }).eq('user_id', user_id),
             supabase.from('points_history').insert({
               user_id: user_id,
@@ -95,7 +95,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           referrals_count: data.referrals_count || 0,
           display_id: data.display_id,
           role: data.role as User['role'] || 'user',
-          has_founder_badge: data.has_founder_badge || false
+          has_founder_badge: data.has_founder_badge || false,
+          phone: data.phone
         });
       } else {
         // Fallback básico caso o perfil ainda não tenha sido criado via trigger
@@ -125,7 +126,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
   // useRef para saber se já temos um user sem causar re-subscrição do listener
   const userRef = React.useRef<User | null>(null);
-  
+
   // Manter o ref sincronizado com o state
   useEffect(() => {
     userRef.current = user;
@@ -149,7 +150,7 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           setIsLoading(true);
         }
 
-        // IMPORTANTE: Usar setTimeout(0) para quebrar o contexto do Web Lock.
+        // Importante: Usar setTimeout(0) para quebrar o contexto do Web Lock.
         // onAuthStateChange roda dentro de um lock — se fizermos await aqui,
         // a query do Supabase entra em deadlock esperando o mesmo lock liberar.
         setTimeout(async () => {
@@ -187,8 +188,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   }, []);
 
   const logout = async () => {
-    try { 
-      await supabase.auth.signOut(); 
+    try {
+      await supabase.auth.signOut();
     } catch (e) {
       console.error("Logout error", e);
     } finally {
@@ -279,8 +280,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, logout, forgotPassword, 
+    <AuthContext.Provider value={{
+      user, logout, forgotPassword,
       isAuthenticated: !!user, isLoading,
       impersonateUser, stopImpersonating, isImpersonating, adminUser
     }}>

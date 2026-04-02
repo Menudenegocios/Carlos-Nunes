@@ -2,11 +2,23 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Sparkles, Zap, Rocket, User, Trophy, CreditCard } from 'lucide-react';
 
+import { useAuth } from '../contexts/AuthContext';
+
 export const Plans: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleSubscribe = (planKey: 'start' | 'pro' | 'full') => {
-    navigate(`/register?plan=${planKey}`);
+    if (isAuthenticated) {
+      const links = {
+        start: 'https://loja.infinitepay.io/menu_de_negocios/bcc7247-plano-start',
+        pro: 'https://loja.infinitepay.io/menu_de_negocios/flw2040-plano-pro',
+        full: 'https://loja.infinitepay.io/menu_de_negocios/puo6518-plano-full---1-licenca'
+      };
+      window.open(links[planKey], '_blank');
+    } else {
+      navigate(`/register?plan=${planKey}`);
+    }
   };
 
   const PlanCard = ({

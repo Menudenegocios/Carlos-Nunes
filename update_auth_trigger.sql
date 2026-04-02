@@ -14,8 +14,8 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
   -- Tenta inserir o perfil normalmente
-  INSERT INTO public.profiles (user_id, business_name, plan, email)
-  VALUES (new.id, new.raw_user_meta_data->>'name', 'profissionais', new.email);
+  INSERT INTO public.profiles (user_id, business_name, plan, email, phone)
+  VALUES (new.id, new.raw_user_meta_data->>'name', 'pre-cadastro', new.email, new.raw_user_meta_data->>'phone');
   
   RETURN new;
 

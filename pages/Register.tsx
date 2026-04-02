@@ -8,6 +8,7 @@ export const Register: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [referralId, setReferralId] = useState('');
@@ -90,6 +91,7 @@ export const Register: React.FC = () => {
         options: {
           data: {
             name: name,
+            phone: whatsapp,
             referrer_id: finalReferrerUuid
           }
         }
@@ -161,6 +163,24 @@ export const Register: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700">
+                Número do WhatsApp
+              </label>
+              <div className="mt-1">
+                <input
+                  id="whatsapp"
+                  name="whatsapp"
+                  type="text"
+                  placeholder="(00) 0 0000-0000"
+                  required
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
               </div>

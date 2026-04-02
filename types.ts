@@ -24,6 +24,7 @@ export interface User {
   display_id?: number;
   role?: 'user' | 'partner' | 'member' | 'client' | 'admin';
   has_founder_badge?: boolean;
+  phone?: string;
 }
 
 export interface PortfolioItem {
