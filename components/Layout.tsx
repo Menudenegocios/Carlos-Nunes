@@ -84,7 +84,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 Elevando a conexão entre negócios locais e consumidores através de tecnologia inteligente e design funcional.
               </p>
               <div className="flex gap-4">
-                <a href="https://instagram.com/menudenegocios" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-all">
+                <a href="https://www.instagram.com/menudenegociosoficial" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 transition-all">
                   <Instagram className="w-5 h-5" />
                 </a>
               </div>
