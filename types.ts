@@ -50,6 +50,7 @@ export interface B2BOffer {
   created_at: number;
 }
 
+
 export interface B2BTransaction {
   id: string;
   buyer_id: string;
@@ -462,6 +463,126 @@ export interface FinancialEntry {
   date: string;
   category: string;
   entity_type: 'personal' | 'business';
+}
+
+// --- Financial Module V2 ---
+
+export type FinAccountType = 'conta_corrente' | 'conta_digital' | 'dinheiro' | 'cartao_credito' | 'carteira' | 'investimento' | 'caixa_fisico' | 'recebíveis';
+
+export interface FinancialAccount {
+  id: string;
+  user_id: string;
+  name: string;
+  type: FinAccountType;
+  entity_type: 'personal' | 'business';
+  institution?: string;
+  initial_balance: number;
+  current_balance: number;
+  color?: string;
+  icon?: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface FinancialCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  type: 'income' | 'expense' | 'both';
+  entity_type: 'personal' | 'business' | 'both';
+  color: string;
+  icon?: string;
+  parent_id?: string;
+  dre_group?: 'gross_revenue' | 'deductions' | 'direct_costs' | 'operating_expenses_fixed' | 'operating_expenses_variable' | 'other_results';
+  created_at: string;
+  // Virtual
+  subcategories?: FinancialCategory[];
+}
+
+export interface FinancialTransaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  category_id?: string;
+  description: string;
+  value: number;
+  type: 'income' | 'expense';
+  date: string;
+  status: 'predicted' | 'realized';
+  entity_type: 'personal' | 'business';
+  observation?: string;
+  is_recurring: boolean;
+  recurrence_period?: 'weekly' | 'monthly' | 'yearly' | 'custom';
+  installments_total?: number;
+  installment_current?: number;
+  parent_transaction_id?: string;
+  attachments?: string[];
+  tags?: string[];
+  is_conciliated: boolean;
+  has_invoice?: boolean;
+  created_at: string;
+  // Virtual (joined)
+  account_name?: string;
+  category_name?: string;
+}
+
+export interface FinancialGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  type: string;
+  target_value: number;
+  current_value: number;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'paused';
+  created_at: string;
+  items?: FinancialGoalItem[];
+}
+
+export interface FinancialGoalItem {
+  id: string;
+  goal_id: string;
+  label: string;
+  target_value: number;
+  current_value: number;
+}
+
+export interface FinancialImportRule {
+  id: string;
+  user_id: string;
+  search_term: string;
+  category_id: string;
+}
+
+export interface FinancialMonthClosing {
+  id: string;
+  user_id: string;
+  month: number;
+  year: number;
+  snapshot: {
+    total_income: number;
+    total_expense: number;
+    balance: number;
+    dre?: {
+      gross_revenue: number;
+      deductions: number;
+      net_revenue: number;
+      direct_costs: number;
+      gross_profit: number;
+      operating_expenses_fixed: number;
+      operating_expenses_variable: number;
+      operating_result: number;
+      other_results: number;
+      net_profit: number;
+      margin: number;
+      items: any[];
+    };
+    account_balances?: { name: string; balance: number }[];
+  };
+  is_closed: boolean;
+  observations?: string;
+  closed_at?: string;
 }
 
 export interface ScheduleItem {

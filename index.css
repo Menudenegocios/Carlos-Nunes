@@ -81,6 +81,23 @@
     padding-bottom: 0.05em;
     line-height: 1.15 !important;
   }
+
+  .whatsapp-input-register select,
+  .whatsapp-input-register input {
+    border: 1px solid #D1D5DB !important; /* gray-300 */
+    border-radius: 0.375rem !important; /* rounded-md */
+    padding: 0.5rem 0.75rem !important; /* px-3 py-2 approx */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+    font-size: 0.875rem !important; /* sm:text-sm */
+    height: auto !important;
+  }
+
+  .whatsapp-input-register select:focus,
+  .whatsapp-input-register input:focus {
+    border-color: #F67C01 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 1px #F67C01 !important;
+  }
 }
 
 @layer base {

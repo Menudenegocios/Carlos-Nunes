@@ -14,6 +14,7 @@ import { PhoneInput } from '../components/PhoneInput';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link, useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import { FinanceViewV2 } from '../components/financial/FinanceViewV2';
 
 export const BusinessSuite: React.FC = () => {
   const { user } = useAuth();
@@ -120,7 +121,7 @@ export const BusinessSuite: React.FC = () => {
         )}
         {activeTab === 'crm' && <CRMView user_id={user.id} />}
         {/* Fix: Added missing FinanceView component mapping */}
-        {activeTab === 'finance' && <FinanceView user_id={user.id} />}
+        {activeTab === 'finance' && <FinanceViewV2 user_id={user.id} />}
         {/* {activeTab === 'menuzap_pro' && <MenuzapProView user={user} />} */}
       </div>
     </div>
