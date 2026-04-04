@@ -87,7 +87,7 @@ export const AboutUs: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. MENU CLUB SECTION */}
+      {/* 4. MENU MATCH SECTION */}
       <section className="grid lg:grid-cols-2 gap-12 items-center">
         <div className="order-2 lg:order-1">
            <div className="bg-indigo-600 rounded-[3.5rem] p-12 text-white space-y-8 shadow-2xl">

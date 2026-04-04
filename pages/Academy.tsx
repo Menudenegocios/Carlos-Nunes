@@ -95,7 +95,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'trilha' | 'biblioteca' | 'connect'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'biblioteca' | 'connect'>('home');
   const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
@@ -130,8 +130,7 @@ export const Academy: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-gray-50 backdrop-blur-md rounded-[2.2rem] border border-gray-100 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
-                  { id: 'treinamentos', label: 'CURSOS', desc: 'Vídeo aulas', icon: Video },
-                  { id: 'trilha', label: 'TRILHA', desc: 'Passo a passo', icon: Map },
+                  { id: 'treinamentos', label: 'TREINAMENTOS', desc: 'Vídeo aulas', icon: Video },
                   { id: 'biblioteca', label: 'PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
                   { id: 'connect', label: 'CONNECT', desc: 'Mentorias ao vivo', icon: Users },
               ].map(tab => (
@@ -166,7 +165,7 @@ export const Academy: React.FC = () => {
                 "Biblioteca de Prompts: Copie e cole estratégias de alta conversão.",
                 "Atualizações: Conteúdo focado no que há de mais moderno no mercado local."
                 ]}
-                ctaLabel="VER CURSOS DISPONÍVEIS"
+                ctaLabel="VER TREINAMENTOS DISPONÍVEIS"
                 onStart={() => setActiveTab('treinamentos')}
                 icon={GraduationCap}
                 accentColor="indigo"
@@ -288,35 +287,6 @@ export const Academy: React.FC = () => {
            </div>
         )}
 
-        {activeTab === 'trilha' && (
-           <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-12 px-4 mx-4">
-              <div className="max-w-2xl">
-                 <h2 className="text-3xl font-black text-gray-900 italic uppercase tracking-tighter mb-4">Seu Caminho para o Topo</h2>
-                 <p className="text-slate-500 font-medium">Siga este passo a passo validado para transformar seu pequeno negócio em uma referência regional.</p>
-              </div>
-
-              <div className="space-y-8 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-1 before:bg-indigo-50">
-                 {[
-                    { step: '01', title: 'Diagnóstico de Estruturação de Negócio', desc: 'Configure sua base para começar a ser visto.', icon: Smartphone },
-                    { step: '02', title: 'Diagnóstico Digital Completo', desc: 'Aprenda a alinhar seu posicionamento digital.', icon: Target },
-                    { step: '03', title: 'Treinamento de Pitch de Vendas', desc: 'Domine a arte de se apresentar e vender sua ideia.', icon: MessageSquare },
-                    { step: '04', title: 'Treinamento de Inteligência Emocional em Vendas', desc: 'Aprenda a lidar com objeções e ter controle nas negociações.', icon: Zap }
-                 ].map((item, idx) => (
-                    <div key={idx} className="relative flex gap-8 pl-14 items-start group">
-                       <div className="absolute left-0 w-14 h-14 rounded-2xl bg-white border-2 border-indigo-600 flex items-center justify-center text-indigo-600 z-10 shadow-lg group-hover:scale-110 transition-transform">
-                          <item.icon className="w-6 h-6" />
-                       </div>
-                       <div className="pt-2">
-                          <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">Passo {item.step}</h4>
-                          <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight mb-2">{item.title}</h3>
-                          <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-lg">{item.desc}</p>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        )}
-
          {activeTab === 'biblioteca' && (
            <div className="space-y-12 px-4">
               <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl">
@@ -393,6 +363,35 @@ export const Academy: React.FC = () => {
                  
                  <div className="mt-6 text-xs text-slate-400 font-bold bg-white px-6 py-3 rounded-xl border border-gray-100 w-full overflow-hidden text-ellipsis whitespace-nowrap">
                     Link oficial: <a href="https://meet.google.com/uuh-ffht-tvu" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">https://meet.google.com/uuh-ffht-tvu</a>
+                 </div>
+
+                 <div className="w-full mt-16 pt-10 border-t border-gray-200 text-left">
+                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.1em] mb-6 flex items-center gap-2">
+                       <PlayCircle className="w-5 h-5 text-[#F67C01]" /> Edições Anteriores
+                    </h4>
+                    <div className="space-y-4">
+                       {[
+                          { title: 'AULA DE VENDAS', speaker: 'DICK BORN', date: '01/04/2026', url: 'https://www.youtube.com/live/CT2c6C4BVfs' },
+                          { title: 'PRODUÇÃO DE VÍDEOS', speaker: 'MAIA WILL', date: '25/03/2026', url: 'https://www.youtube.com/live/mrZDbs516t4' },
+                          { title: 'GESTÃO FINANCEIRA', speaker: 'SIMONE FREITAS', date: '21/01/2026', url: 'https://www.youtube.com/live/NV1KbDow3hg' },
+                          { title: 'GESTÃO EMPRESARIAL', speaker: 'VANDRESSA MOSMANN', date: '10/12/2025', url: 'https://www.youtube.com/live/BLk490Pu7dc' },
+                          { title: 'ESTRUTURA DE MARKETING', speaker: 'INGRID MONTEIRO', date: '26/11/2025', url: 'https://www.youtube.com/live/nPFEVrpqKGQ' }
+                       ].map((item, idx) => (
+                          <a 
+                            key={idx} 
+                            href={item.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="flex items-start justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-[#F67C01] hover:shadow-lg transition-all group"
+                          >
+                             <div>
+                                <p className="text-[10px] font-black text-[#F67C01] uppercase tracking-widest">{item.title}</p>
+                                <p className="text-xs font-bold text-gray-900">{item.speaker} - {item.date}</p>
+                             </div>
+                             <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-[#F67C01] transition-colors" />
+                          </a>
+                       ))}
+                    </div>
                  </div>
               </div>
            </div>

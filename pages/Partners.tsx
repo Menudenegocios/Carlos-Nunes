@@ -135,9 +135,14 @@ export const Partners: React.FC = () => {
           <h2 className="text-4xl md:text-5xl font-black tracking-tight">Quer escalar o impacto local conosco?</h2>
           <p className="text-gray-400 text-lg font-medium leading-relaxed">Estamos sempre em busca de parceiros estratégicos que compartilham nosso amor pelo empreendedorismo regional.</p>
           <div className="pt-4">
-            <button className="bg-white text-gray-900 px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto shadow-2xl active:scale-95">
+            <a 
+              href="https://wa.me/5551981124252" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-white text-gray-900 px-12 py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 mx-auto shadow-2xl active:scale-95"
+            >
               FALAR COM TIME DE PARCERIAS <ArrowRight className="w-4 h-4" />
-            </button>
+            </a>
           </div>
         </div>
         <div className="absolute top-1/2 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +10,8 @@ import {
   LayoutDashboard, Wallet, Coins,
   History, Handshake, UserPlus,
   ChevronRight, Bot, Rocket,
-  Copy, Share2, Sparkles, Lock, Save
+  Copy, Share2, Sparkles, Lock, Save,
+  Bell, X, Star, PartyPopper
 } from 'lucide-react';
 import { pointsRules, tiers } from '../config/gamificationConfig';
 import { supabase } from '../services/supabaseClient';
@@ -31,8 +31,30 @@ export const Dashboard: React.FC = () => {
   const [authMessage, setAuthMessage] = useState('');
   const [ranking, setRanking] = useState<any[]>([]);
 
+  // News Modal State
+  const [showNews, setShowNews] = useState(false);
+  const CURRENT_VERSION = 'v1.0.15';
+
   useEffect(() => {
-    if (user) loadDashboardData();
+    if (user) {
+      loadDashboardData();
+      
+      const storageKey = `menu_match_news_${CURRENT_VERSION}_${user.id}`;
+      const stored = localStorage.getItem(storageKey);
+      let views = 0;
+      if (stored) {
+        views = parseInt(stored, 10);
+        if (isNaN(views)) views = 0;
+      }
+      
+      if (views < 2) {
+        const timer = setTimeout(() => {
+          setShowNews(true);
+          localStorage.setItem(storageKey, (views + 1).toString());
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
   }, [user]);
 
   if (!user) return null;
@@ -167,7 +189,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20 pt-4 px-4 animate-[fade-in_0.4s_ease-out] relative">
+    <div className="max-w-6xl mx-auto space-y-10 pb-20 pt-4 px-4 relative">
 
       {/* Global Background Glows */}
       <div className="fixed top-0 left-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
@@ -190,6 +212,9 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="flex gap-4">
+              <button onClick={() => setShowNews(true)} className="hidden md:flex items-center gap-2 px-6 py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition-all active:scale-95 shadow-sm">
+                <Bell className="w-4 h-4" /> NOVIDADES <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[8px]">{CURRENT_VERSION}</span>
+              </button>
               <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
                 <Plus className="w-4 h-4" /> NOVO ITEM
               </Link>
@@ -442,6 +467,51 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Novidades Modal */}
+      {showNews && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowNews(false)}>
+          <div 
+            className="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl border border-gray-100"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="relative bg-gradient-to-br from-indigo-600 to-indigo-800 px-6 py-10 text-center">
+              <button onClick={() => setShowNews(false)} className="absolute top-4 right-4 text-white/60 hover:text-white bg-white/10 p-2 rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+              <PartyPopper className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
+              <h3 className="text-3xl font-black text-white italic uppercase">NOVIDADES</h3>
+              <p className="inline-block px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold text-indigo-100 uppercase mt-2">Versão {CURRENT_VERSION}</p>
+            </div>
+
+            <div className="px-6 py-8 space-y-4 bg-slate-50">
+              {[
+                { icon: Star, color: 'indigo', title: 'Bem-vindo à Menu Match', desc: 'O Menu Club evoluiu! Nova marca e interface otimizada.' },
+                { icon: Sparkles, color: 'emerald', title: 'Lançamento: Local+', desc: 'Novo marketplace para vendas rápidas e recorrentes.' },
+                { icon: Bot, color: 'orange', title: 'Gestão & Treinamentos', desc: 'Checklists automáticos e aba de edições anteriores.' }
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <div className={`p-2 bg-${item.color}-50 text-${item.color}-500 rounded-xl mt-1`}><item.icon className="w-5 h-5" /></div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider">{item.title}</h4>
+                    <p className="text-sm text-gray-500">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-6 py-6 border-t border-gray-100 bg-white">
+              <button
+                className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+                onClick={() => setShowNews(false)}
+              >
+                Entendi, Bora Trabalhar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

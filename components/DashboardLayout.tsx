@@ -60,7 +60,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
     { 
-      label: 'Menu Club', 
+      label: 'Menu Match', 
       icon: Trophy, 
       to: '/rewards',
       subItems: [
@@ -69,6 +69,18 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         { label: 'Níveis', to: '/rewards?tab=acceleration' },
         { label: 'Indicações', to: '/rewards?tab=referrals' },
         { label: 'Ranking', to: '/rewards?tab=ranking' }
+      ]
+    },
+    { 
+      label: 'Local+', 
+      icon: Sparkles, 
+      to: '/local-plus', 
+      locked: false, 
+      minPlan: 'pre-cadastro',
+      subItems: [
+        { label: 'Marketplace', to: '/local-plus?tab=home' },
+        { label: 'Menu do Dia', to: '/local-plus?tab=flash' },
+        { label: 'Categorias', to: '/local-plus?tab=categories' }
       ]
     },
     { 
@@ -91,17 +103,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       subItems: [
         { label: 'Meus Projetos', to: '/project-management' },
         { label: 'Quadro Kanban', to: '/project-management' }
-      ]
-    },
-    { 
-      label: 'Mentoria Full', 
-      icon: Rocket, 
-      to: '/mentoria', 
-      locked: false, 
-      minPlan: 'full',
-      subItems: [
-        { label: 'Agenda Mentor', to: '/mentoria' },
-        { label: 'Materiais', to: '/mentoria' }
       ]
     },
     { 

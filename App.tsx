@@ -36,6 +36,7 @@ import { TermsOfUse } from './pages/TermsOfUse';
 import { Support } from './pages/Support';
 import { ProjectManagement } from './pages/ProjectManagement';
 import { AdminCentral } from './pages/AdminCentral';
+import { LocalPlus } from './pages/LocalPlus';
 import { Mentoria } from './pages/Mentoria';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -70,6 +71,7 @@ const AppRoutes = () => {
       <Route path="/project-management" element={<ProtectedRoute><DashboardLayout><ProjectManagement /></DashboardLayout></ProtectedRoute>} />
       <Route path="/marketplace-b2b" element={<ProtectedRoute><DashboardLayout><MarketplaceB2B /></DashboardLayout></ProtectedRoute>} />
       <Route path="/academy" element={<ProtectedRoute><DashboardLayout><Academy /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/local-plus" element={<ProtectedRoute><DashboardLayout><LocalPlus /></DashboardLayout></ProtectedRoute>} />
       <Route path="/bio-builder" element={<ProtectedRoute><DashboardLayout><BioBuilder /></DashboardLayout></ProtectedRoute>} />
       <Route path="/catalog" element={<ProtectedRoute><DashboardLayout><MyCatalog /></DashboardLayout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><DashboardLayout><Profile /></DashboardLayout></ProtectedRoute>} />

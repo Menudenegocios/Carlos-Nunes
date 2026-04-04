@@ -78,7 +78,7 @@ export const Rewards: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 overflow-visible">
-                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Club</span>
+                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Match</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">TRANSFORME SUA ATIVIDADE EM CRESCIMENTO REAL.</p>
               </div>
@@ -96,7 +96,7 @@ export const Rewards: React.FC = () => {
               </div>
               <div className="flex items-center gap-8 px-8 py-3">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1">Menu Cash</span>
+                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1">Menu B2B</span>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-black text-white leading-none">M$ {user.menu_cash?.toFixed(2) || '0.00'}</span>
                   </div>
@@ -108,7 +108,7 @@ export const Rewards: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'rules', label: 'REGRAS', desc: 'Guia do Ecossistema', icon: ListTodo },
-                  { id: 'match', label: 'MENU CASH', desc: 'Oportunidades', icon: Handshake },
+                  { id: 'match', label: 'MENU B2B', desc: 'Oportunidades', icon: Handshake },
                   { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Users },
                   { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
@@ -277,7 +277,7 @@ const RulesView = ({ user }: { user: User }) => {
                    onClick={() => setActiveSubTab('menucash')}
                    className={`px-6 py-3 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'menucash' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
-                   REGRAS MENU CASH
+                   REGRAS MENU B2B
                 </button>
              </div>
           </div>
@@ -291,7 +291,7 @@ const RulesView = ({ user }: { user: User }) => {
        {activeSubTab === 'menucash' && (
          <div className="bg-white rounded-[3.5rem] shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
              <div className="bg-[#0F172A] p-10 text-white">
-                 <h3 className="text-3xl font-black uppercase italic tracking-tighter">💰 REGRAS MENU CASH</h3>
+                 <h3 className="text-3xl font-black uppercase italic tracking-tighter">💰 REGRAS MENU B2B</h3>
                  <p className="text-xs font-black text-brand-primary tracking-[0.2em] mt-2 uppercase">A moeda interna do ecossistema</p>
              </div>
              
@@ -539,7 +539,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
                   <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
                       <div>
                           <h3 className="text-xl font-black uppercase italic tracking-tighter">Finalizar Compra</h3>
-                          <p className="text-[9px] font-black text-emerald-400 tracking-widest mt-0.5 uppercase">Use seu saldo Menu Cash</p>
+                          <p className="text-[9px] font-black text-emerald-400 tracking-widest mt-0.5 uppercase">Use seu saldo Menu B2B</p>
                       </div>
                       <button onClick={() => setIsPurchaseModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
                   </div>

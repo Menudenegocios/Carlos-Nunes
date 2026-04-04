@@ -16,6 +16,7 @@ export interface User {
   name: string;
   email: string;
   plan: 'pre-cadastro' | 'basic' | 'pro' | 'full';
+  local_plan?: 'none' | 'presenca' | 'destaque' | 'dominio';
   points: number;
   level: 'Nível Base' | 'Bronze' | 'Prata' | 'Ouro' | 'Diamante';
   menu_cash: number;
@@ -25,6 +26,9 @@ export interface User {
   role?: 'user' | 'partner' | 'member' | 'client' | 'admin';
   has_founder_badge?: boolean;
   phone?: string;
+  business_name?: string;
+  photo_url?: string;
+  city?: string;
 }
 
 export interface PortfolioItem {
@@ -257,6 +261,7 @@ export interface Profile {
   name?: string;
   email?: string;
   plan?: string;
+  local_plan?: string;
   points?: number;
   level?: string;
   role?: string;
@@ -404,9 +409,11 @@ export interface LeadTimelineEvent {
 export interface FollowUp {
   id: string;
   user_id: string;
-  entity_type: 'lead' | 'client';
+  entity_type: 'lead' | 'client' | 'task';
   entity_id: string;
   content: string;
+  checklist?: { text: string; done: boolean }[];
+  due_date?: string;
   created_at: string;
 }
 

@@ -309,7 +309,8 @@ export const supabaseService = {
     try {
       const { data, error } = await supabase
         .from('offers')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -375,6 +376,8 @@ export const supabaseService = {
       throw error;
     }
   },
+
+  addOffer: async (offer: any) => supabaseService.createOffer(offer),
 
   updateOffer: async (id: string, offer: any): Promise<void> => {
     try {
@@ -1197,12 +1200,18 @@ export const supabaseService = {
   },
 
   // --- FOLLOW UPS ---
-  getFollowUps: async (entity_id: string): Promise<any[]> => {
+  getFollowUps: async (entity_id: string, entity_type?: 'lead' | 'client' | 'task'): Promise<any[]> => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('follow_ups')
         .select('*')
-        .eq('entity_id', entity_id)
+        .eq('entity_id', entity_id);
+
+      if (entity_type) {
+        query = query.eq('entity_type', entity_type);
+      }
+      
+      const { data, error } = await query
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -1225,6 +1234,20 @@ export const supabaseService = {
       return data;
     } catch (error) {
       console.error("Error adding follow up:", error);
+      throw error;
+    }
+  },
+
+  updateFollowUp: async (id: string, updates: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('follow_ups')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating follow up:", error);
       throw error;
     }
   },

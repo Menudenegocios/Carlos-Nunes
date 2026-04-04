@@ -134,7 +134,7 @@ const KPICard = ({ icon: Icon, label, value, color }: { icon: any; label: string
         <Icon className="w-4 h-4 opacity-60" />
         <p className="text-[9px] font-black uppercase tracking-widest opacity-70">{label}</p>
       </div>
-      <p className="text-2xl font-black tracking-tight">R$ {Math.abs(value).toFixed(2)}</p>
+      <p className="text-2xl font-black tracking-tight">R$ {(Number(value) || 0).toFixed(2)}</p>
     </div>
   );
 };

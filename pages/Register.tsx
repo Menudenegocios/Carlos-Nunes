@@ -16,6 +16,8 @@ export const Register: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [wantPlatform, setWantPlatform] = useState(true);
+  const [wantLocalPlus, setWantLocalPlus] = useState(false);
 
   const [referrerName, setReferrerName] = useState<string | null>(null);
 
@@ -93,7 +95,10 @@ export const Register: React.FC = () => {
           data: {
             name: name,
             phone: whatsapp,
-            referrer_id: finalReferrerUuid
+            referrer_id: finalReferrerUuid,
+            want_platform: wantPlatform,
+            want_local_plus: wantLocalPlus,
+            local_plan: wantLocalPlus ? 'presenca' : 'none' // Se quiser Local+, ja ganha o plano grátis
           }
         }
       });
@@ -231,6 +236,43 @@ export const Register: React.FC = () => {
                   onChange={(e) => setReferralId(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#F67C01] focus:border-[#F67C01] sm:text-sm"
                 />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <label className="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">
+                O que você deseja no Menu?
+              </label>
+              <div className="space-y-3">
+                <label className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${wantPlatform ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-center h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      checked={wantPlatform}
+                      onChange={(e) => setWantPlatform(e.target.checked)}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Plataforma de Gestão</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Ter minha vitrine, CRM, blog e ferramentas.</span>
+                  </div>
+                </label>
+                
+                <label className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${wantLocalPlus ? 'border-[#F67C01] bg-orange-50/50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <div className="flex items-center h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-[#F67C01] focus:ring-[#F67C01] border-gray-300 rounded"
+                      checked={wantLocalPlus}
+                      onChange={(e) => setWantLocalPlus(e.target.checked)}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Vender no Local+</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Publicar ofertas no marketplace da minha região.</span>
+                  </div>
+                </label>
               </div>
             </div>
 
