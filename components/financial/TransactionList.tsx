@@ -26,6 +26,7 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   // OFX Import State
   const [ofxTransactions, setOfxTransactions] = useState<any[]>([]);
   const [importStep, setImportStep] = useState(1); // 1: Upload, 2: Categorize
+  const [defaultImportAccount, setDefaultImportAccount] = useState('');
 
   const emptyForm = { description: '', value: 0, type: 'expense' as 'income' | 'expense', date: new Date().toISOString().split('T')[0], account_id: '', category_id: '', status: 'realized' as 'predicted' | 'realized', entity_type: entityFilter as any, observation: '', is_recurring: false, recurrence_period: '', tags: [] as string[], is_conciliated: false, has_invoice: false };
   const [form, setForm] = useState(emptyForm);
@@ -99,10 +100,25 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
     reader.onload = (event) => {
       const text = event.target?.result as string;
       const parsed = parseOFX(text);
-      setOfxTransactions(parsed);
+      
+      // Auto-set default account if only one exists for this entity
+      const entityAccounts = accounts.filter(a => a.entity_type === entityFilter);
+      const initialAccountId = entityAccounts.length === 1 ? entityAccounts[0].id : '';
+      setDefaultImportAccount(initialAccountId);
+      
+      setOfxTransactions(parsed.map(t => ({ ...t, account_id: initialAccountId })));
       setImportStep(2);
     };
     reader.readAsText(file);
+  };
+
+  const removeOfxItem = (id: string) => {
+    setOfxTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  const applyDefaultAccountToAll = (accountId: string) => {
+    setDefaultImportAccount(accountId);
+    setOfxTransactions(prev => prev.map(t => ({ ...t, account_id: accountId })));
   };
 
   const confirmOFXImport = async () => {
@@ -383,50 +399,66 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                    <div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                    <div className="md:col-span-1">
                       <h4 className="font-black text-indigo-900 uppercase text-xs tracking-widest">Revisão de Lançamentos</h4>
-                      <p className="text-[10px] text-indigo-600 font-bold">{ofxTransactions.length} transações identificadas no arquivo.</p>
+                      <p className="text-[10px] text-indigo-600 font-bold">{ofxTransactions.length} transações identificadas.</p>
                     </div>
-                    <button onClick={confirmOFXImport} disabled={isSaving} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-md">
-                      {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : <><Check className="w-4 h-4" /> IMPORTAR TODOS</>}
-                    </button>
+                    
+                    <div className="md:col-span-1">
+                      <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1.5 ml-1">Aplicar banco em todos:</label>
+                      <select 
+                        className="w-full bg-white border border-indigo-200 rounded-xl px-4 py-2.5 text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-300 transition-all outline-none"
+                        value={defaultImportAccount}
+                        onChange={e => applyDefaultAccountToAll(e.target.value)}
+                      >
+                        <option value="">Selecione o banco...</option>
+                        {filteredAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-1 flex justify-end">
+                      <button onClick={confirmOFXImport} disabled={isSaving || ofxTransactions.length === 0} className="w-full md:w-auto bg-emerald-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50">
+                        {isSaving ? <RefreshCw className="animate-spin w-4 h-4" /> : <><Check className="w-4 h-4" /> IMPORTAR ({ofxTransactions.length})</>}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
                     <div className="grid grid-cols-12 px-4 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                       <div className="col-span-1">Data</div>
-                      <div className="col-span-4">Descrição Original</div>
+                      <div className="col-span-3">Descrição Original</div>
                       <div className="col-span-2">Valor</div>
-                      <div className="col-span-2">Conta Destino</div>
+                      <div className="col-span-2">Banco Destino</div>
                       <div className="col-span-2">Categoria</div>
                       <div className="col-span-1 text-center">NF?</div>
+                      <div className="col-span-1 text-right pr-2">Ação</div>
                     </div>
                     {ofxTransactions.map((tx, idx) => (
                       <div key={tx.id} className="grid grid-cols-12 items-center gap-3 bg-white border border-gray-100 p-3 rounded-2xl hover:border-indigo-200 transition-all group">
                         <div className="col-span-1 text-[10px] font-black text-slate-500">{new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
-                        <div className="col-span-4">
-                          <input className="w-full text-xs font-bold bg-gray-50 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-indigo-500" value={tx.description} onChange={e => {
+                        <div className="col-span-3">
+                          <input className="w-full text-xs font-bold bg-gray-50 border-none rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-100 outline-none" value={tx.description} onChange={e => {
                             const newTxs = [...ofxTransactions];
                             newTxs[idx].description = e.target.value;
                             setOfxTransactions(newTxs);
                           }} />
                         </div>
                         <div className="col-span-2 font-black text-[11px]" style={{ color: tx.type === 'income' ? '#10b981' : '#f43f5e' }}>
-                          {tx.type === 'income' ? '+' : '-'} R$ {tx.value.toFixed(2)}
+                          {tx.type === 'income' ? '+' : '-'} R$ {tx.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
                         <div className="col-span-2">
-                          <select className="w-full text-[10px] font-bold bg-gray-50 border-none rounded-lg px-1 py-1.5" value={tx.account_id} onChange={e => {
+                          <select className="w-full text-[10px] font-black bg-gray-100 border-none rounded-lg px-2 py-2 outline-none" value={tx.account_id} onChange={e => {
                             const newTxs = [...ofxTransactions];
                             newTxs[idx].account_id = e.target.value;
                             setOfxTransactions(newTxs);
                           }}>
-                            <option value="">Conta...</option>
+                            <option value="">Selecione Banco...</option>
                             {filteredAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <select className="w-full text-[10px] font-bold bg-gray-50 border-none rounded-lg px-1 py-1.5" value={tx.category_id} onChange={e => {
+                          <select className="w-full text-[10px] font-bold bg-gray-50 border-none rounded-lg px-2 py-2 outline-none" value={tx.category_id} onChange={e => {
                             const newTxs = [...ofxTransactions];
                             newTxs[idx].category_id = e.target.value;
                             setOfxTransactions(newTxs);
@@ -436,11 +468,20 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                           </select>
                         </div>
                         <div className="col-span-1 flex justify-center">
-                          <input type="checkbox" className="w-4 h-4 rounded border-gray-300" checked={tx.has_invoice} onChange={e => {
+                          <input type="checkbox" className="w-5 h-5 rounded border-gray-200 text-indigo-600" checked={tx.has_invoice} onChange={e => {
                             const newTxs = [...ofxTransactions];
                             newTxs[idx].has_invoice = e.target.checked;
                             setOfxTransactions(newTxs);
                           }} />
+                        </div>
+                        <div className="col-span-1 flex justify-end">
+                          <button 
+                            onClick={() => removeOfxItem(tx.id)}
+                            className="p-2 text-rose-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Remover este lançamento"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     ))}

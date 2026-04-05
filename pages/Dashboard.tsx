@@ -9,7 +9,7 @@ import {
   ArrowRight, CheckCircle,
   LayoutDashboard, Wallet, Coins,
   History, Handshake, UserPlus,
-  ChevronRight, Bot, Rocket,
+  ChevronRight, Bot, Rocket, GraduationCap,
   Copy, Share2, Sparkles, Lock, Save,
   Bell, X, Star, PartyPopper
 } from 'lucide-react';
@@ -33,7 +33,7 @@ export const Dashboard: React.FC = () => {
 
   // News Modal State
   const [showNews, setShowNews] = useState(false);
-  const CURRENT_VERSION = 'v1.0.15';
+  const CURRENT_VERSION = 'v1.0.16';
 
   useEffect(() => {
     if (user) {
@@ -486,12 +486,13 @@ export const Dashboard: React.FC = () => {
 
             <div className="px-6 py-8 space-y-4 bg-slate-50">
               {[
-                { icon: Star, color: 'indigo', title: 'Bem-vindo à Menu Match', desc: 'O Menu Club evoluiu! Nova marca e interface otimizada.' },
-                { icon: Sparkles, color: 'emerald', title: 'Lançamento: Local+', desc: 'Novo marketplace para vendas rápidas e recorrentes.' },
-                { icon: Bot, color: 'orange', title: 'Gestão & Treinamentos', desc: 'Checklists automáticos e aba de edições anteriores.' }
+                { icon: Star, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Bem-vindo à Menu Match', desc: 'O Menu Club evoluiu! Nova marca e interface otimizada.' },
+                { icon: Sparkles, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Financeiro: Importação OFX', desc: 'Novo seletor de bancos em lote e exclusão antes de importar.' },
+                { icon: Bot, colorClass: 'bg-orange-50 text-orange-500', title: 'Lançamento: Local+', desc: 'Novo marketplace para vendas rápidas e recorrentes no dia a dia.' },
+                { icon: GraduationCap, colorClass: 'bg-amber-50 text-amber-500', title: 'Gestão & Treinamentos', desc: 'Checklists automáticos em Projetos e novos treinamentos gravados.' }
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                  <div className={`p-2 bg-${item.color}-50 text-${item.color}-500 rounded-xl mt-1`}><item.icon className="w-5 h-5" /></div>
+                  <div className={`p-2 ${item.colorClass} rounded-xl mt-1`}><item.icon className="w-5 h-5" /></div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider">{item.title}</h4>
                     <p className="text-sm text-gray-500">{item.desc}</p>
