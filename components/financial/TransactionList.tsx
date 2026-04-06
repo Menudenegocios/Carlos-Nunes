@@ -27,6 +27,10 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   const [ofxTransactions, setOfxTransactions] = useState<any[]>([]);
   const [importStep, setImportStep] = useState(1); // 1: Upload, 2: Categorize
   const [defaultImportAccount, setDefaultImportAccount] = useState('');
+  
+  // Quick Category Creation State
+  const [showQuickCategoryModal, setShowQuickCategoryModal] = useState<{show: boolean, txId: string | null, type: 'income' | 'expense' | null}>({show: false, txId: null, type: null});
+  const [newCatName, setNewCatName] = useState('');
 
   const emptyForm = { description: '', value: 0, type: 'expense' as 'income' | 'expense', date: new Date().toISOString().split('T')[0], account_id: '', category_id: '', status: 'realized' as 'predicted' | 'realized', entity_type: entityFilter as any, observation: '', is_recurring: false, recurrence_period: '', tags: [] as string[], is_conciliated: false, has_invoice: false };
   const [form, setForm] = useState(emptyForm);
@@ -119,6 +123,44 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   const applyDefaultAccountToAll = (accountId: string) => {
     setDefaultImportAccount(accountId);
     setOfxTransactions(prev => prev.map(t => ({ ...t, account_id: accountId })));
+  };
+
+  const handleQuickAddCategory = async () => {
+    if (!newCatName || !showQuickCategoryModal.type) return;
+    setIsSaving(true);
+    try {
+      const newCat = await financialService.addCategory({
+        name: newCatName,
+        type: showQuickCategoryModal.type,
+        user_id,
+        entity_type: entityFilter as any,
+        color: showQuickCategoryModal.type === 'income' ? '#10b981' : '#f43f5e',
+        dre_group: showQuickCategoryModal.type === 'income' ? 'gross_revenue' : 'operating_expenses_variable'
+      });
+      
+      setCategories(prev => [...prev, newCat]);
+      
+      // Update the transaction that triggered the creation
+      if (showQuickCategoryModal.txId) {
+        const newTxs = [...ofxTransactions];
+        const idx = newTxs.findIndex(t => t.id === showQuickCategoryModal.txId);
+        if (idx !== -1) {
+          newTxs[idx].category_id = newCat.id;
+          setOfxTransactions(newTxs);
+        }
+      } else {
+        // If coming from main modal
+        setForm(prev => ({ ...prev, category_id: newCat.id }));
+      }
+      
+      setShowQuickCategoryModal({ show: false, txId: null, type: null });
+      setNewCatName('');
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao criar categoria.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const confirmOFXImport = async () => {
@@ -345,10 +387,22 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                 </div>
                 <div>
                   <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</label>
-                  <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })}>
+                  <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.category_id} onChange={e => {
+                    if (e.target.value === 'NEW_CATEGORY') {
+                      setShowQuickCategoryModal({ show: true, txId: null, type: form.type });
+                      return;
+                    }
+                    setForm({ ...form, category_id: e.target.value });
+                  }}>
                     <option value="">Sem categoria</option>
-                    {categories.filter(c => !c.parent_id).map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}
-                    {categories.filter(c => c.parent_id).map(c => (<option key={c.id} value={c.id}>↳ {c.name}</option>))}
+                    <optgroup label="Disponíveis">
+                      {categories
+                        .filter(c => c.type === form.type)
+                        .map(c => (<option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>))}
+                    </optgroup>
+                    <optgroup label="Ações">
+                      <option value="NEW_CATEGORY" className="text-indigo-600 font-black">+ CRIAR NOVA</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -459,12 +513,24 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                         </div>
                         <div className="col-span-2">
                           <select className="w-full text-[10px] font-bold bg-gray-50 border-none rounded-lg px-2 py-2 outline-none" value={tx.category_id} onChange={e => {
+                            if (e.target.value === 'NEW_CATEGORY') {
+                              setShowQuickCategoryModal({ show: true, txId: tx.id, type: tx.type });
+                              return;
+                            }
                             const newTxs = [...ofxTransactions];
                             newTxs[idx].category_id = e.target.value;
                             setOfxTransactions(newTxs);
                           }}>
                             <option value="">Categoria...</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>)}
+                            <optgroup label="Selecione">
+                              {categories
+                                .filter(c => c.type === tx.type)
+                                .map(c => <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>)
+                              }
+                            </optgroup>
+                            <optgroup label="Ações">
+                              <option value="NEW_CATEGORY" className="text-indigo-600 font-black">+ CRIAR NOVA</option>
+                            </optgroup>
                           </select>
                         </div>
                         <div className="col-span-1 flex justify-center">
@@ -488,6 +554,36 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Quick Category Modal */}
+      {showQuickCategoryModal.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-scale-in">
+            <div className={`p-4 text-white flex justify-between items-center ${showQuickCategoryModal.type === 'income' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+              <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <Plus className="w-4 h-4" /> Nova Categoria de {showQuickCategoryModal.type === 'income' ? 'Receita' : 'Despesa'}
+              </h4>
+              <button onClick={() => setShowQuickCategoryModal({show: false, txId: null, type: null})} className="p-1 hover:bg-white/10 rounded-lg"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <input 
+                autoFocus
+                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm focus:ring-2 focus:ring-indigo-100 outline-none" 
+                placeholder="Nome da categoria..." 
+                value={newCatName} 
+                onChange={e => setNewCatName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleQuickAddCategory()}
+              />
+              <button 
+                onClick={handleQuickAddCategory}
+                disabled={!newCatName || isSaving}
+                className="w-full bg-[#0F172A] text-white font-black py-4 rounded-xl uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all disabled:opacity-50"
+              >
+                {isSaving ? <RefreshCw className="animate-spin w-4 h-4 mx-auto" /> : 'CRIAR CATEGORIA'}
+              </button>
             </div>
           </div>
         </div>
