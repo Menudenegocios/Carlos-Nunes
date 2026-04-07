@@ -31,12 +31,16 @@ export const financialService = {
     return data;
   },
 
-  updateAccount: async (id: string, account: Partial<FinancialAccount>): Promise<void> => {
+  updateAccount: async (id: string, account: Partial<FinancialAccount>, user_id?: string): Promise<void> => {
     const { error } = await supabase
       .from('financial_accounts')
       .update(account)
       .eq('id', id);
     if (error) throw error;
+
+    if (user_id && account.initial_balance !== undefined) {
+      await financialService.recalculateAccountBalance(id, user_id);
+    }
   },
 
   deleteAccount: async (id: string): Promise<void> => {

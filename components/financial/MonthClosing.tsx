@@ -294,7 +294,7 @@ export const MonthClosing: React.FC<Props> = ({ user_id, entityFilter }) => {
           <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm h-[400px]">
              <h4 className="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400">Composição de Custos & Despesas</h4>
              <ResponsiveContainer width="100%" height="80%">
-                <RePieChart>
+                <RePieChart margin={{ top: 0, right: 0, bottom: 40, left: 0 }}>
                   <Pie
                     data={costCompositionData}
                     cx="50%"
@@ -309,7 +309,7 @@ export const MonthClosing: React.FC<Props> = ({ user_id, entityFilter }) => {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 </RePieChart>
              </ResponsiveContainer>
           </div>
@@ -317,14 +317,14 @@ export const MonthClosing: React.FC<Props> = ({ user_id, entityFilter }) => {
           <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm h-[400px]">
              <h4 className="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400">Receita Bruta vs Resultado Líquido</h4>
              <ResponsiveContainer width="100%" height="80%">
-                <BarChart data={[{ name: MONTH_NAMES[month-1], receita: dre.gross_revenue, lucro: dre.net_profit }]}>
+                <BarChart data={[{ name: MONTH_NAMES[month-1], receita: dre.gross_revenue, lucro: dre.net_profit }]} margin={{ top: 0, right: 0, bottom: 40, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} />
                   <Tooltip />
                   <Bar dataKey="receita" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
                   <Bar dataKey="lucro" fill="#6366f1" radius={[8, 8, 0, 0]} barSize={40} />
-                  <Legend />
+                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 </BarChart>
              </ResponsiveContainer>
           </div>

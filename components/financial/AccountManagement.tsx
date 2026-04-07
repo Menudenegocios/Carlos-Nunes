@@ -40,7 +40,7 @@ export const AccountManagement: React.FC<Props> = ({ user_id, entityFilter }) =>
     e.preventDefault(); setIsSaving(true);
     try {
       if (editing) {
-        await financialService.updateAccount(editing.id, { ...form } as any);
+        await financialService.updateAccount(editing.id, { ...form } as any, user_id);
       } else {
         await financialService.addAccount({ ...form, user_id, current_balance: form.initial_balance, active: true } as any);
       }

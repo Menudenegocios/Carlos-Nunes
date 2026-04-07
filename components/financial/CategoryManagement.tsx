@@ -19,7 +19,19 @@ export const CategoryManagement: React.FC<Props> = ({ user_id }) => {
 
   const load = async () => { try { setCategories(await financialService.getCategories(user_id)); } catch (e) { console.error(e); } };
 
-  const openNew = (parentId?: string) => { setEditing(null); setForm({ name: '', type: 'expense', entity_type: 'both', color: '#6366f1', icon: '', parent_id: parentId || '' }); setIsModal(true); };
+  const openNew = (parentId?: string) => { 
+    setEditing(null); 
+    const parent = parentId ? categories.find(c => c.id === parentId) : null;
+    setForm({ 
+      name: '', 
+      type: parent?.type || 'expense', 
+      entity_type: parent?.entity_type || 'both', 
+      color: parent?.color || '#6366f1', 
+      icon: '', 
+      parent_id: parentId || '' 
+    }); 
+    setIsModal(true); 
+  };
   const openEdit = (cat: FinancialCategory) => { setEditing(cat); setForm({ name: cat.name, type: cat.type, entity_type: cat.entity_type, color: cat.color || '#6366f1', icon: cat.icon || '', parent_id: cat.parent_id || '' }); setIsModal(true); };
 
   const save = async (e: React.FormEvent) => {
@@ -100,34 +112,55 @@ export const CategoryManagement: React.FC<Props> = ({ user_id }) => {
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome</label>
                 <input required className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Marketing" />
               </div>
-              {!form.parent_id && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Pai (Opcional)</label>
+                    <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.parent_id} onChange={e => {
+                      const pid = e.target.value;
+                      const parent = categories.find(c => c.id === pid);
+                      setForm({ 
+                        ...form, 
+                        parent_id: pid, 
+                        type: parent?.type || form.type,
+                        entity_type: parent?.entity_type || form.entity_type
+                      });
+                    }}>
+                      <option value="">Nenhuma (Principal)</option>
+                      {parentCategories.filter(c => c.id !== editing?.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Cor</label>
+                    <div className="flex flex-wrap gap-1">
+                      {COLORS.slice(0, 6).map(c => (<button key={c} type="button" onClick={() => setForm({ ...form, color: c })} className={`w-6 h-6 rounded-lg ${form.color === c ? 'ring-2 ring-indigo-500 scale-110' : ''}`} style={{ backgroundColor: c }} />))}
+                    </div>
+                  </div>
+                </div>
+
+              {!form.parent_id ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
-                    <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+                    <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-xs" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                       <option value="income">Receita</option><option value="expense">Despesa</option><option value="both">Ambos</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Perfil</label>
-                    <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.entity_type} onChange={e => setForm({ ...form, entity_type: e.target.value })}>
+                    <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-xs" value={form.entity_type} onChange={e => setForm({ ...form, entity_type: e.target.value })}>
                       <option value="personal">PF</option><option value="business">PJ</option><option value="both">Ambos</option>
                     </select>
                   </div>
                 </div>
-              )}
-              {form.parent_id && (
-                <div>
-                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria Pai</label>
-                  <select className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold" value={form.parent_id} onChange={e => setForm({ ...form, parent_id: e.target.value })}>
-                    {parentCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+              ) : (
+                <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight">Herda do Pai: {typeLabels[form.type]} • {entityLabels[form.entity_type]}</p>
                 </div>
               )}
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Cor</label>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Outras Cores</label>
                 <div className="flex flex-wrap gap-2">
-                  {COLORS.map(c => (<button key={c} type="button" onClick={() => setForm({ ...form, color: c })} className={`w-7 h-7 rounded-lg ${form.color === c ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110' : ''}`} style={{ backgroundColor: c }} />))}
+                  {COLORS.slice(6).map(c => (<button key={c} type="button" onClick={() => setForm({ ...form, color: c })} className={`w-7 h-7 rounded-lg ${form.color === c ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110' : ''}`} style={{ backgroundColor: c }} />))}
                 </div>
               </div>
               <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-4 rounded-xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
