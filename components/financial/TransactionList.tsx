@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { financialService } from '../../services/financialService';
 import { FinancialTransaction, FinancialAccount, FinancialCategory } from '../../types';
-import { Plus, X, Trash2, RefreshCw, TrendingUp, TrendingDown, Search, Filter, CheckSquare, Square, FileText, Upload, Download, Check, AlertCircle } from 'lucide-react';
+import { Plus, X, Trash2, RefreshCw, TrendingUp, TrendingDown, Search, Filter, CheckSquare, Square, FileText, Upload, Download, Check, AlertCircle, Tag } from 'lucide-react';
 
 interface Props { user_id: string; entityFilter: 'personal' | 'business'; }
 
@@ -22,6 +22,10 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [batchCategory, setBatchCategory] = useState('');
+  
+  // Batch Edit Individual
+  const [isBatchEditing, setIsBatchEditing] = useState(false);
+  const [batchEditedTransactions, setBatchEditedTransactions] = useState<Record<string, string>>({});
 
   // OFX Import State
   const [ofxTransactions, setOfxTransactions] = useState<any[]>([]);
@@ -228,6 +232,20 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
     } catch (e) { console.error(e); }
   };
 
+  const handleBatchIndividualSave = async () => {
+    const ids = Object.keys(batchEditedTransactions);
+    if (ids.length === 0) { setIsBatchEditing(false); return; }
+    
+    setIsSaving(true);
+    try {
+      for (const id of ids) {
+        await financialService.updateTransaction(id, { category_id: batchEditedTransactions[id] });
+      }
+      setIsBatchEditing(false); setBatchEditedTransactions({}); setSelectedIds([]); await load();
+    } catch (e) { console.error(e); alert('Erro ao salvar algumas transações.'); }
+    finally { setIsSaving(false); }
+  };
+
   const filteredAccounts = accounts.filter(a => a.entity_type === entityFilter);
 
   return (
@@ -273,14 +291,41 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
 
       {/* Batch actions */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl p-3">
-          <span className="text-[10px] font-black text-indigo-600 uppercase">{selectedIds.length} selecionados</span>
-          <select className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold" value={batchCategory} onChange={e => setBatchCategory(e.target.value)}>
-            <option value="">Alterar categoria...</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>)}
-          </select>
-          {batchCategory && <button onClick={batchUpdateCategory} className="text-[9px] font-black text-indigo-600 underline uppercase">Aplicar</button>}
-          <button onClick={batchDelete} className="ml-auto text-[9px] font-black text-rose-600 uppercase flex items-center gap-1"><Trash2 className="w-3 h-3" /> Excluir</button>
+        <div className="flex flex-col md:flex-row items-center gap-3 bg-[#0F172A] text-white border border-slate-800 rounded-2xl p-4 shadow-xl">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedIds.length} selecionados</span>
+            <div className="w-px h-4 bg-slate-700 hidden md:block" />
+          </div>
+          
+          {isBatchEditing ? (
+            <div className="flex-1 flex flex-wrap items-center gap-3 justify-center md:justify-start">
+              <button onClick={handleBatchIndividualSave} disabled={isSaving} className="bg-emerald-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2">
+                {isSaving ? <RefreshCw className="animate-spin w-3 h-3" /> : <Check className="w-3 h-3" />} SALVAR TUDO
+              </button>
+              <button onClick={() => { setIsBatchEditing(false); setBatchEditedTransactions({}); }} className="text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest px-4 py-2 border border-slate-700 rounded-xl transition-all">CANCELAR</button>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-wrap items-center gap-3 justify-center md:justify-start">
+              <select className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500" value={batchCategory} onChange={e => setBatchCategory(e.target.value)}>
+                <option value="">Aplicar mesma categoria...</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>)}
+              </select>
+              {batchCategory && <button onClick={batchUpdateCategory} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-indigo-700">APLICAR</button>}
+              
+              <div className="w-px h-4 bg-slate-700 hidden md:block" />
+              
+              <button 
+                onClick={() => setIsBatchEditing(true)}
+                className="text-[9px] font-black text-amber-400 hover:text-amber-300 uppercase tracking-widest px-4 py-2 border border-amber-400/20 rounded-xl hover:bg-amber-400/5 transition-all flex items-center gap-2"
+              >
+                <Tag className="w-3 h-3" /> EDITAR CATEGORIAS INDIVIDUALMENTE
+              </button>
+              
+              <button onClick={batchDelete} className="ml-auto text-[9px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest flex items-center gap-2 px-4 py-2 border border-rose-400/10 rounded-xl hover:bg-rose-400/5 transition-all">
+                <Trash2 className="w-3 h-3" /> EXCLUIR TODOS
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -304,10 +349,29 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openEdit(tx)}>
               <div className="flex items-center gap-2">
                 <p className="font-bold text-gray-900 text-sm truncate">{tx.description}</p>
+                {tx.category_name && (
+                  <span className="text-[7.5px] font-black px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 uppercase tracking-tight">#{tx.category_name}</span>
+                )}
                 {tx.status === 'predicted' && <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md uppercase">Previsto</span>}
                 {tx.is_conciliated && <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md uppercase">✓</span>}
               </div>
-              <p className="text-[9px] text-slate-400 font-bold">{tx.category_name || 'Sem categoria'} • {tx.account_name} • {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+              
+              {isBatchEditing && selectedIds.includes(tx.id) ? (
+                <div className="mt-2 animate-in slide-in-from-left-1 duration-200">
+                  <select 
+                    className="w-full max-w-[200px] bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                    value={batchEditedTransactions[tx.id] || tx.category_id || ''}
+                    onChange={e => setBatchEditedTransactions({...batchEditedTransactions, [tx.id]: e.target.value})}
+                  >
+                    <option value="">Categorizar...</option>
+                    {categories.filter(c => c.type === tx.type).map(c => (
+                      <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <p className="text-[9px] text-slate-400 font-bold">{tx.account_name} • {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+              )}
             </div>
             
             <div className="w-16 flex justify-center">

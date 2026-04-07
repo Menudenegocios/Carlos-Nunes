@@ -50,8 +50,23 @@ export const AccountManagement: React.FC<Props> = ({ user_id, entityFilter }) =>
   };
 
   const remove = async (id: string) => {
-    if (!window.confirm('Excluir esta conta? Lançamentos vinculados podem ser impactados.')) return;
-    try { await financialService.deleteAccount(id); await load(); } catch (e) { console.error(e); alert('Erro ao excluir. Verifique se há lançamentos vinculados.'); }
+    if (!window.confirm('Deseja excluir esta conta bancária?')) return;
+    
+    const doubleCheck = window.confirm(
+      '⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\n' +
+      'A exclusão desta conta interfere em todos os lançamentos vinculados a ela. ' +
+      'Tem certeza absoluta que deseja prosseguir?'
+    );
+    
+    if (!doubleCheck) return;
+
+    try { 
+      await financialService.deleteAccount(id); 
+      await load(); 
+    } catch (e) { 
+      console.error(e); 
+      alert('Erro ao excluir. Verifique se há lançamentos vinculados ou tente novamente.'); 
+    }
   };
 
   const totalBalance = accounts.reduce((s, a) => s + Number(a.current_balance), 0);
