@@ -293,38 +293,43 @@ export const MonthClosing: React.FC<Props> = ({ user_id, entityFilter }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm h-[400px]">
              <h4 className="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400">Composição de Custos & Despesas</h4>
-             <ResponsiveContainer width="100%" height="80%">
-                <RePieChart margin={{ top: 0, right: 0, bottom: 40, left: 0 }}>
+             <ResponsiveContainer width="100%" height="90%">
+                <RePieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     data={costCompositionData}
                     cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
+                    cy="40%"
+                    innerRadius={50}
+                    outerRadius={85}
                     paddingAngle={5}
                     dataKey="value"
                   >
                     {costCompositionData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    iconType="circle" 
+                    wrapperStyle={{ paddingTop: '20px', bottom: 0, fontSize: '10px' }} 
+                  />
                 </RePieChart>
              </ResponsiveContainer>
           </div>
 
           <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm h-[400px]">
              <h4 className="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400">Receita Bruta vs Resultado Líquido</h4>
-             <ResponsiveContainer width="100%" height="80%">
-                <BarChart data={[{ name: MONTH_NAMES[month-1], receita: dre.gross_revenue, lucro: dre.net_profit }]} margin={{ top: 0, right: 0, bottom: 40, left: 0 }}>
+             <ResponsiveContainer width="100%" height="90%">
+                <BarChart data={[{ name: MONTH_NAMES[month-1], receita: dre.gross_revenue, lucro: dre.net_profit }]} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900 }} />
                   <Tooltip />
                   <Bar dataKey="receita" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
                   <Bar dataKey="lucro" fill="#6366f1" radius={[8, 8, 0, 0]} barSize={40} />
-                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px', bottom: 0, fontSize: '10px' }} />
                 </BarChart>
              </ResponsiveContainer>
           </div>

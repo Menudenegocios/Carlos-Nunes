@@ -57,6 +57,12 @@ export const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      if (password.length < 6) {
+        setError('A senha deve ter pelo menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
+      
       console.log("Register: Iniciando cadastro para", email);
       
       let finalReferrerUuid = null;
@@ -126,7 +132,18 @@ export const Register: React.FC = () => {
 
     } catch (err: any) {
       console.error("Register: Erro no cadastro:", err);
-      setError(err.message || 'Erro inesperado. Tente novamente em alguns instantes.');
+      let errorMsg = err.message || 'Erro inesperado. Tente novamente em alguns instantes.';
+      
+      // Tradução de erros comuns do Supabase Auth
+      if (errorMsg.includes('User already registered') || errorMsg.includes('already exists')) {
+        errorMsg = 'Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.';
+      } else if (errorMsg.includes('Password should be at least 6 characters')) {
+        errorMsg = 'A senha deve ter pelo menos 6 caracteres.';
+      } else if (errorMsg.includes('Invalid email format')) {
+        errorMsg = 'Formato de e-mail inválido.';
+      }
+
+      setError(errorMsg);
       setLoading(false);
     }
   };
