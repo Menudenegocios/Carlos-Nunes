@@ -246,6 +246,13 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
     finally { setIsSaving(false); }
   };
 
+  const toggleInvoice = async (id: string, current: boolean) => {
+    try {
+      await financialService.updateTransaction(id, { has_invoice: !current });
+      await load();
+    } catch (e) { console.error(e); }
+  };
+
   const filteredAccounts = accounts.filter(a => a.entity_type === entityFilter);
 
   return (
@@ -335,7 +342,10 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
           <div className="flex items-center px-5 py-3 border-b border-gray-50 bg-gray-50/50">
             <button onClick={selectAll} className="mr-3">{selectedIds.length === transactions.length ? <CheckSquare className="w-4 h-4 text-indigo-600" /> : <Square className="w-4 h-4 text-slate-300" />}</button>
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex-1">{transactions.length} lançamentos</span>
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest w-16 text-center">NF?</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest w-32 text-right mr-4">Categoria</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest w-24 text-right mr-4">Valor</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest w-12 text-center">NF?</span>
+            <span className="w-8 ml-2"></span>
           </div>
         )}
         {transactions.map(tx => (
@@ -347,40 +357,59 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
               {tx.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             </div>
             <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openEdit(tx)}>
-              <div className="flex items-center gap-2">
-                <p className="font-bold text-gray-900 text-sm truncate">{tx.description}</p>
-                {tx.category_name && (
-                  <span className="text-[7.5px] font-black px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 uppercase tracking-tight">#{tx.category_name}</span>
+              <div className="flex items-center flex-wrap gap-2 max-w-[250px] md:max-w-[400px]">
+                {tx.account_name && (
+                  <span 
+                    className="text-[7px] font-black px-1.5 py-0.5 rounded-md text-white uppercase tracking-tighter"
+                    style={{ backgroundColor: tx.account_color || '#64748b' }}
+                  >
+                    {tx.account_name}
+                  </span>
                 )}
-                {tx.status === 'predicted' && <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md uppercase">Previsto</span>}
-                {tx.is_conciliated && <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md uppercase">✓</span>}
+                <p className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 whitespace-normal break-words">{tx.description}</p>
+                {tx.status === 'predicted' && <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md uppercase flex-shrink-0">Previsto</span>}
+                {tx.is_conciliated && <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md uppercase flex-shrink-0">✓</span>}
               </div>
               
-              {isBatchEditing && selectedIds.includes(tx.id) ? (
-                <div className="mt-2 animate-in slide-in-from-left-1 duration-200">
-                  <select 
-                    className="w-full max-w-[200px] bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none focus:ring-2 focus:ring-amber-500"
-                    value={batchEditedTransactions[tx.id] || tx.category_id || ''}
-                    onChange={e => setBatchEditedTransactions({...batchEditedTransactions, [tx.id]: e.target.value})}
-                  >
-                    <option value="">Categorizar...</option>
-                    {categories.filter(c => c.type === tx.type).map(c => (
-                      <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <p className="text-[9px] text-slate-400 font-bold">{tx.account_name} • {new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-              )}
-            </div>
-            
-            <div className="w-16 flex justify-center">
-              {tx.has_invoice && <FileText className="w-4 h-4 text-indigo-400" />}
+              <p className="text-[9px] text-slate-400 font-bold mt-1">{new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
             </div>
 
-            <p className={`text-sm font-black mr-3 ${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {tx.type === 'income' ? '+' : '-'} R$ {Number(tx.value).toFixed(2)}
+            <div className="w-32 text-right mr-4">
+              {isBatchEditing && selectedIds.includes(tx.id) ? (
+                <select 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none focus:ring-2 focus:ring-amber-500"
+                  value={batchEditedTransactions[tx.id] || tx.category_id || ''}
+                  onChange={e => setBatchEditedTransactions({...batchEditedTransactions, [tx.id]: e.target.value})}
+                >
+                  <option value="">...</option>
+                  {categories.filter(c => c.type === tx.type).map(c => (
+                    <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>
+                  ))}
+                </select>
+              ) : (
+                tx.category_name && (
+                  <span 
+                    className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight"
+                    style={{ backgroundColor: `${tx.category_color}15` || '#f1f5f9', color: tx.category_color || '#64748b' }}
+                  >
+                    {tx.category_name}
+                  </span>
+                )
+              )}
+            </div>
+
+            <p className={`w-24 text-right mr-4 text-sm font-black ${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+              {tx.type === 'income' ? '+' : '-'} R$ {Number(tx.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
+
+            <div className="w-12 flex justify-center">
+              <button 
+                onClick={() => toggleInvoice(tx.id, tx.has_invoice || false)} 
+                className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${tx.has_invoice ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 hover:border-indigo-400'}`}
+              >
+                {tx.has_invoice && <Check className="w-3 h-3" />}
+              </button>
+            </div>
             <button onClick={() => remove(tx.id, tx.account_id)} className="p-1.5 text-slate-200 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
               <Trash2 className="w-4 h-4" />
             </button>

@@ -472,38 +472,38 @@ export const Dashboard: React.FC = () => {
       {showNews && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" onClick={() => setShowNews(false)}>
           <div 
-            className="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl border border-gray-100"
+            className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 animate-scale-in"
             onClick={e => e.stopPropagation()}
           >
-            <div className="relative bg-gradient-to-br from-indigo-600 to-indigo-800 px-6 py-10 text-center">
+            <div className="relative bg-gradient-to-br from-indigo-600 to-indigo-800 px-6 py-8 text-center">
               <button onClick={() => setShowNews(false)} className="absolute top-4 right-4 text-white/60 hover:text-white bg-white/10 p-2 rounded-full">
                 <X className="w-5 h-5" />
               </button>
-              <PartyPopper className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
-              <h3 className="text-3xl font-black text-white italic uppercase">NOVIDADES</h3>
-              <p className="inline-block px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold text-indigo-100 uppercase mt-2">Versão {CURRENT_VERSION}</p>
+              <PartyPopper className="w-12 h-12 text-yellow-300 mx-auto mb-3" />
+              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">NOVIDADES</h3>
+              <p className="inline-block px-3 py-1 bg-white/20 rounded-full text-[9px] font-bold text-indigo-100 uppercase mt-1">Versão {CURRENT_VERSION}</p>
             </div>
 
-            <div className="px-6 py-8 space-y-4 bg-slate-50">
+            <div className="px-5 py-6 space-y-3 bg-slate-50">
               {[
                 { icon: Star, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Bem-vindo à Menu Match', desc: 'O Menu Club evoluiu! Nova marca e interface otimizada.' },
                 { icon: Sparkles, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Financeiro: Importação OFX', desc: 'Novo seletor de bancos em lote e exclusão antes de importar.' },
                 { icon: Bot, colorClass: 'bg-orange-50 text-orange-500', title: 'Lançamento: Local+', desc: 'Novo marketplace para vendas rápidas e recorrentes no dia a dia.' },
                 { icon: GraduationCap, colorClass: 'bg-amber-50 text-amber-500', title: 'Gestão & Treinamentos', desc: 'Checklists automáticos em Projetos e novos treinamentos gravados.' }
               ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                  <div className={`p-2 ${item.colorClass} rounded-xl mt-1`}><item.icon className="w-5 h-5" /></div>
+                <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <div className={`p-2 ${item.colorClass} rounded-xl mt-1`}><item.icon className="w-4 h-4" /></div>
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm uppercase tracking-wider">{item.title}</h4>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
+                    <h4 className="font-black text-gray-900 text-[10px] uppercase tracking-wider">{item.title}</h4>
+                    <p className="text-xs text-gray-500 leading-tight">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="px-6 py-6 border-t border-gray-100 bg-white">
+            <div className="px-6 py-5 border-t border-gray-100 bg-white">
               <button
-                className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+                className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-lg"
                 onClick={() => setShowNews(false)}
               >
                 Entendi, Bora Trabalhar

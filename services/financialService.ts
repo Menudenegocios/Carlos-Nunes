@@ -152,8 +152,8 @@ export const financialService = {
       .from('financial_transactions')
       .select(`
         *,
-        financial_accounts!financial_transactions_account_id_fkey (name),
-        financial_categories!financial_transactions_category_id_fkey (name)
+        financial_accounts!financial_transactions_account_id_fkey (name, color),
+        financial_categories!financial_transactions_category_id_fkey (name, color)
       `)
       .eq('user_id', user_id)
       .order('date', { ascending: false });
@@ -178,7 +178,9 @@ export const financialService = {
     return (data || []).map((t: any) => ({
       ...t,
       account_name: t.financial_accounts?.name,
+      account_color: t.financial_accounts?.color,
       category_name: t.financial_categories?.name,
+      category_color: t.financial_categories?.color,
     }));
   },
 

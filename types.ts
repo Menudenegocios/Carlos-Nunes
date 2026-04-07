@@ -530,7 +530,9 @@ export interface FinancialTransaction {
   created_at: string;
   // Virtual (joined)
   account_name?: string;
+  account_color?: string;
   category_name?: string;
+  category_color?: string;
 }
 
 export interface FinancialGoal {
