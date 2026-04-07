@@ -501,6 +501,7 @@ export interface FinancialCategory {
   icon?: string;
   parent_id?: string;
   dre_group?: 'gross_revenue' | 'deductions' | 'direct_costs' | 'operating_expenses_fixed' | 'operating_expenses_variable' | 'other_results';
+  is_fixed?: boolean;
   created_at: string;
   // Virtual
   subcategories?: FinancialCategory[];

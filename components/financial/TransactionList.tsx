@@ -43,10 +43,43 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
 
   const loadMeta = async () => {
     try {
-      const [acc, cat] = await Promise.all([financialService.getAccounts(user_id), financialService.getAllCategoriesFlat(user_id)]);
-      setAccounts(acc); setCategories(cat);
-    } catch (e) { console.error(e); }
+      const [acc, cat] = await Promise.all([
+        financialService.getAccounts(user_id),
+        financialService.getAllCategoriesFlat(user_id)
+      ]);
+      setAccounts(acc);
+      setCategories(cat);
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  const sortedCategories = React.useMemo(() => {
+    // 1. Separate parents and children
+    const parents = categories
+      .filter((c: FinancialCategory) => !c.parent_id)
+      .sort((a: FinancialCategory, b: FinancialCategory) => a.name.localeCompare(b.name));
+    const children = categories.filter((c: FinancialCategory) => c.parent_id);
+    
+    // 2. Assemble result
+    const result: FinancialCategory[] = [];
+    parents.forEach((parent: FinancialCategory) => {
+      result.push(parent);
+      // Find all children for this parent
+      const parentChildren = children
+        .filter((c: FinancialCategory) => c.parent_id === parent.id)
+        .sort((a: FinancialCategory, b: FinancialCategory) => a.name.localeCompare(b.name));
+      result.push(...parentChildren);
+    });
+    
+    // 3. Add orphaned children (just in case)
+    const addedIds = new Set(result.map(r => r.id));
+    const orphans = children
+      .filter((c: FinancialCategory) => !addedIds.has(c.id))
+      .sort((a: FinancialCategory, b: FinancialCategory) => a.name.localeCompare(b.name));
+    
+    return [...result, ...orphans];
+  }, [categories]);
 
   const load = async () => {
     try {
@@ -401,7 +434,7 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                   >
                     <option value="" className="text-slate-400">SELECIONAR...</option>
                     <optgroup label="Minhas Categorias">
-                      {categories.filter(c => c.type === tx.type || c.type === 'both').map(c => (
+                      {sortedCategories.filter(c => c.type === tx.type || c.type === 'both').map(c => (
                         <option key={c.id} value={c.id} className="text-slate-900 font-bold bg-white">
                           {c.parent_id ? '↳ ' : ''}{c.name}
                         </option>
@@ -645,8 +678,8 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                           }}>
                             <option value="">Categoria...</option>
                             <optgroup label="Selecione">
-                              {categories
-                                .filter(c => c.type === tx.type)
+                              {sortedCategories
+                                .filter(c => c.type === tx.type || c.type === 'both')
                                 .map(c => <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>)
                               }
                             </optgroup>
@@ -699,7 +732,7 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
                   onChange={e => setQuickParentId(e.target.value)}
                 >
                   <option value="">Sem Categoria Pai</option>
-                  {categories
+                  {sortedCategories
                     .filter(c => !c.parent_id && (c.type === showQuickCategoryModal.type || c.type === 'both'))
                     .map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>

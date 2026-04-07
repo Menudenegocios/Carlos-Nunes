@@ -84,20 +84,38 @@ export const financialService = {
 
   // ===================== CATEGORIES =====================
   getCategories: async (user_id: string): Promise<FinancialCategory[]> => {
+    // 1. Ensure system categories exist first
+    await financialService.seedBasicCategories(user_id);
+
+    // 2. Fetch full list
     const { data, error } = await supabase
       .from('financial_categories')
       .select('*')
       .eq('user_id', user_id)
+      .order('sort_order', { ascending: true })
       .order('name', { ascending: true });
     if (error) throw error;
     
-    // Build hierarchy
     const all = data || [];
-    const parents = all.filter((c: any) => !c.parent_id);
-    return parents.map((p: any) => ({
-      ...p,
-      subcategories: all.filter((c: any) => c.parent_id === p.id),
-    }));
+    const buildTree = (parentId: string | null): any[] => {
+      return all
+        .filter((c: any) => c.parent_id === parentId)
+        .map((c: any) => ({
+          ...c,
+          subcategories: buildTree(c.id)
+        }));
+    };
+    return buildTree(null);
+  },
+
+  updateCategoriesOrder: async (categories: { id: string, sort_order: number }[]): Promise<void> => {
+    // Perform bulk update via parallel individual updates to respect RLS and avoid UPSERT conflicts
+    const updatePromises = categories.map(c => 
+      supabase.from('financial_categories').update({ sort_order: c.sort_order }).eq('id', c.id)
+    );
+    const results = await Promise.all(updatePromises);
+    const error = results.find(r => r.error)?.error;
+    if (error) throw error;
   },
 
   getAllCategoriesFlat: async (user_id: string): Promise<FinancialCategory[]> => {
@@ -376,42 +394,83 @@ export const financialService = {
   },
 
   seedBasicCategories: async (user_id: string): Promise<void> => {
-    const categories = [
-      // RECEITA BRUTA
-      { name: 'Serviços Audiovisuais', type: 'income', entity_type: 'business', color: '#10b981', dre_group: 'gross_revenue' },
-      { name: 'Contratos Recorrentes', type: 'income', entity_type: 'business', color: '#059669', dre_group: 'gross_revenue' },
-      { name: 'Adicionais / Extras', type: 'income', entity_type: 'business', color: '#34d399', dre_group: 'gross_revenue' },
-      
-      // DEDUÇÕES
-      { name: 'Impostos (Simples/MEI)', type: 'expense', entity_type: 'business', color: '#f43f5e', dre_group: 'deductions' },
-      { name: 'Taxas de Plataforma', type: 'expense', entity_type: 'business', color: '#fb7185', dre_group: 'deductions' },
-      { name: 'Descontos Concedidos', type: 'expense', entity_type: 'both', color: '#fda4af', dre_group: 'deductions' },
 
-      // CUSTOS DIRETOS
-      { name: 'Freelancers (Edição/Captação)', type: 'expense', entity_type: 'business', color: '#f59e0b', dre_group: 'direct_costs' },
-      { name: 'Locação de Equipamentos', type: 'expense', entity_type: 'business', color: '#fbbf24', dre_group: 'direct_costs' },
-      { name: 'Custos de Produção', type: 'expense', entity_type: 'business', color: '#d97706', dre_group: 'direct_costs' },
-      { name: 'Softwares de Projeto', type: 'expense', entity_type: 'business', color: '#b45309', dre_group: 'direct_costs' },
-
-      // DESPESAS OPERACIONAIS FIXAS
-      { name: 'Pró-Labore', type: 'expense', entity_type: 'business', color: '#8b5cf6', dre_group: 'operating_expenses_fixed' },
-      { name: 'Contabilidade', type: 'expense', entity_type: 'business', color: '#7c3aed', dre_group: 'operating_expenses_fixed' },
-      { name: 'Aluguel / Escritório', type: 'expense', entity_type: 'both', color: '#6d28d9', dre_group: 'operating_expenses_fixed' },
-      { name: 'Softwares Admin / SaaS', type: 'expense', entity_type: 'both', color: '#4c1d95', dre_group: 'operating_expenses_fixed' },
-
-      // DESPESAS OPERACIONAIS VARIÁVEIS
-      { name: 'Tráfego Pago', type: 'expense', entity_type: 'business', color: '#ec4899', dre_group: 'operating_expenses_variable' },
-      { name: 'Comissão de Vendas', type: 'expense', entity_type: 'business', color: '#db2777', dre_group: 'operating_expenses_variable' },
-      { name: 'Taxas Bancárias', type: 'expense', entity_type: 'both', color: '#be185d', dre_group: 'operating_expenses_variable' },
-
-      // OUTROS
-      { name: 'Outras Receitas', type: 'income', entity_type: 'both', color: '#3b82f6', dre_group: 'other_results' },
-      { name: 'Outras Despesas', type: 'expense', entity_type: 'both', color: '#64748b', dre_group: 'other_results' },
+    // 1. Define Fixed Parent Categories (DRE Groups)
+    const parentTemplates = [
+      { name: 'RECEITA BRUTA', type: 'income', entity_type: 'both', color: '#10b981', dre_group: 'gross_revenue' },
+      { name: 'DEDUÇÕES DA RECEITA', type: 'expense', entity_type: 'both', color: '#f43f5e', dre_group: 'deductions' },
+      { name: 'DESPESAS OPERACIONAIS FIXAS', type: 'expense', entity_type: 'both', color: '#8b5cf6', dre_group: 'operating_expenses_fixed' },
+      { name: 'DESPESAS OPERACIONAIS VARIÁVEIS', type: 'expense', entity_type: 'both', color: '#ec4899', dre_group: 'operating_expenses_variable' },
+      { name: 'OUTROS RESULTADOS', type: 'both', entity_type: 'both', color: '#64748b', dre_group: 'other_results' }
     ];
-    
-    const { data: existing } = await supabase.from('financial_categories').select('id').eq('user_id', user_id).limit(1);
-    if (!existing || existing.length === 0) {
-      await supabase.from('financial_categories').insert(categories.map(c => ({ ...c, user_id })));
+
+    const parentMap: Record<string, string> = {};
+
+    // Get all current categories to avoid duplicates and map existing
+    const { data: allCurrent } = await supabase
+      .from('financial_categories')
+      .select('id, name, dre_group, is_fixed, parent_id')
+      .eq('user_id', user_id);
+
+    const currentList = allCurrent || [];
+
+    for (const template of parentTemplates) {
+      const match = currentList.find((c: any) => c.name === template.name || (c.dre_group === template.dre_group && !c.parent_id));
+      
+      if (match) {
+        parentMap[template.dre_group] = match.id;
+        if (!match.is_fixed || !match.dre_group) {
+          await supabase.from('financial_categories').update({ is_fixed: true, dre_group: template.dre_group, parent_id: null }).eq('id', match.id);
+        }
+      } else {
+        const { data: newP, error } = await supabase
+          .from('financial_categories')
+          .insert({ ...template, user_id, is_fixed: true })
+          .select()
+          .maybeSingle();
+        
+        if (newP) parentMap[template.dre_group] = newP.id;
+        else if (error) console.error('FAIL SEED PARENT', template.name, error);
+      }
+    }
+
+    // 2. Migration for orphans
+    const orphans = currentList.filter((c: any) => !c.parent_id && !c.is_fixed);
+    for (const o of orphans) {
+      const t = currentList.find((x: any) => x.id === o.id);
+      let targetId = parentMap[t?.dre_group || ''];
+      if (!targetId) {
+        const { data: fullO } = await supabase.from('financial_categories').select('type').eq('id', o.id).single();
+        if (fullO?.type === 'income') targetId = parentMap['gross_revenue'];
+        else if (fullO?.type === 'expense') targetId = parentMap['operating_expenses_fixed'];
+        else targetId = parentMap['other_results'];
+      }
+
+      if (targetId && targetId !== o.id) {
+        await supabase.from('financial_categories').update({ parent_id: targetId }).eq('id', o.id);
+      }
+    }
+
+    // 3. Fresh user standard subs
+    const nonFixedCount = currentList.filter((c: any) => !c.is_fixed).length;
+    if (nonFixedCount === 0) {
+      const standardSubs = [
+        { name: 'Vendas de Produtos', type: 'income', entity_type: 'business', color: '#10b981', dre_group: 'gross_revenue' },
+        { name: 'Prestação de Serviços', type: 'income', entity_type: 'business', color: '#059669', dre_group: 'gross_revenue' },
+        { name: 'Impostos (Simples/MEI)', type: 'expense', entity_type: 'business', color: '#f43f5e', dre_group: 'deductions' },
+        { name: 'Taxas de Maquininha', type: 'expense', entity_type: 'business', color: '#fb7185', dre_group: 'deductions' },
+        { name: 'Pró-Labore', type: 'expense', entity_type: 'both', color: '#8b5cf6', dre_group: 'operating_expenses_fixed', },
+        { name: 'Aluguel / Escritório', type: 'expense', entity_type: 'both', color: '#6d28d9', dre_group: 'operating_expenses_fixed' },
+        { name: 'Contabilidade', type: 'expense', entity_type: 'business', color: '#7c3aed', dre_group: 'operating_expenses_fixed' },
+        { name: 'Marketing / Tráfego', type: 'expense', entity_type: 'business', color: '#ec4899', dre_group: 'operating_expenses_variable' },
+        { name: 'Comissões', type: 'expense', entity_type: 'business', color: '#db2777', dre_group: 'operating_expenses_variable' },
+        { name: 'Freelancers / Diárias', type: 'expense', entity_type: 'business', color: '#f59e0b', dre_group: 'operating_expenses_variable' },
+        { name: 'Outras Receitas', type: 'income', entity_type: 'both', color: '#3b82f6', dre_group: 'other_results' },
+        { name: 'Outras Despesas', type: 'expense', entity_type: 'both', color: '#64748b', dre_group: 'other_results' },
+      ];
+      await supabase.from('financial_categories').insert(
+        standardSubs.map(s => ({ ...s, user_id, parent_id: parentMap[s.dre_group] }))
+      );
     }
   },
 
@@ -424,9 +483,21 @@ export const financialService = {
 
     let txQuery = supabase
       .from('financial_transactions')
-      .select('value, type, category_id, status, entity_type, financial_categories!financial_transactions_category_id_fkey (name, dre_group)')
+      .select(`
+        id, 
+        date, 
+        description, 
+        value, 
+        type, 
+        category_id, 
+        account_id, 
+        status, 
+        entity_type, 
+        has_invoice, 
+        financial_categories!financial_transactions_category_id_fkey (name, dre_group),
+        financial_accounts!financial_transactions_account_id_fkey (name)
+      `)
       .eq('user_id', user_id)
-      .eq('status', 'realized')
       .gte('date', startDate)
       .lt('date', endDate);
 
@@ -434,7 +505,10 @@ export const financialService = {
       txQuery = txQuery.eq('entity_type', entityFilter);
     }
 
-    const { data: transactions } = await txQuery;
+    const { data: transactions, error: txError } = await txQuery;
+    if (txError) {
+      console.error('Error fetching transactions:', txError);
+    }
 
     let accountsQuery = supabase
       .from('financial_accounts')
@@ -447,6 +521,22 @@ export const financialService = {
     }
 
     const { data: accounts } = await accountsQuery;
+
+    // Fetch all categories for recursive DRE group resolution
+    const { data: allCategories } = await supabase
+      .from('financial_categories')
+      .select('id, dre_group, parent_id, name, type');
+
+    const getRootDreGroup = (categoryId: string | null, type: string) => {
+      if (!categoryId) return type === 'income' ? 'gross_revenue' : 'other_results';
+      let curr = allCategories?.find((c: any) => c.id === categoryId);
+      while(curr) {
+        if (curr.dre_group) return curr.dre_group;
+        if (!curr.parent_id) break;
+        curr = allCategories?.find((c: any) => c.id === curr!.parent_id);
+      }
+      return type === 'income' ? 'gross_revenue' : 'other_results';
+    };
 
     // DRE Logic
     const dre = {
@@ -464,12 +554,13 @@ export const financialService = {
       items: [] as any[]
     };
 
+    const realizedTransactions = (transactions || []).filter((t: any) => t.status === 'realized');
     const categoryMap: Record<string, { name: string; value: number; type: string; dre_group: string }> = {};
 
-    (transactions || []).forEach((t: any) => {
+    realizedTransactions.forEach((t: any) => {
       const cat = t.financial_categories;
       const catName = cat?.name || 'Sem Categoria';
-      const group = cat?.dre_group || 'other_results';
+      const group = getRootDreGroup(t.category_id, t.type);
       const val = Number(t.value);
 
       if (!categoryMap[catName]) {
@@ -479,9 +570,10 @@ export const financialService = {
 
       if (group === 'gross_revenue') dre.gross_revenue += val;
       else if (group === 'deductions') dre.deductions += val;
-      else if (group === 'direct_costs') dre.direct_costs += val;
+      else if (group === 'direct_costs' || group === 'operating_expenses_variable') {
+        dre.operating_expenses_variable += val;
+      }
       else if (group === 'operating_expenses_fixed') dre.operating_expenses_fixed += val;
-      else if (group === 'operating_expenses_variable') dre.operating_expenses_variable += val;
       else if (group === 'other_results') {
         if (t.type === 'income') dre.other_results += val;
         else dre.other_results -= val;
@@ -489,7 +581,7 @@ export const financialService = {
     });
 
     dre.net_revenue = dre.gross_revenue - dre.deductions;
-    dre.gross_profit = dre.net_revenue - dre.direct_costs;
+    dre.gross_profit = dre.net_revenue; // Since direct costs moved to operating expenses variable
     dre.operating_result = dre.gross_profit - (dre.operating_expenses_fixed + dre.operating_expenses_variable);
     dre.net_profit = dre.operating_result + dre.other_results;
     dre.margin = dre.gross_revenue > 0 ? (dre.net_profit / dre.gross_revenue) * 100 : 0;
@@ -512,15 +604,26 @@ export const financialService = {
     const pendingPayables = (pendingTx || []).filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + Number(t.value), 0);
     const pendingReceivables = (pendingTx || []).filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + Number(t.value), 0);
 
-    const totalIncome = (transactions || [])
+    const totalIncome = realizedTransactions
       .filter((t: any) => t.type === 'income')
       .reduce((sum: number, t: any) => sum + Number(t.value), 0);
 
-    const totalExpense = (transactions || [])
+    const totalExpense = realizedTransactions
       .filter((t: any) => t.type === 'expense')
       .reduce((sum: number, t: any) => sum + Number(t.value), 0);
 
     const totalBalance = (accounts || []).reduce((sum: number, a: any) => sum + Number(a.current_balance), 0);
+
+    const invoiceStats = {
+      totalIncome: (transactions || [])
+        .filter((t: any) => t.type === 'income')
+        .reduce((sum: number, t: any) => sum + Number(t.value), 0),
+      issuedValue: (transactions || [])
+        .filter((t: any) => t.type === 'income' && t.has_invoice)
+        .reduce((sum: number, t: any) => sum + Number(t.value), 0),
+      missingValue: 0
+    };
+    invoiceStats.missingValue = Math.max(0, invoiceStats.totalIncome - invoiceStats.issuedValue);
 
     return {
       totalIncome,
@@ -529,10 +632,12 @@ export const financialService = {
       totalBalance,
       accounts: accounts || [],
       dre,
-      topExpenseCategories: Object.values(categoryMap).filter(i => i.type === 'expense').sort((a,b) => b.value - a.value).slice(0, 10),
+      topExpenseCategories: Object.values(categoryMap).filter(i => i.type === 'expense').sort((a: any, b: any) => b.value - a.value).slice(0, 10),
       monthlyBilling: dre.gross_revenue,
       pendingPayables,
       pendingReceivables,
+      invoiceStats,
+      transactions: transactions || []
     };
   },
 };
