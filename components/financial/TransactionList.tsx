@@ -129,6 +129,8 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
     setOfxTransactions(prev => prev.map(t => ({ ...t, account_id: accountId })));
   };
 
+  const [quickParentId, setQuickParentId] = useState<string>('');
+
   const handleQuickAddCategory = async () => {
     if (!newCatName || !showQuickCategoryModal.type) return;
     setIsSaving(true);
@@ -136,6 +138,7 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
       const newCat = await financialService.addCategory({
         name: newCatName,
         type: showQuickCategoryModal.type,
+        parent_id: quickParentId || undefined,
         user_id,
         entity_type: entityFilter as any,
         color: showQuickCategoryModal.type === 'income' ? '#10b981' : '#f43f5e',
@@ -146,11 +149,18 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
       
       // Update the transaction that triggered the creation
       if (showQuickCategoryModal.txId) {
-        const newTxs = [...ofxTransactions];
-        const idx = newTxs.findIndex(t => t.id === showQuickCategoryModal.txId);
-        if (idx !== -1) {
-          newTxs[idx].category_id = newCat.id;
+        // Try OFX list
+        const ofxIdx = ofxTransactions.findIndex(t => t.id === showQuickCategoryModal.txId);
+        if (ofxIdx !== -1) {
+          const newTxs = [...ofxTransactions];
+          newTxs[ofxIdx].category_id = newCat.id;
           setOfxTransactions(newTxs);
+        } else {
+          // Try batch edit state
+          setBatchEditedTransactions(prev => ({
+            ...prev,
+            [showQuickCategoryModal.txId as string]: newCat.id
+          }));
         }
       } else {
         // If coming from main modal
@@ -159,6 +169,7 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
       
       setShowQuickCategoryModal({ show: false, txId: null, type: null });
       setNewCatName('');
+      setQuickParentId('');
     } catch (e) {
       console.error(e);
       alert('Erro ao criar categoria.');
@@ -374,22 +385,40 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
               <p className="text-[9px] text-slate-400 font-bold mt-1">{new Date(tx.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
             </div>
 
-            <div className="w-32 text-right mr-4">
+            <div className="w-32 text-right mr-4 group/cat">
               {isBatchEditing && selectedIds.includes(tx.id) ? (
-                <select 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none focus:ring-2 focus:ring-amber-500"
-                  value={batchEditedTransactions[tx.id] || tx.category_id || ''}
-                  onChange={e => setBatchEditedTransactions({...batchEditedTransactions, [tx.id]: e.target.value})}
-                >
-                  <option value="">...</option>
-                  {categories.filter(c => c.type === tx.type).map(c => (
-                    <option key={c.id} value={c.id}>{c.parent_id ? '↳ ' : ''}{c.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select 
+                    className="w-full bg-slate-100 hover:bg-slate-200 border-none rounded-lg pl-2 pr-6 py-1.5 text-[9px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer text-slate-700"
+                    value={batchEditedTransactions[tx.id] || tx.category_id || ''}
+                    onChange={e => {
+                      if (e.target.value === 'NEW_CATEGORY') {
+                        setShowQuickCategoryModal({ show: true, txId: tx.id, type: tx.type });
+                        return;
+                      }
+                      setBatchEditedTransactions({...batchEditedTransactions, [tx.id]: e.target.value});
+                    }}
+                  >
+                    <option value="" className="text-slate-400">SELECIONAR...</option>
+                    <optgroup label="Minhas Categorias">
+                      {categories.filter(c => c.type === tx.type || c.type === 'both').map(c => (
+                        <option key={c.id} value={c.id} className="text-slate-900 font-bold bg-white">
+                          {c.parent_id ? '↳ ' : ''}{c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Atalhos">
+                      <option value="NEW_CATEGORY" className="text-indigo-600 font-extrabold">+ NOVA CATEGORIA</option>
+                    </optgroup>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <Tag className="w-2.5 h-2.5" />
+                  </div>
+                </div>
               ) : (
                 tx.category_name && (
                   <span 
-                    className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight"
+                    className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight shadow-sm border border-black/5"
                     style={{ backgroundColor: `${tx.category_color}15` || '#f1f5f9', color: tx.category_color || '#64748b' }}
                   >
                     {tx.category_name}
@@ -661,19 +690,39 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
               </h4>
               <button onClick={() => setShowQuickCategoryModal({show: false, txId: null, type: null})} className="p-1 hover:bg-white/10 rounded-lg"><X className="w-4 h-4" /></button>
             </div>
-            <div className="p-6 space-y-4">
-              <input 
-                autoFocus
-                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm focus:ring-2 focus:ring-indigo-100 outline-none" 
-                placeholder="Nome da categoria..." 
-                value={newCatName} 
-                onChange={e => setNewCatName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleQuickAddCategory()}
-              />
+             <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Pai (Opcional - p/ Subcategoria)</label>
+                <select 
+                  className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-xs focus:ring-2 focus:ring-indigo-100 outline-none"
+                  value={quickParentId}
+                  onChange={e => setQuickParentId(e.target.value)}
+                >
+                  <option value="">Sem Categoria Pai</option>
+                  {categories
+                    .filter(c => !c.parent_id && (c.type === showQuickCategoryModal.type || c.type === 'both'))
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1 ml-1">Nome da Categoria</label>
+                <input 
+                  autoFocus
+                  className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm focus:ring-2 focus:ring-indigo-100 outline-none" 
+                  placeholder="Ex: Aluguel, Alimentação..." 
+                  value={newCatName} 
+                  onChange={e => setNewCatName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleQuickAddCategory()}
+                />
+              </div>
+
               <button 
                 onClick={handleQuickAddCategory}
                 disabled={!newCatName || isSaving}
-                className="w-full bg-[#0F172A] text-white font-black py-4 rounded-xl uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all disabled:opacity-50"
+                className="w-full bg-[#0F172A] text-white font-black py-4 rounded-xl uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all disabled:opacity-50 mt-2"
               >
                 {isSaving ? <RefreshCw className="animate-spin w-4 h-4 mx-auto" /> : 'CRIAR CATEGORIA'}
               </button>

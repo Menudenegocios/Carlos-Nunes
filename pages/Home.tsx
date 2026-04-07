@@ -313,8 +313,7 @@ export const Home: React.FC = () => {
               { q: "O que é o Menu de Negócios?", a: "É uma plataforma completa que une vitrine digital, CRM, agendamento e marketplace B2B para impulsionar seu negócio." },
               { q: "Quanto custa para usar?", a: "Temos planos de adesão flexíveis para começar e opções premium com recursos avançados como domínio personalizado e taxas menores." },
               { q: "Preciso ter CNPJ?", a: "Não! Você pode começar como autônomo ou freelancer e profissionalizar sua gestão conosco." },
-              { q: "Como funciona o Programa de Recompensas?", a: "Você ganha pontos (Menu Cash) ao completar tarefas, indicar amigos e fechar negócios, trocando por benefícios exclusivos." },
-              { q: "Posso cancelar quando quiser?", a: "Sim, não temos fidelidade. Você tem total liberdade sobre sua assinatura." }
+              { q: "Como funciona o Programa de Recompensas?", a: "Você ganha pontos (Menu Cash) ao completar tarefas, indicar amigos e fechar negócios, trocando por benefícios exclusivos." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden transition-all hover:shadow-lg">
                 <button
