@@ -135,9 +135,8 @@ export const LocalPlus: React.FC = () => {
            { id: 'home', label: 'Home', icon: Grid },
            { id: 'flash', label: 'Menu do Dia', icon: Zap },
            { id: 'categories', label: 'Categorias', icon: Filter },
-           { id: 'plans', label: 'Empresas', icon: TrendingUp },
-           // Se o usuário já tiver um plano local ativo, mostrar a aba de ofertas
-           ...(user && user.local_plan && user.local_plan !== 'none' ? [{ id: 'my-offers', label: 'Minhas Ofertas', icon: Tag }] : [])
+           // Se o usuário já tiver acesso liberado ao local+, mostrar a aba de ofertas
+           ...(user && user.has_local_plus ? [{ id: 'my-offers', label: 'Minhas Ofertas', icon: Tag }] : [])
          ].map(tab => (
            <button
              key={tab.id}
@@ -262,88 +261,12 @@ export const LocalPlus: React.FC = () => {
              </section>
           )}
 
-          {activeTab === 'plans' && (
-             <section className="px-4 space-y-16 py-10">
-                <div className="text-center max-w-3xl mx-auto space-y-6">
-                   <h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter leading-tight">
-                      Coloque seu negócio na frente de clientes <br /><span className="text-brand-primary">Todos os Dias.</span>
-                   </h2>
-                   <p className="text-lg text-slate-500 font-medium italic">"O Clube Local coloca seu negócio na frente de clientes todos os dias e gera vendas toda quarta."</p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-8">
-                   {/* PRESENÇA */}
-                   <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl flex flex-col space-y-8 relative overflow-hidden group">
-                      <div className="space-y-2">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Para Começar</span>
-                         <h3 className="text-3xl font-black text-slate-900 italic">PRESENÇA</h3>
-                         <p className="text-xl font-bold text-emerald-600">R$ 0<span className="text-xs text-slate-400 font-medium">/mês</span></p>
-                      </div>
-                      <ul className="space-y-4 flex-1">
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Presença no Clube Local</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Página básica</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 1 oferta simples</li>
-                      </ul>
-                      <button className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all">COMEÇAR GRÁTIS</button>
-                   </div>
-
-                   {/* DESTAQUE */}
-                   <div className="bg-[#0F172A] p-10 rounded-[3rem] border border-brand-primary/30 shadow-2xl flex flex-col space-y-8 relative overflow-hidden scale-105 z-10 text-white">
-                      <div className="absolute top-0 right-10 -mt-3 bg-brand-primary text-white text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">INDICADO</div>
-                      <div className="space-y-2">
-                         <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Para Crescer</span>
-                         <h3 className="text-3xl font-black text-white italic">DESTAQUE</h3>
-                         <p className="text-xl font-bold text-brand-primary">R$ 49<span className="text-xs text-white/40 font-medium">/mês</span></p>
-                      </div>
-                      <ul className="space-y-4 flex-1">
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-300"><CheckCircle2 className="w-4 h-4 text-brand-primary" /> Página completa no Clube</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-300"><CheckCircle2 className="w-4 h-4 text-brand-primary" /> Até 10 ofertas ativas</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-300"><CheckCircle2 className="w-4 h-4 text-brand-primary" /> Botão WhatsApp Direto</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-300"><CheckCircle2 className="w-4 h-4 text-brand-primary" /> Presença nas Categorias</li>
-                      </ul>
-                      <button className="w-full py-5 bg-brand-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-brand-primary/30">QUERO O DESTAQUE</button>
-                   </div>
-
-                   {/* DOMÍNIO */}
-                   <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl flex flex-col space-y-8 relative overflow-hidden group">
-                      <div className="space-y-2">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Para Dominar</span>
-                         <h3 className="text-3xl font-black text-slate-900 italic">DOMÍNIO</h3>
-                         <p className="text-xl font-bold text-indigo-600">R$ 97<span className="text-xs text-slate-400 font-medium">/mês</span></p>
-                      </div>
-                      <ul className="space-y-4 flex-1">
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Tudo do Destaque</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Até 50 ofertas ativas</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Acesso ao Menu do Dia</li>
-                         <li className="flex items-center gap-3 text-xs font-bold text-slate-600"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Destaque Máximo</li>
-                      </ul>
-                      <button className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">ASSUMIR LIDERANÇA</button>
-                   </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-[3rem] p-10 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-8">
-                   <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 bg-brand-primary/10 rounded-2xl flex items-center justify-center border border-brand-primary/20">
-                         <Target className="w-8 h-8 text-brand-primary" />
-                      </div>
-                      <div>
-                         <h4 className="text-xl font-black uppercase italic italic text-slate-900">Precisa de Ajuda?</h4>
-                         <p className="text-sm font-medium text-slate-500">Fale com nosso time de consultores para escolher o melhor plano.</p>
-                      </div>
-                   </div>
-                   <button className="px-10 py-5 bg-white border border-gray-200 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" /> FALAR NO WHATSAPP
-                   </button>
-                </div>
-             </section>
-          )}
-
-          {activeTab === 'my-offers' && user && user.local_plan && user.local_plan !== 'none' && (
+          {activeTab === 'my-offers' && user && user.has_local_plus && (
              <section className="px-4 py-6">
                 <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-100">
                    <div className="mb-8">
                       <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Portal do Anunciante</h2>
-                      <p className="text-sm font-medium text-slate-500">Cadastre e gerencie suas ofertas do seu plano Local+ ({user.local_plan.toUpperCase()})</p>
+                      <p className="text-sm font-medium text-slate-500">Cadastre e gerencie suas ofertas Local+ (Acesso Aberto)</p>
                    </div>
                    {/* Reutilizando o sistema de ofertas existente */}
                    <div className="local-plus-offers-context">

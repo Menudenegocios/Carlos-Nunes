@@ -817,6 +817,7 @@ export const supabaseService = {
     menu_cash: number,
     has_founder_badge?: boolean,
     display_id?: number,
+    has_local_plus?: boolean,
     cpf_cnpj?: string
   }): Promise<void> => {
     try {
@@ -835,6 +836,7 @@ export const supabaseService = {
           menu_cash: data.menu_cash,
           has_founder_badge: data.has_founder_badge,
           display_id: data.display_id,
+          has_local_plus: data.has_local_plus,
           cpf_cnpj: data.cpf_cnpj,
           updated_at: new Date().toISOString()
         })

@@ -104,7 +104,7 @@ export const Register: React.FC = () => {
             referrer_id: finalReferrerUuid,
             want_platform: wantPlatform,
             want_local_plus: wantLocalPlus,
-            local_plan: wantLocalPlus ? 'presenca' : 'none' // Se quiser Local+, ja ganha o plano grátis
+            has_local_plus: wantLocalPlus
           }
         }
       });

@@ -9,7 +9,7 @@ import {
   Save, X, ShieldCheck, Eye, EyeOff, CheckCircle, 
   Search, User, ArrowRight, RefreshCw, Layout, Smartphone, 
   Package, BookOpen, Briefcase, GraduationCap, Trophy, CreditCard,
-  UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag, Phone
+  UserCheck, AlertCircle, Mail, Lock, UserPlus, ShoppingBag, Phone, Sparkles
 } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -18,12 +18,12 @@ export const AdminCentral: React.FC = () => {
   const { user, impersonateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'membros' | 'agenda' | 'marketplace' | 'parceiros'>('membros');
+  const [activeTab, setActiveTab] = useState<'membros' | 'agenda' | 'marketplace' | 'parceiros' | 'localplus'>('membros');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && ['membros', 'agenda', 'marketplace', 'parceiros'].includes(tab)) {
+    if (tab && ['membros', 'agenda', 'marketplace', 'parceiros', 'localplus'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [location.search]);
@@ -49,6 +49,7 @@ export const AdminCentral: React.FC = () => {
     menu_cash: 0,
     role: 'user' as any,
     has_founder_badge: false,
+    has_local_plus: false,
     display_id: undefined as number | undefined,
     cpf_cnpj: ''
   });
@@ -145,6 +146,7 @@ export const AdminCentral: React.FC = () => {
         menu_cash: 0,
         role: 'user',
         has_founder_badge: false,
+        has_local_plus: false,
         display_id: undefined,
         cpf_cnpj: ''
     });
@@ -163,6 +165,7 @@ export const AdminCentral: React.FC = () => {
       menu_cash: (profile as any).menu_cash || 0,
       role: (profile as any).role || 'user',
       has_founder_badge: (profile as any).has_founder_badge || false,
+      has_local_plus: (profile as any).has_local_plus || false,
       display_id: profile.display_id,
       cpf_cnpj: profile.cpf_cnpj || ''
     });
@@ -187,6 +190,7 @@ export const AdminCentral: React.FC = () => {
           menu_cash: memberForm.menu_cash,
           role: memberForm.role,
           has_founder_badge: memberForm.has_founder_badge,
+          has_local_plus: memberForm.has_local_plus,
           display_id: memberForm.display_id,
           cpf_cnpj: memberForm.cpf_cnpj
         });
@@ -470,6 +474,7 @@ export const AdminCentral: React.FC = () => {
             {[{ id: 'membros', label: 'Membros', icon: Users, desc: 'Gestão de Usuários' },
             { id: 'agenda', label: 'Agenda', icon: Calendar, desc: 'Eventos da Plataforma' },
             { id: 'marketplace', label: 'Menu Store', icon: ShoppingBag, desc: 'Produtos do Admin' },
+            { id: 'localplus', label: 'Local+', icon: Sparkles, desc: 'Controle Local+' },
             { id: 'parceiros', label: 'Parceiros', icon: UserPlus, desc: 'Logos e Links de Parceiros' }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex-1 min-w-[150px] flex items-center justify-center gap-3 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>
                     <tab.icon className="w-4 h-4" /> {tab.label}
@@ -590,8 +595,10 @@ export const AdminCentral: React.FC = () => {
                             </div>
                             
                             <div className="grid gap-4">
-                                {[...products.map(p => ({...p, type: 'product', _key: `product-${p.id}`})), ...offers.map(o => ({...o, type: 'offer', name: o.title, _key: `offer-${o.id}`}))].map(item => (
-                                    <div key={item._key} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
+                                {products.map(item => {
+                                    const processedItem = { ...item, type: 'product', _key: `product-${item.id}` };
+                                    return (
+                                    <div key={processedItem._key} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 flex items-center justify-between group hover:bg-white transition-all shadow-sm">
                                         <div className="flex items-center gap-6">
                                             <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
                                                 <Package className="w-7 h-7" />
@@ -605,11 +612,63 @@ export const AdminCentral: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleOpenMarketplaceModal(item)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
-                                            <button onClick={() => deleteItem(item.id, item.type, item.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
+                                            <button onClick={() => handleOpenMarketplaceModal(processedItem)} className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
+                                            <button onClick={() => deleteItem(processedItem.id, processedItem.type, processedItem.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
+                                        </div>
+                                    </div>
+                                )})}
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'localplus' && (
+                        <div className="space-y-8 animate-fade-in">
+                            <div className="flex justify-between items-center px-4">
+                                <div>
+                                    <h3 className="text-2xl font-black italic uppercase text-brand-primary">Gestão Local+</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Controle Global de Ofertas das Empresas</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {offers.map(offer => (
+                                    <div key={`localplus-offer-${offer.id}`} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-col justify-between group hover:shadow-xl transition-all h-full relative overflow-hidden">
+                                        {offer.is_flash_deal && (
+                                            <div className="absolute top-0 right-0 bg-brand-primary text-white text-[8px] font-black px-3 py-1 rounded-bl-xl tracking-widest uppercase">
+                                                MENU DO DIA
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-6 mt-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
+                                                        {offer.store_logo_url ? <img src={offer.store_logo_url} className="w-full h-full object-cover" /> : <Sparkles className="w-5 h-5 text-brand-primary" />}
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-bold text-sm text-slate-900">{offer.store_name || 'Usuário Local+'}</h5>
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{offer.category || 'Oferta'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1 mb-4">
+                                                <h4 className="text-lg font-black text-slate-900 leading-tight">{offer.title}</h4>
+                                                <span className="inline-block bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border border-emerald-100 mt-2">
+                                                    Desconto/Benefício: {offer.discount_display}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-50">
+                                            <button onClick={() => deleteItem(offer.id, 'offer', offer.user_id)} className="w-full py-3 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95">
+                                                <Trash2 className="w-4 h-4" /> EXCLUIR OFERTA
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
+                                {offers.length === 0 && (
+                                    <div className="col-span-full py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center">
+                                        <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma oferta Local+ cadastrada ativamente ainda.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -908,7 +967,7 @@ export const AdminCentral: React.FC = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 mb-6">
+                        <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 mb-6 w-full">
                             <input 
                                 type="checkbox" 
                                 id="has_founder_badge"
@@ -917,6 +976,16 @@ export const AdminCentral: React.FC = () => {
                                 className="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                             />
                             <label htmlFor="has_founder_badge" className="text-[10px] font-black text-amber-700 uppercase tracking-widest cursor-pointer select-none">Selo Membro Fundador</label>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 mb-6 w-full">
+                            <input 
+                                type="checkbox" 
+                                id="has_local_plus"
+                                checked={memberForm.has_local_plus} 
+                                onChange={e => setMemberForm({...memberForm, has_local_plus: e.target.checked})}
+                                className="w-5 h-5 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary"
+                            />
+                            <label htmlFor="has_local_plus" className="text-[10px] font-black text-brand-primary uppercase tracking-widest cursor-pointer select-none">Liberação Local+</label>
                         </div>
 
                         <div>
