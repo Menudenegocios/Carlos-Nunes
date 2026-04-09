@@ -544,6 +544,34 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
     }
   };
 
+  const removeCheckItemFromFu = async (fu: any, itemIdx: number) => {
+    const updatedChecklist = [...(fu.checklist || [])];
+    updatedChecklist.splice(itemIdx, 1);
+    
+    setFollowUps(followUps.map(f => f.id === fu.id ? { ...f, checklist: updatedChecklist } : f));
+    
+    try {
+      await supabaseService.updateFollowUp(fu.id, { checklist: updatedChecklist });
+    } catch(e) {
+      console.error(e);
+      loadFollowUps();
+    }
+  };
+
+  const addCheckItemToFu = async (fu: any, text: string) => {
+    if (!text.trim()) return;
+    const updatedChecklist = [...(fu.checklist || []), { text, done: false }];
+    
+    setFollowUps(followUps.map(f => f.id === fu.id ? { ...f, checklist: updatedChecklist } : f));
+    
+    try {
+      await supabaseService.updateFollowUp(fu.id, { checklist: updatedChecklist });
+    } catch(e) {
+      console.error(e);
+      loadFollowUps();
+    }
+  };
+
   const addChecklistItem = () => {
     if (!newCheckItem.trim()) return;
     setChecklistItems([...checklistItems, { text: newCheckItem, done: false }]);
@@ -568,12 +596,13 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
           type="text" 
           value={newContent}
           onChange={e => setNewContent(e.target.value)}
-          placeholder="Resumo do follow-up..."
+          placeholder="O que foi feito ou precisa ser feito? (Ex: Ligar para cliente)"
           className="w-full bg-white border-none rounded-xl p-4 text-xs font-bold focus:ring-2 focus:ring-brand-primary shadow-sm"
         />
         
         {/* New Checklist items builder */}
-        <div className="space-y-2">
+        <div className="space-y-3 pt-2">
+           <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Criar Checklist Inicial (Opcional)</h5>
            {checklistItems.map((item, idx) => (
              <div key={idx} className="flex items-center justify-between bg-white/50 p-2.5 rounded-lg border border-gray-100">
                <span className="text-[10px] font-bold text-slate-600">{item.text}</span>
@@ -585,12 +614,12 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
                type="text" 
                value={newCheckItem}
                onChange={e => setNewCheckItem(e.target.value)}
-               placeholder="Adicionar item de checklist..."
+               placeholder="Adicionar item ao checklist..."
                className="flex-1 bg-white border-none rounded-lg p-3 text-[10px] font-medium focus:ring-2 focus:ring-brand-primary shadow-sm"
                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
              />
-             <button onClick={addChecklistItem} className="p-3 bg-white text-brand-primary rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
-               <Plus className="w-3.5 h-3.5" />
+             <button onClick={addChecklistItem} className="px-4 bg-brand-primary text-white font-black text-[10px] uppercase tracking-widest rounded-lg shadow-sm hover:bg-orange-600 transition-colors">
+               Adicionar
              </button>
            </div>
         </div>
@@ -598,7 +627,7 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
         <button 
           onClick={handleAdd}
           disabled={isLoading}
-          className="w-full py-4 bg-brand-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
+          className="w-full py-4 mt-2 bg-slate-900 border border-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2"
         >
           {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Registrar Follow-up
@@ -626,18 +655,29 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
             <div key={fu.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-col gap-4 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-primary opacity-20 group-hover:opacity-100 transition-opacity"></div>
               
-              <div className="flex justify-between items-start">
+               <div className="flex justify-between items-start">
                  <div className="space-y-1">
-                    <p className="text-[11px] text-gray-900 font-black leading-relaxed">{fu.content}</p>
+                    <p className="text-[11px] text-gray-900 font-extrabold leading-relaxed bg-brand-primary/5 inline-block px-3 py-1.5 rounded-lg border border-brand-primary/10">{fu.content || 'Acompanhamento'}</p>
                     {fu.due_date && (
-                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-rose-50 text-rose-500 rounded text-[8px] font-black uppercase tracking-tighter">
-                          <Clock className="w-2.5 h-2.5" /> Prazo: {new Date(fu.due_date).toLocaleDateString('pt-BR')}
-                       </span>
+                       <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-1 rounded-md inline-block">
+                          Prazo: {new Date(fu.due_date).toLocaleDateString('pt-BR')}
+                       </div>
                     )}
                  </div>
-                 <span className="text-[9px] font-bold text-slate-300 uppercase whitespace-nowrap">
-                    {new Date(fu.created_at).toLocaleDateString('pt-BR')}
-                 </span>
+                 <div className="flex flex-col items-end gap-2">
+                    <span className="text-[9px] font-bold text-slate-400 border border-gray-100 bg-gray-50 px-2 py-1 rounded-md uppercase whitespace-nowrap">
+                        {new Date(fu.created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                    <button onClick={async () => {
+                        if(confirm('Excluir este painel inteiro?')) {
+                            // Quick deletion action for the whole follow-up
+                            await supabaseService.deleteFollowUp(fu.id);
+                            loadFollowUps();
+                        }
+                    }} className="text-rose-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-600">
+                        <Trash2 className="w-3 h-3" />
+                    </button>
+                 </div>
               </div>
 
               {totalItems > 0 && (
@@ -654,21 +694,59 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
                     />
                   </div>
                   
-                  <div className="space-y-1.5 mt-2">
+                  <div className="space-y-1.5 mt-3">
                     {fu.checklist.map((item: any, idx: number) => (
-                      <label key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-brand-primary/10">
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-brand-primary/10 group/item">
                         <input 
                           type="checkbox" 
                           checked={item.done} 
                           onChange={() => toggleCheckItem(fu, idx)}
-                          className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
+                          className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary cursor-pointer"
                         />
-                        <span className={`text-[10px] font-bold flex-1 ${item.done ? 'text-slate-400 line-through' : 'text-gray-700'}`}>
+                        <span className={`text-[11px] font-bold flex-1 ${item.done ? 'text-slate-400 line-through' : 'text-gray-700'}`}>
                           {item.text}
                         </span>
-                      </label>
+                        <button onClick={() => removeCheckItemFromFu(fu, idx)} className="text-rose-400 p-1.5 opacity-0 group-hover/item:opacity-100 hover:text-rose-600 transition-all hover:bg-rose-50 rounded-lg">
+                           <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     ))}
                   </div>
+                  
+                  {/* Inline Add Item to Existing Checklist */}
+                  <div className="pt-2 px-1">
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="+ Adicionar item rápido..."
+                        className="flex-1 bg-transparent border-b border-gray-200 focus:border-brand-primary py-2 px-1 text-[10px] font-medium outline-none transition-colors"
+                        onKeyPress={e => {
+                           if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addCheckItemToFu(fu, e.currentTarget.value);
+                              e.currentTarget.value = '';
+                           }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {totalItems === 0 && (
+                <div className="pt-2">
+                   {/* Allows creating a checklist in a Follow Up that didn't have one initially */}
+                   <input 
+                        type="text" 
+                        placeholder="+ Transformar em checklist..."
+                        className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-[10px] font-medium outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
+                        onKeyPress={e => {
+                           if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addCheckItemToFu(fu, e.currentTarget.value);
+                              e.currentTarget.value = '';
+                           }
+                        }}
+                    />
                 </div>
               )}
             </div>

@@ -204,6 +204,12 @@ export const financialService = {
 
   addTransaction: async (transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'account_name' | 'category_name'>): Promise<FinancialTransaction> => {
     const { account_name, category_name, ...cleanData } = transaction as any;
+    
+    // Convert empty strings to null for UUID fields
+    if (cleanData.category_id === '') cleanData.category_id = null;
+    if (cleanData.account_id === '') cleanData.account_id = null;
+    if (cleanData.parent_transaction_id === '') cleanData.parent_transaction_id = null;
+
     const { data, error } = await supabase
       .from('financial_transactions')
       .insert(cleanData)
@@ -215,6 +221,12 @@ export const financialService = {
 
   updateTransaction: async (id: string, transaction: Partial<FinancialTransaction>): Promise<void> => {
     const { account_name, category_name, ...cleanData } = transaction as any;
+    
+    // Convert empty strings to null for UUID fields
+    if (cleanData.category_id === '') cleanData.category_id = null;
+    if (cleanData.account_id === '') cleanData.account_id = null;
+    if (cleanData.parent_transaction_id === '') cleanData.parent_transaction_id = null;
+
     const { error } = await supabase
       .from('financial_transactions')
       .update(cleanData)
@@ -232,6 +244,12 @@ export const financialService = {
 
   batchUpdateTransactions: async (ids: string[], updates: Partial<FinancialTransaction>): Promise<void> => {
     const { account_name, category_name, ...cleanData } = updates as any;
+    
+    // Convert empty strings to null for UUID fields
+    if (cleanData.category_id === '') cleanData.category_id = null;
+    if (cleanData.account_id === '') cleanData.account_id = null;
+    if (cleanData.parent_transaction_id === '') cleanData.parent_transaction_id = null;
+
     for (const id of ids) {
       const { error } = await supabase
         .from('financial_transactions')
