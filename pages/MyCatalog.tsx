@@ -111,12 +111,22 @@ export const MyCatalog: React.FC = () => {
     category: 'Marketing',
     summary: '',
     content: '',
-    image_url: ''
+    image_url: '',
+    seo_title: '',
+    seo_description: '',
+    seo_keywords: '',
+    slug: '',
+    alt_text: '',
+    og_title: '',
+    og_description: ''
   });
+
+  const [blogModalTab, setBlogModalTab] = useState<'content' | 'seo' | 'social'>('content');
 
   const fileInputLogoRef = useRef<HTMLInputElement>(null);
   const fileInputProductRef = useRef<HTMLInputElement>(null);
   const fileInputBlogRef = useRef<HTMLInputElement>(null);
+  const blogEditorRef = useRef<HTMLDivElement>(null);
   const ogImageInputRef = useRef<HTMLInputElement>(null);
   const botAvatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
@@ -203,6 +213,39 @@ export const MyCatalog: React.FC = () => {
         setProducts(prods || []);
         setBlogPosts(allPosts.filter(p => p.user_id === user.id));
     } finally { setIsLoading(false); }
+  };
+
+  // Sincroniza o editor de blog apenas quando o modal abre ou muda o post
+  useEffect(() => {
+    if (isBlogModalOpen && blogEditorRef.current) {
+        blogEditorRef.current.innerHTML = blogForm.content || '';
+    }
+  }, [isBlogModalOpen, editingBlogPost?.id]);
+
+  const handleLink = () => {
+    const url = prompt('Digite ou cole a URL (link):', 'https://');
+    if (url && url !== 'https://') {
+      document.execCommand('createLink', false, url);
+      // Garantir que o link tenha estilo visível no editor
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const anchor = selection.anchorNode?.parentElement;
+        if (anchor && anchor.tagName === 'A') {
+          anchor.classList.add('text-indigo-600', 'underline');
+          anchor.setAttribute('target', '_blank');
+        }
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text/plain');
+    const urlRegex = /^(https?:\/\/[^\s]+)$/;
+    if (urlRegex.test(text)) {
+      e.preventDefault();
+      const linkHtml = `<a href="${text}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">${text}</a>`;
+      document.execCommand('insertHTML', false, linkHtml);
+    }
   };
 
   if (!hasAccess) {
@@ -342,7 +385,14 @@ export const MyCatalog: React.FC = () => {
                 ...blogForm,
                 user_id: user.id,
                 author: profile.business_name || user.name,
-                date: new Date().toLocaleDateString('pt-BR')
+                date: new Date().toLocaleDateString('pt-BR'),
+                seo_title: blogForm.seo_title,
+                seo_description: blogForm.seo_description,
+                seo_keywords: blogForm.seo_keywords ? blogForm.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+                slug: blogForm.slug,
+                alt_text: blogForm.alt_text,
+                og_title: blogForm.og_title,
+                og_description: blogForm.og_description
             } as any);
         }
         setIsBlogModalOpen(false);
@@ -897,55 +947,203 @@ export const MyCatalog: React.FC = () => {
                   <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center flex-shrink-0">
                       <div>
                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingBlogPost ? 'Editar Artigo' : 'Novo Artigo de Autoridade'}</h3>
-                        <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mt-1">Este conteúdo será publicado no blog global e na sua vitrine.</p>
+                        <div className="flex gap-4 mt-4">
+                          {[
+                            { id: 'content', label: 'Conteúdo', icon: AlignLeft },
+                            { id: 'seo', label: 'SEO & Google', icon: Search },
+                            { id: 'social', label: 'Impulso Social', icon: Share2 }
+                          ].map(t => (
+                            <button 
+                              key={t.id}
+                              type="button"
+                              onClick={() => setBlogModalTab(t.id as any)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${blogModalTab === t.id ? 'bg-[#F67C01] text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                            >
+                              <t.icon className="w-3 h-3" /> {t.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <button onClick={() => setIsBlogModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                   </div>
                   
                   <form onSubmit={handleBlogSubmit} className="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
-                      <div className="grid lg:grid-cols-12 gap-10">
-                         <div className="lg:col-span-7 space-y-8">
-                            <div>
-                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> Título Impactante</label>
-                               <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} placeholder="Ex: Por que investir em consultoria local?" />
+                      {blogModalTab === 'content' && (
+                        <div className="grid lg:grid-cols-12 gap-10 animate-fade-in">
+                           <div className="lg:col-span-7 space-y-8">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> Título Impactante</label>
+                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} placeholder="Ex: Por que investir em consultoria local?" />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-6">
+                                 <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria Principal</label>
+                                    <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={blogForm.category} onChange={e => setBlogForm({...blogForm, category: e.target.value})}>
+                                       <option>Marketing</option>
+                                       <option>Estratégia</option>
+                                       <option>Dicas</option>
+                                       <option>Novidades</option>
+                                       <option>Gastronomia</option>
+                                    </select>
+                                 </div>
+                                 <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Autor Responsável</label>
+                                    <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold opacity-50" value={profile.business_name || user?.name} readOnly />
+                                 </div>
+                              </div>
+
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><AlignLeft className="w-3 h-3" /> Resumo Curto</label>
+                                 <textarea rows={2} required className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" value={blogForm.summary} onChange={e => setBlogForm({...blogForm, summary: e.target.value})} placeholder="Breve introdução do tema..." />
+                              </div>
+                           </div>
+
+                           <div className="lg:col-span-5">
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Capa do Artigo</label>
+                              <div className="aspect-[4/3] bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
+                                 {blogForm.image_url ? <img src={blogForm.image_url} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
+                                 <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
+                              </div>
+                           </div>
+
+                           <div className="lg:col-span-12">
+                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
+                              
+                              <div className="flex flex-col border border-gray-100 rounded-[2.5rem] bg-gray-50 overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-indigo-600/50 transition-all">
+                                 <div className="bg-white border-b border-gray-100 p-4 flex gap-2 w-full flex-wrap shadow-sm z-10 sticky top-0">
+                                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('bold', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0"><strong className="text-sm border-r border-gray-300 pr-2 mr-2">B</strong> Negrito</button>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('italic', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] italic m-0"><span className="text-sm border-r border-gray-300 pr-2 mr-2">I</span> Itálico</button>
+                                    <div className="w-px h-6 bg-gray-200 mx-2 self-center"></div>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyLeft', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0"><AlignLeft className="w-3.5 h-3.5 inline mr-1" /> Esq</button>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyCenter', false, ''); }} className="px-3 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0">Centro</button>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyFull', false, ''); }} className="px-3 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0">Justificar</button>
+                                    <div className="w-px h-6 bg-gray-200 mx-2 self-center"></div>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); handleLink(); }} className="px-4 py-2 font-black text-indigo-600 rounded-xl hover:bg-indigo-50 uppercase text-[10px] m-0 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5" /> Link</button>
+                                 </div>
+                                 <div 
+                                   ref={blogEditorRef}
+                                   contentEditable
+                                   suppressContentEditableWarning
+                                   data-placeholder="Escreva seu conhecimento aqui..."
+                                   className="w-full bg-transparent border-none p-10 text-lg font-medium leading-relaxed outline-none min-h-[400px] empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                                   onInput={e => setBlogForm({...blogForm, content: e.currentTarget.innerHTML})}
+                                   onPaste={handlePaste}
+                                 />
+                              </div>
+                           </div>
+                        </div>
+                      )}
+
+                      {blogModalTab === 'seo' && (
+                        <div className="space-y-10 animate-fade-in">
+                          <div className="grid lg:grid-cols-2 gap-10">
+                            <div className="space-y-8">
+                              <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2"><Eye className="w-4 h-4 text-indigo-600" /> Preview no Google</h4>
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-xl">
+                                  <p className="text-blue-600 text-xl font-medium hover:underline cursor-pointer truncate">
+                                    {blogForm.seo_title || blogForm.title || 'Título do seu artigo aparecerá aqui'}
+                                  </p>
+                                  <p className="text-emerald-700 text-sm mt-1 truncate">
+                                    https://menudenegocios.com/blog/{blogForm.slug || 'url-amigavel'}
+                                  </p>
+                                  <p className="text-slate-600 text-sm mt-2 line-clamp-2">
+                                    {blogForm.seo_description || blogForm.summary || 'A descrição que atrai cliques no Google aparecerá aqui para convencer o usuário a entrar.'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-6">
+                                <div>
+                                  <div className="flex justify-between items-center mb-3 px-1">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Meta Title</label>
+                                    <span className={`text-[10px] font-bold ${blogForm.seo_title?.length > 60 ? 'text-rose-500' : 'text-slate-400'}`}>{blogForm.seo_title?.length || 0}/60</span>
+                                  </div>
+                                  <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="Título otimizado para busca" value={blogForm.seo_title} onChange={e => setBlogForm({...blogForm, seo_title: e.target.value})} />
+                                </div>
+                                <div>
+                                  <div className="flex justify-between items-center mb-3 px-1">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Meta Description</label>
+                                    <span className={`text-[10px] font-bold ${blogForm.seo_description?.length > 160 ? 'text-rose-500' : 'text-slate-400'}`}>{blogForm.seo_description?.length || 0}/160</span>
+                                  </div>
+                                  <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" placeholder="Resumo atrativo para os resultados de busca" value={blogForm.seo_description} onChange={e => setBlogForm({...blogForm, seo_description: e.target.value})} />
+                                </div>
+                              </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
-                               <div>
-                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Categoria Principal</label>
-                                  <select className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={blogForm.category} onChange={e => setBlogForm({...blogForm, category: e.target.value})}>
-                                     <option>Marketing</option>
-                                     <option>Estratégia</option>
-                                     <option>Dicas</option>
-                                     <option>Novidades</option>
-                                     <option>Gastronomia</option>
-                                  </select>
-                               </div>
-                               <div>
-                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Autor Responsável</label>
-                                  <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold opacity-50" value={profile.business_name || user?.name} readOnly />
-                               </div>
+                            <div className="space-y-8">
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">URL Amigável (Slug)</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="ex: como-vender-mais" value={blogForm.slug} onChange={e => setBlogForm({...blogForm, slug: e.target.value})} />
+                              </div>
+                              
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Palavras-Chave</label>
+                                 <div className="flex flex-wrap gap-2 mb-3">
+                                    {(blogForm.seo_keywords || '').split(',').filter(k => k.trim()).map((k, i) => (
+                                      <span key={i} className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                        {k.trim()}
+                                        <button type="button" onClick={() => setBlogForm({...blogForm, seo_keywords: blogForm.seo_keywords.split(',').filter((_, index) => index !== i).join(',')})}><X className="w-3 h-3" /></button>
+                                      </span>
+                                    ))}
+                                 </div>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="Digite e aperte Enter" onKeyDown={e => {
+                                   if (e.key === 'Enter') {
+                                     e.preventDefault();
+                                     const val = e.currentTarget.value.trim();
+                                     if (val) {
+                                       setBlogForm({...blogForm, seo_keywords: blogForm.seo_keywords ? `${blogForm.seo_keywords},${val}` : val});
+                                       e.currentTarget.value = '';
+                                     }
+                                   }
+                                 }} />
+                              </div>
+
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Texto Alt da Imagem</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="Descrição da imagem para o Google" value={blogForm.alt_text} onChange={e => setBlogForm({...blogForm, alt_text: e.target.value})} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {blogModalTab === 'social' && (
+                        <div className="space-y-10 animate-fade-in">
+                          <div className="grid md:grid-cols-2 gap-10">
+                            <div className="space-y-8">
+                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Configuração de Preview Social</h4>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título p/ Redes Sociais</label>
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="Título chamativo para WhatsApp/FB" value={blogForm.og_title} onChange={e => setBlogForm({...blogForm, og_title: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição p/ Redes Sociais</label>
+                                 <textarea rows={3} className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" placeholder="Texto que convida ao clique nas redes" value={blogForm.og_description} onChange={e => setBlogForm({...blogForm, og_description: e.target.value})} />
+                              </div>
                             </div>
 
-                            <div>
-                               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><AlignLeft className="w-3 h-3" /> Resumo Curto</label>
-                               <textarea rows={2} required className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-medium leading-relaxed resize-none" value={blogForm.summary} onChange={e => setBlogForm({...blogForm, summary: e.target.value})} placeholder="Breve introdução do tema..." />
+                            <div className="space-y-6">
+                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Preview de Compartilhamento</h4>
+                              <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100">
+                                <div className="aspect-video bg-slate-100 relative">
+                                  {blogForm.image_url ? (
+                                    <img src={blogForm.image_url} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="h-full flex items-center justify-center text-slate-300"><ImageIcon className="w-12 h-12" /></div>
+                                  )}
+                                </div>
+                                <div className="p-6 bg-[#F0F2F5]">
+                                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">MENUDENEGOCIOS.COM</p>
+                                  <p className="font-bold text-gray-900 text-lg leading-tight truncate">{blogForm.og_title || blogForm.title || 'Título do Post'}</p>
+                                  <p className="text-slate-500 text-xs mt-1 line-clamp-1">{blogForm.og_description || blogForm.summary || 'Resumo do conteúdo...'}</p>
+                                </div>
+                              </div>
                             </div>
-                         </div>
-
-                         <div className="lg:col-span-5">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Capa do Artigo</label>
-                            <div className="aspect-[4/3] bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-100 relative overflow-hidden group cursor-pointer" onClick={() => fileInputBlogRef.current?.click()}>
-                               {blogForm.image_url ? <img src={blogForm.image_url} className="w-full h-full object-cover" /> : <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4"><Camera className="w-12 h-12" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload Foto</span></div>}
-                               <input type="file" ref={fileInputBlogRef} hidden accept="image/*" onChange={e => handleImageUpload(e, 'blogUrl')} />
-                            </div>
-                         </div>
-
-                         <div className="lg:col-span-12">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
-                            <textarea rows={12} required className="w-full bg-gray-50 border-none rounded-[2.5rem] p-10 text-lg font-medium leading-relaxed" value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} placeholder="Escreva seu conhecimento aqui..." />
-                         </div>
-                      </div>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="pt-6">
                         <button type="submit" disabled={isSaving} className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2.5rem] shadow-2xl uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-4">

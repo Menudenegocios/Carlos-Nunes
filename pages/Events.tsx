@@ -22,13 +22,68 @@ const MOCK_MEDIA = [
     description: "Prepare-se para uma experiência transformadora que vai muito além do networking tradicional. Um evento criado para empreendedores que querem gerar oportunidades reais, fortalecer parcerias estratégicas e acelerar resultados."
   },
   {
-    id: 'menucast-ep1',
-    title: "MenuCast #01 - Como escalar vendas locais",
+    id: 'menucast-ep30',
+    title: "MenuCast #30 - 2026 02 05 12 21 56",
     category: "MenuCast",
-    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800",
-    duration: "45m",
-    youtubeEmbed: "https://www.youtube.com/embed/fP3SujZ2olQ?si=eScDroQosOKRNVm2",
-    description: "Neste episódio de estreia, discutimos as melhores estratégias para dominar o mercado local usando tráfego pago e relacionamento."
+    image: "https://i.ytimg.com/vi/-Bc7iURVVvY/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/-Bc7iURVVvY",
+    description: "Episódio 30 do MenuCast"
+  },
+  {
+    id: 'menucast-ep29',
+    title: "MenuCast #29 - Faça o Instagram VENDER POR VOCÊ em 2026",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/CkPwk5qwUOc/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/CkPwk5qwUOc",
+    description: "Faça o Instagram VENDER POR VOCÊ em 2026 sem Forçar!"
+  },
+  {
+    id: 'menucast-ep28',
+    title: "🎙️ MenuCast #28",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/rAZdjQbT6sc/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/rAZdjQbT6sc",
+    description: "MenuCast #28"
+  },
+  {
+    id: 'menucast-ep27',
+    title: "🎙️ MenuCast #27 - Alimentação e Resultados",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/T4cYiHJr89I/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/T4cYiHJr89I",
+    description: "Como Uma alimentação adequada pode transformar sua vida e destravar seus resultados"
+  },
+  {
+    id: 'menucast-ep26',
+    title: "🎙️ MenuCast #26 - Quem Não É Visto, Não É Lembrado",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/JlqwNK1dcrw/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/JlqwNK1dcrw",
+    description: "“Quem Não É Visto, Não É Lembrado”"
+  },
+  {
+    id: 'menucast-ep25',
+    title: "MenuCast #25 — De um Sonho à Marca: Pulsatti",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/GtPpSLKdO8M/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/GtPpSLKdO8M",
+    description: "De um Sonho à Marca: Como Surgiu a Pulsatti"
+  },
+  {
+    id: 'menucast-ep24',
+    title: "MenuCast #24 🎙️ Jucélia Ferreira",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/-MR0-dryTio/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/-MR0-dryTio",
+    description: "Minhas Palavras na Tua Boca"
+  },
+  {
+    id: 'menucast-ep23',
+    title: "🎙️ MenuCast #23 - Mais que Vendas",
+    category: "MenuCast",
+    image: "https://i.ytimg.com/vi/MoICvGX9wt0/maxresdefault.jpg",
+    youtubeEmbed: "https://www.youtube.com/embed/MoICvGX9wt0",
+    description: "Mais que Vendas, uma História de Vida"
   }
 ];
 
@@ -63,13 +118,9 @@ export const Events: React.FC = () => {
         }));
 
         const allItems = [...mediaItemsData, ...normalizedEvents];
+        const mockItemsToInject = MOCK_MEDIA.filter(mock => !allItems.some(item => item.id === mock.id));
 
-        // Fallback to MOCK_MEDIA if no items are found at all
-        if (allItems.length > 0) {
-          setMediaItems(allItems);
-        } else {
-          setMediaItems(MOCK_MEDIA);
-        }
+        setMediaItems([...allItems, ...mockItemsToInject]);
       } catch (error) {
         console.error("Error loading events and media:", error);
         setMediaItems(MOCK_MEDIA);
@@ -89,8 +140,7 @@ export const Events: React.FC = () => {
 
   const getDisplayMedia = () => {
     if (activeTab === 'MenuCast') {
-      // Limit to 4 episodes for MenuCast tab
-      return filteredMedia.filter(item => item.category === 'MenuCast').slice(0, 4);
+      return filteredMedia.filter(item => item.category === 'MenuCast');
     }
     return filteredMedia;
   };

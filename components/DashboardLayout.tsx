@@ -60,6 +60,17 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
     { 
+      label: 'CRM & Vendas', 
+      icon: Briefcase, 
+      to: '/business-suite',
+      locked: (user.plan === 'basic' || isPreRegistration) && !isAdmin,
+      minPlan: 'pro',
+      subItems: [
+        { label: 'CRM (Pipeline)', to: '/business-suite?tab=crm' },
+        { label: 'Financeiro', to: '/business-suite?tab=finance' }
+      ]
+    },
+    { 
       label: 'Menu Match', 
       icon: Trophy, 
       to: '/rewards',
@@ -81,17 +92,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         { label: 'Marketplace', to: '/local-plus?tab=home' },
         { label: 'Menu do Dia', to: '/local-plus?tab=flash' },
         { label: 'Categorias', to: '/local-plus?tab=categories' }
-      ]
-    },
-    { 
-      label: 'CRM & Vendas', 
-      icon: Briefcase, 
-      to: '/business-suite',
-      locked: (user.plan === 'basic' || isPreRegistration) && !isAdmin,
-      minPlan: 'pro',
-      subItems: [
-        { label: 'CRM (Pipeline)', to: '/business-suite?tab=crm' },
-        { label: 'Financeiro', to: '/business-suite?tab=finance' }
       ]
     },
     { 

@@ -21,6 +21,10 @@ export const MarketplaceB2B: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
+  // View Offer State
+  const [selectedOffer, setSelectedOffer] = useState<B2BOffer | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<any>(null);
+
   // Create Opportunity Form
   const [formData, setFormData] = useState({
     title: '',
@@ -63,6 +67,17 @@ export const MarketplaceB2B: React.FC = () => {
       // Redireciona para a aba de Match (Browse) após salvar com sucesso
       setActiveTab('browse');
     } finally { setIsSaving(false); }
+  };
+
+  const handleViewOffer = async (offer: B2BOffer) => {
+    setSelectedOffer(offer);
+    setSellerProfile(null); // Reset until loaded
+    try {
+      const profile = await supabaseService.getProfile(offer.user_id);
+      setSellerProfile(profile);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const filteredOffers = offers.filter(o => 
@@ -183,10 +198,11 @@ export const MarketplaceB2B: React.FC = () => {
                           <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">{offer.business_name}</p>
                           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{offer.description}</p>
                        </div>
-                       <button className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95">
-                          SOLICITAR MATCH <ArrowRight className="w-3 h-3" />
+                       <button onClick={() => handleViewOffer(offer)} className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-primary transition-all active:scale-95 shadow-lg shadow-gray-900/20">
+                          VER DETALHES <ArrowRight className="w-3 h-3" />
                        </button>
                     </div>
+
                  ))}
               </div>
            </div>
@@ -204,15 +220,15 @@ export const MarketplaceB2B: React.FC = () => {
       {/* Modal Criar Oportunidade */}
       {isModalOpen && (
          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-            <div className="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in">
-                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-3xl shadow-2xl border border-white/5 animate-scale-in max-h-[90vh] flex flex-col">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center shrink-0">
                     <div>
                         <h3 className="text-2xl font-black uppercase italic tracking-tighter">Criar Oportunidade B2B</h3>
                         <p className="text-[10px] font-black text-[#F67C01] tracking-widest mt-1 uppercase">Exclusivo para membros da rede</p>
                     </div>
                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-white/10 rounded-2xl transition-all"><X className="w-8 h-8" /></button>
                 </div>
-                <form onSubmit={handleCreateOffer} className="p-10 space-y-6">
+                <form onSubmit={handleCreateOffer} className="p-10 space-y-6 overflow-y-auto relative">
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Título da Oportunidade</label>
                         <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: 20% de Desconto em Consultoria Contábil" />
@@ -240,10 +256,97 @@ export const MarketplaceB2B: React.FC = () => {
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Termos e Condições</label>
                         <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.terms} onChange={e => setFormData({...formData, terms: e.target.value})} placeholder="Ex: Válido apenas para novos contratos." />
                     </div>
-                    <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all">
-                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5 mx-auto" /> : 'PUBLICAR OPORTUNIDADE'}
+                    <button type="submit" disabled={isSaving} className="w-full bg-[#F67C01] text-white font-black py-5 rounded-[2rem] shadow-2xl uppercase tracking-widest text-sm hover:bg-orange-600 transition-all flex items-center justify-center gap-2 mt-4 shrink-0">
+                        {isSaving ? <RefreshCw className="animate-spin w-5 h-5" /> : 'PUBLICAR OPORTUNIDADE'}
                     </button>
                 </form>
+            </div>
+         </div>
+      )}
+
+      {/* Modal Ver Detalhes (Visual Upgrade) */}
+      {selectedOffer && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+            <div className="bg-white rounded-[3.5rem] w-full max-w-3xl shadow-2xl border border-white/5 animate-scale-in max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="bg-[#0F172A] p-8 text-white relative overflow-hidden shrink-0">
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div className="flex gap-6 items-center">
+                            <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden shadow-lg border-4 border-white/10 shrink-0">
+                                <img src={selectedOffer.businessLogo} className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-none mb-1">{selectedOffer.title}</h3>
+                                <div className="flex items-center gap-3">
+                                   <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase">{selectedOffer.business_name}</p>
+                                   <span className="bg-white/10 px-2 py-0.5 rounded text-[9px] uppercase tracking-widest font-black flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-400" /> DESTAQUE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => setSelectedOffer(null)} className="p-3 hover:bg-white/10 rounded-2xl transition-all self-start"><X className="w-6 h-6" /></button>
+                    </div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+                </div>
+
+                <div className="p-10 overflow-y-auto space-y-10">
+                    <div className="flex flex-col md:flex-row gap-10">
+                       <div className="flex-1 space-y-8">
+                          <div className="space-y-4">
+                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 pb-2">Sobre a Oportunidade</h4>
+                             <p className="text-gray-700 leading-relaxed font-medium">{selectedOffer.description}</p>
+                          </div>
+                          
+                          <div className="space-y-4">
+                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 pb-2">Termos e Condições</h4>
+                             <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100/50">
+                                <p className="text-sm font-bold text-orange-900">{selectedOffer.terms || "Sem termos específicos adicionados."}</p>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div className="w-full md:w-72 shrink-0 space-y-6">
+                           <div className="bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100 flex flex-col items-center text-center shadow-inner">
+                              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 w-full border-b border-gray-200 pb-2">Ofertante</h4>
+                              {sellerProfile ? (
+                                <>
+                                  <div className="w-16 h-16 bg-white rounded-full overflow-hidden shadow-md mb-4 border border-gray-100 border-2 border-indigo-100 p-0.5">
+                                      <div className="w-full h-full rounded-full overflow-hidden">
+                                        <img src={sellerProfile.logo_url || sellerProfile.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${sellerProfile.name}`} className="w-full h-full object-cover" />
+                                      </div>
+                                  </div>
+                                  <p className="font-black text-gray-900 uppercase italic mb-1 text-sm">
+                                    {sellerProfile?.business_name || selectedOffer.business_name || sellerProfile?.name || "Empresa Parceira"}
+                                  </p>
+                                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3">{sellerProfile.city || "Brasil"}</p>
+                                  {(sellerProfile.phone || sellerProfile.whatsapp) ? (
+                                     <button 
+                                       onClick={() => {
+                                          const phone = sellerProfile.whatsapp || sellerProfile.phone;
+                                          const msg = `Olá ${sellerProfile.name}, vi sua oportunidade no Menu Match: ${selectedOffer.title}`;
+                                          window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                                       }}
+                                       className="w-full bg-[#25D366] text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#128C7E] transition-all shadow-md mt-2"
+                                     >
+                                        <MessageCircle className="w-4 h-4" /> CHAMAR VIA WHATS
+                                     </button>
+                                  ) : (
+                                     <p className="text-[10px] text-orange-600 font-bold bg-orange-50 px-3 py-1.5 rounded-lg w-full">Vendedor sem número visível</p>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="py-6 flex flex-col items-center">
+                                   <RefreshCw className="w-6 h-6 text-gray-300 animate-spin mb-2" />
+                                   <p className="text-[9px] text-gray-400 uppercase font-black">Carregando perfil...</p>
+                                </div>
+                              )}
+                           </div>
+                           
+                           <div className="bg-emerald-50 rounded-[2.5rem] p-8 border border-emerald-100 text-center">
+                               <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Desconto Ofertado</p>
+                               <span className="text-3xl font-black text-emerald-700 italic uppercase bg-white px-4 py-2 rounded-2xl shadow-sm block w-fit mx-auto">{selectedOffer.discount}</span>
+                           </div>
+                       </div>
+                    </div>
+                </div>
             </div>
          </div>
       )}

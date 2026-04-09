@@ -112,9 +112,10 @@ export const Blog: React.FC = () => {
                       <p className="text-2xl text-gray-500 font-medium mb-12 italic leading-relaxed border-l-8 border-indigo-100 pl-8">
                           {selectedPost.summary}
                       </p>
-                      <div className="text-gray-700 leading-relaxed space-y-8 text-lg font-medium">
-                          {selectedPost.content}
-                      </div>
+                      <div 
+                           className="text-gray-700 leading-relaxed text-lg font-medium whitespace-pre-wrap"
+                           dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                      />
                   </div>
               </div>
           </article>

@@ -395,6 +395,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productSellerProfile, setProductSellerProfile] = useState<any>(null);
   const [menuCashToUse, setMenuCashToUse] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -433,7 +434,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
         buyer_id: user.id,
         buyer_name: user.name,
         seller_id: selectedProduct.user_id,
-        seller_name: 'Vendedor', // Idealmente buscar nome do perfil
+        seller_name: productSellerProfile?.business_name || productSellerProfile?.name || 'Vendedor',
         product_id: selectedProduct.id,
         total_amount: selectedProduct.price,
         menu_cash_amount: menuCashToUse,
@@ -519,7 +520,17 @@ const B2BMatchView = ({ user }: { user: User }) => {
                     </div>
 
                     <button 
-                      onClick={() => { setSelectedProduct(prod); setIsPurchaseModalOpen(true); }}
+                      onClick={async () => { 
+                         setSelectedProduct(prod); 
+                         setIsPurchaseModalOpen(true); 
+                         setProductSellerProfile(null);
+                         if (prod.user_id) {
+                            try {
+                               const profile = await supabaseService.getProfile(prod.user_id);
+                               setProductSellerProfile(profile);
+                            } catch(e) {}
+                         }
+                      }}
                       className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-brand-primary transition-all active:scale-95 shadow-lg"
                     >
                        COMPRAR AGORA <ArrowRight className="w-3 h-3" />
@@ -550,6 +561,13 @@ const B2BMatchView = ({ user }: { user: User }) => {
                         </div>
                         <div>
                           <h4 className="text-lg font-black text-gray-900 uppercase italic line-clamp-1 leading-tight">{selectedProduct.name}</h4>
+                          {productSellerProfile ? (
+                             <p className="text-[10px] font-black text-[#F67C01] tracking-widest uppercase mb-1">
+                                {productSellerProfile.business_name || productSellerProfile.name || "Empresa Parceira"}
+                             </p>
+                          ) : (
+                             <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase mb-1">Carregando...</p>
+                          )}
                           <p className="text-xl font-black text-brand-primary">R$ {selectedProduct.price.toFixed(2)}</p>
                         </div>
                       </div>
@@ -748,22 +766,6 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                   <p className={`text-[10px] font-black uppercase tracking-widest ${tx.status === 'confirmed' ? 'text-emerald-500' : tx.status === 'rejected' ? 'text-red-500' : 'text-orange-500'}`}>
                     {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Aprovação'}
                   </p>
-                  
-                  {/* Botão de WhatsApp direto na lista para transações pendentes */}
-                  {tx.status === 'pending' && (tx.buyer_id === user?.id ? tx.seller_phone : tx.buyer_phone) && (
-                    <button
-                      onClick={() => {
-                        const isUserBuyer = tx.buyer_id === user?.id;
-                        const targetPhone = isUserBuyer ? tx.seller_phone : tx.buyer_phone;
-                        const msg = `Olá! Referente à proposta de compra via Menu Cash no item: ${tx.description}. \n\n💎 *Valor Total*: R$ ${(tx.total_amount || tx.amount).toFixed(2)} \n💎 *Menu Cash utilizado*: M$ ${(tx.menu_cash_amount || 0).toFixed(2)} \n💎 *Valor Líquido a Pagar*: R$ ${tx.amount.toFixed(2)}`;
-                        window.open(`https://wa.me/${targetPhone!.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-                      }}
-                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] rounded-full hover:bg-[#25D366]/20 transition-all group mx-auto"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">WhatsApp</span>
-                    </button>
-                  )}
                 </div>
                 
                 {tx.status === 'pending' && (
@@ -793,14 +795,15 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                         <button
                           onClick={() => {
                             const isUserBuyer = tx.buyer_id === user?.id;
-                            const targetPhone = isUserBuyer ? tx.seller_phone : tx.buyer_phone;
+                            const targetPhone = isUserBuyer ? (tx as any).seller?.phone : (tx as any).buyer?.phone;
+                            if (!targetPhone) return;
                             const msg = `Olá! Referente à proposta de compra via Menu Cash no item: ${tx.description}. \n\n💎 *Valor Total*: R$ ${(tx.total_amount || tx.amount).toFixed(2)} \n💎 *Menu Cash utilizado*: M$ ${(tx.menu_cash_amount || 0).toFixed(2)} \n💎 *Valor Líquido a Pagar*: R$ ${tx.amount.toFixed(2)}`;
-                            window.open(`https://wa.me/${targetPhone!.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                            window.open(`https://wa.me/${targetPhone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
                           }}
                           className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366]/20 transition-all group"
                         >
                           <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                          <span className="text-[9px] font-black uppercase tracking-widest">Cobrar via Whats</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest">CHAMAR VIA WHATS</span>
                         </button>
                       </div>
                     )}
@@ -821,12 +824,12 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                       
                       return (
                         <a 
-                          href={`https://wa.me/55${cleanPhone}`}
+                          href={`https://wa.me/${cleanPhone}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-4 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                          className="px-4 py-2 bg-[#25D366] text-white rounded-xl font-black text-[10px] uppercase hover:bg-[#128C7E] transition-all flex items-center gap-2 shadow-lg shadow-[#25D366]/20"
                         >
-                          <MessageCircle className="w-4 h-4" /> WHATSAPP
+                          <MessageCircle className="w-4 h-4" /> CHAMAR VIA WHATS
                         </a>
                       );
                     })()}

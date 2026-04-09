@@ -7,7 +7,7 @@ import {
   BookOpen, Plus, FileText, Home as HomeIcon, Layout, 
   ChevronRight, Calendar, Edit2, Trash2, X, Send, RefreshCw,
   Image as ImageIcon, AlignLeft, Type, Sparkles, Camera, ShieldAlert,
-  Lock, Crown, Search, Share2, Eye, Briefcase, Smartphone
+  Lock, Crown, Search, Share2, Eye, Briefcase, Smartphone, Link as LinkIcon
 } from 'lucide-react';
 import { SectionLanding } from '../components/SectionLanding';
 import { Link } from 'react-router-dom';
@@ -23,6 +23,39 @@ export const MyBlog: React.FC = () => {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Sincroniza o editor de blog apenas quando o modal abre ou muda o post
+  useEffect(() => {
+    if (isModalOpen && editorRef.current) {
+        editorRef.current.innerHTML = blogForm.content || '';
+    }
+  }, [isModalOpen, editingPost?.id]);
+
+  const handleLink = () => {
+    const url = prompt('Digite ou cole a URL (link):', 'https://');
+    if (url && url !== 'https://') {
+      document.execCommand('createLink', false, url);
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const anchor = selection.anchorNode?.parentElement;
+        if (anchor && anchor.tagName === 'A') {
+          anchor.classList.add('text-indigo-600', 'underline');
+          anchor.setAttribute('target', '_blank');
+        }
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text/plain');
+    const urlRegex = /^(https?:\/\/[^\s]+)$/;
+    if (urlRegex.test(text)) {
+      e.preventDefault();
+      const linkHtml = `<a href="${text}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">${text}</a>`;
+      document.execCommand('insertHTML', false, linkHtml);
+    }
+  };
   
   const isAdmin = user?.role === 'admin';
   const hasAccess = isAdmin || (user?.plan !== 'basic');
@@ -384,7 +417,28 @@ export const MyBlog: React.FC = () => {
 
                          <div className="lg:col-span-12">
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conteúdo Completo</label>
-                            <textarea rows={12} required className="w-full bg-gray-50 border-none rounded-[2.5rem] p-10 text-lg font-medium leading-relaxed" value={blogForm.content} onChange={e => setBlogForm({...blogForm, content: e.target.value})} />
+                            
+                            <div className="flex flex-col border border-gray-100 rounded-[2.5rem] bg-gray-50 overflow-hidden shadow-inner focus-within:ring-2 focus-within:ring-brand-primary/50 transition-all">
+                               <div className="bg-white border-b border-gray-100 p-4 flex gap-2 w-full flex-wrap shadow-sm z-10 sticky top-0">
+                                  <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('bold', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0"><strong className="text-sm border-r border-gray-300 pr-2 mr-2">B</strong> Negrito</button>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('italic', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] italic m-0"><span className="text-sm border-r border-gray-300 pr-2 mr-2">I</span> Itálico</button>
+                                  <div className="w-px h-6 bg-gray-200 mx-2 self-center"></div>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyLeft', false, ''); }} className="px-4 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0"><AlignLeft className="w-3.5 h-3.5 inline mr-1" /> Esq</button>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyCenter', false, ''); }} className="px-3 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0">Centro</button>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyFull', false, ''); }} className="px-3 py-2 font-black text-slate-600 rounded-xl hover:bg-gray-100 uppercase text-[10px] m-0">Justificar</button>
+                                  <div className="w-px h-6 bg-gray-200 mx-2 self-center"></div>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); handleLink(); }} className="px-4 py-2 font-black text-indigo-600 rounded-xl hover:bg-indigo-50 uppercase text-[10px] m-0 flex items-center gap-2"><LinkIcon className="w-3.5 h-3.5" /> Link</button>
+                               </div>
+                               <div 
+                                 ref={editorRef}
+                                 contentEditable
+                                 suppressContentEditableWarning
+                                 data-placeholder="Comece a escrever seu artigo aqui..."
+                                 className="w-full bg-transparent border-none p-10 text-lg font-medium leading-relaxed outline-none min-h-[400px] empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                                 onInput={e => setBlogForm({...blogForm, content: e.currentTarget.innerHTML})}
+                                 onPaste={handlePaste}
+                               />
+                            </div>
                          </div>
                       </div>
                     )}
