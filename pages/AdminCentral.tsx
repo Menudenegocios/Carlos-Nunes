@@ -77,7 +77,10 @@ export const AdminCentral: React.FC = () => {
     price: 0,
     category: '',
     type: 'product' as 'product' | 'offer',
-    image_url: ''
+    image_url: '',
+    store_name: '',
+    discount_display: '',
+    store_logo_url: ''
   });
   const [selectedItemFile, setSelectedItemFile] = useState<File | null>(null);
 
@@ -378,7 +381,10 @@ export const AdminCentral: React.FC = () => {
         price: item.price || 0,
         category: item.category || '',
         type: item.type || (item.name ? 'product' : 'offer'),
-        image_url: item.image_url || ''
+        image_url: item.image_url || '',
+        store_name: item.social_links?.store_name || item.store_name || '',
+        discount_display: item.social_links?.discount_display || item.discount_display || '',
+        store_logo_url: item.social_links?.store_logo_url || item.store_logo_url || ''
       });
     } else {
       setEditingItem(null);
@@ -388,7 +394,10 @@ export const AdminCentral: React.FC = () => {
         price: 0,
         category: '',
         type: 'product',
-        image_url: ''
+        image_url: '',
+        store_name: '',
+        discount_display: '',
+        store_logo_url: ''
       });
     }
     setIsMarketplaceModalOpen(true);
@@ -404,20 +413,39 @@ export const AdminCentral: React.FC = () => {
         final_image_url = await supabaseService.uploadImage(file, `marketplace/${Date.now()}_${file.name}`);
       }
       
-      const { type, name, ...restOfForm } = itemForm;
+      const { type, name, store_name, discount_display, store_logo_url, ...restOfForm } = itemForm;
       const itemData: any = { ...restOfForm, image_url: final_image_url };
 
       if (editingItem) {
         if (type === 'product') {
-            await supabaseService.updateProduct(editingItem.id, { ...itemData, name });
+            await supabaseService.updateProduct(editingItem.id, { ...itemData, name, store_name, discount_display, store_logo_url });
         } else {
-            await supabaseService.updateOffer(editingItem.id, { ...itemData, title: name });
+            await supabaseService.updateOffer(editingItem.id, { 
+                ...itemData, 
+                title: name,
+                logo_url: store_logo_url,
+                social_links: {
+                    store_name,
+                    discount_display,
+                    store_logo_url
+                } 
+            });
         }
       } else {
         if (type === 'product') {
-            await supabaseService.createProduct({ ...itemData, name, user_id: user.id });
+            await supabaseService.createProduct({ ...itemData, name, user_id: user.id, store_name, discount_display, store_logo_url });
         } else {
-            await supabaseService.createOffer({ ...itemData, title: name, user_id: user.id });
+            await supabaseService.createOffer({ 
+                ...itemData, 
+                title: name, 
+                user_id: user.id,
+                logo_url: store_logo_url,
+                social_links: {
+                    store_name,
+                    discount_display,
+                    store_logo_url
+                }
+            });
         }
       }
       setIsMarketplaceModalOpen(false);
@@ -474,7 +502,7 @@ export const AdminCentral: React.FC = () => {
             {[{ id: 'membros', label: 'Membros', icon: Users, desc: 'Gestão de Usuários' },
             { id: 'agenda', label: 'Agenda', icon: Calendar, desc: 'Eventos da Plataforma' },
             { id: 'marketplace', label: 'Menu Store', icon: ShoppingBag, desc: 'Produtos do Admin' },
-            { id: 'localplus', label: 'Local+', icon: Sparkles, desc: 'Controle Local+' },
+            { id: 'localplus', label: 'Menu Club', icon: Sparkles, desc: 'Controle Menu Club' },
             { id: 'parceiros', label: 'Parceiros', icon: UserPlus, desc: 'Logos e Links de Parceiros' }].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex-1 min-w-[150px] flex items-center justify-center gap-3 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>
                     <tab.icon className="w-4 h-4" /> {tab.label}
@@ -589,7 +617,7 @@ export const AdminCentral: React.FC = () => {
                                     <h3 className="text-2xl font-black italic uppercase">Gestão Menu Store</h3>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Produtos registrados exclusivamente pelo admin</p>
                                 </div>
-                                <button onClick={() => { setEditingItem(null); setItemForm({ name: '', description: '', price: 0, category: 'Produtos', type: 'product', image_url: '' }); setIsMarketplaceModalOpen(true); }} className="bg-[#F67C01] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
+                                <button onClick={() => { setEditingItem(null); setItemForm({ name: '', description: '', price: 0, category: 'Produtos', type: 'product', image_url: '', store_name: '', discount_display: '', store_logo_url: '' }); setIsMarketplaceModalOpen(true); }} className="bg-[#F67C01] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
                                     <Plus className="w-4 h-4" /> NOVO ITEM
                                 </button>
                             </div>
@@ -624,9 +652,12 @@ export const AdminCentral: React.FC = () => {
                         <div className="space-y-8 animate-fade-in">
                             <div className="flex justify-between items-center px-4">
                                 <div>
-                                    <h3 className="text-2xl font-black italic uppercase text-brand-primary">Gestão Local+</h3>
+                                    <h3 className="text-2xl font-black italic uppercase text-brand-primary">Gestão Menu Club</h3>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Controle Global de Ofertas das Empresas</p>
                                 </div>
+                                <button onClick={() => { setEditingItem(null); setItemForm({ name: '', description: '', price: 0, category: 'Oferta', type: 'offer', image_url: '', store_name: '', discount_display: '', store_logo_url: '' }); setIsMarketplaceModalOpen(true); }} className="bg-[#F67C01] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
+                                    <Plus className="w-4 h-4" /> NOVA EMPRESA / OFERTA
+                                </button>
                             </div>
                             
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -641,10 +672,10 @@ export const AdminCentral: React.FC = () => {
                                             <div className="flex items-center justify-between mb-6 mt-2">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
-                                                        {offer.store_logo_url ? <img src={offer.store_logo_url} className="w-full h-full object-cover" /> : <Sparkles className="w-5 h-5 text-brand-primary" />}
+                                                        {offer.social_links?.store_logo_url || offer.store_logo_url ? <img src={offer.social_links?.store_logo_url || offer.store_logo_url} className="w-full h-full object-cover" /> : <Sparkles className="w-5 h-5 text-brand-primary" />}
                                                     </div>
                                                     <div>
-                                                        <h5 className="font-bold text-sm text-slate-900">{offer.store_name || 'Usuário Local+'}</h5>
+                                                        <h5 className="font-bold text-sm text-slate-900">{offer.social_links?.store_name || offer.store_name || 'Usuário Menu Club'}</h5>
                                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{offer.category || 'Oferta'}</p>
                                                     </div>
                                                 </div>
@@ -652,7 +683,7 @@ export const AdminCentral: React.FC = () => {
                                             <div className="space-y-1 mb-4">
                                                 <h4 className="text-lg font-black text-slate-900 leading-tight">{offer.title}</h4>
                                                 <span className="inline-block bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border border-emerald-100 mt-2">
-                                                    Desconto/Benefício: {offer.discount_display}
+                                                    Desconto/Benefício: {offer.social_links?.discount_display || offer.discount_display}
                                                 </span>
                                             </div>
                                         </div>
@@ -666,7 +697,7 @@ export const AdminCentral: React.FC = () => {
                                 {offers.length === 0 && (
                                     <div className="col-span-full py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center">
                                         <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma oferta Local+ cadastrada ativamente ainda.</p>
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma oferta Menu Club cadastrada ativamente ainda.</p>
                                     </div>
                                 )}
                             </div>
@@ -834,11 +865,28 @@ export const AdminCentral: React.FC = () => {
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo</label>
                                 <select className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.type} onChange={e => setItemForm({...itemForm, type: e.target.value as any})}>
-                                    <option value="product">Produto</option>
-                                    <option value="offer">Oferta</option>
+                                    <option value="product">Produto (Menu Store)</option>
+                                    <option value="offer">Oferta (Menu Club)</option>
                                 </select>
                             </div>
                         </div>
+
+                        {itemForm.type === 'offer' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome da Empresa</label>
+                                    <input required={itemForm.type === 'offer'} type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.store_name} onChange={e => setItemForm({...itemForm, store_name: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Benefício / Desconto (Ex: 20% OFF)</label>
+                                    <input required={itemForm.type === 'offer'} type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.discount_display} onChange={e => setItemForm({...itemForm, discount_display: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URL do Logo da Empresa</label>
+                                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.store_logo_url} onChange={e => setItemForm({...itemForm, store_logo_url: e.target.value})} placeholder="https://..." />
+                                </div>
+                            </div>
+                        )}
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Categoria</label>
                             <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold" value={itemForm.category} onChange={e => setItemForm({...itemForm, category: e.target.value})} />
@@ -985,7 +1033,7 @@ export const AdminCentral: React.FC = () => {
                                 onChange={e => setMemberForm({...memberForm, has_local_plus: e.target.checked})}
                                 className="w-5 h-5 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary"
                             />
-                            <label htmlFor="has_local_plus" className="text-[10px] font-black text-brand-primary uppercase tracking-widest cursor-pointer select-none">Liberação Local+</label>
+                            <label htmlFor="has_local_plus" className="text-[10px] font-black text-brand-primary uppercase tracking-widest cursor-pointer select-none">Liberação Menu Club</label>
                         </div>
 
                         <div>

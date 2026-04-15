@@ -62,7 +62,11 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onClick }) => {
 
         {/* Business Logo Overlay */}
         <div className="absolute -bottom-4 right-8 w-16 h-16 rounded-2xl bg-white p-1 border border-gray-100 shadow-xl z-20 overflow-hidden transform rotate-3 group-hover:rotate-0 transition-transform flex items-center justify-center">
-           <Store className="w-8 h-8 text-indigo-600" />
+           {(offer.social_links?.store_logo_url || offer.logo_url || offer.store_logo_url) ? (
+             <img src={(offer.social_links?.store_logo_url || offer.logo_url || offer.store_logo_url)!} alt={offer.social_links?.store_name || offer.store_name || 'Logo'} className="w-full h-full object-cover rounded-xl" />
+           ) : (
+             <Store className="w-8 h-8 text-indigo-600" />
+           )}
         </div>
       </div>
 
@@ -70,12 +74,18 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onClick }) => {
       <div className="p-8 flex-1 flex flex-col pt-10">
         <div className="flex items-center gap-2 mb-3">
            <Star className="w-3 h-3 text-yellow-500 fill-current" />
-           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Verificado</span>
+           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{offer.social_links?.store_name || offer.store_name || 'Verificado'}</span>
         </div>
 
-        <h3 className="text-2xl font-black text-gray-900 leading-[1.1] mb-4 group-hover:text-indigo-600 transition-colors line-clamp-2">
+        <h3 className="text-2xl font-black text-gray-900 leading-[1.1] mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
           {offer.title}
         </h3>
+        
+        {(offer.social_links?.discount_display || offer.discount_display) && (
+          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold">
+            Benefício: {offer.social_links?.discount_display || offer.discount_display}
+          </div>
+        )}
         
         <p className="text-gray-500 text-sm font-medium leading-relaxed line-clamp-2 mb-8">
           {offer.description}

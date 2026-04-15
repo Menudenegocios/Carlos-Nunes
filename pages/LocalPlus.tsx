@@ -120,7 +120,7 @@ export const LocalPlus: React.FC = () => {
                <Sparkles className="w-4 h-4 text-brand-primary" /> O melhor da sua região
             </div>
             <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.9] uppercase italic overflow-visible">
-               Local <span className="text-brand-primary">+</span> <br />
+               Menu <span className="text-brand-primary">Club</span> <br />
                Vantagens <span className="text-indigo-400">Todo Dia.</span>
             </h1>
             <p className="text-lg text-slate-400 font-medium leading-relaxed">
@@ -135,8 +135,8 @@ export const LocalPlus: React.FC = () => {
            { id: 'home', label: 'Home', icon: Grid },
            { id: 'flash', label: 'Menu do Dia', icon: Zap },
            { id: 'categories', label: 'Categorias', icon: Filter },
-           // Se o usuário já tiver acesso liberado ao local+, mostrar a aba de ofertas
-           ...(user && user.has_local_plus ? [{ id: 'my-offers', label: 'Minhas Ofertas', icon: Tag }] : [])
+           // Se o usuário já tiver acesso liberado ao Menu Club ou for admin, mostrar a aba de ofertas
+           ...(user && (user.has_local_plus || user.role === 'admin') ? [{ id: 'my-offers', label: 'Minhas Ofertas', icon: Tag }] : [])
          ].map(tab => (
            <button
              key={tab.id}
@@ -261,12 +261,12 @@ export const LocalPlus: React.FC = () => {
              </section>
           )}
 
-          {activeTab === 'my-offers' && user && user.has_local_plus && (
+          {activeTab === 'my-offers' && user && (user.has_local_plus || user.role === 'admin') && (
              <section className="px-4 py-6">
                 <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-gray-100">
                    <div className="mb-8">
                       <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Portal do Anunciante</h2>
-                      <p className="text-sm font-medium text-slate-500">Cadastre e gerencie suas ofertas Local+ (Acesso Aberto)</p>
+                      <p className="text-sm font-medium text-slate-500">Cadastre e gerencie suas ofertas no Menu Club (Acesso Aberto)</p>
                    </div>
                    {/* Reutilizando o sistema de ofertas existente */}
                    <div className="local-plus-offers-context">

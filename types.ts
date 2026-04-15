@@ -324,6 +324,9 @@ export interface Offer {
   image_url?: string;
   video_url?: string;
   logo_url?: string;
+  store_name?: string;
+  discount_display?: string;
+  store_logo_url?: string;
   social_links?: {
     instagram?: string;
     whatsapp?: string;

@@ -32,6 +32,17 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const menuItems = [
     { label: 'Visão Geral', icon: LayoutDashboard, to: '/dashboard', locked: false, minPlan: 'pre-cadastro' },
+    { 
+      label: 'Comece por aqui', 
+      icon: GraduationCap, 
+      to: '/academy', 
+      locked: false, 
+      minPlan: 'pre-cadastro',
+      subItems: [
+        { label: 'Treinamentos', to: '/academy' },
+        { label: 'Certificados', to: '/academy' }
+      ]
+    },
     ...(isAdmin ? [{ 
       label: 'Central Admin', 
       icon: Settings2, 
@@ -83,7 +94,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
     { 
-      label: 'Local+', 
+      label: 'Menu Club', 
       icon: Sparkles, 
       to: '/local-plus', 
       locked: false, 
@@ -103,17 +114,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       subItems: [
         { label: 'Meus Projetos', to: '/project-management' },
         { label: 'Quadro Kanban', to: '/project-management' }
-      ]
-    },
-    { 
-      label: 'Menu Academy', 
-      icon: GraduationCap, 
-      to: '/academy', 
-      locked: false, 
-      minPlan: 'pre-cadastro',
-      subItems: [
-        { label: 'Treinamentos', to: '/academy' },
-        { label: 'Certificados', to: '/academy' }
       ]
     },
     { 

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 import {
    Play, Star, X, Award, CheckCircle, GraduationCap,
-   Video, Map, Sparkles, Target, Image,
+   Video, Map, Sparkles, Target, Image, Handshake,
    Monitor, Layers, Zap, Bot, Home as HomeIcon,
    PlayCircle, RefreshCw, ExternalLink, ListChecks, Repeat, Rocket, CloudSun, TrendingUp,
    ChevronRight, Clock, Users, BookOpen, MessageSquare, Smartphone
@@ -86,7 +86,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
    const { user } = useAuth();
-   const [activeTab, setActiveTab] = useState<'home' | 'treinamentos' | 'biblioteca' | 'connect'>('home');
+   const [activeTab, setActiveTab] = useState<'home' | 'trilha' | 'treinamentos' | 'biblioteca' | 'connect'>('home');
    const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -103,11 +103,11 @@ export const Academy: React.FC = () => {
                      <div className="p-5 bg-indigo-50 backdrop-blur-xl rounded-[2rem] border border-indigo-100 shadow-xl">
                         <GraduationCap className="h-10 w-10 text-brand-primary" />
                      </div>
-                     <div>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase overflow-visible">
-                           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] title-fix">Menu Academy</span>
+                      <div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase overflow-visible text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] title-fix">
+                           Comece por aqui
                         </h1>
-                        <p className="text-gray-500 text-sm font-bold uppercase tracking-[0.2em]">CONHECIMENTO ESTRATÉGICO PARA SEU NEGÓCIO LOCAL.</p>
+                        <p className="text-gray-500 text-sm font-bold uppercase tracking-[0.2em]">BEM-VINDO AO SEU ECOSSISTEMA DE SUCESSO.</p>
                      </div>
                   </div>
 
@@ -120,7 +120,8 @@ export const Academy: React.FC = () => {
 
                <div className="flex p-1.5 mt-12 bg-gray-50 backdrop-blur-md rounded-[2.2rem] border border-gray-100 w-fit overflow-x-auto scrollbar-hide gap-1">
                   {[
-                     { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
+                     { id: 'home', label: 'INÍCIO', desc: 'Bem-vindo', icon: HomeIcon },
+                     { id: 'trilha', label: 'TRILHA DO SUCESSO', desc: 'Passo a passo', icon: Map },
                      { id: 'connect', label: 'CONNECT', desc: 'Mentorias ao vivo', icon: Users },
                      { id: 'treinamentos', label: 'TREINAMENTOS', desc: 'Vídeo aulas', icon: Video },
                      { id: 'biblioteca', label: 'PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
@@ -144,23 +145,137 @@ export const Academy: React.FC = () => {
 
          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {activeTab === 'home' && (
-               <SectionLanding
-                  title="Sua jornada para a Maestria em Negócios."
-                  subtitle="Menu Academy"
-                  description="O conhecimento que transforma pequenos negócios em referências regionais. Explore treinamentos práticos, trilhas de sucesso validadas e ferramentas de IA que funcionam como sua consultoria 24h por dia."
-                  summaryText="A Menu Academy é o seu centro de treinamento estratégico. Aqui você encontra cursos práticos de tráfego pago, scripts de vendas e gestão financeira, além de agentes de IA especializados que funcionam como sua consultoria de negócios 24 horas por dia."
-                  benefits={[
-                     "Aulas Práticas: Aprenda Tráfego Pago, Vendas e Gestão de forma direta.",
-                     "Trilha do Sucesso: Siga um caminho lógico do zero ao topo do mercado.",
-                     "Agentes de IA: Consultores especializados em scripts e quebra de objeções.",
-                     "Biblioteca de Prompts: Copie e cole estratégias de alta conversão.",
-                     "Atualizações: Conteúdo focado no que há de mais moderno no mercado local."
-                  ]}
-                  ctaLabel="VER TREINAMENTOS DISPONÍVEIS"
-                  onStart={() => setActiveTab('treinamentos')}
-                  icon={GraduationCap}
-                  accentColor="indigo"
-               />
+               <div className="bg-white rounded-[3.5rem] p-8 md:p-12 border border-gray-100 shadow-xl space-y-10">
+                  <div className="max-w-3xl">
+                     <h2 className="text-3xl font-black text-gray-900 uppercase italic mb-4">Bem-vindo ao Menu de Negócios!</h2>
+                     <p className="text-lg text-slate-600 font-medium leading-relaxed">
+                        Você agora faz parte de um ecossistema criado para ajudar você a organizar, conectar e crescer seu negócio.
+                     </p>
+                  </div>
+
+                  <div className="aspect-video w-full rounded-[2.5rem] overflow-hidden bg-black shadow-2xl border border-gray-200">
+                     <iframe
+                        className="w-full h-full"
+                        src="https://www.youtube.com/embed/UZ0l4AddQLI"
+                        title="Aula de Boas vindas"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                     ></iframe>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                     <div className="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100 space-y-4">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
+                           <Rocket className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-black text-indigo-900 uppercase italic">Aceleração</h3>
+                        <p className="text-xs text-indigo-700 font-medium">Ferramentas focadas em escala e resultados rápidos.</p>
+                     </div>
+                     <div className="bg-orange-50 p-8 rounded-[2rem] border border-orange-100 space-y-4">
+                        <div className="w-12 h-12 bg-[#F67C01] rounded-2xl flex items-center justify-center text-white">
+                           <Handshake className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-black text-orange-900 uppercase italic">Conexão</h3>
+                        <p className="text-xs text-orange-700 font-medium">O maior ecossistema de parceiros regionais.</p>
+                     </div>
+                     <div className="bg-purple-50 p-8 rounded-[2rem] border border-purple-100 space-y-4">
+                        <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white">
+                           <GraduationCap className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-black text-purple-900 uppercase italic">Conhecimento</h3>
+                        <p className="text-xs text-purple-700 font-medium">Mentorias e conteúdos práticos semanais.</p>
+                     </div>
+                  </div>
+               </div>
+            )}
+
+            {activeTab === 'trilha' && (
+               <div className="space-y-10">
+                  <div className="max-w-3xl px-4">
+                     <h2 className="text-3xl font-black text-gray-900 uppercase italic mb-4">Trilha do Sucesso</h2>
+                     <p className="text-lg text-slate-600 font-medium">
+                        Siga este passo a passo simples com ações práticas para extrair o máximo da plataforma.
+                     </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+                     {[
+                        {
+                           number: "1️⃣",
+                           title: "Primeiros Passos",
+                           desc: "Inicie sua jornada configurando sua base dentro da plataforma.",
+                           action: "Agendar suporte inicial",
+                           link: "https://wa.me/5551981124252",
+                           icon: Rocket,
+                           color: "indigo"
+                        },
+                        {
+                           number: "2️⃣",
+                           title: "Desenvolvimento de Negócio",
+                           desc: "Estruture seu negócio e defina seus objetivos.",
+                           action: "Falar com especialista",
+                           link: "https://wa.me/5551981124252",
+                           icon: Target,
+                           color: "orange"
+                        },
+                        {
+                           number: "3️⃣",
+                           title: "Gestão de Redes Sociais",
+                           desc: "Organize sua presença digital e comece a produzir conteúdo estratégico.",
+                           action: "Receber orientação",
+                           link: "https://wa.me/5551981124252",
+                           icon: Smartphone,
+                           color: "purple"
+                        },
+                        {
+                           number: "4️⃣",
+                           title: "Vendas",
+                           desc: "Aprenda a organizar seu funil e aumentar suas conversões.",
+                           action: "Falar com consultor de vendas",
+                           link: "https://wa.me/5551981124252",
+                           icon: TrendingUp,
+                           color: "emerald"
+                        },
+                        {
+                           number: "5️⃣",
+                           title: "Plano de Ação",
+                           desc: "Transforme tudo em um plano prático para execução.",
+                           action: "Criar plano com especialista",
+                           link: "https://wa.me/5551981124252",
+                           icon: ListChecks,
+                           color: "blue"
+                        }
+                     ].map((item, idx) => (
+                        <div key={idx} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between h-full">
+                           <div className="space-y-6">
+                              <div className="flex justify-between items-center">
+                                 <span className="text-2xl">{item.number}</span>
+                                 <div className={`p-4 rounded-2xl bg-${item.color}-50 text-${item.color}-600`}>
+                                    <item.icon className="w-6 h-6" />
+                                 </div>
+                              </div>
+                              <div className="space-y-2">
+                                 <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter">{item.title}</h3>
+                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                              </div>
+                           </div>
+                           
+                           <div className="pt-8">
+                              <a 
+                                 href={item.link}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className={`w-full py-4 bg-gray-50 text-gray-900 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-gray-100 flex items-center justify-center gap-2 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all`}
+                              >
+                                 {item.action} <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
             )}
 
             {activeTab === 'treinamentos' && !selectedCourse && (

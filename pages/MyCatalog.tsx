@@ -661,7 +661,7 @@ export const MyCatalog: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setEditingBlogPost(null);
-                                setBlogForm({ title: '', category: 'Dicas', summary: '', content: '', image_url: '' });
+                                setBlogForm({ title: '', category: 'Dicas', summary: '', content: '', image_url: '', seo_title: '', seo_description: '', seo_keywords: '', slug: '', alt_text: '', og_title: '', og_description: '' });
                                 setIsBlogModalOpen(true);
                             }}
                             className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
@@ -684,7 +684,7 @@ export const MyCatalog: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-6 md:mt-0">
-                                    <button onClick={() => { setEditingBlogPost(post); setBlogForm(post); setIsBlogModalOpen(true); }} className="p-3 bg-white rounded-xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => { setEditingBlogPost(post); setBlogForm({ title: post.title || '', category: post.category || 'Dicas', summary: post.summary || '', content: post.content || '', image_url: post.image_url || '', seo_title: post.seo_title || '', seo_description: post.seo_description || '', seo_keywords: post.seo_keywords ? post.seo_keywords.join(', ') : '', slug: post.slug || '', alt_text: post.alt_text || '', og_title: post.og_title || '', og_description: post.og_description || '' }); setIsBlogModalOpen(true); }} className="p-3 bg-white rounded-xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-4 h-4" /></button>
                                     <button onClick={() => handleDeleteBlog(post.id)} className="p-3 bg-white rounded-xl text-rose-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                             </div>

@@ -481,7 +481,7 @@ export const StoreView: React.FC = () => {
                                     <div className="mb-12 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-center">
                                         <p className="text-xs font-black text-brand-dark uppercase tracking-widest italic">
                                             Apenas usuários cadastrados podem comentar. <br/>
-                                            <Link to="/auth" className="underline mt-2 inline-block">Faça login para participar</Link>
+                                            <Link to="/register" className="underline mt-2 text-indigo-600 hover:text-indigo-800 transition-colors inline-block">Faça seu cadastro para participar</Link>
                                         </p>
                                     </div>
                                 )}
@@ -554,16 +554,18 @@ export const StoreView: React.FC = () => {
                                             <img src={prod.image_url} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter leading-tight truncate">{prod.name}</h4>
+                                            <div className="mb-2">
+                                                <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter leading-tight break-words">{prod.name}</h4>
+                                            </div>
+                                            <p className="text-sm text-slate-500 font-medium line-clamp-3 mb-3 whitespace-pre-line break-words">{prod.description}</p>
+                                            <div className="flex flex-col items-start gap-1">
+                                                <p className="text-2xl font-black text-emerald-600">{prod.price_on_request ? 'Sob Consulta' : `R$ ${prod.price.toFixed(2)}`}</p>
                                                 {prod.accepts_menu_cash && (
                                                     <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100">
                                                         M$ {prod.menu_cash_percentage}%
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-slate-500 font-medium line-clamp-3 mb-2 whitespace-pre-line">{prod.description}</p>
-                                            <p className="text-2xl font-black text-emerald-600">{prod.price_on_request ? 'Sob Consulta' : `R$ ${prod.price.toFixed(2)}`}</p>
                                         </div>
                                         <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
                                             {prod.accepts_menu_cash && (
