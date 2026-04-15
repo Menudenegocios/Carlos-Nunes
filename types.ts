@@ -331,6 +331,9 @@ export interface Offer {
     instagram?: string;
     whatsapp?: string;
     website?: string;
+    store_name?: string;
+    discount_display?: string;
+    store_logo_url?: string;
   };
   coupons?: Coupon[];
   scheduling?: SchedulingConfig;
