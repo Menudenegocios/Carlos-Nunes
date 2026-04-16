@@ -418,7 +418,7 @@ export const AdminCentral: React.FC = () => {
 
       if (editingItem) {
         if (type === 'product') {
-            await supabaseService.updateProduct(editingItem.id, { ...itemData, name, store_name, discount_display, store_logo_url });
+            await supabaseService.updateProduct(editingItem.id, { ...itemData, name });
         } else {
             await supabaseService.updateOffer(editingItem.id, { 
                 ...itemData, 
@@ -433,7 +433,7 @@ export const AdminCentral: React.FC = () => {
         }
       } else {
         if (type === 'product') {
-            await supabaseService.createProduct({ ...itemData, name, user_id: user.id, store_name, discount_display, store_logo_url });
+            await supabaseService.createProduct({ ...itemData, name, user_id: user.id });
         } else {
             await supabaseService.createOffer({ 
                 ...itemData, 

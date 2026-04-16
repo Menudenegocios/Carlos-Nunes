@@ -78,7 +78,7 @@ export const LocalPlus: React.FC = () => {
         <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
         <div className="absolute top-4 left-4">
            <span className="bg-white/90 backdrop-blur-md text-brand-primary text-[10px] font-black px-4 py-2 rounded-full shadow-lg uppercase tracking-widest border border-brand-primary/10">
-              {offer.discount_display}
+              {offer.social_links?.discount_display || offer.discount_display}
            </span>
         </div>
         {flash && (
@@ -94,12 +94,19 @@ export const LocalPlus: React.FC = () => {
         <h4 className="text-lg font-black text-slate-900 leading-tight mb-2 group-hover:text-brand-primary transition-colors">{offer.title}</h4>
         <div className="flex items-center gap-3 mb-6">
            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
-              {offer.store_logo_url ? <img src={offer.store_logo_url} /> : <Zap className="w-4 h-4 text-brand-primary" />}
+              {offer.social_links?.store_logo_url || offer.store_logo_url ? <img src={offer.social_links?.store_logo_url || offer.store_logo_url} /> : <Zap className="w-4 h-4 text-brand-primary" />}
            </div>
-           <span className="text-[11px] font-bold text-slate-500">{offer.store_name}</span>
+           <span className="text-[11px] font-bold text-slate-500">{offer.social_links?.store_name || offer.store_name}</span>
         </div>
         <div className="mt-auto">
-           <button className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 ${flash ? 'bg-brand-primary text-white hover:bg-orange-600' : 'bg-brand-dark text-white hover:opacity-90'}`}>
+           <button 
+             onClick={() => {
+               if (offer.social_links?.whatsapp) {
+                 window.open(`https://wa.me/${offer.social_links.whatsapp}`, '_blank');
+               }
+             }}
+             className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 ${flash ? 'bg-brand-primary text-white hover:bg-orange-600' : 'bg-brand-dark text-white hover:opacity-90'}`}
+           >
               {offer.action_type === 'coupon' ? 'GERAR CUPOM AGORA' : 'QUERO ESSE BENEFÍCIO'} <ArrowRight className="w-4 h-4" />
            </button>
         </div>

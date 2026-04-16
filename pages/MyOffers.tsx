@@ -105,8 +105,9 @@ export const MyOffers = () => {
       
       setIsModalOpen(false);
       resetForm();
-    } catch (error) {
-      alert(isEditing ? 'Erro ao atualizar oferta' : 'Erro ao criar oferta');
+    } catch (error: any) {
+      console.error('Offer submission error:', error);
+      alert(isEditing ? `Erro ao atualizar oferta: ${error.message || JSON.stringify(error)}` : `Erro ao criar oferta: ${error.message || JSON.stringify(error)}`);
     }
   };
 
@@ -208,7 +209,7 @@ export const MyOffers = () => {
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full">
+            <div className="relative z-10 inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex justify-between items-start mb-6">
                   <div>
