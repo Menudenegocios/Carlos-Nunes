@@ -33,7 +33,7 @@ export const Dashboard: React.FC = () => {
 
   // News Modal State
   const [showNews, setShowNews] = useState(false);
-  const CURRENT_VERSION = 'v1.0.16';
+  const CURRENT_VERSION = 'v1.0.17';
 
   useEffect(() => {
     if (user) {
@@ -486,10 +486,10 @@ export const Dashboard: React.FC = () => {
 
             <div className="px-5 py-6 space-y-3 bg-slate-50">
               {[
-                { icon: Star, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Bem-vindo à Menu Match', desc: 'O Menu Club evoluiu! Nova marca e interface otimizada.' },
-                { icon: Sparkles, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Financeiro: Importação OFX', desc: 'Novo seletor de bancos em lote e exclusão antes de importar.' },
-                { icon: Bot, colorClass: 'bg-orange-50 text-orange-500', title: 'Lançamento: Local+', desc: 'Novo marketplace para vendas rápidas e recorrentes no dia a dia.' },
-                { icon: GraduationCap, colorClass: 'bg-amber-50 text-amber-500', title: 'Gestão & Treinamentos', desc: 'Checklists automáticos em Projetos e novos treinamentos gravados.' }
+                { icon: Handshake, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Reunião 1x1 — Privacidade', desc: 'Reuniões agendadas visíveis apenas para os participantes. O histórico de concluídas é público, mostrando os dois perfis.' },
+                { icon: Sparkles, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Feed — Foto do autor + Edição', desc: 'A foto do criador aparece no feed. O autor pode editar ou excluir suas publicações.' },
+                { icon: Star, colorClass: 'bg-orange-50 text-orange-500', title: 'Mural — WhatsApp & Interesse', desc: 'Botão de ação em oportunidades redireciona para o WhatsApp do criador. O contador de interessados é atualizado em tempo real.' },
+                { icon: Bot, colorClass: 'bg-rose-50 text-rose-500', title: 'CRM — DDI internacional', desc: 'Novo seletor de código de país (+55 BR padrão) no campo de telefone de Clientes e Leads para o link do WhatsApp funcionar corretamente.' }
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <div className={`p-2 ${item.colorClass} rounded-xl mt-1`}><item.icon className="w-4 h-4" /></div>
