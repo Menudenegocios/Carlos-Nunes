@@ -1,34 +1,62 @@
 
 import React, { useState } from 'react';
 import { 
-  LayoutGrid, Target, ListTodo, Calendar, 
+  LayoutGrid, Target, ListTodo, Calendar as CalendarIcon, Home as HomeIcon,
   BarChart3, Plus, ChevronRight, 
   CheckCircle2, Clock, AlertCircle,
   TrendingUp, Users, Zap, Search,
   ArrowRight, Save, Trash2, Edit3,
   Lightbulb, Shield, HelpCircle,
   Briefcase, PieChart, Layers, RefreshCw,
-  Handshake, Globe, Coins, Columns, UserPlus, Smartphone, X, Sparkles, TrendingDown
+  Handshake, Globe, Coins, Columns, UserPlus, Smartphone, X, Sparkles, TrendingDown,
+  ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseService } from '../services/supabaseService';
 import { useAuth } from '../contexts/AuthContext';
 
-type TabType = 'inicio' | 'swot' | 'smart' | 'canva' | 'projects';
+type TabType = 'inicio' | 'projects' | 'tasks' | 'canva' | 'swot' | 'smart';
 
 export const ProjectManagement: React.FC = () => {
   const { user } = useAuth();
-  const user_id = user?.id || 'user-123'; // Fallback to placeholder if user not loaded
-  const [newProjectCategory, setNewProjectCategory] = useState('Outros');
-  const [newProjectTool, setNewProjectTool] = useState('Outros');
-  const [activeTab, setActiveTab] = useState<'projects' | 'tasks' | 'canva'>('canva');
+  const user_id = user?.id || 'user-123'; 
+  const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const [profile, setProfile] = useState<any>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [newProjectStatus, setNewProjectStatus] = useState('A Fazer');
   const [newProjectPriority, setNewProjectPriority] = useState('Média');
+  const [newProjectCategory, setNewProjectCategory] = useState('Outros');
+  const [newProjectTool, setNewProjectTool] = useState('Outros');
   const [editingProject, setEditingProject] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    if (!user_id) return;
+    loadInitialData();
+  }, [user_id]);
+
+  const loadInitialData = async () => {
+    setIsLoading(true);
+    try {
+      const [projs, tsks, prof] = await Promise.all([
+        supabaseService.getProjects(user_id),
+        supabaseService.getTasks(user_id),
+        supabaseService.getProfileByUserId(user_id)
+      ]);
+      setProjects(projs);
+      setTasks(tsks);
+      setProfile(prof);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   React.useEffect(() => {
     if (!user_id) return;
@@ -101,10 +129,12 @@ export const ProjectManagement: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'canva', label: 'Business Canva', icon: PieChart },
+    { id: 'inicio', label: 'Início', icon: HomeIcon },
     { id: 'projects', label: 'Projetos', icon: Briefcase },
-    { id: 'tasks', label: 'Tarefas (Kanban)', icon: LayoutGrid },
+    { id: 'tasks', label: 'Tarefas', icon: LayoutGrid },
+    { id: 'canva', label: 'Business Canva', icon: PieChart },
   ];
+
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
@@ -223,25 +253,204 @@ export const ProjectManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Content Area */}
       <div className="min-h-[400px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeTab === 'projects' && <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
-            {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} />}
-            {activeTab === 'canva' && <BusinessCanvaView user_id={user_id} />}
-          </motion.div>
-        </AnimatePresence>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <RefreshCw className="w-8 h-8 text-brand-primary animate-spin" />
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'inicio' && <DashboardView user_id={user_id} projects={projects} tasks={tasks} />}
+              {activeTab === 'projects' && <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
+              {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} initialTasks={tasks} profile={profile} onTasksUpdate={loadInitialData} />}
+              {activeTab === 'canva' && <BusinessCanvaView user_id={user_id} />}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );
 };
+
+// --- DASHBOARD VIEW ---
+
+const DashboardView = ({ user_id, projects, tasks }: { user_id: string, projects: any[], tasks: any[] }) => {
+  const today = new Date();
+  const tasksToday = tasks.filter(t => {
+    if (!t.due_date) return false;
+    const d = new Date(t.due_date);
+    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+  });
+
+  const nextTasks = tasks.filter(t => {
+    if (!t.due_date) return false;
+    const d = new Date(t.due_date);
+    return d > today && t.status !== 'Concluído';
+  }).sort((a,b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 3);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+      {/* Left Column: Calendar & Stats */}
+      <div className="lg:col-span-4 space-y-8">
+        <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+           <div className="flex items-center justify-between mb-6">
+              <h3 className="font-black text-xs uppercase tracking-widest text-slate-400 italic">Mini Calendário</h3>
+              <CalendarIcon className="w-4 h-4 text-brand-primary" />
+           </div>
+           <MiniCalendar tasks={tasks} />
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200">
+           <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Visão Geral</p>
+           <h4 className="text-3xl font-black italic uppercase tracking-tighter leading-tight mb-6">Foco na <br/>Execução</h4>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/10 p-4 rounded-2xl">
+                 <p className="text-[9px] font-black uppercase opacity-60">Projetos</p>
+                 <p className="text-2xl font-black">{projects.length}</p>
+              </div>
+              <div className="bg-white/10 p-4 rounded-2xl">
+                 <p className="text-[9px] font-black uppercase opacity-60">Em Aberto</p>
+                 <p className="text-2xl font-black">{tasks.filter(t => t.status !== 'Concluído').length}</p>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* Right Column: Tasks Today & Next */}
+      <div className="lg:col-span-8 space-y-8">
+         <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-center mb-8">
+               <div>
+                  <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Tarefas do Dia</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">O que você precisa entregar hoje</p>
+               </div>
+               <span className="bg-orange-50 text-brand-primary font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest">
+                  {tasksToday.length} TAREFAS
+               </span>
+            </div>
+
+            <div className="space-y-4">
+               {tasksToday.length > 0 ? tasksToday.map(task => (
+                 <div key={task.id} className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl border border-transparent hover:border-brand-primary/10 transition-all">
+                    <div className="flex gap-4 items-center">
+                       <CheckCircle2 className={`w-5 h-5 ${task.status === 'Concluído' ? 'text-emerald-500' : 'text-slate-200'}`} />
+                       <div>
+                          <p className="font-bold text-gray-900 leading-none">{task.title}</p>
+                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">
+                             {projects.find(p => p.id === task.project_id)?.name || 'Sem Projeto'}
+                          </p>
+                       </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                       task.priority === 'Alta' ? 'bg-rose-50 text-rose-500' :
+                       task.priority === 'Baixa' ? 'bg-blue-50 text-blue-500' : 'bg-orange-50 text-brand-primary'
+                    }`}>
+                       {task.priority || 'Média'}
+                    </span>
+                 </div>
+               )) : (
+                 <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <CheckCircle2 className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Tudo pronto por aqui!</p>
+                 </div>
+               )}
+            </div>
+         </div>
+
+         <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+               <h4 className="text-xs font-black text-gray-900 uppercase italic tracking-tight mb-6 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-brand-primary" /> Próximos Prazos
+               </h4>
+               <div className="space-y-4">
+                  {nextTasks.map(task => (
+                    <div key={task.id} className="flex items-center justify-between group">
+                       <div>
+                          <p className="text-[11px] font-black text-gray-700 leading-tight group-hover:text-brand-primary transition-colors">{task.title}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                             {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                          </p>
+                       </div>
+                       <ArrowRight className="w-3 h-3 text-slate-200 group-hover:text-brand-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                  ))}
+               </div>
+            </div>
+
+            <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+               <div className="relative z-10">
+                  <h4 className="text-xs font-black uppercase italic tracking-tight mb-4">Google Calendar</h4>
+                  <p className="text-xs text-slate-400 font-medium mb-6">Sincronize suas tarefas com o Google para receber alertas em tempo real.</p>
+                  <button className="w-full py-3.5 bg-white text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
+                     <Smartphone className="w-4 h-4" /> CONECTAR GOOGLE
+                  </button>
+               </div>
+               <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            </div>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+const MiniCalendar = ({ tasks = [] }: { tasks?: any[] }) => {
+  const days = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
+  for (let d = 1; d <= daysInMonth; d++) calendarDays.push(d);
+
+  const hasTaskOnDay = (day: number) => {
+    if (!day) return false;
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return tasks.some(t => t.due_date?.startsWith(dateStr));
+  };
+
+  return (
+    <div className="w-full">
+       <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-6 text-center italic">
+          {new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today)}
+       </p>
+       <div className="grid grid-cols-7 gap-1 text-center">
+          {days.map(d => (
+            <div key={d} className="text-[9px] font-black text-slate-300 py-2">{d}</div>
+          ))}
+          {calendarDays.map((d, i) => {
+            const hasTask = d ? hasTaskOnDay(d) : false;
+            return (
+              <div 
+                key={i} 
+                className={`p-2 rounded-lg text-[10px] font-black transition-all relative ${
+                  d === today.getDate() ? 'bg-brand-primary text-white shadow-lg scale-110' : 
+                  d ? 'text-gray-600 hover:bg-gray-50 cursor-pointer' : ''
+                }`}
+              >
+                {d}
+                {hasTask && d !== today.getDate() && (
+                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-brand-primary rounded-full"></div>
+                )}
+              </div>
+            );
+          })}
+       </div>
+    </div>
+  );
+};
+
+
 
 // --- SUB-VIEWS ---
 
@@ -298,24 +507,29 @@ const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], de
   );
 };
 
-const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] }) => {
-  const [tasks, setTasks] = useState<any[]>([]);
+const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }: { user_id: string, projects: any[], initialTasks: any[], profile: any, onTasksUpdate: () => void }) => {
+  const [tasks, setTasks] = useState<any[]>(initialTasks);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isFupModalOpen, setIsFupModalOpen] = useState(false);
-  const [fupTaskId, setFupTaskId] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<any>(null);
-  const [formData, setFormData] = useState({ title: '', description: '', status: 'A Fazer', project_id: '' });
+  const [filters, setFilters] = useState({ search: '', responsible: '', priority: '', project_id: '', today: false });
+  const [formData, setFormData] = useState<any>({ 
+    title: '', description: '', status: 'A Fazer', project_id: '', 
+    assignee_name: '', priority: 'Média', due_date: '', checklist: [], external_link: '' 
+  });
+
+  // Load custom stages from profile if they exist
+  const defaultStages = ['A Fazer', 'Em Progresso', 'Concluído'];
+  const [columns, setColumns] = useState<string[]>(profile?.store_config?.project_stages || defaultStages);
 
   React.useEffect(() => {
-    loadTasks();
-  }, [user_id]);
+    if (profile?.store_config?.project_stages) {
+       setColumns(profile.store_config.project_stages);
+    }
+  }, [profile]);
 
-  const loadTasks = async () => {
-    try {
-       const data = await supabaseService.getTasks(user_id);
-       setTasks(data.map(t => ({ ...t, status: ['A Fazer', 'Em Progresso', 'Concluído'].includes(t.status) ? t.status : 'A Fazer' })));
-    } catch(e) { console.error(e) }
-  };
+  React.useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const handleSave = async () => {
     if (!formData.title) return;
@@ -328,18 +542,36 @@ const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] })
       if (editingTask) {
         await supabaseService.updateTask(editingTask.id, dataToSave);
       } else {
-        await supabaseService.addTask({ user_id, ...dataToSave, due_date: new Date().toISOString(), type: 'other' });
+        await supabaseService.addTask({ user_id, ...dataToSave, type: 'other' });
       }
-      loadTasks();
+      onTasksUpdate();
       setIsModalOpen(false);
       setEditingTask(null);
-      setFormData({ title: '', description: '', status: 'A Fazer', project_id: '' });
     } catch(e) { console.error(e) }
+  };
+
+  const openNew = (status?: string) => {
+    setEditingTask(null);
+    setFormData({ 
+      title: '', description: '', status: status || columns[0], project_id: '', 
+      assignee_name: '', priority: 'Média', due_date: '', checklist: [], external_link: '' 
+    });
+    setIsModalOpen(true);
   };
 
   const openEdit = (task: any) => {
      setEditingTask(task);
-     setFormData({ title: task.title, description: task.description || '', status: task.status, project_id: task.project_id || '' });
+     setFormData({ 
+        title: task.title, 
+        description: task.description || '', 
+        status: task.status, 
+        project_id: task.project_id || '',
+        assignee_name: task.assignee_name || '',
+        priority: task.priority || 'Média',
+        due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        checklist: task.checklist || [],
+        external_link: task.external_link || ''
+     });
      setIsModalOpen(true);
   };
 
@@ -348,142 +580,349 @@ const KanbanView = ({ user_id, projects }: { user_id: string, projects: any[] })
     await supabaseService.updateTask(id, { status });
   };
 
-  const onDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('taskId', id);
-  }
-
-  const onDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  }
-
-  const onDrop = (e: React.DragEvent, status: string) => {
-    const taskId = e.dataTransfer.getData('taskId');
-    if (taskId) {
-      updateStatus(taskId, status);
+  const addStage = async () => {
+    const stageName = prompt('Nome da nova etapa:');
+    if (stageName && !columns.includes(stageName)) {
+      const newCols = [...columns, stageName];
+      setColumns(newCols);
+      await supabaseService.updateProfile(user_id, { store_config: { ...profile.store_config, project_stages: newCols } });
     }
-  }
+  };
 
-  const columns = ['A Fazer', 'Em Progresso', 'Concluído'];
+  const removeStage = async (col: string) => {
+     if (confirm(`Excluir etapa "${col}"?`)) {
+        const newCols = columns.filter(c => c !== col);
+        setColumns(newCols);
+        await supabaseService.updateProfile(user_id, { store_config: { ...profile.store_config, project_stages: newCols } });
+     }
+  };
+
+  const getFilteredTasks = () => {
+    let filtered = tasks;
+    if (filters.search) filtered = filtered.filter(t => t.title.toLowerCase().includes(filters.search.toLowerCase()));
+    if (filters.responsible) filtered = filtered.filter(t => t.assignee_name?.toLowerCase().includes(filters.responsible.toLowerCase()));
+    if (filters.priority) filtered = filtered.filter(t => t.priority === filters.priority);
+    if (filters.project_id) filtered = filtered.filter(t => t.project_id === filters.project_id);
+    if (filters.today) {
+       const todayStr = new Date().toISOString().split('T')[0];
+       filtered = filtered.filter(t => t.due_date?.split('T')[0] === todayStr);
+    }
+    return filtered;
+  };
+
+  const filteredTasks = getFilteredTasks();
+
+  const getDeadlineColor = (dateStr: string, status: string) => {
+    if (!dateStr || status === 'Concluído') return 'bg-slate-50 border-transparent';
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const deadlineStr = dateStr.split('T')[0];
+    
+    if (deadlineStr < todayStr) return 'bg-rose-50 border-rose-200 shadow-rose-100'; // Atrasado
+    if (deadlineStr === todayStr) return 'bg-orange-50 border-orange-200 shadow-orange-100'; // Hoje
+    
+    const diff = new Date(deadlineStr).getTime() - new Date(todayStr).getTime();
+    const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
+    
+    if (diffDays <= 2) return 'bg-amber-50 border-amber-200 shadow-amber-100'; // Próximo
+    return 'bg-gray-50 border-transparent';
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
-       <div className="flex justify-between items-center px-4">
-         <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Quadro Kanban</h3>
-         <button onClick={() => { setFormData({ title: '', description: '', status: 'A Fazer', project_id: '' }); setEditingTask(null); setIsModalOpen(true); }} className="px-6 py-3 bg-brand-primary text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex gap-2 items-center">
-            <Plus className="w-4 h-4" /> Nova Tarefa
-         </button>
+       {/* Filters */}
+       <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm space-y-6">
+          <div className="flex flex-col md:flex-row gap-4">
+             <div className="flex-1 relative">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar tarefa..." 
+                  className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-14 pr-6 text-xs font-bold"
+                  value={filters.search}
+                  onChange={e => setFilters({...filters, search: e.target.value})}
+                />
+             </div>
+             <div className="grid grid-cols-2 md:flex gap-3">
+                <select 
+                  className="bg-gray-50 border-none rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none"
+                  value={filters.priority}
+                  onChange={e => setFilters({...filters, priority: e.target.value})}
+                >
+                   <option value="">Prioridade</option>
+                   <option>Baixa</option>
+                   <option>Média</option>
+                   <option>Alta</option>
+                   <option>Crítica</option>
+                </select>
+                <select 
+                   className="bg-gray-50 border-none rounded-2xl py-4 px-6 text-[10px] font-black uppercase tracking-widest outline-none"
+                   value={filters.project_id}
+                   onChange={e => setFilters({...filters, project_id: e.target.value})}
+                >
+                   <option value="">Todos Projetos</option>
+                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <button 
+                   onClick={() => setFilters({...filters, today: !filters.today})}
+                   className={`px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filters.today ? 'bg-orange-500 text-white' : 'bg-gray-50 text-slate-400'}`}
+                >
+                   Hoje
+                </button>
+                <button onClick={() => setFilters({ search: '', responsible: '', priority: '', project_id: '', today: false })} className="p-4 bg-gray-50 text-slate-300 hover:text-rose-500 rounded-2xl transition-colors">
+                   <Trash2 className="w-4 h-4" />
+                </button>
+             </div>
+          </div>
        </div>
 
-       <div className="flex gap-6 overflow-x-auto pb-4 snap-x px-4" style={{ minHeight: '600px' }}>
+       <div className="flex justify-between items-center px-4">
+         <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tight underline decoration-brand-primary decoration-4 underline-offset-8">Quadro Kanban</h3>
+         <div className="flex gap-3">
+            <button onClick={addStage} className="px-5 py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex gap-2 items-center hover:bg-indigo-100 transition-all">
+               <Plus className="w-4 h-4" /> Nova Etapa
+            </button>
+            <button onClick={() => openNew()} className="px-6 py-3 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex gap-2 items-center">
+               <Plus className="w-4 h-4" /> Nova Tarefa
+            </button>
+         </div>
+       </div>
+
+       <div className="flex gap-6 overflow-x-auto pb-10 snap-x px-4 no-scrollbar" style={{ minHeight: '600px' }}>
          {columns.map(col => (
            <div 
              key={col} 
-             onDragOver={onDragOver} 
-             onDrop={e => onDrop(e, col)} 
-             className="flex-1 min-w-[320px] max-w-[400px] bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col gap-4 snap-center shrink-0"
+             onDragOver={e => e.preventDefault()} 
+             onDrop={async e => {
+                const taskId = e.dataTransfer.getData('taskId');
+                if (taskId) updateStatus(taskId, col);
+             }} 
+             className="flex-1 min-w-[320px] max-w-[400px] bg-white/40 backdrop-blur-sm rounded-[2.5rem] p-6 border border-gray-100 flex flex-col gap-5 snap-center shrink-0"
            >
-             <div className="flex items-center justify-between mb-2">
-               <h4 className={`font-black text-xs uppercase tracking-widest ${col === 'Concluído' ? 'text-emerald-500' : col === 'Em Progresso' ? 'text-indigo-500' : 'text-slate-400'}`}>{col}</h4>
-               <span className="bg-gray-50 text-slate-400 font-black px-3 py-1 rounded-xl text-[10px] shadow-inner">
-                 {tasks.filter(t => t.status === col).length}
-               </span>
+             <div className="flex items-center justify-between group">
+               <div className="flex items-center gap-3">
+                  <div className={`w-2 h-6 rounded-full ${col === 'Concluído' ? 'bg-emerald-500' : col === 'Em Progresso' ? 'bg-indigo-500' : 'bg-slate-300'}`} />
+                  <h4 className="font-black text-xs uppercase tracking-[0.2em] text-gray-900">{col}</h4>
+               </div>
+               <div className="flex items-center gap-2">
+                  <span className="bg-white text-slate-400 font-black px-3 py-1 rounded-xl text-[10px] shadow-sm border border-gray-50">
+                    {filteredTasks.filter(t => t.status === col).length}
+                  </span>
+                  {!defaultStages.includes(col) && (
+                     <button onClick={() => removeStage(col)} className="p-1.5 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><X className="w-3 h-3" /></button>
+                  )}
+               </div>
              </div>
              
-             {tasks.filter(t => t.status === col).map(task => (
-                <div 
-                  key={task.id} 
-                  draggable 
-                  onDragStart={e => onDragStart(e, task.id)}
-                  onClick={() => openEdit(task)}
-                  className="bg-gray-50 p-5 rounded-2xl border border-transparent cursor-grab hover:shadow-md hover:border-brand-primary/30 transition-all hover:-translate-y-1 active:scale-95"
-                >
-                  <h5 className="font-bold text-gray-900 leading-snug mb-2">{task.title}</h5>
-                  {task.project_id && (
-                     <span className="inline-block bg-brand-primary/10 text-brand-primary text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg mb-2">
-                        {projects.find(p => p.id === task.project_id)?.name || 'Projeto Oculto'}
-                     </span>
-                  )}
-                  {task.description && <p className="text-xs text-slate-500 line-clamp-3 font-medium leading-relaxed mb-4">{task.description}</p>}
-                  
-                  <div className="flex items-center justify-between">
-                     <button 
-                        onClick={(e) => { e.stopPropagation(); setFupTaskId(task.id); setIsFupModalOpen(true); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary/5 text-brand-primary rounded-lg font-black text-[8px] uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-sm"
-                     >
-                        <RefreshCw className="w-2.5 h-2.5" /> FUP
-                     </button>
-                     <div className="flex -space-x-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-black italic">CN</div>
-                     </div>
-                  </div>
-                </div>
-             ))}
+             <div className="flex-1 space-y-5">
+               {filteredTasks.filter(t => t.status === col).map(task => (
+                  <div 
+                    key={task.id} 
+                    draggable 
+                    onDragStart={e => e.dataTransfer.setData('taskId', task.id)}
+                    onClick={() => openEdit(task)}
+                    className={`p-6 rounded-3xl border transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer relative overflow-hidden group/card ${getDeadlineColor(task.due_date, task.status)}`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                       <h5 className="font-extrabold text-gray-900 leading-snug group-hover/card:text-brand-primary transition-colors pr-2">{task.title}</h5>
+                       <span className={`px-2.5 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest shrink-0 ${
+                          task.priority === 'Crítica' ? 'bg-red-500 text-white' :
+                          task.priority === 'Alta' ? 'bg-rose-50 text-rose-500' :
+                          task.priority === 'Média' ? 'bg-orange-50 text-brand-primary' : 'bg-gray-100 text-slate-400'
+                       }`}>
+                          {task.priority || 'Média'}
+                       </span>
+                    </div>
 
-             <button onClick={() => { setFormData({...formData, title: '', description: '', status: col, project_id: ''}); setEditingTask(null); setIsModalOpen(true); }} className="w-full py-4 text-slate-400 hover:text-brand-primary font-black text-[10px] uppercase tracking-widest border-2 border-dashed border-gray-100 rounded-2xl hover:border-brand-primary/30 hover:bg-brand-primary/5 transition-all mt-auto">
-                + Adicionar Cartão
+                    <div className="space-y-3">
+                       {task.description && <p className="text-[10px] text-slate-500 line-clamp-2 font-medium leading-relaxed italic opacity-80">"{task.description}"</p>}
+                       
+                       <div className="flex flex-wrap gap-2">
+                          {task.project_id && (
+                             <span className="inline-block bg-brand-primary/10 text-brand-primary text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg">
+                                {projects.find(p => p.id === task.project_id)?.name || 'Projeto'}
+                             </span>
+                          )}
+                          {task.due_date && (
+                             <span className="inline-flex items-center gap-1.5 bg-gray-900/5 text-[8px] font-black px-2.5 py-1 rounded-lg text-slate-500">
+                                <Clock className="w-2.5 h-2.5" /> {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                             </span>
+                          )}
+                       </div>
+                    </div>
+                    
+                    <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-white flex items-center justify-center text-[8px] font-black text-white italic shadow-md">
+                             {task.assignee_name ? task.assignee_name.split(' ').map((n:any) => n[0]).join('').slice(0, 2).toUpperCase() : '??'}
+                          </div>
+                          {task.assignee_name && <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{task.assignee_name}</span>}
+                       </div>
+                       
+                       {task.checklist?.length > 0 && (
+                          <div className="flex items-center gap-1.5">
+                             <ListTodo className="w-3 h-3 text-brand-primary" />
+                             <span className="text-[8px] font-black text-brand-primary">
+                                {task.checklist.filter((i:any) => i.done).length}/{task.checklist.length}
+                             </span>
+                          </div>
+                       )}
+                    </div>
+                  </div>
+               ))}
+             </div>
+
+             <button onClick={() => openNew(col)} className="w-full py-4 text-slate-400 hover:text-brand-primary font-black text-[10px] uppercase tracking-widest border-2 border-dashed border-gray-100 rounded-2xl hover:border-brand-primary/30 hover:bg-brand-primary/5 transition-all mt-4">
+                + Novo Cartão
              </button>
            </div>
          ))}
        </div>
 
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-             <div className="bg-white rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl border border-gray-100 animate-scale-in my-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-xl font-black text-gray-900 uppercase italic">Tarefa Kanban</h3>
-                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-gray-900 p-2"><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                  <input type="text" placeholder="O que precisa ser feito?" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-gray-50 rounded-xl p-5 text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary" />
-                  <textarea placeholder="Detalhes da tarefa..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 rounded-xl p-5 text-sm font-medium border-none resize-none focus:ring-2 focus:ring-brand-primary h-32" />
-                  <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Progresso</label>
-                       <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-medium border-none focus:ring-2 focus:ring-brand-primary">
-                          <option value="A Fazer">A Fazer</option>
-                          <option value="Em Progresso">Em Progresso</option>
-                          <option value="Concluído">Concluído</option>
-                       </select>
+        {/* Task Detail/Edit Modal */}
+        <AnimatePresence>
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  className="bg-white rounded-[3rem] w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden border border-white/5 flex flex-col md:flex-row"
+               >
+                  {/* Left Column: Form */}
+                  <div className="flex-1 p-10 overflow-y-auto custom-scrollbar border-r border-gray-50">
+                     <div className="flex justify-between items-center mb-8">
+                        <span className="px-5 py-1.5 bg-brand-primary/5 text-brand-primary text-[10px] font-black uppercase tracking-widest rounded-full">Detalhes da Tarefa</span>
+                        <div className="flex gap-2">
+                           <button onClick={handleSave} className="bg-brand-primary text-white p-3 rounded-2xl shadow-xl hover:scale-110 active:scale-90 transition-all"><Save className="w-5 h-5" /></button>
+                           <button onClick={() => setIsModalOpen(false)} className="bg-gray-50 text-slate-400 p-3 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-5 h-5" /></button>
+                        </div>
                      </div>
-                     <div>
-                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Projeto Relacionado</label>
-                       <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-medium border-none focus:ring-2 focus:ring-brand-primary">
-                          <option value="">Sem Projeto</option>
-                          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                       </select>
+
+                     <div className="space-y-6">
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Título da Tarefa</label>
+                           <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full text-2xl font-black text-gray-900 border-none bg-gray-50 p-6 rounded-3xl focus:ring-4 focus:ring-brand-primary/5 transition-all" placeholder="Nome da tarefa..." />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                           <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Responsável</label>
+                              <div className="relative">
+                                 <Users className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                 <input type="text" value={formData.assignee_name} onChange={e => setFormData({...formData, assignee_name: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 font-bold text-xs" placeholder="Nome do executor" />
+                              </div>
+                           </div>
+                           <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Prioridade</label>
+                              <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-black text-[10px] uppercase tracking-widest">
+                                 <option>Baixa</option>
+                                 <option>Média</option>
+                                 <option>Alta</option>
+                                 <option>Crítica</option>
+                              </select>
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                           <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Prazo Limite</label>
+                              <div className="relative">
+                                 <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                 <input type="date" value={formData.due_date} onChange={e => setFormData({...formData, due_date: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 font-bold text-xs" />
+                              </div>
+                           </div>
+                           <div>
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Projeto Relacionado</label>
+                              <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-bold text-[10px] uppercase tracking-widest">
+                                 <option value="">Nenhum Projeto</option>
+                                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                              </select>
+                           </div>
+                        </div>
+
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Detalhes e Notas</label>
+                           <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 border-none rounded-3xl p-6 text-sm font-medium resize-none min-h-[120px]" placeholder="Instruções e observações..." />
+                        </div>
+
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Link Externo (Drive / Documentos)</label>
+                           <div className="relative">
+                              <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                              <input type="url" value={formData.external_link} onChange={e => setFormData({...formData, external_link: e.target.value})} className="w-full bg-indigo-50/30 border-none rounded-2xl py-4 pl-12 font-bold text-xs text-indigo-600 placeholder:text-indigo-200" placeholder="https://drive.google.com/..." />
+                           </div>
+                           {formData.external_link && (
+                              <a href={formData.external_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-3 text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] hover:underline px-1">
+                                 Acessar Documento <ArrowUpRight className="w-3 h-3" />
+                              </a>
+                           )}
+                        </div>
+
+                        {/* Integrated Checklist */}
+                        <div className="pt-6 border-t border-gray-100">
+                           <div className="flex justify-between items-center mb-6">
+                              <h4 className="text-[10px] font-black uppercase italic tracking-widest text-gray-900 flex gap-2 items-center"><ListTodo className="w-4 h-4 text-brand-primary" /> Checklist da Tarefa</h4>
+                              <button onClick={() => {
+                                 const item = prompt('Nome do item:');
+                                 if (item) setFormData({...formData, checklist: [...(formData.checklist || []), { text: item, done: false }]});
+                              }} className="text-[10px] font-black text-brand-primary uppercase tracking-widest underline decoration-2 underline-offset-4">Adicionar Item</button>
+                           </div>
+                           <div className="space-y-3">
+                              {formData.checklist?.map((item:any, idx:number) => (
+                                 <div key={idx} className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-brand-primary/10 transition-all">
+                                    <input 
+                                       type="checkbox" 
+                                       checked={item.done} 
+                                       onChange={() => {
+                                          const newList = [...formData.checklist];
+                                          newList[idx].done = !newList[idx].done;
+                                          setFormData({...formData, checklist: newList});
+                                       }}
+                                       className="w-5 h-5 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
+                                    />
+                                    <span className={`text-xs font-bold flex-1 ${item.done ? 'text-slate-300 line-through' : 'text-gray-700'}`}>{item.text}</span>
+                                    <button onClick={() => {
+                                       const newList = formData.checklist.filter((_:any, i:number) => i !== idx);
+                                       setFormData({...formData, checklist: newList});
+                                    }} className="text-rose-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+
+                        {editingTask && (
+                           <div className="pt-10 flex justify-between">
+                              <button onClick={async () => { if(confirm('Excluir esta tarefa definitivamente?')) { await supabaseService.deleteTask(editingTask.id); onTasksUpdate(); setIsModalOpen(false); } }} className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 px-6 py-3 rounded-xl transition-all"><Trash2 className="w-4 h-4" /> Deletar Tarefa</button>
+                           </div>
+                        )}
                      </div>
                   </div>
-                  <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
+
+                  {/* Right Column: FUP History */}
+                  <div className="w-full md:w-80 bg-gray-50/50 p-10 overflow-y-auto custom-scrollbar">
+                     <div className="flex items-center gap-2 mb-8">
+                        <RefreshCw className="w-4 h-4 text-brand-primary" />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fluxo de Follow-up</h4>
+                     </div>
+
                      {editingTask ? (
-                        <button onClick={async () => { await supabaseService.deleteTask(editingTask.id); loadTasks(); setIsModalOpen(false); }} className="text-rose-500 font-black p-4 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors"><Trash2 className="w-5 h-5" /></button>
-                     ) : <div></div>}
-                     <button onClick={handleSave} className="px-8 bg-brand-primary text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs shadow-lg shadow-brand-primary/30 hover:-translate-y-1 transition-all">
-                        {editingTask ? 'Salvar Edição' : 'Criar Tarefa'}
-                     </button>
+                        <TaskFollowUps taskId={editingTask.id} userId={user_id} />
+                     ) : (
+                        <div className="text-center py-20 opacity-30">
+                           <Clock className="w-12 h-12 mx-auto mb-4" />
+                           <p className="text-[9px] font-black uppercase tracking-widest">Salve a tarefa primeiro para registrar follow-ups.</p>
+                        </div>
+                     )}
                   </div>
-                </div>
-             </div>
-          </div>
-       )}
-       {isFupModalOpen && fupTaskId && (
-          <div className="fixed inset-0 z-[160] flex flex-col items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto">
-             <div className="bg-white rounded-[3rem] p-0 max-w-xl w-full shadow-2xl border border-gray-100 animate-scale-in my-8 max-h-[90vh] overflow-hidden flex flex-col">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                   <div>
-                     <h3 className="text-xl font-black text-gray-900 uppercase italic">Follow-up da Tarefa</h3>
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Histórico e Checklist de Acompanhamento</p>
-                   </div>
-                   <button onClick={() => setIsFupModalOpen(false)} className="text-slate-400 hover:text-gray-900 p-2 bg-white rounded-xl shadow-sm border border-gray-100"><X className="w-5 h-5" /></button>
-                </div>
-                <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
-                   <TaskFollowUps taskId={fupTaskId} userId={user_id} />
-                </div>
-             </div>
-          </div>
-       )}
+               </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
     </div>
   );
 };
+
 
 const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) => {
   const [followUps, setFollowUps] = useState<any[]>([]);

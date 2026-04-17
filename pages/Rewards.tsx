@@ -9,25 +9,73 @@ import {
   CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
   Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield, MessageCircle,
-  Share2, Copy, Save, Trash2, Edit3, Target
+  Share2, Copy, Save, Trash2, Edit3, Target, Calendar, Video, ExternalLink, AlertCircle,
+  Megaphone, Heart, HandHeart, FileBarChart, Link2, Zap as ZapIcon
 } from 'lucide-react';
-import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product } from '../types';
+import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product, Meeting1x1 } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
 import { pointsRules, tiers, rankingRules } from '../config/gamificationConfig';
+
+const NextMeetingSummary: React.FC<{ user: any, meetings: Meeting1x1[], setActiveTab: (tab: any) => void }> = ({ user, meetings, setActiveTab }) => {
+  const nextMeeting = meetings
+    .filter(m => m.status === 'scheduled' && (m.creator_id === user.id || m.guest_id === user.id))
+    .sort((a, b) => new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime())[0];
+
+  if (!nextMeeting) return null;
+
+  const isCreator = nextMeeting.creator_id === user.id;
+  const partner = isCreator ? (nextMeeting as any).guest : (nextMeeting as any).creator;
+  const partnerName = partner?.business_name || partner?.name || "Membro";
+
+  return (
+    <div 
+      onClick={() => setActiveTab('meeting')}
+      className="bg-indigo-600/5 hover:bg-indigo-600/10 border border-indigo-600/10 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer transition-all animate-in fade-in slide-in-from-top-4 duration-700"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600">
+          <Calendar className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest leading-none mb-1">Próxima Reunião Agendada</p>
+          <h4 className="text-lg font-black text-gray-900">{nextMeeting.title}</h4>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3">
+          <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${partnerName}`} className="w-8 h-8 rounded-lg" alt="Partner" />
+          <div>
+            <p className="text-[9px] font-black text-slate-400 uppercase leading-none">Com</p>
+            <p className="text-sm font-bold text-gray-700">{partnerName}</p>
+          </div>
+        </div>
+        <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-3 hover:translate-x-1 transition-transform">
+           <div className="flex flex-col">
+              <span className="text-[8px] font-black text-slate-400 uppercase">Data/Hora</span>
+              <span className="text-xs font-black text-gray-900">{new Date(nextMeeting.date + 'T00:00:00').toLocaleDateString('pt-BR')} às {nextMeeting.time}</span>
+           </div>
+           <ChevronRight className="w-4 h-4 text-indigo-600" />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'rules' | 'match' | 'ranking' | 'referrals'>('rules');
+  const [activeTab, setActiveTab] = useState<'feed' | 'rules' | 'match' | 'referrals' | 'meeting'>('feed');
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [loadingReferrals, setLoadingReferrals] = useState(true); // Changed initial state to true
+  const [loadingReferrals, setLoadingReferrals] = useState(true);
   const [copied, setCopied] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [globalMeetings, setGlobalMeetings] = useState<Meeting1x1[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && ['rules', 'match', 'ranking', 'referrals'].includes(tab)) {
+    if (tab && ['feed', 'rules', 'match', 'referrals', 'meeting'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [location.search]);
@@ -41,12 +89,14 @@ export const Rewards: React.FC = () => {
   const loadData = async () => {
     try {
       setLoadingReferrals(true);
-      const [referralsData, profile] = await Promise.all([
+      const [referralsData, profile, meetingsData] = await Promise.all([
         supabaseService.getReferrals(user!.id),
-        supabaseService.getProfile(user!.id)
+        supabaseService.getProfile(user!.id),
+        supabaseService.getMeetings1x1(user!.id)
       ]);
       setReferrals(referralsData);
       setUserProfile(profile);
+      setGlobalMeetings(meetingsData);
     } catch (error) {
       console.error("Error loading rewards data:", error);
     } finally {
@@ -67,7 +117,7 @@ export const Rewards: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4">
+    <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4 overflow-x-hidden">
       {/* Header Estilo Unificado Menu Club */}
       <div className="bg-[#0F172A] rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5">
         <div className="relative z-10">
@@ -78,7 +128,7 @@ export const Rewards: React.FC = () => {
               </div>
               <div>
                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 overflow-visible">
-                    Menu <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Match</span>
+                    Networking e <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic uppercase title-fix">Negócios</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">TRANSFORME SUA ATIVIDADE EM CRESCIMENTO REAL.</p>
               </div>
@@ -107,10 +157,11 @@ export const Rewards: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
+                  { id: 'feed', label: 'FEED', desc: 'Porta de Entrada', icon: Megaphone },
+                  { id: 'meeting', label: 'REUNIÃO 1X1', desc: 'Networking Direto', icon: Users },
+                  { id: 'match', label: 'NEGÓCIOS', desc: 'Oportunidades', icon: Handshake },
+                  { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Share2 },
                   { id: 'rules', label: 'REGRAS', desc: 'Guia do Ecossistema', icon: ListTodo },
-                  { id: 'match', label: 'MENU B2B', desc: 'Oportunidades', icon: Handshake },
-                  { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Users },
-                  { id: 'ranking', label: 'RANKING', desc: 'Competição', icon: Medal },
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -130,6 +181,15 @@ export const Rewards: React.FC = () => {
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === 'feed' && <CommunityFeedView user={user} userProfile={userProfile} />}
+        {activeTab === 'rules' && <RulesView user={user} />}
+        {activeTab === 'meeting' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <NextMeetingSummary user={user} meetings={globalMeetings} setActiveTab={setActiveTab} />
+            <Meeting1x1View user={user} userProfile={userProfile} />
+          </div>
+        )}
+        {activeTab === 'match' && <B2BMatchView user={user} />}
         {activeTab === 'referrals' && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-gray-100 shadow-xl relative overflow-hidden">
@@ -198,33 +258,29 @@ export const Rewards: React.FC = () => {
                                                {ref.name?.[0]?.toUpperCase() || '-'}
                                             </div>
                                             <div>
-                                               <p className="text-sm font-black text-gray-900">{ref.name}</p>
-                                               <p className="text-[10px] text-slate-400 font-medium">{ref.email}</p>
+                                               <p className="text-sm font-black text-gray-900 leading-none mb-1">{ref.name}</p>
+                                               <p className="text-[10px] text-slate-400 font-medium lowercase truncate max-w-[150px]">{ref.email}</p>
                                             </div>
                                          </div>
                                       </td>
-                                      <td className="px-6 py-6 text-sm font-bold text-gray-600">#{ref.display_id || '---'}</td>
-                                      <td className="px-6 py-6 text-sm font-medium text-gray-500">{new Date(ref.created_at).toLocaleDateString('pt-BR')}</td>
-                                      <td className="px-6 py-6">
-                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'}`}>
-                                            {ref.plan?.toUpperCase() || 'PRÉ-CADASTRO'}
+                                      <td className="px-6 py-6 border-l border-gray-100/50">
+                                         <span className="text-xs font-bold text-slate-500">#{ref.id.split('-')[0]}</span>
+                                      </td>
+                                      <td className="px-6 py-6 border-l border-gray-100/50">
+                                         <span className="text-xs font-bold text-slate-500 italic">{ref.created_at ? new Date(ref.created_at).toLocaleDateString() : '-'}</span>
+                                      </td>
+                                      <td className="px-6 py-6 border-l border-gray-100/50">
+                                         <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'}`}>
+                                            {ref.plan?.toUpperCase() || 'PRE-CADASTRO'}
                                          </span>
                                       </td>
-                                      <td className="px-6 py-6 font-black text-gray-900">
-                                         {isActive ? (
-                                           <div className="flex items-center gap-1.5">
-                                              <span>{ref.plan === 'basic' ? '+50' : ref.plan === 'pro' ? '+100' : '+200'}</span>
-                                              <Zap className="w-3 h-3 text-brand-primary fill-current" />
-                                           </div>
-                                         ) : '---'}
+                                      <td className="px-6 py-6 border-l border-gray-100/50">
+                                         <span className="text-sm font-black text-brand-primary">+{isActive ? (ref.plan === 'pro' ? pointsRules.indicacaoPro : ref.plan === 'full' ? (pointsRules as any).indicacaoFull : pointsRules.indicacaoBasico) : 0}</span>
                                       </td>
-                                      <td className="px-6 py-6 rounded-r-2xl">
-                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-orange-500'} animate-pulse`}></div>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-emerald-600' : 'text-orange-600'}`}>
-                                               {isActive ? 'ATIVO' : 'INATIVO'}
-                                            </span>
-                                         </div>
+                                      <td className="px-6 py-6 rounded-r-2xl border-l border-gray-100/50">
+                                         <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${isActive ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                            {isActive ? 'ATIVO' : 'PENDENTE'}
+                                         </span>
                                       </td>
                                    </tr>
                                  );
@@ -233,25 +289,17 @@ export const Rewards: React.FC = () => {
                         </table>
                      </div>
                    )}
-                   <p className="mt-10 text-[10px] text-slate-400 font-medium leading-relaxed italic border-t border-gray-100 pt-8 uppercase tracking-widest">
-                      * O status ATIVO é atingido após a confirmação do pagamento do plano de adesão.
-                   </p>
                 </div>
-                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
              </div>
           </div>
         )}
-
-        {activeTab === 'rules' && <RulesView user={user} />}
-        {activeTab === 'match' && <B2BMatchView user={user} />}
-        {activeTab === 'ranking' && <RankingView user={user} />}
       </div>
     </div>
   );
 };
 
 const RulesView = ({ user }: { user: User }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'points' | 'levels' | 'menucash'>('points');
+  const [activeSubTab, setActiveSubTab] = useState<'points' | 'levels' | 'menucash' | 'ranking'>('points');
   
   return (
     <div className="space-y-10 animate-fade-in">
@@ -279,6 +327,12 @@ const RulesView = ({ user }: { user: User }) => {
                 >
                    REGRAS MENU B2B
                 </button>
+                <button 
+                   onClick={() => setActiveSubTab('ranking')}
+                   className={`px-6 py-3 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition-all ${activeSubTab === 'ranking' ? 'bg-white text-indigo-600 shadow-2xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                   RANKING
+                </button>
              </div>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
@@ -288,8 +342,15 @@ const RulesView = ({ user }: { user: User }) => {
           <div className="space-y-12 animate-fade-in"><MissionsView /></div>
        )}
        {activeSubTab === 'levels' && <LevelsView user={user} />}
-       {activeSubTab === 'menucash' && (
-         <div className="bg-white rounded-[3.5rem] shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
+       {activeSubTab === 'menucash' && <MenuCashInfo />}
+       {activeSubTab === 'ranking' && <RankingView user={user} />}
+    </div>
+  );
+};
+
+const MenuCashInfo = () => {
+    return (
+        <div className="bg-white rounded-[3.5rem] shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
              <div className="bg-[#0F172A] p-10 text-white">
                  <h3 className="text-3xl font-black uppercase italic tracking-tighter">💰 REGRAS MENU B2B</h3>
                  <p className="text-xs font-black text-brand-primary tracking-[0.2em] mt-2 uppercase">A moeda interna do ecossistema</p>
@@ -309,7 +370,7 @@ const RulesView = ({ user }: { user: User }) => {
                          </p>
                          
                          <div className="bg-indigo-50/50 p-8 rounded-[2rem] border border-indigo-100/50">
-                            <h5 className="font-black text-indigo-900 uppercase italic mb-4">Cashback por Nível:</h5>
+                            <h5 className="font-black text-indigo-900 uppercase italic mb-4">Cashback por Nivel:</h5>
                             <div className="grid grid-cols-2 gap-4">
                                {[
                                  { label: 'Bronze', val: '5%' },
@@ -327,11 +388,11 @@ const RulesView = ({ user }: { user: User }) => {
                      </div>
 
                      <div className="bg-gray-50/80 p-10 rounded-[3rem] border border-gray-100 space-y-8">
-                         <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Regras de Utilização</h4>
+                         <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Regras de Utilizaçao</h4>
                          <ul className="space-y-8">
                             {[
                               { text: "Uso Exclusivo", desc: "O Menu Cash só pode ser utilizado para adquirir produtos e serviços de outros membros dentro da nossa plataforma." },
-                              { text: "Limite de Utilização", desc: "Você pode utilizar até 20% do valor de uma compra (conforme limite do vendedor) usando seu saldo disponível." },
+                              { text: "Limite de Utilizaçao", desc: "Você pode utilizar até 20% do valor de uma compra (conforme limite do vendedor) usando seu saldo disponível." },
                               { text: "Saldo e Plano", desc: "Seu saldo é válido e utilizável enquanto seu plano estiver ativo no Menu Club." },
                               { text: "Acúmulo por Autoridade", desc: "O Menu Cash é um percentual que vem dos seus Pontos de Autoridade ganhos em missões." }
                             ].map((item, i) => (
@@ -376,16 +437,14 @@ const RulesView = ({ user }: { user: User }) => {
                                     </div>
                                 </div>
                             </div>
-                            <p className="mt-10 text-center text-slate-400 font-medium italic">"Isso cria circulação de riqueza e retenção dentro da rede."</p>
+                            <p className="mt-10 text-center text-slate-400 font-medium italic">"Isso cria circulaçao de riqueza e retençao dentro da rede."</p>
                         </div>
                         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
                     </div>
                  </div>
              </div>
-         </div>
-       )}
-    </div>
-  );
+        </div>
+    );
 };
 
 const B2BMatchView = ({ user }: { user: User }) => {
@@ -764,13 +823,12 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
                     </div>
                   )}
                   <p className={`text-[10px] font-black uppercase tracking-widest ${tx.status === 'confirmed' ? 'text-emerald-500' : tx.status === 'rejected' ? 'text-red-500' : 'text-orange-500'}`}>
-                    {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Aprovação'}
+                    {tx.status === 'confirmed' ? 'Confirmado' : tx.status === 'rejected' ? 'Recusado' : 'Aguardando Aprovaçao'}
                   </p>
                 </div>
                 
                 {tx.status === 'pending' && (
                   <div className="flex flex-col gap-2">
-                    {/* Botão de Confirmação Individual */}
                     {((tx.buyer_id === user?.id && !tx.buyer_confirmed) || (tx.seller_id === user?.id && !tx.seller_confirmed)) ? (
                       <div className="flex gap-2">
                         <button 
@@ -841,7 +899,7 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
         </div>
       )}
 
-      {/* MODAL: CONFIRMAÇÃO DE RECUSA */}
+      {/* MODAL: CONFIRMAÇAO DE RECUSA */}
       {isRejectionModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
@@ -849,8 +907,8 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
                 <X className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter">Recusar Transação</h3>
-              <p className="text-sm font-bold text-red-100 mt-2">Esta ação é irreversível e o saldo de Menu Cash será estornado imediatamente.</p>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter">Recusar Transaçao</h3>
+              <p className="text-sm font-bold text-red-100 mt-2">Esta açao é irreversível e o saldo de Menu Cash será estornado imediatamente.</p>
             </div>
             <div className="p-8 space-y-4">
               <button 
@@ -880,7 +938,7 @@ const LevelsView = ({ user }: { user: User }) => {
   return (
     <div className="space-y-12 animate-fade-in">
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">🏅 NÍVEIS DO MENU CLUB</h2>
+        <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter">🏆 NÍVEIS DO MENU CLUB</h2>
         <p className="text-slate-500 font-medium">Sua jornada de crescimento e autoridade dentro do ecossistema.</p>
       </div>
 
@@ -1045,7 +1103,7 @@ const RankingView = ({ user }: { user: User }) => {
              </div>
 
              <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-6">
-                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Divulgação:</p>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Divulgaçao:</p>
                 <div className="grid grid-cols-2 gap-4">
                    {[
                      "Plataforma",
@@ -1139,3 +1197,980 @@ const RankingView = ({ user }: { user: User }) => {
     </div>
   );
 };
+
+const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any }) => {
+  const [meetings, setMeetings] = useState<Meeting1x1[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    guest_id: '',
+    date: '',
+    time: '',
+    title: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    loadData();
+  }, [user.id, userProfile]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      const [meetingsData, profilesData, rankingData] = await Promise.all([
+        supabaseService.getMeetings1x1(realUserId),
+        supabaseService.getAllProfiles(),
+        supabaseService.getMeetingsRanking()
+      ]);
+      setMeetings(meetingsData);
+      setProfiles(profilesData.filter(p => p.user_id !== realUserId));
+      setRanking(rankingData);
+    } catch (error) {
+       console.error("Error loading meeting data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.guest_id || !formData.date || !formData.time || !formData.title) {
+      alert("Por favor, preencha os campos obrigatórios.");
+      return;
+    }
+
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      const meetLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`;
+      
+      await supabaseService.createMeeting1x1({
+        creator_id: realUserId,
+        guest_id: formData.guest_id,
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        time: formData.time,
+        meet_link: meetLink
+      });
+
+      setIsModalOpen(false);
+      setFormData({ guest_id: '', date: '', time: '', title: '', description: '' });
+      loadData();
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+      alert("Erro ao agendar reunião.");
+    }
+  };
+
+  const handleComplete = async (mId: string) => {
+    if (!window.confirm("Confirmar que a reunião foi realizada? (Isso atribuirá 10 pontos aos participantes)")) return;
+    try {
+      await supabaseService.completeMeeting1x1(mId);
+      loadData();
+    } catch (error) {
+      alert("Erro ao concluir reunião.");
+    }
+  };
+
+  const shareOnWhatsApp = (meeting: Meeting1x1) => {
+    const guestName = (meeting as any).guest?.business_name || (meeting as any).guest?.name || "Convidado";
+    const creatorName = user.business_name || user.name;
+    
+    const text = `📅 *Reunião 1x1 agendada!*
+\n👤 *Participantes*: ${creatorName} + ${guestName}
+\n⏰ *Horário*: ${new Date(meeting.date + 'T00:00:00').toLocaleDateString('pt-BR')} às ${meeting.time}
+\n🔗 *Link da reunião*: ${meeting.meet_link}
+\nConfirme sua presença 👇
+\nhttps://menudenegocios.com/`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const filteredProfiles = profiles.filter(p => 
+    (p.business_name || p.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: meetings.filter(m => m.status === 'completed').length,
+    points: meetings.filter(m => m.status === 'completed' && m.points_awarded).length * 10
+  };
+
+  const userRank = ranking.findIndex(r => r.user_id === user.id) + 1;
+
+  return (
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* Intro & Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl overflow-hidden relative group">
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
+                <Users className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">Reunião 1x1</h2>
+                <p className="text-slate-500 text-sm font-medium mt-1">Conecte-se diretamente e ganhe autoridade.</p>
+              </div>
+            </div>
+            
+            <p className="text-slate-600 leading-relaxed mb-8 max-w-xl">
+              O objetivo é facilitar conexões diretas entre usuários, acompanhar o fluxo de reuniões realizadas e gerar engajamento com pontuação e ranking mensal.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
+              >
+                <Plus className="w-4 h-4" /> CRIAR REUNIÃO
+              </button>
+            </div>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+        </div>
+
+        <div className="bg-gradient-to-br from-gray-900 to-slate-800 rounded-[3rem] p-10 text-white shadow-xl flex flex-col justify-between">
+          <div className="space-y-6">
+            <div className="flex justify-between items-start">
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Seu Desempenho</span>
+               <Trophy className="w-6 h-6 text-brand-primary" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-3xl font-black">{stats.total}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Reuniões Feitas</p>
+              </div>
+              <div>
+                <p className="text-3xl font-black text-brand-primary">+{stats.points}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Pontos Acumulados</p>
+              </div>
+            </div>
+          </div>
+          <div className="pt-6 border-t border-white/10 mt-6">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-slate-300">Sua posição no ranking:</span>
+              <span className="text-xl font-black italic">#{userRank || '--'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        <div className="lg:col-span-8 space-y-12">
+           {/* Section 1: Agendadas */}
+           <div className="space-y-6">
+             <div className="flex items-center justify-between">
+               <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter flex items-center gap-3">
+                 <Calendar className="text-indigo-600" /> Próximas Reuniões Agendadas
+               </h3>
+               <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">
+                 {meetings.filter(m => m.status === 'scheduled' && (m.creator_id === (userProfile?.user_id || user.id) || m.guest_id === (userProfile?.user_id || user.id))).length} Total
+               </span>
+             </div>
+
+             {loading ? (
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {[1,2].map(i => <div key={i} className="h-48 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)}
+               </div>
+             ) : meetings.filter(m => m.status === 'scheduled' && (m.creator_id === (userProfile?.user_id || user.id) || m.guest_id === (userProfile?.user_id || user.id))).length === 0 ? (
+               <div className="py-20 text-center bg-gray-50 rounded-[3rem] border border-dashed border-gray-200">
+                  <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Nenhuma reunião agendada na sua agenda.</p>
+               </div>
+             ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {meetings.filter(m => m.status === 'scheduled' && (m.creator_id === (userProfile?.user_id || user.id) || m.guest_id === (userProfile?.user_id || user.id))).map((m) => {
+                   const isCreator = m.creator_id === user.id;
+                   const partner = isCreator ? (m as any).guest : (m as any).creator;
+                   const partnerName = partner?.business_name || partner?.name || 'Membro';
+                   
+                   return (
+                     <div key={m.id} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+                       <div className="flex justify-between items-start mb-6">
+                          <div className="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-100 text-indigo-600">
+                            Agendada
+                          </div>
+                          <span className="text-[10px] font-black text-slate-300 italic">#{m.id.substring(0,4)}</span>
+                       </div>
+                       
+                       <h4 className="text-xl font-black text-gray-900 mb-2 truncate">{m.title}</h4>
+                       <div className="flex items-center gap-3 mb-6">
+                          <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${partnerName}`} className="w-8 h-8 rounded-lg shadow-sm" alt="Partner" />
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Conector</p>
+                            <p className="text-sm font-bold text-gray-700">{partnerName}</p>
+                          </div>
+                       </div>
+
+                       <div className="flex items-center gap-6 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Data</span>
+                            <span className="text-sm font-black text-gray-900 italic">{new Date(m.date + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                          </div>
+                          <div className="w-px h-8 bg-slate-200"></div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Horário</span>
+                            <span className="text-sm font-black text-gray-900 italic">{m.time}</span>
+                          </div>
+                       </div>
+
+                       <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <a 
+                              href={m.meet_link} 
+                              target="_blank" 
+                              className="flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-md"
+                            >
+                              <Video className="w-3 h-3" /> ENTRAR
+                            </a>
+                            <button 
+                              onClick={() => shareOnWhatsApp(m)}
+                              className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+                            >
+                              <MessageCircle className="w-3 h-3 font-bold" /> WHATSAPP
+                            </button>
+                          </div>
+                          <button 
+                            onClick={() => handleComplete(m.id)}
+                            className="w-full flex items-center justify-center gap-2 bg-white text-emerald-600 border border-emerald-200 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-50 transition-all active:scale-95"
+                          >
+                            <CheckCircle className="w-3 h-3" /> MARCAR COMO CONCLUÍDA
+                          </button>
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+             )}
+           </div>
+
+           {/* Section 2: Concluídas (Histórico) */}
+           {meetings.filter(m => m.status === 'completed').length > 0 && (
+             <div className="space-y-6 pt-10 border-t border-gray-100">
+               <div className="flex items-center justify-between">
+                 <h3 className="text-lg font-black text-slate-400 uppercase italic tracking-tighter flex items-center gap-3">
+                   <Clock className="w-5 h-5" /> Reuniões Concluídas recentemente
+                 </h3>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {meetings.filter(m => m.status === 'completed').map((m) => {
+                   const creatorO = (m as any).creator;
+                   const guestO = (m as any).guest;
+                   const cName = creatorO?.business_name || creatorO?.name || 'Membro';
+                   const gName = guestO?.business_name || guestO?.name || 'Membro';
+                   const meetingDescriptor = `${cName} e ${gName}`;
+                   
+                   return (
+                     <div key={m.id} className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100 flex items-center justify-between group">
+                       <div className="flex items-center gap-4">
+                          <div className="flex -space-x-3">
+                            <img src={creatorO?.logo_url || creatorO?.photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${cName}`} className="w-10 h-10 rounded-full border-2 border-white bg-white" alt={cName} />
+                            <img src={guestO?.logo_url || guestO?.photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${gName}`} className="w-10 h-10 rounded-full border-2 border-white bg-white" alt={gName} />
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-black text-gray-900 leading-none mb-1">{m.title}</h5>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase truncate max-w-[150px] md:max-w-md">{meetingDescriptor} • {new Date(m.date + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                          </div>
+                       </div>
+                       <div className="flex flex-col items-end">
+                          <span className="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded-md mb-1">+10 PONTOS</span>
+                          <CheckCircle className="w-4 h-4 text-emerald-500" />
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+             </div>
+           )}
+        </div>
+
+        {/* Ranking Mensal */}
+        <div className="lg:col-span-4 space-y-8">
+           <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-xl relative overflow-hidden">
+              <h3 className="text-xl font-black text-gray-900 uppercase italic tracking-tighter flex items-center gap-3 mb-8">
+                <Trophy className="text-brand-primary" /> Top Conectores
+              </h3>
+
+              <div className="space-y-4">
+                {ranking.slice(0, 5).map((member, i) => (
+                   <div key={member.user_id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-indigo-100 transition-all">
+                      <div className="flex items-center gap-4">
+                        <span className={`font-black text-sm italic w-4 ${i === 0 ? 'text-yellow-500' : 'text-slate-300'}`}>#${i + 1}</span>
+                        <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name}`} className="w-10 h-10 rounded-xl shadow-sm" alt="Avatar" />
+                        <div>
+                          <p className="text-[11px] font-black text-gray-900 leading-none">{member.business_name || member.name}</p>
+                          <p className="text-[8px] font-black text-indigo-600 uppercase mt-1">Nível {member.level || 'Expert'}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-black text-gray-900 text-xs">{member.points}</span>
+                        <span className="text-[8px] text-slate-400 font-bold ml-1 uppercase">PTS</span>
+                      </div>
+                   </div>
+                ))}
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-gray-50">
+                 <div className="bg-indigo-600 rounded-2xl p-6 text-white text-center shadow-lg relative overflow-hidden">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Dica de Autoridade</p>
+                    <p className="text-xs font-medium leading-relaxed italic">"Cada reunião concluída gera 10 pontos de autoridade no ranking."</p>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* MODAL: CRIAR REUNIAO */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+             <div className="bg-gray-900 p-5 text-white flex justify-between items-center">
+                <div>
+                   <h3 className="text-lg font-black uppercase italic tracking-tighter leading-none">Agendar 1x1</h3>
+                   <p className="text-[8px] font-black text-indigo-400 tracking-[0.2em] mt-1.5 uppercase">Conecte-se com um novo parceiro</p>
+                </div>
+                <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-white/10 rounded-full transition-all text-white/40 hover:text-white">
+                  <X className="w-6 h-6" />
+                </button>
+             </div>
+
+             <form onSubmit={handleCreateMeeting} className="p-5 space-y-3">
+                
+                {/* Selecionar Usuário */}
+                <div>
+                   <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Selecione o Parceiro (Obrigatório)</label>
+                   <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                      <input 
+                        type="text"
+                        placeholder="Buscar parceiro..."
+                        className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border-none rounded-xl font-bold text-[11px] focus:ring-1 focus:ring-indigo-500/20 transition-all mb-1.5"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                      />
+                   </div>
+                   <div className="max-h-24 overflow-y-auto pr-1.5 space-y-1 custom-scrollbar">
+                      {filteredProfiles.length === 0 ? (
+                        <p className="text-[9px] text-center text-slate-400 py-2 uppercase font-bold italic">Nenhum encontrado</p>
+                      ) : (
+                        filteredProfiles.map(p => (
+                          <button
+                            key={p.user_id}
+                            type="button"
+                            onClick={() => {
+                              setFormData({...formData, guest_id: p.user_id});
+                              setSearchTerm(p.business_name || p.name);
+                            }}
+                            className={`w-full flex items-center gap-2.5 p-2 rounded-lg border transition-all ${formData.guest_id === p.user_id ? 'border-indigo-600 bg-indigo-50' : 'border-transparent bg-gray-50 hover:bg-gray-100'}`}
+                          >
+                             <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${p.business_name || p.name}`} className="w-6 h-6 rounded-md" alt="Avatar" />
+                             <div className="text-left">
+                                <p className="text-[9px] font-black text-gray-900 leading-none">{p.business_name || p.name}</p>
+                             </div>
+                             {formData.guest_id === p.user_id && <CheckCircle className="ml-auto w-3.5 h-3.5 text-indigo-600" />}
+                          </button>
+                        ))
+                      )}
+                   </div>
+                </div>
+
+                <div>
+                   <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Título</label>
+                   <input 
+                      required
+                      type="text" 
+                      placeholder="Ex: Alinhamento de Parceria"
+                      className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                      value={formData.title} 
+                      onChange={e => setFormData({...formData, title: e.target.value})} 
+                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                   <div>
+                      <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Data</label>
+                      <input 
+                        required
+                        type="date" 
+                        className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                        value={formData.date} 
+                        onChange={e => setFormData({...formData, date: e.target.value})} 
+                      />
+                   </div>
+                   <div>
+                      <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Horário</label>
+                      <input 
+                        required
+                        type="time" 
+                        className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                        value={formData.time} 
+                        onChange={e => setFormData({...formData, time: e.target.value})} 
+                      />
+                   </div>
+                </div>
+
+                <div>
+                   <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Descrição (Opcional)</label>
+                   <textarea 
+                      rows={1}
+                      placeholder="Pauta da reunião..."
+                      className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs resize-none" 
+                      value={formData.description} 
+                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                   />
+                </div>
+
+                <button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest text-[9px] hover:bg-brand-primary transition-all active:scale-95 mt-1 border border-indigo-500">
+                  CONFIRMAR AGENDAMENTO
+                </button>
+             </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- NEW COMMUNITY FEED COMPONENTS ---
+
+const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any }) => {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeSubTab, setActiveSubTab] = useState<'feed' | 'opportunities'>('feed');
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [showOppModal, setShowOppModal] = useState(false);
+  const [newPost, setNewPost] = useState<{content: string, type: 'pitch' | 'business'}>({ content: '', type: 'pitch' });
+  const [newOpp, setNewOpp] = useState({ title: '', description: '', type: 'service_search', deadline: '' });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const [postsData, oppsData] = await Promise.all([
+      supabaseService.getCommunityPosts(),
+      supabaseService.getOpportunities()
+    ]);
+    setPosts(postsData);
+    setOpportunities(oppsData);
+    setLoading(false);
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPost.content.trim()) return;
+
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      
+      await supabaseService.createCommunityPost({
+        user_id: realUserId,
+        user_name: user.name,
+        business_name: user.business_name,
+        user_avatar: userProfile?.logo_url || user.photo_url || '',
+        content: newPost.content,
+        type: newPost.type
+      });
+      setNewPost({ content: '', type: 'pitch' });
+      setShowPostModal(false);
+      loadData();
+    } catch (error) {
+      alert("Erro ao publicar.");
+    }
+  };
+
+  const handleCreateOpp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOpp.title.trim() || !newOpp.description.trim()) return;
+
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+
+      await supabaseService.createOpportunity({
+        user_id: realUserId,
+        ...newOpp
+      });
+      setNewOpp({ title: '', description: '', type: 'service_search', deadline: '' });
+      setShowOppModal(false);
+      loadData();
+    } catch (error) {
+      alert("Erro ao publicar oportunidade.");
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header with Switcher and Add Button */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm">
+        <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full md:w-auto">
+          <button 
+            onClick={() => setActiveSubTab('feed')}
+            className={`flex-1 md:flex-none px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeSubTab === 'feed' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
+          >
+            Feed da Comunidade
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('opportunities')}
+            className={`flex-1 md:flex-none px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeSubTab === 'opportunities' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-500 hover:text-emerald-600'}`}
+          >
+            Mural de Oportunidades
+          </button>
+        </div>
+        
+        <button 
+          onClick={() => activeSubTab === 'feed' ? setShowPostModal(true) : setShowOppModal(true)}
+          className={`w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 ${activeSubTab === 'feed' ? 'bg-indigo-600' : 'bg-emerald-600'}`}
+        >
+          <Plus className="w-4 h-4" /> {activeSubTab === 'feed' ? 'NOVA PUBLICAÇÃO' : 'PUBLICAR OPORTUNIDADE'}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-48 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)}
+        </div>
+      ) : activeSubTab === 'feed' ? (
+        <CommunityFeed posts={posts} user={user} userProfile={userProfile} onRefresh={loadData} />
+      ) : (
+        <OpportunitiesMural opportunities={opportunities} user={user} userProfile={userProfile} onRefresh={loadData} />
+      )}
+
+      {/* MODAL: NOVA PUBLICAÇÃO */}
+      {showPostModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+            <div className="bg-indigo-600 p-6 text-white flex justify-between items-center">
+              <div>
+                 <h3 className="text-xl font-black uppercase italic tracking-tighter">Criar Nova Publicação</h3>
+                 <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-1">Gere visibilidade para seu negócio</p>
+              </div>
+              <button onClick={() => setShowPostModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-all text-white/60 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCreatePost} className="p-8 space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Tipo de Conteúdo</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setNewPost({...newPost, type: 'pitch'})}
+                    className={`p-4 rounded-2xl border-2 transition-all text-left ${newPost.type === 'pitch' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-100 hover:border-gray-200'}`}
+                  >
+                    <p className="font-black text-gray-900 text-xs uppercase">Pitch de Entrada</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Apresente-se à rede</p>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setNewPost({...newPost, type: 'business'})}
+                    className={`p-4 rounded-2xl border-2 transition-all text-left ${newPost.type === 'business' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-100 hover:border-gray-200'}`}
+                  >
+                    <p className="font-black text-gray-900 text-xs uppercase">Atualização</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Novidades da empresa</p>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Seu Post</label>
+                <textarea 
+                  required
+                  rows={4}
+                  className="w-full bg-gray-50 border-none rounded-2xl p-6 font-medium text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500/20"
+                  placeholder="O que você quer compartilhar hoje?"
+                  value={newPost.content}
+                  onChange={e => setNewPost({...newPost, content: e.target.value})}
+                />
+              </div>
+              <button type="submit" className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-sm hover:bg-indigo-700 transition-all active:scale-95">
+                PUBLICAR AGORA
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: NOVA OPORTUNIDADE */}
+      {showOppModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+            <div className="bg-emerald-600 p-6 text-white flex justify-between items-center">
+              <div>
+                 <h3 className="text-xl font-black uppercase italic tracking-tighter">Publicar Oportunidade</h3>
+                 <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mt-1">Encontre parceiros e fornecedores</p>
+              </div>
+              <button onClick={() => setShowOppModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-all text-white/60 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateOpp} className="p-8 space-y-4">
+               <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Título</label>
+                  <input 
+                    required
+                    type="text"
+                    className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm"
+                    placeholder="Ex: Procuro desenvolvedor React"
+                    value={newOpp.title}
+                    onChange={e => setNewOpp({...newOpp, title: e.target.value})}
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Tipo</label>
+                    <select 
+                      className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm"
+                      value={newOpp.type}
+                      onChange={e => setNewOpp({...newOpp, type: e.target.value as any})}
+                    >
+                      <option value="service_search">Busca de Serviço</option>
+                      <option value="partnership">Parceria Estratégica</option>
+                      <option value="supplier">Fornecedor</option>
+                      <option value="project">Projeto Específico</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Prazo (opcional)</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-sm"
+                      placeholder="Ex: 30 dias"
+                      value={newOpp.deadline}
+                      onChange={e => setNewOpp({...newOpp, deadline: e.target.value})}
+                    />
+                  </div>
+               </div>
+               <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Descrição</label>
+                  <textarea 
+                    required
+                    rows={3}
+                    className="w-full bg-gray-50 border-none rounded-xl p-4 font-medium text-sm"
+                    placeholder="Descreva sua demanda em detalhes..."
+                    value={newOpp.description}
+                    onChange={e => setNewOpp({...newOpp, description: e.target.value})}
+                  />
+               </div>
+               <button type="submit" className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-sm hover:bg-emerald-700 transition-all active:scale-95">
+                 PUBLICAR OPORTUNIDADE
+               </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], user: User, userProfile: any, onRefresh: () => void }) => {
+  const [commentingOn, setCommentingOn] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+
+  const handleLike = async (postId: string) => {
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      await supabaseService.likePost(postId, realUserId);
+      onRefresh();
+    } catch (error) {
+       console.error(error);
+    }
+  };
+
+  const handleComment = async (postId: string) => {
+    if (!commentText.trim()) return;
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      await supabaseService.addCommentToPost(postId, {
+        user_id: realUserId,
+        user_name: user.name,
+        user_avatar: userProfile?.logo_url || user.photo_url || '',
+        content: commentText
+      });
+      setCommentText('');
+      setCommentingOn(null);
+      onRefresh();
+    } catch (error) {
+       console.error(error);
+    }
+  };
+
+  const handleEdit = async (postId: string, currentContent: string) => {
+    const newContent = window.prompt("Editar publicação:", currentContent);
+    if (!newContent || newContent.trim() === currentContent) return;
+    
+    try {
+      await supabaseService.updateCommunityPost(postId, newContent.trim());
+      onRefresh();
+    } catch (error) {
+      alert("Erro ao editar publicação.");
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    if (!window.confirm("Deseja realmente excluir esta publicação?")) return;
+    
+    try {
+      await supabaseService.deleteCommunityPost(postId);
+      onRefresh();
+    } catch (error) {
+      alert("Erro ao excluir publicação.");
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {posts.length === 0 ? (
+        <div className="py-20 text-center bg-white rounded-[3rem] border border-gray-100 flex flex-col items-center">
+            <Megaphone className="w-16 h-16 text-slate-200 mb-6" />
+            <h3 className="text-xl font-black text-gray-900 uppercase italic">Nada por aqui ainda</h3>
+            <p className="text-slate-400 font-medium mt-2">Clique no botão acima e faça seu primeiro pitch!</p>
+        </div>
+      ) : (
+        posts.map((post) => (
+          <div key={post.id} className={`bg-white rounded-[2.5rem] border overflow-hidden shadow-sm transition-all hover:shadow-xl ${post.is_pinned ? 'border-indigo-600 ring-2 ring-indigo-50/50' : 'border-gray-100'}`}>
+            {post.is_pinned && (
+              <div className="bg-indigo-600 px-6 py-2 flex items-center gap-2 text-white">
+                <ZapIcon className="w-3 h-3 fill-current" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Aviso Importante</span>
+              </div>
+            )}
+            
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src={post.author?.logo_url || post.author?.photo_url || post.user_avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.business_name || post.user_name}`} 
+                    className="w-12 h-12 rounded-2xl shadow-md border-2 border-white ring-4 ring-gray-50 object-cover"
+                  />
+                  <div>
+                    <h4 className="font-black text-gray-900 leading-none">{post.business_name || post.user_name}</h4>
+                    <p className="text-[10px] font-black text-indigo-600 uppercase mt-1 tracking-tight">
+                      {post.type === 'pitch' ? '💼 Pitch Profissional' : post.type === 'automated' ? '🎉 Movimentação' : '📢 Atualização'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(post.created_at).toLocaleDateString()}</span>
+                  {(post.user_id === user.id || post.user_id === userProfile?.user_id) && (
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleEdit(post.id, post.content)} className="text-[9px] font-black uppercase text-indigo-600 hover:text-indigo-800 tracking-widest transition-colors">Editar</button>
+                      <button onClick={() => handleDelete(post.id)} className="text-[9px] font-black uppercase text-red-500 hover:text-red-700 tracking-widest transition-colors">Excluir</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-gray-700 font-medium leading-relaxed whitespace-pre-wrap">
+                  {post.content}
+                </p>
+                {post.image_url && (
+                  <img src={post.image_url} className="rounded-3xl w-full h-64 object-cover shadow-lg" alt="Post content" />
+                )}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-50 flex items-center gap-8">
+                <button 
+                  onClick={() => handleLike(post.id)}
+                  className={`flex items-center gap-2 text-xs font-black transition-all ${(post.liked_by || []).includes(userProfile?.user_id || user.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}`}
+                >
+                  <Heart className={`w-5 h-5 ${(post.liked_by || []).includes(userProfile?.user_id || user.id) ? 'fill-current' : ''}`} />
+                  {post.likes || 0}
+                </button>
+                <button 
+                  onClick={() => setCommentingOn(commentingOn === post.id ? null : post.id)}
+                  className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-indigo-600 transition-all"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {post.comments?.length || 0}
+                </button>
+                <button className="ml-auto text-xs font-black text-slate-400 hover:text-gray-900 transition-all uppercase tracking-widest flex items-center gap-2">
+                  <Share2 className="w-4 h-4" /> COMPARTILHAR
+                </button>
+              </div>
+
+              {/* Comments Section */}
+              {(commentingOn === post.id || post.comments?.length > 0) && (
+                <div className="mt-6 space-y-4 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100">
+                  {post.comments?.map((c: any, ci: number) => (
+                    <div key={ci} className="flex gap-3">
+                      <img src={c.user_avatar} className="w-6 h-6 rounded-lg" />
+                      <div>
+                        <p className="text-[10px] font-black text-gray-900 leading-none">{c.user_name}</p>
+                        <p className="text-xs text-gray-600 mt-1">{c.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {commentingOn === post.id && (
+                    <div className="flex gap-3 mt-4">
+                      <input 
+                        className="flex-1 bg-white border-2 border-gray-100 rounded-xl px-4 py-2 text-xs font-medium focus:ring-0 focus:border-indigo-500"
+                        placeholder="Escreva um comentário..."
+                        value={commentText}
+                        onChange={e => setCommentText(e.target.value)}
+                        onKeyPress={e => e.key === 'Enter' && handleComment(post.id)}
+                      />
+                      <button 
+                        onClick={() => handleComment(post.id)}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh }: { opportunities: any[], user: User, userProfile: any, onRefresh: () => void }) => {
+  const handleInterest = async (oppId: string, authorPhone: string) => {
+    try {
+      const realUserId = userProfile?.user_id || user.id;
+      await supabaseService.expressInterestInOpportunity(oppId, realUserId);
+      onRefresh();
+      
+      if (authorPhone) {
+        const cleanPhone = authorPhone.replace(/\D/g, '');
+        if (cleanPhone) {
+          window.open(`https://wa.me/55${cleanPhone.startsWith('55') ? cleanPhone.substring(2) : cleanPhone}?text=Olá!%20Vi%20sua%20oportunidade%20no%20Menu%20de%20Negócios%20e%20tenho%20interesse.`, '_blank');
+        } else {
+          alert('Seu interesse foi registrado, mas o autor não possui um WhatsApp válido cadastrado.');
+        }
+      } else {
+        alert('Seu interesse foi registrado, mas o autor não possui um número de telefone cadastrado.');
+      }
+    } catch (error) {
+       console.error(error);
+    }
+  };
+
+  const handleEdit = async (oppId: string, currentTitle: string, currentDesc: string) => {
+    const newTitle = window.prompt("Editar título da oportunidade:", currentTitle);
+    if (newTitle === null) return;
+    
+    const newDesc = window.prompt("Editar descrição da oportunidade:", currentDesc);
+    if (newDesc === null) return;
+
+    if (newTitle.trim() === currentTitle && newDesc.trim() === currentDesc) return;
+    
+    try {
+      await supabaseService.updateOpportunity(oppId, { title: newTitle.trim(), description: newDesc.trim() });
+      onRefresh();
+    } catch (error) {
+      alert("Erro ao editar oportunidade.");
+    }
+  };
+
+  const handleDelete = async (oppId: string) => {
+    if (!window.confirm("Deseja realmente excluir esta oportunidade?")) return;
+    
+    try {
+      await supabaseService.deleteOpportunity(oppId);
+      onRefresh();
+    } catch (error) {
+      alert("Erro ao excluir oportunidade.");
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {opportunities.length === 0 ? (
+        <div className="col-span-2 py-20 text-center bg-white rounded-[3rem] border border-gray-100 flex flex-col items-center">
+            <Trophy className="w-16 h-16 text-slate-200 mb-6" />
+            <h3 className="text-xl font-black text-gray-900 uppercase italic">Nenhuma oportunidade aberta</h3>
+            <p className="text-slate-400 font-medium mt-2">Dê o primeiro passo e publique uma demanda!</p>
+        </div>
+      ) : (
+        opportunities.map((opp) => {
+          const realUserId = userProfile?.user_id || user.id;
+          const isOwner = opp.user_id === realUserId;
+          const hasInterest = (opp.interested_user_ids || []).includes(realUserId);
+          
+          return (
+            <div key={opp.id} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                    opp.type === 'service_search' ? 'bg-blue-50 text-blue-600' :
+                    opp.type === 'partnership' ? 'bg-purple-50 text-purple-600' :
+                    opp.type === 'supplier' ? 'bg-orange-50 text-orange-600' :
+                    'bg-emerald-50 text-emerald-600'
+                  }`}>
+                    {opp.type === 'service_search' ? 'Procuro Serviço' :
+                     opp.type === 'partnership' ? 'Parceria' :
+                     opp.type === 'supplier' ? 'Fornecedor' :
+                     'Demanda de Projeto'}
+                  </div>
+                  {opp.deadline && (
+                    <div className="flex items-center gap-1.5 text-red-500 font-black text-[9px] uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-full">
+                       <Clock className="w-3 h-3" /> {opp.deadline}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="text-xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase italic tracking-tighter leading-tight pr-4">
+                    {opp.title}
+                  </h4>
+                  {isOwner && (
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(opp.id, opp.title, opp.description)} className="text-[9px] font-black uppercase text-indigo-600 hover:text-indigo-800 tracking-widest transition-colors bg-indigo-50 px-2 py-1 rounded-md">Editar</button>
+                      <button onClick={() => handleDelete(opp.id)} className="text-[9px] font-black uppercase text-red-500 hover:text-red-700 tracking-widest transition-colors bg-red-50 px-2 py-1 rounded-md">Excluir</button>
+                    </div>
+                  )}
+                </div>
+                
+                <p className="text-sm font-medium text-slate-500 leading-relaxed mb-8 line-clamp-3">
+                  {opp.description}
+                </p>
+
+                <div className="flex items-center gap-3 mb-8 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  <img src={opp.author?.logo_url || opp.author?.photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${opp.author?.name}`} className="w-10 h-10 rounded-xl object-cover" />
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Autor</p>
+                    <p className="text-xs font-black text-gray-900">{opp.author?.business_name || opp.author?.name}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <button 
+                  disabled={isOwner || hasInterest}
+                  onClick={() => handleInterest(opp.id, opp.author?.phone || '')}
+                  className={`w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+                    hasInterest ? 'bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-none' :
+                    isOwner ? 'bg-gray-100 text-slate-400 border border-gray-200 shadow-none' :
+                    'bg-gray-900 text-white hover:bg-black'
+                  }`}
+                >
+                  <HandHeart className="w-4 h-4" /> {hasInterest ? 'JÁ MANIFESTEI INTERESSE' : isOwner ? 'SUA OPORTUNIDADE' : 'TENHO INTERESSE'}
+                </button>
+                <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400">
+                  <Users className="w-3 h-3" /> {opp.interested_user_ids?.length || 0} membros interessados
+                </div>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+};
+
+export default Rewards;

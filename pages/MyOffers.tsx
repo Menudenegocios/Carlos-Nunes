@@ -19,7 +19,7 @@ export const MyOffers = () => {
     title: '',
     discount_display: '',
     description: '',
-    category: OfferCategory.NEGOCIOS_LOCAIS,
+    category: OfferCategory.SERVICOS,
     image_url: '',
     logo_url: '',
     whatsapp: '',
@@ -47,7 +47,7 @@ export const MyOffers = () => {
       title: offer.title || '',
       discount_display: offer.social_links?.discount_display || offer.discount_display || '',
       description: offer.description || '',
-      category: (offer.category as OfferCategory) || OfferCategory.NEGOCIOS_LOCAIS,
+      category: (offer.category as OfferCategory) || OfferCategory.SERVICOS,
       image_url: offer.image_url || '',
       logo_url: offer.social_links?.store_logo_url || offer.logo_url || offer.store_logo_url || '',
       whatsapp: offer.social_links?.whatsapp || '',
@@ -117,7 +117,7 @@ export const MyOffers = () => {
       title: '',
       discount_display: '',
       description: '',
-      category: OfferCategory.NEGOCIOS_LOCAIS,
+      category: OfferCategory.SERVICOS,
       image_url: '',
       logo_url: '',
       whatsapp: '',
@@ -140,23 +140,22 @@ export const MyOffers = () => {
 
   return (
     <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-4">
          <div className="relative z-10 max-w-2xl">
-          <h1 className="text-4xl font-extrabold mb-4 flex items-center gap-3">
-             <ShoppingBag className="w-10 h-10 -rotate-12 text-yellow-300" />
+          <h1 className="text-2xl md:text-3xl font-extrabold mb-2 flex items-center gap-3">
+             <ShoppingBag className="w-8 h-8 -rotate-12 text-yellow-300" />
              Minhas Ofertas
           </h1>
-          <p className="text-xl text-blue-100">
+          <p className="text-sm md:text-base text-blue-100">
             Gerencie suas ofertas e benefícios no Clube de Vantagens Menu Club.
           </p>
          </div>
          
          <button 
            onClick={openCreateModal}
-           className="relative z-10 bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+           className="relative z-10 bg-white text-indigo-600 px-5 py-2.5 rounded-xl font-bold shadow-md hover:bg-indigo-50 transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
          >
-           <Plus className="w-5 h-5" /> Criar Nova Oferta
+           <Plus className="w-4 h-4" /> Criar Nova Oferta
          </button>
       </div>
 

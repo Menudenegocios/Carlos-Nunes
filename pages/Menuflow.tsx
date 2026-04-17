@@ -389,7 +389,7 @@ const WhatsAppView = () => {
               <span className="text-gray-500 text-xs">[QR Code Simulado]</span>
             </div>
             <p className="text-sm text-gray-500 mb-4 text-center max-w-xs">
-              Abra o WhatsApp no seu celular, vÃ¡ em Aparelhos Conectados e escaneie o código.
+              Abra o WhatsApp no seu celular, vá em Aparelhos Conectados e escaneie o código.
             </p>
             <button 
               onClick={() => setConnected(true)}

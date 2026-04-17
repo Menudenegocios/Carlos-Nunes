@@ -59,6 +59,15 @@ const base64ToBlob = (base64: string): Blob => {
   return new Blob([uInt8Array], { type: contentType });
 };
 
+const generateSlug = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
 export const MyCatalog: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -194,10 +203,10 @@ export const MyCatalog: React.FC = () => {
                 user_id: user.id, 
                 vitrine_category: 'Produtos',
                 is_published: false,
-                social_links: { instagram: '', whatsapp: '', website: '' }, 
+                social_links: { instagram: '', whatsapp: '', website: '', custom_links: [] }, 
                 store_config: { 
                     payment_methods: { pix: true, card: true, cash: true, credit: true },
-                    social_links: { instagram: '', whatsapp: '', website: '' },
+                    social_links: { instagram: '', whatsapp: '', website: '', custom_links: [] },
                     business_type: 'local_business',
                     banner_images: [],
                     whatsapp_bot: {
@@ -270,7 +279,7 @@ export const MyCatalog: React.FC = () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      // Limpa dados que não pertencem Ã  tabela profiles
+      // Limpa dados que não pertencem à  tabela profiles
       const { subscriptions, id, created_at, ...profileToSave } = profile as any;
 
       console.log('Saving profile:', profileToSave);
@@ -376,28 +385,46 @@ export const MyCatalog: React.FC = () => {
   const handleBlogSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    // Ensure slug is not empty
+    const finalSlug = blogForm.slug || generateSlug(blogForm.title);
+    if (!finalSlug) {
+      alert("Por favor, informe um título ou um slug para o artigo.");
+      return;
+    }
+
     setIsSaving(true);
     try {
+        const blogData = {
+            ...blogForm,
+            slug: finalSlug,
+            user_id: user.id,
+            author: profile.business_name || user.name || 'Autor',
+            date: new Date().toLocaleDateString('pt-BR'),
+            seo_title: blogForm.seo_title || blogForm.title,
+            seo_description: blogForm.seo_description || blogForm.summary,
+            seo_keywords: blogForm.seo_keywords ? blogForm.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+            alt_text: blogForm.alt_text || blogForm.title,
+            og_title: blogForm.og_title || blogForm.title,
+            og_description: blogForm.og_description || blogForm.summary
+        };
+
         if (editingBlogPost) {
-            await supabaseService.updateBlogPost(editingBlogPost.id, blogForm);
+            await supabaseService.updateBlogPost(editingBlogPost.id, blogData);
         } else {
-            await supabaseService.addBlogPost({
-                ...blogForm,
-                user_id: user.id,
-                author: profile.business_name || user.name,
-                date: new Date().toLocaleDateString('pt-BR'),
-                seo_title: blogForm.seo_title,
-                seo_description: blogForm.seo_description,
-                seo_keywords: blogForm.seo_keywords ? blogForm.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
-                slug: blogForm.slug,
-                alt_text: blogForm.alt_text,
-                og_title: blogForm.og_title,
-                og_description: blogForm.og_description
-            } as any);
+            await supabaseService.addBlogPost(blogData as any);
         }
         setIsBlogModalOpen(false);
         alert("Artigo publicado com sucesso!");
         loadData();
+    } catch (error: any) {
+        console.error("Error saving blog post:", error);
+        if (error?.code === '23505') {
+            alert("Este link (slug) já está em uso por outro artigo. Por favor, escolha um link diferente na aba SEO.");
+            setBlogModalTab('seo');
+        } else {
+            alert("Erro ao salvar artigo. Tente novamente.");
+        }
     } finally { setIsSaving(false); }
   };
 
@@ -492,7 +519,7 @@ export const MyCatalog: React.FC = () => {
               "Landing Page: Configure sua página de vendas exclusiva.",
               "Sincronização: Tudo o que você faz aqui reflete no Marketplace."
             ]} 
-            ctaLabel="COMEÇAR CONFIGURAÇÃO" 
+            ctaLabel="COMEÇAR CONFIGURAÇàO" 
             onStart={() => handleTabChange('identity')} 
             icon={LayoutGrid} 
             accentColor="brand" 
@@ -529,7 +556,7 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* SEÃ‡ÃƒO BOT WHATSAPP */}
+                   {/* SEà‡àƒO BOT WHATSAPP */}
                    <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl mt-12">
                       <div className="flex items-center gap-4 mb-8">
                           <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600">
@@ -599,7 +626,7 @@ export const MyCatalog: React.FC = () => {
                                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mensagem de Boas-vindas</label>
                                   <textarea 
                                       className="w-full p-4 rounded-2xl bg-gray-50 font-bold h-24 resize-none" 
-                                      placeholder="Ex: Olá! Bem-vindo Ã  nossa loja. Como posso ajudar você hoje?" 
+                                      placeholder="Ex: Olá! Bem-vindo à  nossa loja. Como posso ajudar você hoje?" 
                                       value={profile.store_config?.whatsapp_bot?.welcome_message || ''}
                                       onChange={e => setProfile(prev => ({ ...prev, store_config: { ...prev.store_config, whatsapp_bot: { ...prev.store_config?.whatsapp_bot, enabled: prev.store_config?.whatsapp_bot?.enabled ?? false, welcome_message: e.target.value } } }))}
                                   />
@@ -633,7 +660,7 @@ export const MyCatalog: React.FC = () => {
                                               </div>
                                           </div>
                                           <p className="text-xs text-slate-500 leading-relaxed">
-                                              {profile.store_config?.whatsapp_bot?.welcome_message || 'Olá! Bem-vindo Ã  nossa loja. Como posso ajudar você hoje?'}
+                                              {profile.store_config?.whatsapp_bot?.welcome_message || 'Olá! Bem-vindo à  nossa loja. Como posso ajudar você hoje?'}
                                           </p>
                                       </div>
 
@@ -843,6 +870,79 @@ export const MyCatalog: React.FC = () => {
                                />
                             </div>
                          </div>
+
+                         {/* DYNAMIC SOCIAL LINKS */}
+                         <div className="md:col-span-2 space-y-6 pt-4 border-t border-gray-100">
+                            <div className="flex justify-between items-center">
+                               <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Outras Redes & Links</h5>
+                               <button 
+                                  type="button"
+                                  onClick={() => {
+                                     const currentLinks = profile.social_links?.custom_links || [];
+                                     setProfile({
+                                        ...profile,
+                                        social_links: {
+                                           ...profile.social_links,
+                                           custom_links: [...currentLinks, { platform: '', url: '' }]
+                                        }
+                                     });
+                                  }}
+                                  className="bg-white text-indigo-600 border border-indigo-100 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all"
+                               >
+                                  <Plus className="w-3 h-3" /> ADICIONAR NOVA REDE SOCIAL
+                               </button>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                               {(profile.social_links?.custom_links || []).map((link, idx) => (
+                                  <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 relative group animate-fade-in">
+                                     <button 
+                                        type="button"
+                                        onClick={() => {
+                                           const currentLinks = [...(profile.social_links?.custom_links || [])];
+                                           currentLinks.splice(idx, 1);
+                                           setProfile({...profile, social_links: {...profile.social_links, custom_links: currentLinks}});
+                                        }}
+                                        className="absolute top-4 right-4 p-2 text-rose-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                     >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                     </button>
+                                     
+                                     <div className="space-y-4">
+                                        <div>
+                                           <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Plataforma (ex: LinkedIn, TikTok)</label>
+                                           <input 
+                                              type="text" 
+                                              className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                                              value={link.platform} 
+                                              onChange={e => {
+                                                 const currentLinks = [...(profile.social_links?.custom_links || [])];
+                                                 currentLinks[idx].platform = e.target.value;
+                                                 setProfile({...profile, social_links: {...profile.social_links, custom_links: currentLinks}});
+                                              }}
+                                              placeholder="Nome da rede..."
+                                           />
+                                        </div>
+                                        <div>
+                                           <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Link Completo (URL)</label>
+                                           <input 
+                                              type="url" 
+                                              className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                                              value={link.url} 
+                                              onChange={e => {
+                                                 const currentLinks = [...(profile.social_links?.custom_links || [])];
+                                                 currentLinks[idx].url = e.target.value;
+                                                 setProfile({...profile, social_links: {...profile.social_links, custom_links: currentLinks}});
+                                              }}
+                                              placeholder="https://..."
+                                           />
+                                        </div>
+                                     </div>
+                                  </div>
+                               ))}
+                            </div>
+                         </div>
+
                          <div>
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Globe className="w-3 h-3" /> Website Oficial</label>
                             <input 
@@ -866,7 +966,7 @@ export const MyCatalog: React.FC = () => {
                       </div>
                    </div>
 
-                   {/* PORTFÃ“LIO DE VÍDEOS */}
+                   {/* PORTFà“LIO DE VÍDEOS */}
                    <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 space-y-8">
                       <div className="flex justify-between items-center">
                          <h4 className="flex items-center gap-2 text-sm font-black text-indigo-900 uppercase"><Youtube className="w-5 h-5" /> Portfólio de vídeos</h4>
@@ -973,7 +1073,17 @@ export const MyCatalog: React.FC = () => {
                            <div className="lg:col-span-7 space-y-8">
                               <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2"><Type className="w-3 h-3" /> Título Impactante</label>
-                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight" value={blogForm.title} onChange={e => setBlogForm({...blogForm, title: e.target.value})} placeholder="Ex: Por que investir em consultoria local?" />
+                                 <input required type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-black text-xl italic tracking-tight" value={blogForm.title} 
+                                   onChange={e => {
+                                     const newTitle = e.target.value;
+                                     setBlogForm(prev => ({
+                                       ...prev, 
+                                       title: newTitle,
+                                       slug: prev.slug === generateSlug(prev.title) ? generateSlug(newTitle) : prev.slug
+                                     }));
+                                   }} 
+                                   placeholder="Ex: Por que investir em consultoria local?" 
+                                 />
                               </div>
 
                               <div className="grid grid-cols-2 gap-6">
@@ -1075,7 +1185,7 @@ export const MyCatalog: React.FC = () => {
                             <div className="space-y-8">
                               <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">URL Amigável (Slug)</label>
-                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="ex: como-vender-mais" value={blogForm.slug} onChange={e => setBlogForm({...blogForm, slug: e.target.value})} />
+                                 <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" placeholder="ex: como-vender-mais" value={blogForm.slug} onChange={e => setBlogForm({...blogForm, slug: generateSlug(e.target.value)})} />
                               </div>
                               
                               <div>
@@ -1284,7 +1394,7 @@ export const MyCatalog: React.FC = () => {
       )}
 
 
-      {/* MODAL: CONFIRMAÃ‡ÃƒO DE EXCLUSÃƒO */}
+      {/* MODAL: CONFIRMAà‡àƒO DE EXCLUSàƒO */}
       {isDeleteModalOpen && (
          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">

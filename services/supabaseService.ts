@@ -1577,12 +1577,117 @@ export const supabaseService = {
   },
 
 
+  // --- 1x1 MEETINGS ---
+  getMeetings1x1: async (user_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('meetings_1x1')
+        .select(`
+          *,
+          creator:profiles!creator_id(name, business_name),
+          guest:profiles!guest_id(name, business_name)
+        `)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting 1x1 meetings:", error);
+      return [];
+    }
+  },
+
+  createMeeting1x1: async (meeting: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('meetings_1x1')
+        .insert({ 
+          ...meeting, 
+          status: 'scheduled', 
+          points_awarded: false,
+          created_at: new Date().toISOString() 
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating 1x1 meeting:", error);
+      throw error;
+    }
+  },
+
+  completeMeeting1x1: async (meeting_id: string): Promise<void> => {
+    try {
+      // 1. Get meeting data to award points
+      const { data: meeting, error: fetchError } = await supabase
+        .from('meetings_1x1')
+        .select('*')
+        .eq('id', meeting_id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (meeting.status === 'completed' || meeting.points_awarded) return;
+
+      // 2. Update status
+      const { error: updateError } = await supabase
+        .from('meetings_1x1')
+        .update({ status: 'completed', points_awarded: true })
+        .eq('id', meeting_id);
+      
+      if (updateError) throw updateError;
+
+      // 3. Award points to both participants (10 points each)
+      const participants = [meeting.creator_id, meeting.guest_id];
+      for (const pId of participants) {
+        // Increment profile points
+        const { data: profile } = await supabase.from('profiles').select('points').eq('user_id', pId).single();
+        await supabase.from('profiles')
+          .update({ points: (profile?.points || 0) + 10 })
+          .eq('user_id', pId);
+        
+        // Add to points history
+        await supabase.from('points_history').insert({
+          user_id: pId,
+          action: 'Reunião 1x1 Concluída',
+          points: 10,
+          category: 'engajamento',
+          date: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Error completing 1x1 meeting:", error);
+      throw error;
+    }
+  },
+
+  getMeetingsRanking: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, name, business_name, logo_url, points')
+        .order('points', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting meeting ranking:", error);
+      return [];
+    }
+  },
+
   // --- COMMUNITY ---
   getCommunityPosts: async (): Promise<any[]> => {
     try {
       const { data, error } = await supabase
         .from('community_posts')
-        .select('*')
+        .select(`
+          *,
+          author:profiles!user_id(logo_url)
+        `)
+        .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -1599,9 +1704,10 @@ export const supabaseService = {
         .from('community_posts')
         .insert({
           ...post,
-          likes: 0,
-          liked_by: [],
-          comments: [],
+          likes: post.likes || 0,
+          liked_by: post.liked_by || [],
+          comments: post.comments || [],
+          type: post.type || 'pitch',
           created_at: new Date().toISOString()
         })
         .select()
@@ -1615,28 +1721,134 @@ export const supabaseService = {
     }
   },
 
-  likePost: async (postId: string, user_id: string): Promise<void> => {
+  updateCommunityPost: async (id: string, content: string): Promise<void> => {
     try {
-      const { data: post, error: fetchError } = await supabase
+      const { error } = await supabase
         .from('community_posts')
-        .select('liked_by, likes')
-        .eq('id', postId)
+        .update({ content })
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating community post:", error);
+      throw error;
+    }
+  },
+
+  deleteCommunityPost: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting community post:", error);
+      throw error;
+    }
+  },
+
+  addCommentToPost: async (postId: string, comment: any): Promise<void> => {
+    try {
+      const newComment = { ...comment, id: Math.random().toString(36).substring(7), created_at: new Date().toISOString() };
+      const { error } = await supabase.rpc('add_post_comment', {
+        post_id: postId,
+        comment_data: newComment
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
+  },
+
+  getOpportunities: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('community_opportunities')
+        .select(`
+          *,
+          author:profiles!user_id(name, business_name, logo_url, phone)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting opportunities:", error);
+      return [];
+    }
+  },
+
+  createOpportunity: async (opportunity: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('community_opportunities')
+        .insert({
+          ...opportunity,
+          interested_user_ids: [],
+          created_at: new Date().toISOString()
+        })
+        .select()
         .single();
       
-      if (fetchError) throw fetchError;
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error creating opportunity:", error);
+      throw error;
+    }
+  },
+
+  updateOpportunity: async (id: string, updates: { title?: string, description?: string }): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('community_opportunities')
+        .update(updates)
+        .eq('id', id);
       
-      const likedBy = post.liked_by || [];
-      if (!likedBy.includes(user_id)) {
-        const { error: updateError } = await supabase
-          .from('community_posts')
-          .update({
-            likes: (post.likes || 0) + 1,
-            liked_by: [...likedBy, user_id]
-          })
-          .eq('id', postId);
-        
-        if (updateError) throw updateError;
-      }
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating opportunity:", error);
+      throw error;
+    }
+  },
+
+  deleteOpportunity: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('community_opportunities')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting opportunity:", error);
+      throw error;
+    }
+  },
+
+  expressInterestInOpportunity: async (opportunityId: string, user_id: string): Promise<void> => {
+    try {
+      const { error } = await supabase.rpc('express_interest', {
+        opp_id: opportunityId,
+        user_id_val: user_id
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error expressing interest:", error);
+      throw error;
+    }
+  },
+
+  likePost: async (postId: string, user_id: string): Promise<void> => {
+    try {
+      const { error } = await supabase.rpc('like_post', {
+        post_id: postId,
+        user_id_val: user_id
+      });
+      if (error) throw error;
     } catch (error) {
       console.error("Error liking post:", error);
       throw error;
@@ -1842,3 +2054,6 @@ export const supabaseService = {
   },
 
 };
+
+
+

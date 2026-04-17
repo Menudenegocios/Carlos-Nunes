@@ -225,6 +225,7 @@ export interface StoreConfig {
     instagram?: string;
     whatsapp?: string;
     website?: string;
+    custom_links?: { platform: string, url: string }[];
   };
   calendar_link?: string;
   crm_funnels?: CRMFunnel[];
@@ -254,6 +255,7 @@ export interface Profile {
     instagram?: string;
     whatsapp?: string;
     website?: string;
+    custom_links?: { platform: string, url: string }[];
   };
   store_config?: StoreConfig;
   bio_config?: BioConfig;
@@ -347,12 +349,20 @@ export interface Prize {
 }
 
 export enum OfferCategory {
-  SERVICOS_PROFISSIONAIS = 'Serviços Profissionais',
-  NEGOCIOS_LOCAIS = 'Negócios Locais',
-  SAUDE_BEM_ESTAR = 'Saúde e Bem-estar',
-  IMOVEIS_SERVICOS = 'Imóveis e Residencial',
-  OPORTUNIDADES = 'Oportunidades e Parcerias'
+  ALIMENTACAO = 'Alimentação',
+  BELEZA_ESTETICA = 'Beleza e Estética',
+  FITNESS = 'Fitness',
+  VAREJO = 'Varejo',
+  SERVICOS = 'Serviços',
+  EDUCACAO = 'Educação',
+  EXPERIENCIAS = 'Experiências',
+  LAZER = 'Lazer',
+  PETS = 'Pets',
+  COMPRAS = 'Compras',
+  SAUDE = 'Saúde',
+  TECH = 'Tech'
 }
+
 
 export interface Product {
   id: string;
@@ -751,4 +761,20 @@ export interface BusinessCanva {
   cost_structure: string;
   revenue_streams: string;
   created_at: string;
+}
+export interface Meeting1x1 {
+  id: string;
+  creator_id: string;
+  guest_id: string;
+  title: string;
+  description?: string;
+  date: string;
+  time: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  meet_link?: string;
+  points_awarded: boolean;
+  created_at: string;
+  // Join fields
+  creator_name?: string;
+  guest_name?: string;
 }

@@ -16,6 +16,7 @@ import { supabaseService } from '../services/supabaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyOffers } from './MyOffers';
+import { OfferCategory } from '../types';
 
 export const LocalPlus: React.FC = () => {
   const { user } = useAuth();
@@ -27,18 +28,18 @@ export const LocalPlus: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
-    { id: 'food', name: 'Alimentação', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100' },
-    { id: 'beauty', name: 'Beleza e Estética', icon: Heart, color: 'text-pink-500', bg: 'bg-pink-100' },
-    { id: 'fitness', name: 'Fitness', icon: Dumbbell, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { id: 'retail', name: 'Varejo', icon: ShoppingBag, color: 'text-purple-500', bg: 'bg-purple-100' },
-    { id: 'services', name: 'Serviços', icon: Wrench, color: 'text-slate-500', bg: 'bg-slate-100' },
-    { id: 'edu', name: 'Educação', icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-    { id: 'experiences', name: 'Experiências', icon: Star, color: 'text-amber-500', bg: 'bg-amber-100' },
-    { id: 'leisure', name: 'Lazer', icon: PartyPopper, color: 'text-green-500', bg: 'bg-green-100' },
-    { id: 'pets', name: 'Pets', icon: Dog, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { id: 'shopping', name: 'Compras', icon: ShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-100' },
-    { id: 'health', name: 'Saúde', icon: Activity, color: 'text-rose-500', bg: 'bg-rose-100' },
-    { id: 'tech', name: 'Tech', icon: Laptop, color: 'text-cyan-500', bg: 'bg-cyan-100' }
+    { id: OfferCategory.ALIMENTACAO, name: 'Alimentação', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100' },
+    { id: OfferCategory.BELEZA_ESTETICA, name: 'Beleza e Estética', icon: Heart, color: 'text-pink-500', bg: 'bg-pink-100' },
+    { id: OfferCategory.FITNESS, name: 'Fitness', icon: Dumbbell, color: 'text-blue-500', bg: 'bg-blue-100' },
+    { id: OfferCategory.VAREJO, name: 'Varejo', icon: ShoppingBag, color: 'text-purple-500', bg: 'bg-purple-100' },
+    { id: OfferCategory.SERVICOS, name: 'Serviços', icon: Wrench, color: 'text-slate-500', bg: 'bg-slate-100' },
+    { id: OfferCategory.EDUCACAO, name: 'Educação', icon: GraduationCap, color: 'text-indigo-500', bg: 'bg-indigo-100' },
+    { id: OfferCategory.EXPERIENCIAS, name: 'Experiências', icon: Star, color: 'text-amber-500', bg: 'bg-amber-100' },
+    { id: OfferCategory.LAZER, name: 'Lazer', icon: PartyPopper, color: 'text-green-500', bg: 'bg-green-100' },
+    { id: OfferCategory.PETS, name: 'Pets', icon: Dog, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { id: OfferCategory.COMPRAS, name: 'Compras', icon: ShoppingCart, color: 'text-emerald-500', bg: 'bg-emerald-100' },
+    { id: OfferCategory.SAUDE, name: 'Saúde', icon: Activity, color: 'text-rose-500', bg: 'bg-rose-100' },
+    { id: OfferCategory.TECH, name: 'Tech', icon: Laptop, color: 'text-cyan-500', bg: 'bg-cyan-100' }
   ];
 
   useEffect(() => {
@@ -56,13 +57,13 @@ export const LocalPlus: React.FC = () => {
       } else {
         // Mock data for WOW effect
         const mockOffers = [
-          { id: '1', title: '10% OFF no Almoço', store_name: 'Restaurante Sabor Local', category: 'food', discount_display: '10% OFF', image_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400', action_type: 'whatsapp' },
-          { id: '2', title: 'Corte + Barba com Desconto', store_name: 'Barbearia Vintage', category: 'beauty', discount_display: 'R$ 20 OFF', image_url: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=400', action_type: 'coupon' },
-          { id: '3', title: 'Avaliação Grátis + 1 Mês', store_name: 'Iron Fitness', category: 'fitness', discount_display: 'GRÁTIS', image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=400', action_type: 'whatsapp' }
+          { id: '1', title: '10% OFF no Almoço', store_name: 'Restaurante Sabor Local', category: OfferCategory.ALIMENTACAO, discount_display: '10% OFF', image_url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400', action_type: 'whatsapp' },
+          { id: '2', title: 'Corte + Barba com Desconto', store_name: 'Barbearia Vintage', category: OfferCategory.BELEZA_ESTETICA, discount_display: 'R$ 20 OFF', image_url: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=400', action_type: 'coupon' },
+          { id: '3', title: 'Avaliação Grátis + 1 Mês', store_name: 'Iron Fitness', category: OfferCategory.FITNESS, discount_display: 'GRÁTIS', image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=400', action_type: 'whatsapp' }
         ];
         setOffers(mockOffers);
         setFlashDeals([
-          { id: 'f1', title: 'PIZZA EM DOBRO', store_name: 'Pizzaria Napolitana', category: 'food', discount_display: 'COMPRE 1 LEVE 2', is_flash_deal: true, flash_deal_expires_at: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(), image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=400' }
+          { id: 'f1', title: 'PIZZA EM DOBRO', store_name: 'Pizzaria Napolitana', category: OfferCategory.ALIMENTACAO, discount_display: 'COMPRE 1 LEVE 2', is_flash_deal: true, flash_deal_expires_at: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(), image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=400' }
         ]);
       }
     } catch (e) {
@@ -71,6 +72,7 @@ export const LocalPlus: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const OfferCard = ({ offer, flash = false }: any) => (
     <div className={`bg-white rounded-[2rem] border overflow-hidden transition-all group hover:shadow-2xl hover:-translate-y-1 ${flash ? 'border-brand-primary/30 ring-4 ring-brand-primary/5' : 'border-gray-100 flex flex-col'}`}>

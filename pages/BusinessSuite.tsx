@@ -534,7 +534,7 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                             <div className="flex flex-col items-start gap-3 mt-4">
                                <div className="flex gap-2 justify-start">
                                   {lead.phone && (
-                                    <a href={`https://wa.me/${lead.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-all shadow-sm">
+                                    <a href={`https://wa.me/${(lead.country_code || '55')}${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-all shadow-sm">
                                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                                     </a>
                                   )}
@@ -544,7 +544,7 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                             </div>
                             {lead.ultimo_follow_up && (
                               <div className="mt-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-all" onClick={(e) => { e.stopPropagation(); openFollowUpModal(lead.id, 'lead', lead.name); }}>
-                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> ÚLTIMA AÇÃO</p>
+                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> ÚLTIMA AÇàO</p>
                                  <p className="text-[11px] font-bold text-gray-700 line-clamp-2">{lead.ultimo_follow_up}</p>
                               </div>
                             )}
@@ -604,7 +604,7 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                        {client.phone && (
-                         <a href={`https://wa.me/${client.phone.replace(/\D/g, '').slice(0, 13)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm">
+                         <a href={`https://wa.me/${(client.country_code || '55')}${client.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm">
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
                          </a>
                        )}
@@ -656,9 +656,32 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
-                             <Phone className="w-3 h-3" /> Telefones
+                             <Phone className="w-3 h-3" /> Telefone WhatsApp
                           </label>
-                          <input type="text" placeholder="Ex: (11) 9999-9999, (11) 8888-8888" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                          <div className="flex gap-2">
+                            <select className="bg-gray-50 border-none rounded-2xl p-5 font-bold w-[120px] text-sm" value={formData.country_code || '55'} onChange={e => setFormData({...formData, country_code: e.target.value})}>
+                              <option value="55">🇧🇷 +55</option>
+                              <option value="1">🇺🇸 +1</option>
+                              <option value="351">🇵🇹 +351</option>
+                              <option value="244">🇦🇴 +244</option>
+                              <option value="258">🇲🇿 +258</option>
+                              <option value="34">🇪🇸 +34</option>
+                              <option value="33">🇫🇷 +33</option>
+                              <option value="44">🇬🇧 +44</option>
+                              <option value="49">🇩🇪 +49</option>
+                              <option value="39">🇮🇹 +39</option>
+                              <option value="81">🇯🇵 +81</option>
+                              <option value="86">🇨🇳 +86</option>
+                              <option value="91">🇮🇳 +91</option>
+                              <option value="54">🇦🇷 +54</option>
+                              <option value="56">🇨🇱 +56</option>
+                              <option value="57">🇨🇴 +57</option>
+                              <option value="52">🇲🇽 +52</option>
+                              <option value="595">🇵🇾 +595</option>
+                              <option value="598">🇺🇾 +598</option>
+                            </select>
+                            <input type="text" placeholder="Ex: (11) 99999-9999" className="flex-1 bg-gray-50 border-none rounded-2xl p-5 font-bold" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                          </div>
                        </div>
                        <div>
                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Valor do Negócio</label>
@@ -750,9 +773,32 @@ const CRMView = ({ user_id }: { user_id: string }) => {
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1 flex items-center gap-2">
-                                    <Phone className="w-3 h-3" /> Telefones
+                                    <Phone className="w-3 h-3" /> Telefone WhatsApp
                                  </label>
-                                 <input type="text" placeholder="Ex: (11) 9999-9999, (11) 8888-8888" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone || ''} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
+                                 <div className="flex gap-2">
+                                   <select className="bg-gray-50 border-none rounded-2xl p-5 font-bold w-[120px] text-sm" value={clientFormData.country_code || '55'} onChange={e => setClientFormData({...clientFormData, country_code: e.target.value})}>
+                                     <option value="55">🇧🇷 +55</option>
+                                     <option value="1">🇺🇸 +1</option>
+                                     <option value="351">🇵🇹 +351</option>
+                                     <option value="244">🇦🇴 +244</option>
+                                     <option value="258">🇲🇿 +258</option>
+                                     <option value="34">🇪🇸 +34</option>
+                                     <option value="33">🇫🇷 +33</option>
+                                     <option value="44">🇬🇧 +44</option>
+                                     <option value="49">🇩🇪 +49</option>
+                                     <option value="39">🇮🇹 +39</option>
+                                     <option value="81">🇯🇵 +81</option>
+                                     <option value="86">🇨🇳 +86</option>
+                                     <option value="91">🇮🇳 +91</option>
+                                     <option value="54">🇦🇷 +54</option>
+                                     <option value="56">🇨🇱 +56</option>
+                                     <option value="57">🇨🇴 +57</option>
+                                     <option value="52">🇲🇽 +52</option>
+                                     <option value="595">🇵🇾 +595</option>
+                                     <option value="598">🇺🇾 +598</option>
+                                   </select>
+                                   <input type="text" placeholder="Ex: (11) 99999-9999" className="flex-1 bg-gray-50 border-none rounded-2xl p-5 font-bold" value={clientFormData.phone || ''} onChange={e => setClientFormData({...clientFormData, phone: e.target.value})} />
+                                 </div>
                               </div>
                               <div>
                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email</label>

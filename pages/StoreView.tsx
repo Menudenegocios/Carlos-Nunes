@@ -7,7 +7,8 @@ import {
   MapPin, MessageCircle, ArrowLeft, Star, Package, Send, ArrowRight, ArrowUpRight,
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
-  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store, RefreshCw
+  QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store, RefreshCw,
+  Link as LinkIcon
 } from 'lucide-react';
 
 // Componente do Bot de WhatsApp
@@ -85,7 +86,7 @@ const WhatsappBotWidget: React.FC<{ profile: Profile }> = ({ profile }) => {
                             <div className="space-y-6 flex-1">
                                 <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100">
                                     <p className="text-sm text-gray-600 leading-relaxed">
-                                        {config.welcome_message || 'Olá! Bem-vindo Ã  nossa loja. Como posso ajudar você hoje?'}
+                                        {config.welcome_message || 'Olá! Bem-vindo à  nossa loja. Como posso ajudar você hoje?'}
                                     </p>
                                 </div>
                                 <button 
@@ -704,15 +705,21 @@ export const StoreView: React.FC = () => {
                                 {profile.social_links?.instagram && (
                                     <a href={`https://instagram.com/${profile.social_links.instagram}`} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-[2rem] hover:bg-pink-50 transition-all group">
                                         <Instagram className="w-6 h-6 text-pink-500 group-hover:scale-110 transition-transform" />
-                                        <span className="text-[9px] font-black uppercase text-slate-400">Instagram</span>
+                                        <span className="text-[9px] font-black uppercase text-slate-400 text-center truncate w-full px-1">Instagram</span>
                                     </a>
                                 )}
                                 {profile.social_links?.website && (
                                     <a href={profile.social_links.website} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-[2rem] hover:bg-slate-100 transition-all group">
                                         <Globe className="w-6 h-6 text-[#0F172A] group-hover:scale-110 transition-transform" />
-                                        <span className="text-[9px] font-black uppercase text-slate-400">Website</span>
+                                        <span className="text-[9px] font-black uppercase text-slate-400 text-center truncate w-full px-1">Website</span>
                                     </a>
                                 )}
+                                {profile.social_links?.custom_links?.map((link, i) => (
+                                    <a key={i} href={link.url} target="_blank" className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-[2rem] hover:bg-indigo-50 transition-all group">
+                                        <LinkIcon className="w-6 h-6 text-indigo-600 group-hover:scale-110 transition-transform" />
+                                        <span className="text-[9px] font-black uppercase text-slate-400 text-center truncate w-full px-1">{link.platform || 'Link'}</span>
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     </div>

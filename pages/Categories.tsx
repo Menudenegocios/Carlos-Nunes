@@ -2,58 +2,124 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Briefcase, Store, Heart, Home, Handshake,
-  LayoutGrid, ArrowRight, Search, Image as ImageIcon
+  Utensils, Heart, Dumbbell, ShoppingBag, 
+  Wrench, GraduationCap, Star, PartyPopper, 
+  Dog, ShoppingCart, Activity, Laptop,
+  ArrowRight, Search, LayoutGrid, Image as ImageIcon
 } from 'lucide-react';
 import { OfferCategory } from '../types';
 
 const CATEGORIES = [
   { 
-    id: 'servicos', 
-    title: 'Serviços Profissionais', 
-    desc: 'Marketing, Design, Consultoria, Jurídico e mais.', 
-    icon: Briefcase, 
-    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800',
-    count: 324,
-    enumValue: OfferCategory.SERVICOS_PROFISSIONAIS
+    id: 'alimentacao', 
+    title: 'Alimentação', 
+    desc: 'Restaurantes, Cafés, Bares e Gastronomia.', 
+    icon: Utensils, 
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800',
+    count: 145,
+    enumValue: OfferCategory.ALIMENTACAO
   },
   { 
-    id: 'negocios_locais', 
-    title: 'Negócios Locais', 
-    desc: 'Restaurantes, Cafés, Lojas, Salões e Automotivo.', 
-    icon: Store, 
-    image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800',
-    count: 450,
-    enumValue: OfferCategory.NEGOCIOS_LOCAIS
+    id: 'beleza', 
+    title: 'Beleza e Estética', 
+    desc: 'Salões, Clínicas de Estética e Bem-estar.', 
+    icon: Heart, 
+    image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&q=80&w=800',
+    count: 82,
+    enumValue: OfferCategory.BELEZA_ESTETICA
+  },
+  { 
+    id: 'fitness', 
+    title: 'Fitness', 
+    desc: 'Academias, Studios, Crossfit e Esportes.', 
+    icon: Dumbbell, 
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800',
+    count: 54,
+    enumValue: OfferCategory.FITNESS
+  },
+  { 
+    id: 'varejo', 
+    title: 'Varejo', 
+    desc: 'Lojas físicas, Vestuário e Acessórios.', 
+    icon: ShoppingBag, 
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
+    count: 210,
+    enumValue: OfferCategory.VAREJO
+  },
+  { 
+    id: 'servicos', 
+    title: 'Serviços', 
+    desc: 'Manutenção, Reformas e Serviços Gerais.', 
+    icon: Wrench, 
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695ce6958?auto=format&fit=crop&q=80&w=800',
+    count: 124,
+    enumValue: OfferCategory.SERVICOS
+  },
+  { 
+    id: 'educacao', 
+    title: 'Educação', 
+    desc: 'Cursos, Idiomas, Mentorias e Treinamentos.', 
+    icon: GraduationCap, 
+    image: 'https://images.unsplash.com/photo-1523050338392-06ba54431b72?auto=format&fit=crop&q=80&w=800',
+    count: 45,
+    enumValue: OfferCategory.EDUCACAO
+  },
+  { 
+    id: 'experiencias', 
+    title: 'Experiências', 
+    desc: 'Viagens, Eventos e Momentos Únicos.', 
+    icon: Star, 
+    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=800',
+    count: 38,
+    enumValue: OfferCategory.EXPERIENCIAS
+  },
+  { 
+    id: 'lazer', 
+    title: 'Lazer', 
+    desc: 'Parques, Cinemas, Teatros e Diversão.', 
+    icon: PartyPopper, 
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=800',
+    count: 27,
+    enumValue: OfferCategory.LAZER
+  },
+  { 
+    id: 'pets', 
+    title: 'Pets', 
+    desc: 'Petshops, Clínicas e Produtos para Animais.', 
+    icon: Dog, 
+    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&q=80&w=800',
+    count: 42,
+    enumValue: OfferCategory.PETS
+  },
+  { 
+    id: 'compras', 
+    title: 'Compras Online', 
+    desc: 'E-commerce e Produtos Variados.', 
+    icon: ShoppingCart, 
+    image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&q=80&w=800',
+    count: 95,
+    enumValue: OfferCategory.COMPRAS
   },
   { 
     id: 'saude', 
-    title: 'Saúde e Bem-estar', 
-    desc: 'Psicologia, Nutrição, Yoga, Pilates e Terapias.', 
-    icon: Heart, 
-    image: 'https://images.unsplash.com/photo-1544367563-12123d8966bf?auto=format&fit=crop&q=80&w=800',
-    count: 120,
-    enumValue: OfferCategory.SAUDE_BEM_ESTAR
+    title: 'Saúde', 
+    desc: 'Clínicas, Médicos e Bem-estar Físico.', 
+    icon: Activity, 
+    image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=800',
+    count: 112,
+    enumValue: OfferCategory.SAUDE
   },
   { 
-    id: 'imoveis', 
-    title: 'Imóveis e Residencial', 
-    desc: 'Corretores, Arquitetura, Síndicos e Reformas.', 
-    icon: Home, 
-    image: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&q=80&w=800',
-    count: 85,
-    enumValue: OfferCategory.IMOVEIS_SERVICOS
-  },
-  { 
-    id: 'oportunidades', 
-    title: 'Oportunidades', 
-    desc: 'Parcerias, Fornecedores e Indicações.', 
-    icon: Handshake, 
-    image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=800',
-    count: 65,
-    enumValue: OfferCategory.OPORTUNIDADES
+    id: 'tech', 
+    title: 'Tecnologia', 
+    desc: 'Informática, Celulares e Inovação.', 
+    icon: Laptop, 
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800',
+    count: 63,
+    enumValue: OfferCategory.TECH
   }
 ];
+
 
 export const Categories: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
