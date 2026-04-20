@@ -14,8 +14,10 @@ import {
   Search,
   Sparkles,
   TrendingUp,
-  MapPin
+  MapPin,
+  AtSign
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Community: React.FC = () => {
   const { user } = useAuth();
@@ -55,6 +57,14 @@ export const Community: React.FC = () => {
         user_avatar: userProfile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`,
         content: newPostContent,
       });
+
+      // Process Mentions in post
+      const mentionRegex = /@(\w+)/g;
+      const mentions = [...newPostContent.matchAll(mentionRegex)].map(m => m[1]);
+      
+      // In a real scenario, we would search for these users and notify them
+      // For now, we've implemented the visual part and the backend structure is ready
+      
       setPosts([newPost, ...posts]);
       setNewPostContent('');
     } finally {
@@ -97,13 +107,13 @@ export const Community: React.FC = () => {
         <div className="hidden lg:block lg:col-span-3 space-y-6">
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm sticky top-24">
              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gray-100 mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden">
+                <Link to={`/store/${user?.id}`} className="block w-20 h-20 rounded-2xl bg-gray-100 mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden hover:scale-105 transition-transform">
                    <img 
                     src={userProfile?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} 
                     className="w-full h-full object-cover" 
                     alt="Me" 
                    />
-                </div>
+                </Link>
                 <h3 className="font-bold text-gray-900 leading-tight">{user?.name}</h3>
                 <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider mt-1">{userProfile?.business_name || 'Meu Negócio'}</p>
              </div>
@@ -221,11 +231,11 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
        {/* Card Header */}
        <div className="p-6 pb-4 flex justify-between items-start">
           <div className="flex gap-4">
-             <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+             <Link to={`/store/${post.user_id}`} className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 hover:scale-105 transition-transform">
                 <img src={post.user_avatar} className="w-full h-full object-cover" alt={post.user_name} />
-             </div>
+             </Link>
              <div>
-                <h4 className="font-bold text-gray-900 leading-tight">{post.user_name}</h4>
+                <Link to={`/store/${post.user_id}`} className="font-bold text-gray-900 leading-tight hover:text-indigo-600 transition-all">{post.user_name}</Link>
                 <p className="text-xs text-indigo-600 font-bold">{post.business_name}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">{new Date(post.created_at).toLocaleDateString()} às {new Date(post.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
              </div>
@@ -235,7 +245,14 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
 
        {/* Card Body */}
        <div className="px-6 pb-4">
-          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+            {post.content.split(' ').map((word, i) => {
+              if (word.startsWith('@')) {
+                return <span key={i} className="text-indigo-600 font-black italic cursor-pointer hover:underline">{word} </span>;
+              }
+              return word + ' ';
+            })}
+          </p>
           {post.image_url && (
             <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100">
                <img src={post.image_url} className="w-full object-cover max-h-80" alt="Post content" />
@@ -288,12 +305,17 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
              <div className="space-y-4">
                 {post.comments.map(comment => (
                    <div key={comment.id} className="flex gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                      <Link to={`/store/${comment.user_id}`} className="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 hover:scale-105 transition-transform">
                          <img src={comment.user_avatar} alt={comment.user_name} className="w-full h-full object-cover" />
-                      </div>
+                      </Link>
                       <div className="flex-1 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
-                         <h5 className="text-xs font-black text-gray-900 mb-0.5">{comment.user_name}</h5>
-                         <p className="text-xs text-gray-600 leading-relaxed">{comment.content}</p>
+                         <Link to={`/store/${comment.user_id}`} className="text-xs font-black text-gray-900 mb-0.5 block hover:text-indigo-600 transition-all">{comment.user_name}</Link>
+                         <p className="text-xs text-gray-600 leading-relaxed font-bold italic">
+                            {comment.content.split(' ').map((word, i) => {
+                              if (word.startsWith('@')) return <span key={i} className="text-indigo-600">{word} </span>;
+                              return word + ' ';
+                            })}
+                         </p>
                       </div>
                    </div>
                 ))}
@@ -307,7 +329,7 @@ const PostCard: React.FC<{ post: CommunityPost, onLike: () => any, currentUserId
                    <input 
                      type="text" 
                      placeholder="Escreva seu comentário..." 
-                     className="w-full bg-white border-gray-100 rounded-xl py-2 pl-4 pr-10 text-xs focus:ring-2 focus:ring-indigo-100"
+                     className="w-full bg-white border-gray-100 rounded-xl py-2 pl-4 pr-10 text-xs focus:ring-2 focus:ring-indigo-100 outline-none"
                      value={commentText}
                      onChange={(e) => setCommentText(e.target.value)}
                    />

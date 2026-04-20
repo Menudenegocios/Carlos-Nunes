@@ -13,6 +13,8 @@ import {
 import { Logo } from './Logo';
 import { AIChatAgent } from './AIChatAgent';
 import { motion } from 'framer-motion';
+import { NotificationCenter } from './NotificationCenter';
+import { MessageSquare } from 'lucide-react';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout, isImpersonating, stopImpersonating, adminUser } = useAuth();
@@ -115,6 +117,13 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         { label: 'Meus Projetos', to: '/project-management' },
         { label: 'Quadro Kanban', to: '/project-management' }
       ]
+    },
+    { 
+      label: 'Mensagens', 
+      icon: MessageSquare, 
+      to: '/messages', 
+      locked: isPreRegistration && !isAdmin, 
+      minPlan: 'basic'
     },
     { 
       label: 'Planos de Adesão', 
@@ -330,6 +339,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                      </span>
                   </div>
                  <div className="flex items-center gap-2">
+                   <NotificationCenter />
                    <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform">
                      {user.name.charAt(0)}
                    </Link>

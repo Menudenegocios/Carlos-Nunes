@@ -38,6 +38,7 @@ import { ProjectManagement } from './pages/ProjectManagement';
 import { AdminCentral } from './pages/AdminCentral';
 import { LocalPlus } from './pages/LocalPlus';
 import { Mentoria } from './pages/Mentoria';
+import { DirectMessages } from './pages/DirectMessages';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -80,6 +81,7 @@ const AppRoutes = () => {
        <Route path="/reviews" element={<ProtectedRoute><DashboardLayout><Reviews /></DashboardLayout></ProtectedRoute>} />
        <Route path="/support" element={<ProtectedRoute><DashboardLayout><Support /></DashboardLayout></ProtectedRoute>} />
        <Route path="/mentoria" element={<ProtectedRoute><DashboardLayout><Mentoria /></DashboardLayout></ProtectedRoute>} />
+       <Route path="/messages" element={<ProtectedRoute><DashboardLayout><DirectMessages /></DashboardLayout></ProtectedRoute>} />
       
       {/* Admin Route - Admin restriction */}
       <Route path="/admin-central" element={<ProtectedRoute requireAdmin={true}><DashboardLayout><AdminCentral /></DashboardLayout></ProtectedRoute>} />

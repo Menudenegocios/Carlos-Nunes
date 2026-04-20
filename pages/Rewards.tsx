@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
 import { 
@@ -1212,7 +1212,8 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
     date: '',
     time: '',
     title: '',
-    description: ''
+    description: '',
+    meet_link: ''
   });
 
   useEffect(() => {
@@ -1256,11 +1257,22 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
         description: formData.description,
         date: formData.date,
         time: formData.time,
-        meet_link: meetLink
+        meet_link: formData.meet_link || meetLink
+      });
+
+      // Notify guest
+      await supabaseService.createNotification({
+        user_id: formData.guest_id,
+        type: 'meeting',
+        from_user_id: realUserId,
+        from_user_name: userProfile?.business_name || user.name,
+        from_user_avatar: userProfile?.logo_url || user.photo_url || '',
+        content: `agendou um 1x1 com você: "${formData.title}"`,
+        link: '/rewards'
       });
 
       setIsModalOpen(false);
-      setFormData({ guest_id: '', date: '', time: '', title: '', description: '' });
+      setFormData({ guest_id: '', date: '', time: '', title: '', description: '', meet_link: '' });
       loadData();
     } catch (error) {
       console.error("Error creating meeting:", error);
@@ -1402,13 +1414,13 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
                        </div>
                        
                        <h4 className="text-xl font-black text-gray-900 mb-2 truncate">{m.title}</h4>
-                       <div className="flex items-center gap-3 mb-6">
+                       <Link to={`/store/${partner.user_id}`} className="flex items-center gap-3 mb-6 hover:opacity-80 transition-opacity">
                           <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${partnerName}`} className="w-8 h-8 rounded-lg shadow-sm" alt="Partner" />
                           <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Conector</p>
                             <p className="text-sm font-bold text-gray-700">{partnerName}</p>
                           </div>
-                       </div>
+                       </Link>
 
                        <div className="flex items-center gap-6 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                           <div className="flex flex-col">
@@ -1616,6 +1628,17 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
                         onChange={e => setFormData({...formData, time: e.target.value})} 
                       />
                    </div>
+                </div>
+
+                <div>
+                   <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Link da Reunião (Google Meet)</label>
+                   <input 
+                      type="text" 
+                      placeholder="https://meet.google.com/..."
+                      className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-xs" 
+                      value={formData.meet_link} 
+                      onChange={e => setFormData({...formData, meet_link: e.target.value})} 
+                   />
                 </div>
 
                 <div>
@@ -1879,7 +1902,23 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
   const handleLike = async (postId: string) => {
     try {
       const realUserId = userProfile?.user_id || user.id;
+      const post = posts.find(p => p.id === postId);
+      const isAlreadyLiked = (post?.liked_by || []).includes(realUserId);
+      
       await supabaseService.likePost(postId, realUserId);
+      
+      if (!isAlreadyLiked && post && post.user_id !== realUserId) {
+        await supabaseService.createNotification({
+          user_id: post.user_id,
+          type: 'like',
+          from_user_id: realUserId,
+          from_user_name: userProfile?.business_name || user.name,
+          from_user_avatar: userProfile?.logo_url || user.photo_url || '',
+          content: `curtiu sua publicação.`,
+          link: '/rewards'
+        });
+      }
+      
       onRefresh();
     } catch (error) {
        console.error(error);
@@ -1890,12 +1929,36 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
     if (!commentText.trim()) return;
     try {
       const realUserId = userProfile?.user_id || user.id;
+      
+      // Parse mentions
+      const mentions = commentText.match(/@(\w+)/g) || [];
+      
       await supabaseService.addCommentToPost(postId, {
         user_id: realUserId,
-        user_name: user.name,
+        user_name: userProfile?.business_name || user.name,
         user_avatar: userProfile?.logo_url || user.photo_url || '',
         content: commentText
       });
+
+      // Send notifications for mentions
+      for (const mention of mentions) {
+        const username = mention.substring(1);
+        const mentionedProfiles = await supabaseService.searchProfiles(username);
+        const targetProfile = mentionedProfiles.find(p => (p.business_name || p.name).toLowerCase().replace(/\s+/g, '') === username.toLowerCase());
+        
+        if (targetProfile && targetProfile.user_id !== realUserId) {
+          await supabaseService.createNotification({
+            user_id: targetProfile.user_id,
+            type: 'mention',
+            from_user_id: realUserId,
+            from_user_name: userProfile?.business_name || user.name,
+            from_user_avatar: userProfile?.logo_url || user.photo_url || '',
+            content: `mencionou você em um comentário.`,
+            link: '/rewards' // Open feed
+          });
+        }
+      }
+
       setCommentText('');
       setCommentingOn(null);
       onRefresh();
@@ -1947,10 +2010,11 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
             
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
+                <Link to={`/store/${post.user_id}`} className="flex items-center gap-4 hover:opacity-80 transition-opacity">
                   <img 
                     src={post.author?.logo_url || post.author?.photo_url || post.user_avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.business_name || post.user_name}`} 
                     className="w-12 h-12 rounded-2xl shadow-md border-2 border-white ring-4 ring-gray-50 object-cover"
+                    alt="Avatar"
                   />
                   <div>
                     <h4 className="font-black text-gray-900 leading-none">{post.business_name || post.user_name}</h4>
@@ -1958,7 +2022,7 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
                       {post.type === 'pitch' ? '💼 Pitch Profissional' : post.type === 'automated' ? '🎉 Movimentação' : '📢 Atualização'}
                     </p>
                   </div>
-                </div>
+                </Link>
                 <div className="flex flex-col items-end gap-2">
                   <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(post.created_at).toLocaleDateString()}</span>
                   {(post.user_id === user.id || post.user_id === userProfile?.user_id) && (
@@ -1972,7 +2036,17 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
 
               <div className="space-y-4">
                 <p className="text-gray-700 font-medium leading-relaxed whitespace-pre-wrap">
-                  {post.content}
+                  {post.content.split(/(\s+)/).map((word: string, i: number) => {
+                    if (word.startsWith('@') && word.length > 1) {
+                      const slug = word.substring(1);
+                      return (
+                        <Link key={i} to={`/${slug}`} className="text-indigo-600 font-bold hover:underline">
+                          {word}
+                        </Link>
+                      );
+                    }
+                    return word;
+                  })}
                 </p>
                 {post.image_url && (
                   <img src={post.image_url} className="rounded-3xl w-full h-64 object-cover shadow-lg" alt="Post content" />
@@ -2004,10 +2078,24 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
                 <div className="mt-6 space-y-4 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100">
                   {post.comments?.map((c: any, ci: number) => (
                     <div key={ci} className="flex gap-3">
-                      <img src={c.user_avatar} className="w-6 h-6 rounded-lg" />
+                      <Link to={`/store/${c.user_id}`}>
+                        <img src={c.user_avatar} className="w-6 h-6 rounded-lg hover:opacity-80 transition-opacity" alt="Avatar" />
+                      </Link>
                       <div>
-                        <p className="text-[10px] font-black text-gray-900 leading-none">{c.user_name}</p>
-                        <p className="text-xs text-gray-600 mt-1">{c.content}</p>
+                        <Link to={`/store/${c.user_id}`} className="text-[10px] font-black text-gray-900 leading-none hover:text-indigo-600 transition-colors uppercase">{c.user_name}</Link>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {c.content.split(/(\s+)/).map((word: string, i: number) => {
+                            if (word.startsWith('@') && word.length > 1) {
+                              const slug = word.substring(1);
+                              return (
+                                <Link key={i} to={`/${slug}`} className="text-indigo-600 font-bold hover:underline">
+                                  {word}
+                                </Link>
+                              );
+                            }
+                            return word;
+                          })}
+                        </p>
                       </div>
                     </div>
                   ))}

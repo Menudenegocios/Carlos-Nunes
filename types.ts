@@ -778,3 +778,30 @@ export interface Meeting1x1 {
   creator_name?: string;
   guest_name?: string;
 }
+
+export interface PlatformNotification {
+  id: string;
+  user_id: string;
+  type: 'mention' | 'post' | 'comment' | 'like' | 'message' | 'meeting' | 'gramou';
+  from_user_id: string;
+  from_user_name: string;
+  from_user_avatar?: string;
+  content: string;
+  link?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface DirectMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  // Join virtual fields
+  sender_name?: string;
+  sender_avatar?: string;
+  receiver_name?: string;
+  receiver_avatar?: string;
+}

@@ -51,7 +51,8 @@ export const AdminCentral: React.FC = () => {
     has_founder_badge: false,
     has_local_plus: false,
     display_id: undefined as number | undefined,
-    cpf_cnpj: ''
+    cpf_cnpj: '',
+    phone: ''
   });
 
   // Event Modal State
@@ -151,7 +152,8 @@ export const AdminCentral: React.FC = () => {
         has_founder_badge: false,
         has_local_plus: false,
         display_id: undefined,
-        cpf_cnpj: ''
+        cpf_cnpj: '',
+        phone: ''
     });
     setIsModalOpen(true);
   };
@@ -170,7 +172,8 @@ export const AdminCentral: React.FC = () => {
       has_founder_badge: (profile as any).has_founder_badge || false,
       has_local_plus: (profile as any).has_local_plus || false,
       display_id: profile.display_id,
-      cpf_cnpj: profile.cpf_cnpj || ''
+      cpf_cnpj: profile.cpf_cnpj || '',
+      phone: profile.phone || ''
     });
     setIsModalOpen(true);
   };
@@ -195,7 +198,8 @@ export const AdminCentral: React.FC = () => {
           has_founder_badge: memberForm.has_founder_badge,
           has_local_plus: memberForm.has_local_plus,
           display_id: memberForm.display_id,
-          cpf_cnpj: memberForm.cpf_cnpj
+          cpf_cnpj: memberForm.cpf_cnpj,
+          phone: memberForm.phone
         });
         setIsModalOpen(false);
         await loadAdminData();
@@ -601,6 +605,17 @@ export const AdminCentral: React.FC = () => {
                                                 >
                                                   <Eye className="w-5 h-5" />
                                                 </button>
+                                                {profile.phone && (
+                                                    <a 
+                                                        href={`https://wa.me/${profile.phone.replace(/\D/g, '')}`} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        title="Chamar no WhatsApp"
+                                                        className="p-3 bg-white rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all shadow-sm border border-gray-100"
+                                                    >
+                                                        <Phone className="w-5 h-5" />
+                                                    </a>
+                                                )}
                                                 <button onClick={() => handleOpenEditModal(profile)} title="Editar dados/Login" className="p-3 bg-white rounded-xl text-indigo-400 hover:bg-indigo-50 transition-all shadow-sm border border-gray-100"><Edit2 className="w-5 h-5" /></button>
                                                 <button onClick={() => deleteMember(profile.user_id)} className="p-3 bg-white rounded-xl text-rose-400 hover:bg-rose-50 transition-all shadow-sm border border-gray-100"><Trash2 className="w-5 h-5" /></button>
                                             </div>
@@ -975,7 +990,7 @@ export const AdminCentral: React.FC = () => {
       )}
       {isModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in overflow-y-auto">
-             <div className="bg-white rounded-[2.5rem] w-full max-w-sm shadow-2xl overflow-hidden border border-white/5 animate-scale-in my-auto">
+             <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl overflow-hidden border border-white/5 animate-scale-in my-auto">
                 <div className="bg-[#0F172A] p-6 text-white flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-black uppercase italic">{editingProfile ? 'Configurações' : 'Novo Cadastro'}</h3>
@@ -993,6 +1008,11 @@ export const AdminCentral: React.FC = () => {
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">CPF / CNPJ</label>
                             <input type="text" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm" value={memberForm.cpf_cnpj} onChange={e => setMemberForm({...memberForm, cpf_cnpj: e.target.value})} placeholder="000.000.000-00" />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2"><Phone className="w-3 h-3" /> WhatsApp</label>
+                            <PhoneInput value={memberForm.phone} onChange={val => setMemberForm({...memberForm, phone: val})} className="w-full" />
                         </div>
                         
                         <div>

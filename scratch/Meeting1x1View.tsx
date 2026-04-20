@@ -1,5 +1,12 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Users, Plus, Trophy, Calendar, Clock, Video, 
+  MessageCircle, CheckCircle, X, Search 
+} from 'lucide-react';
+import { supabaseService } from '../services/supabaseService';
+import { User, Meeting1x1 } from '../types';
 
-const Meeting1x1View = ({ user }: { user: User }) => {
+export const Meeting1x1View = ({ user }: { user: User }) => {
   const [meetings, setMeetings] = useState<Meeting1x1[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [ranking, setRanking] = useState<any[]>([]);
@@ -13,7 +20,8 @@ const Meeting1x1View = ({ user }: { user: User }) => {
     date: '',
     time: '',
     title: '',
-    description: ''
+    description: '',
+    meet_link: ''
   });
 
   useEffect(() => {
@@ -31,7 +39,7 @@ const Meeting1x1View = ({ user }: { user: User }) => {
       setMeetings(meetingsData);
       setProfiles(profilesData.filter(p => p.user_id !== user.id));
       setRanking(rankingData);
-    } catch (error) {
+    } catch (error: any) {
        console.error("Error loading meeting data:", error);
     } finally {
       setLoading(false);
@@ -55,13 +63,13 @@ const Meeting1x1View = ({ user }: { user: User }) => {
         description: formData.description,
         date: formData.date,
         time: formData.time,
-        meet_link: meetLink
+        meet_link: formData.meet_link || meetLink
       });
 
       setIsModalOpen(false);
-      setFormData({ guest_id: '', date: '', time: '', title: '', description: '' });
+      setFormData({ guest_id: '', date: '', time: '', title: '', description: '', meet_link: '' });
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating meeting:", error);
       alert("Erro ao agendar reunião.");
     }
@@ -72,7 +80,7 @@ const Meeting1x1View = ({ user }: { user: User }) => {
     try {
       await supabaseService.completeMeeting1x1(mId);
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       alert("Erro ao concluir reunião.");
     }
   };
@@ -94,16 +102,16 @@ https://menudenegocios.com/`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const filteredProfiles = profiles.filter(p => 
+  const filteredProfiles = profiles.filter((p: any) => 
     (p.business_name || p.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const stats = {
-    total: meetings.filter(m => m.status === 'completed').length,
-    points: meetings.filter(m => m.status === 'completed' && m.points_awarded).length * 10
+    total: meetings.filter((m: any) => m.status === 'completed').length,
+    points: meetings.filter((m: any) => m.status === 'completed' && m.points_awarded).length * 10
   };
 
-  const userRank = ranking.findIndex(r => r.user_id === user.id) + 1;
+  const userRank = ranking.findIndex((r: any) => r.user_id === user.id) + 1;
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -185,7 +193,7 @@ https://menudenegocios.com/`;
              </div>
            ) : (
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               {meetings.map((m) => {
+               {meetings.map((m: any) => {
                  const isCreator = m.creator_id === user.id;
                  const partner = isCreator ? (m as any).guest : (m as any).creator;
                  const partnerName = partner?.business_name || partner?.name || "Membro";
@@ -267,7 +275,7 @@ https://menudenegocios.com/`;
               </h3>
 
               <div className="space-y-4">
-                {ranking.slice(0, 5).map((member, i) => (
+                {ranking.slice(0, 5).map((member: any, i: number) => (
                    <div key={member.user_id} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-transparent hover:border-indigo-100 transition-all">
                       <div className="flex items-center gap-4">
                         <span className={`font-black text-sm italic w-4 ${i === 0 ? 'text-yellow-500' : 'text-slate-300'}`}>#{i + 1}</span>
@@ -321,14 +329,14 @@ https://menudenegocios.com/`;
                         placeholder="Buscar por nome ou negócio..."
                         className="w-full pl-11 pr-4 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:ring-2 focus:ring-indigo-500/10 transition-all mb-3"
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                       />
                    </div>
                    <div className="max-h-40 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                       {filteredProfiles.length === 0 ? (
                         <p className="text-[10px] text-center text-slate-400 py-4 uppercase font-bold italic">Nenhum parceiro encontrado</p>
                       ) : (
-                        filteredProfiles.map(p => (
+                        filteredProfiles.map((p: any) => (
                           <button
                             key={p.user_id}
                             type="button"
@@ -358,7 +366,7 @@ https://menudenegocios.com/`;
                       placeholder="Ex: Alinhamento de Parceria Estratégica"
                       className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm" 
                       value={formData.title} 
-                      onChange={e => setFormData({...formData, title: e.target.value})} 
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, title: e.target.value})} 
                    />
                 </div>
 
@@ -370,7 +378,7 @@ https://menudenegocios.com/`;
                         type="date" 
                         className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm" 
                         value={formData.date} 
-                        onChange={e => setFormData({...formData, date: e.target.value})} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, date: e.target.value})} 
                       />
                    </div>
                    <div>
@@ -380,21 +388,32 @@ https://menudenegocios.com/`;
                         type="time" 
                         className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm" 
                         value={formData.time} 
-                        onChange={e => setFormData({...formData, time: e.target.value})} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, time: e.target.value})} 
                       />
                    </div>
                 </div>
 
-                <div>
-                   <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição (Opcional)</label>
-                   <textarea 
-                      rows={3}
-                      placeholder="Sobre o que vamos conversar?"
-                      className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm resize-none" 
-                      value={formData.description} 
-                      onChange={e => setFormData({...formData, description: e.target.value})} 
-                   />
-                </div>
+                 <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Link da Reunião (Google Meet)</label>
+                    <input 
+                       type="text" 
+                       placeholder="https://meet.google.com/..."
+                       className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm" 
+                       value={formData.meet_link} 
+                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, meet_link: e.target.value})} 
+                    />
+                 </div>
+
+                 <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Descrição (Opcional)</label>
+                    <textarea 
+                       rows={3}
+                       placeholder="Sobre o que vamos conversar?"
+                       className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm resize-none" 
+                       value={formData.description} 
+                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, description: e.target.value})} 
+                    />
+                 </div>
 
                 <button type="submit" className="w-full bg-indigo-600 text-white font-black py-6 rounded-[2rem] shadow-2xl uppercase tracking-widest text-xs hover:bg-brand-primary transition-all active:scale-95 mt-4">
                   CONFIRMAR AGENDAMENTO

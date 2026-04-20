@@ -818,7 +818,8 @@ export const supabaseService = {
     has_founder_badge?: boolean,
     display_id?: number,
     has_local_plus?: boolean,
-    cpf_cnpj?: string
+    cpf_cnpj?: string,
+    phone?: string
   }): Promise<void> => {
     try {
       // Revertido para comunicação direta como solicitado pelo usuário (sem rota de API).
@@ -838,6 +839,7 @@ export const supabaseService = {
           display_id: data.display_id,
           has_local_plus: data.has_local_plus,
           cpf_cnpj: data.cpf_cnpj,
+          phone: data.phone,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', data.userId);
@@ -2038,9 +2040,6 @@ export const supabaseService = {
 
   adminDeleteUser: async (userId: string): Promise<void> => {
     try {
-      // Revertido para comunicação direta como solicitado pelo usuário (sem rota de API).
-      // Nota: Remover do Auth (auth.users) não é possível diretamente do frontend (Service Role).
-      // Mas deletar o PERFIL (tabela profiles) funcionará via RLS se o usuário for admin.
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -2049,6 +2048,241 @@ export const supabaseService = {
       if (error) throw error;
     } catch (error: any) {
       console.error("Error admin delete user (Direct):", error);
+      throw error;
+    }
+  },
+
+  // --- SOCIAL MESSAGING & NOTIFICATIONS ---
+  searchProfiles: async (query: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, name, business_name, logo_url')
+        .or(`name.ilike.%${query}%,business_name.ilike.%${query}%`)
+        .limit(5);
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error searching profiles:", error);
+      return [];
+    }
+  },
+
+  getDirectMessages: async (user1: string, user2: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting messages:", error);
+      return [];
+    }
+  },
+
+  getConversations: async (user_id: string): Promise<any[]> => {
+    try {
+      // Get all messages where user is sender or receiver
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('sender_id, receiver_id, content, created_at, is_read')
+        .or(`sender_id.eq.${user_id},receiver_id.eq.${user_id}`)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+
+      // Group by other user and pick latest message
+      const conversationsMap: Record<string, any> = {};
+      data?.forEach((msg: any) => {
+        const otherId = msg.sender_id === user_id ? msg.receiver_id : msg.sender_id;
+        if (!conversationsMap[otherId]) {
+          conversationsMap[otherId] = msg;
+        }
+      });
+
+      const results = await Promise.all(Object.keys(conversationsMap).map(async (id) => {
+        const profile = await supabaseService.getProfile(id);
+        return {
+          other_id: id,
+          other_name: profile?.name || 'Usuário',
+          other_avatar: profile?.logo_url,
+          last_message: conversationsMap[id].content,
+          last_date: conversationsMap[id].created_at,
+          unread_count: 0 // Simplificado
+        };
+      }));
+
+      return results;
+    } catch (error) {
+      console.error("Error getting conversations:", error);
+      return [];
+    }
+  },
+
+  sendDirectMessage: async (msg: { sender_id: string, receiver_id: string, content: string }): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('direct_messages')
+        .insert({ ...msg, created_at: new Date().toISOString() });
+      if (error) throw error;
+
+      // Create notification for receiver
+      const sender = await supabaseService.getProfile(msg.sender_id);
+      await supabaseService.createNotification({
+        user_id: msg.receiver_id,
+        type: 'message',
+        from_user_id: msg.sender_id,
+        from_user_name: sender?.name || 'Alguém',
+        from_user_avatar: sender?.logo_url,
+        content: `enviou uma nova mensagem: "${msg.content.substring(0, 30)}..."`,
+        link: '/messages'
+      });
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    }
+  },
+
+  getNotifications: async (user_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting notifications:", error);
+      return [];
+    }
+  },
+
+  createNotification: async (notif: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert({ ...notif, created_at: new Date().toISOString(), is_read: false });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
+  },
+
+  markNotificationAsRead: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  },
+
+  markAllNotificationsAsRead: async (user_id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user_id);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  },
+
+  // --- MEMBER REVIEWS ---
+  getMemberReviews: async (target_user_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('member_reviews')
+        .select(`
+          *,
+          reviewer:profiles!reviewer_id(name, business_name, logo_url)
+        `)
+        .eq('target_user_id', target_user_id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting member reviews:", error);
+      return [];
+    }
+  },
+
+  addMemberReview: async (review: any): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('member_reviews')
+        .insert({
+          ...review,
+          created_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error adding member review:", error);
+      throw error;
+    }
+  },
+
+  getAverageRating: async (target_user_id: string): Promise<{ average: number, count: number }> => {
+    try {
+      const { data, error } = await supabase
+        .from('member_reviews')
+        .select('rating')
+        .eq('target_user_id', target_user_id);
+      
+      if (error) throw error;
+      if (!data || data.length === 0) return { average: 0, count: 0 };
+      
+      const sum = data.reduce((acc: number, curr: any) => acc + curr.rating, 0);
+      return { average: sum / data.length, count: data.length };
+    } catch (error) {
+      console.error("Error getting average rating:", error);
+      return { average: 0, count: 0 };
+    }
+  },
+
+  deleteConversation: async (user_id: string, other_id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('direct_messages')
+        .delete()
+        .or(`and(sender_id.eq.${user_id},receiver_id.eq.${other_id}),and(sender_id.eq.${other_id},receiver_id.eq.${user_id})`);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      throw error;
+    }
+  },
+
+  uploadChatImage: async (file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `chat_attachments/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error uploading chat image:", error);
       throw error;
     }
   },

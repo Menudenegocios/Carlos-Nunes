@@ -8,7 +8,7 @@ import {
   ShoppingBag, Trash2, Plus, Minus, X, Play, Zap, CreditCard, DollarSign, ShieldCheck,
   Calendar, Clock, User, Briefcase, Award, CheckCircle, Instagram, Globe, Info, Target, ListTodo, Handshake,
   QrCode, Download, BookOpen, FileText, Sparkles, MessageSquare, Store, RefreshCw,
-  Link as LinkIcon
+  Link as LinkIcon, Star as StarIcon, Save, Lock
 } from 'lucide-react';
 
 // Componente do Bot de WhatsApp
@@ -166,6 +166,11 @@ export const StoreView: React.FC = () => {
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [avgRating, setAvgRating] = useState({ average: 0, count: 0 });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isPurchaseSuccess, setIsPurchaseSuccess] = useState(false);
@@ -218,17 +223,21 @@ export const StoreView: React.FC = () => {
       setProfile(prof);
       const targetUserId = prof.user_id;
 
-      const [prods, cats, allPosts, vitrineComments] = await Promise.all([
+      const [prods, cats, allPosts, vitrineComments, reviewsData, stats] = await Promise.all([
         supabaseService.getProducts(targetUserId),
         supabaseService.getStoreCategories(targetUserId),
         supabaseService.getBlogPosts(),
-        supabaseService.getVitrineComments(targetUserId)
+        supabaseService.getVitrineComments(targetUserId),
+        supabaseService.getMemberReviews(targetUserId),
+        supabaseService.getAverageRating(targetUserId)
       ]);
       setProducts(prods);
       setCategories(cats);
       setComments(vitrineComments);
+      setReviews(reviewsData);
+      setAvgRating(stats);
       
-      // Lógica \"Top 3\" Artigos Recentes
+      // Lógica "Top 3" Artigos Recentes
       const userPosts = allPosts
         .filter(p => p.user_id === targetUserId)
         .sort((a, b) => {
@@ -264,6 +273,55 @@ export const StoreView: React.FC = () => {
     } finally {
         setIsSubmittingComment(false);
     }
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !profile) return;
+    
+    setIsSubmittingReview(true);
+    try {
+        await supabaseService.addMemberReview({
+            reviewer_id: user.id,
+            target_user_id: profile.user_id,
+            rating: reviewRating,
+            comment: reviewComment
+        });
+        setReviewComment('');
+        setReviewRating(5);
+        
+        // Reload
+        const [reviewsData, stats] = await Promise.all([
+            supabaseService.getMemberReviews(profile.user_id),
+            supabaseService.getAverageRating(profile.user_id)
+        ]);
+        setReviews(reviewsData);
+        setAvgRating(stats);
+        alert("Avaliação enviada com sucesso!");
+    } catch (err: any) {
+        console.error("Erro ao enviar avaliação:", err);
+        if (err.code === '23505') {
+            alert("Você já avaliou este especialista.");
+        } else {
+            alert("Erro ao enviar avaliação.");
+        }
+    } finally {
+        setIsSubmittingReview(false);
+    }
+  };
+
+  const renderStars = (rating: number, size = "w-4 h-4", interactive = false) => {
+      return (
+          <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                  <StarIcon 
+                      key={star} 
+                      className={`${size} ${star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} ${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                      onClick={() => interactive && setReviewRating(star)}
+                  />
+              ))}
+          </div>
+      );
   };
 
   const handleMenuCashPurchase = async () => {
@@ -365,11 +423,19 @@ export const StoreView: React.FC = () => {
                         </div>
                          <div className="flex items-center gap-3">
                             <h1 className="text-5xl lg:text-7xl font-black text-[#0F172A] uppercase italic tracking-tighter leading-tight title-fix">{profile.business_name}</h1>
-                            {profile.has_founder_badge && (
-                                <div className="bg-amber-100 text-amber-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse mb-4">
-                                    Membro Fundador
-                                </div>
-                            )}
+                            <div className="flex flex-col gap-2 mb-4">
+                                {profile.has_founder_badge && (
+                                    <div className="bg-amber-100 text-amber-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse w-fit">
+                                        Membro Fundador
+                                    </div>
+                                )}
+                                {avgRating.count > 0 && (
+                                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/40 shadow-sm w-fit">
+                                        {renderStars(Math.round(avgRating.average), "w-3 h-3")}
+                                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{avgRating.average.toFixed(1)} ({avgRating.count} avaliações)</span>
+                                    </div>
+                                )}
+                            </div>
                          </div>
                          <p className="text-2xl font-bold text-[#0F172A] uppercase italic tracking-tight title-fix">{profile.category || 'VENDAS'}</p>
                    </div>
@@ -454,57 +520,90 @@ export const StoreView: React.FC = () => {
                                 </p>
                             </section>
 
-                            {/* COMENTÁRIOS */}
+                            {/* AVALIAÇÕES E RECOMENDAÇÕES */}
                             <section className="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-xl border border-gray-100">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#0F172A]"><MessageSquare className="w-5 h-5" /></div>
-                                     <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">O que dizem sobre mim</h2>
+                                <div className="flex items-center justify-between mb-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-amber-500"><StarIcon className="w-5 h-5 fill-amber-500" /></div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-[#0F172A] uppercase italic tracking-tighter title-fix">Avaliações da Rede</h2>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Confiança e reputação no ecossistema</p>
+                                        </div>
+                                    </div>
+                                    {avgRating.count > 0 && (
+                                        <div className="text-right">
+                                            <div className="text-3xl font-black text-gray-900 leading-none">{avgRating.average.toFixed(1)}</div>
+                                            <div className="flex justify-end mt-1">{renderStars(Math.round(avgRating.average), "w-3 h-3")}</div>
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 {user ? (
-                                    <form onSubmit={handleCommentSubmit} className="mb-12 space-y-4">
+                                    <form onSubmit={handleReviewSubmit} className="mb-12 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-6">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest italic">Sua avaliação para este especialista:</label>
+                                            <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 w-fit">
+                                                {renderStars(reviewRating, "w-6 h-6", true)}
+                                            </div>
+                                        </div>
                                         <textarea 
                                             required
-                                            placeholder="DEIXE SEU COMENTÁRIO OU DEPOIMENTO..."
-                                            className="w-full bg-gray-50 border-none rounded-3xl p-6 font-bold text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-[#0F172A]/20 transition-all min-h-[120px]"
-                                            value={commentText}
-                                            onChange={e => setCommentText(e.target.value)}
+                                            placeholder="Descreva sua experiência ou deixe um depoimento sobre este membro..."
+                                            className="w-full bg-white border-none rounded-3xl p-6 font-bold text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-[#0F172A]/20 transition-all min-h-[120px] shadow-sm italic"
+                                            value={reviewComment}
+                                            onChange={e => setReviewComment(e.target.value)}
                                         />
-                                        <button 
-                                            type="submit"
-                                            disabled={isSubmittingComment}
-                                            className="px-10 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50"
-                                        >
-                                            {isSubmittingComment ? 'ENVIANDO...' : 'PUBLICAR COMENTÁRIO'}
-                                        </button>
+                                        <div className="flex justify-end">
+                                            <button 
+                                                type="submit"
+                                                disabled={isSubmittingReview}
+                                                className="px-10 py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                {isSubmittingReview ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                {isSubmittingReview ? 'ENVIANDO...' : 'PUBLICAR AVALIAÇÃO'}
+                                            </button>
+                                        </div>
                                     </form>
                                 ) : (
-                                    <div className="mb-12 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-center">
-                                        <p className="text-xs font-black text-brand-dark uppercase tracking-widest italic">
-                                            Apenas usuários cadastrados podem comentar. <br/>
-                                            <Link to="/register" className="underline mt-2 text-indigo-600 hover:text-indigo-800 transition-colors inline-block">Faça seu cadastro para participar</Link>
-                                        </p>
+                                    <div className="mb-12 p-10 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 text-center">
+                                        <Lock className="w-8 h-8 text-slate-300 mx-auto mb-4" />
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest italic mb-2">Área Exclusiva para Membros</p>
+                                        <p className="text-gray-500 font-medium text-sm mb-6 max-w-xs mx-auto">Apenas membros logados podem avaliar outros profissionais da rede.</p>
+                                        <Link to="/login" className="px-8 py-3 bg-white text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-200 shadow-sm hover:bg-gray-50 transition-all inline-block">Fazer Login</Link>
                                     </div>
                                 )}
 
-                                <div className="space-y-8">
-                                    {comments.length > 0 ? comments.map(comment => (
-                                        <div key={comment.id} className="flex gap-6 p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100">
-                                            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 shadow-md">
-                                                <img src={comment.user_avatar} className="w-full h-full object-cover" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-3">
-                                                    <h5 className="font-black text-xs uppercase tracking-widest text-gray-900">{comment.user_name}</h5>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(comment.created_at).toLocaleDateString('pt-BR')}</span>
+                                <div className="space-y-6">
+                                    {reviews.length > 0 ? reviews.map(rev => (
+                                        <div key={rev.id} className="relative p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                                            <div className="flex gap-6">
+                                                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 shadow-lg border-2 border-slate-50">
+                                                    <img src={rev.reviewer?.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${rev.reviewer?.name}`} className="w-full h-full object-cover" />
                                                 </div>
-                                                <p className="text-gray-600 font-medium italic leading-relaxed">
-                                                    "{comment.content}"
-                                                </p>
+                                                <div className="flex-1 space-y-3">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <h5 className="font-black text-xs uppercase tracking-widest text-gray-900">{rev.reviewer?.business_name || rev.reviewer?.name}</h5>
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(rev.created_at).toLocaleDateString('pt-BR')}</span>
+                                                        </div>
+                                                        <div className="px-3 py-1.5 bg-amber-50 rounded-xl border border-amber-100">
+                                                            {renderStars(rev.rating, "w-3 h-3")}
+                                                        </div>
+                                                    </div>
+                                                    <div className="relative">
+                                                        <span className="absolute -left-4 -top-2 text-4xl text-slate-100 font-serif opacity-50">"</span>
+                                                        <p className="text-gray-600 font-medium italic leading-relaxed relative z-10 px-2">
+                                                            {rev.comment}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )) : (
-                                        <p className="text-center text-slate-400 font-bold uppercase tracking-widest text-[10px] italic py-10">Seja o primeiro a comentar!</p>
+                                        <div className="py-20 text-center bg-gray-50 rounded-[3rem] border border-dashed border-gray-100">
+                                             <Sparkles className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                                             <p className="text-slate-400 font-bold uppercase tracking-widest text-[9px] italic">Este especialista ainda não foi avaliado pela rede.</p>
+                                        </div>
                                     )}
                                 </div>
                             </section>
@@ -720,6 +819,26 @@ export const StoreView: React.FC = () => {
                                         <span className="text-[9px] font-black uppercase text-slate-400 text-center truncate w-full px-1">{link.platform || 'Link'}</span>
                                     </a>
                                 ))}
+                            </div>
+
+                            <div className="pt-2 border-t border-gray-50 mt-6">
+                                {user ? (
+                                    user.id !== profile.user_id && (
+                                        <Link 
+                                            to={`/messages?userId=${profile.user_id}`}
+                                            className="w-full py-5 bg-white text-brand-dark border-2 border-brand-dark rounded-full font-black text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-3 hover:bg-brand-dark hover:text-white transition-all active:scale-95 group"
+                                        >
+                                            <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" /> ENVIAR DIRECT
+                                        </Link>
+                                    )
+                                ) : (
+                                    <Link 
+                                        to="/login"
+                                        className="w-full py-5 bg-gray-100 text-slate-400 rounded-full font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 opacity-70 hover:opacity-100 transition-all"
+                                    >
+                                        <MessageSquare className="w-5 h-5" /> LOGIN PARA DIRECT
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>

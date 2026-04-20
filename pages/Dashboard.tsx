@@ -11,7 +11,7 @@ import {
   History, Handshake, UserPlus,
   ChevronRight, Bot, Rocket, GraduationCap,
   Copy, Share2, Sparkles, Lock, Save,
-  Bell, X, Star, PartyPopper
+  Bell, X, Star, PartyPopper, MessageSquare, Globe, Calendar
 } from 'lucide-react';
 import { pointsRules, tiers } from '../config/gamificationConfig';
 import { supabase } from '../services/supabaseClient';
@@ -33,7 +33,7 @@ export const Dashboard: React.FC = () => {
 
   // News Modal State
   const [showNews, setShowNews] = useState(false);
-  const CURRENT_VERSION = 'v1.0.17';
+  const CURRENT_VERSION = 'v1.0.18';
 
   useEffect(() => {
     if (user) {
@@ -486,10 +486,10 @@ export const Dashboard: React.FC = () => {
 
             <div className="px-5 py-6 space-y-3 bg-slate-50">
               {[
-                { icon: Handshake, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Reunião 1x1 — Privacidade', desc: 'Reuniões agendadas visíveis apenas para os participantes. O histórico de concluídas é público, mostrando os dois perfis.' },
-                { icon: Sparkles, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Feed — Foto do autor + Edição', desc: 'A foto do criador aparece no feed. O autor pode editar ou excluir suas publicações.' },
-                { icon: Star, colorClass: 'bg-orange-50 text-orange-500', title: 'Mural — WhatsApp & Interesse', desc: 'Botão de ação em oportunidades redireciona para o WhatsApp do criador. O contador de interessados é atualizado em tempo real.' },
-                { icon: Bot, colorClass: 'bg-rose-50 text-rose-500', title: 'CRM — DDI internacional', desc: 'Novo seletor de código de país (+55 BR padrão) no campo de telefone de Clientes e Leads para o link do WhatsApp funcionar corretamente.' }
+                { icon: Star, colorClass: 'bg-amber-50 text-amber-500', title: 'Avaliações com Estrelas', desc: 'Agora você pode avaliar e deixar depoimentos para outros membros diretamente na vitrine (1 a 5 estrelas).' },
+                { icon: MessageSquare, colorClass: 'bg-indigo-50 text-indigo-500', title: 'Interface de Mensagens', desc: 'Chat mais limpo e profissional, sem ícones redundantes e com melhor organização visual.' },
+                { icon: Globe, colorClass: 'bg-emerald-50 text-emerald-600', title: 'Links de Vitrine Inteligentes', desc: 'Cliques em fotos e nomes no feed agora levam direto para a vitrine correta do especialista.' },
+                { icon: Calendar, colorClass: 'bg-rose-50 text-rose-500', title: 'Estabilidade em Reuniões 1x1', desc: 'Correção de erros na finalização de reuniões, garantindo que seus pontos sempre sejam computados.' }
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <div className={`p-2 ${item.colorClass} rounded-xl mt-1`}><item.icon className="w-4 h-4" /></div>

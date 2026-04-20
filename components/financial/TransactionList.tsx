@@ -19,6 +19,8 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterAccount, setFilterAccount] = useState('');
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [batchCategory, setBatchCategory] = useState('');
@@ -39,7 +41,10 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
   const emptyForm = { description: '', value: 0, type: 'expense' as 'income' | 'expense', date: new Date().toISOString().split('T')[0], account_id: '', category_id: '', status: 'realized' as 'predicted' | 'realized', entity_type: entityFilter as any, observation: '', is_recurring: false, recurrence_period: '', tags: [] as string[], is_conciliated: false, has_invoice: false };
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => { load(); loadMeta(); }, [entityFilter]);
+  const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y + 1); } else setMonth(m => m + 1); };
+
+  useEffect(() => { load(); loadMeta(); }, [entityFilter, month, year]);
 
   const loadMeta = async () => {
     try {
@@ -85,6 +90,8 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
     try {
       const filters: any = {};
       filters.entity_type = entityFilter;
+      filters.month = month;
+      filters.year = year;
       if (filterType) filters.type = filterType;
       if (filterStatus) filters.status = filterStatus;
       if (filterAccount) filters.account_id = filterAccount;
@@ -301,6 +308,25 @@ export const TransactionList: React.FC<Props> = ({ user_id, entityFilter }) => {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Month Selector */}
+      <div className="flex items-center justify-center gap-4 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+        <button onClick={prevMonth} className="p-3 hover:bg-gray-100 rounded-2xl transition-all">
+          <TrendingUp className="w-5 h-5 -rotate-90 text-slate-400" />
+        </button>
+        <div className="text-center min-w-[180px]">
+          <h3 className="text-lg font-black uppercase tracking-tighter text-gray-900">{MONTH_NAMES[month - 1]} {year}</h3>
+          <div className="flex items-center justify-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              Lançamentos do Período
+            </p>
+          </div>
+        </div>
+        <button onClick={nextMonth} className="p-3 hover:bg-gray-100 rounded-2xl transition-all">
+          <TrendingUp className="w-5 h-5 rotate-90 text-slate-400" />
+        </button>
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex-1 min-w-[200px] relative">
