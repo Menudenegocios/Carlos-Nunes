@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [1.0.18] - 2026-04-20
 
 ### Adicionado
+- **Real-time para Notificações**: A central de notificações agora atualiza instantaneamente.
+- **Real-time para Mensagens**: O chat e a lista de conversas agora atualizam em tempo real.
+- **Notificação no Mobile**: Central de notificações integrada ao menu lateral em dispositivos móveis.
+- **Bloqueio de Pré-cadastro**: Acesso às mensagens restrito para usuários em pré-cadastro.
 - **Sistema de Avaliações entre Membros**: Nova funcionalidade que permite aos usuários avaliar uns aos outros com estrelas (1-5) e depoimentos na Vitrine (StoreView).
 - **Média de Estrelas no Hero**: A vitrine agora exibe a média de avaliações e o número total de recomendações.
 - **Roteamento Dinâmico**: Melhoria no sistema de rotas dinâmicas e roteamento por slug.

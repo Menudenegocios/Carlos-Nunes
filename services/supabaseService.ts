@@ -2284,9 +2284,39 @@ export const supabaseService = {
     } catch (error) {
       console.error("Error uploading chat image:", error);
       throw error;
-    }
   },
 
+  subscribeToNotifications: (user_id: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel('public:notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user_id}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  subscribeToMessages: (user_id: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel('public:direct_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+          filter: `receiver_id=eq.${user_id}`
+        },
+        callback
+      )
+      .subscribe();
+  },
 };
 
 

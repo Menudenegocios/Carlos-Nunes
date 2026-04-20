@@ -384,7 +384,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
            <aside className="absolute top-0 left-0 bottom-0 w-[280px] bg-white/70 backdrop-blur-3xl border-r border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] flex flex-col animate-slide-in-left">
               <div className="p-6 border-b border-brand-secondary/10 flex justify-between items-center">
                  <Logo size="sm" />
-                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X className="w-6 h-6" /></button>
+                 <div className="flex items-center gap-2">
+                   <NotificationCenter />
+                   <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X className="w-6 h-6" /></button>
+                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                  {menuItems.map((item) => (

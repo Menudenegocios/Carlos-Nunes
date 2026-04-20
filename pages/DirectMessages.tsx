@@ -35,10 +35,15 @@ export const DirectMessages: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      if (user.plan === 'pre-cadastro' && user.role !== 'admin') {
+        navigate('/dashboard');
+        return;
+      }
+      
       const saved = localStorage.getItem(`archived_chats_${user.id}`);
       if (saved) setArchivedChats(JSON.parse(saved));
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const toggleArchive = (otherId: string) => {
     if (!user) return;
@@ -97,13 +102,29 @@ export const DirectMessages: React.FC = () => {
     if (user) {
       loadConversations();
       
+      const sub = supabaseService.subscribeToMessages(user.id, (payload) => {
+        const newMsg = payload.new;
+        
+        // Se a conversa for a selecionada, adiciona a mensagem
+        if (selectedChat && newMsg.sender_id === selectedChat.other_id) {
+          setMessages(prev => [...prev, newMsg]);
+        }
+        
+        // Independente de ser a selecionada, atualiza a lista de conversas
+        loadConversations();
+      });
+
       const params = new URLSearchParams(location.search);
       const userIdParam = params.get('userId');
       if (userIdParam) {
         startChatWithUser(userIdParam);
       }
+
+      return () => {
+        sub.unsubscribe();
+      };
     }
-  }, [user, location.search]);
+  }, [user, location.search, selectedChat]);
 
   const startChatWithUser = async (otherId: string) => {
     try {

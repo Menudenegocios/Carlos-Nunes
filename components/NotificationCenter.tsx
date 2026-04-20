@@ -18,9 +18,17 @@ export const NotificationCenter: React.FC = () => {
     if (user) {
       loadNotifications();
       
-      // Set up real-time listener if possible, but for now just simple load
-      const interval = setInterval(loadNotifications, 30000); // Check every 30s
-      return () => clearInterval(interval);
+      const subscription = supabaseService.subscribeToNotifications(user.id, (payload) => {
+        setNotifications(prev => [payload.new as PlatformNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+        
+        // Opcional: Tocar um som ou mostrar um log
+        console.log("Nova notificação recebida:", payload.new);
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, [user]);
 
