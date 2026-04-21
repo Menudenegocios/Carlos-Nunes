@@ -55,6 +55,24 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
       if (error) throw error;
 
       if (data) {
+        // --- PROCESS PENDING SOCIAL REGISTRATION DATA ---
+        const pendingDataStr = sessionStorage.getItem('pending_registration_data');
+        if (pendingDataStr) {
+          try {
+            const pendingData = JSON.parse(pendingDataStr);
+            if (!data.phone && pendingData.whatsapp) {
+              await supabase.from('profiles').update({
+                phone: pendingData.whatsapp,
+                referrer_id: pendingData.referrer_id
+              }).eq('user_id', user_id);
+              data.phone = pendingData.whatsapp;
+            }
+            sessionStorage.removeItem('pending_registration_data');
+          } catch (e) {
+            console.error("Error processing pending registration data:", e);
+          }
+        }
+
         // --- GAMIFICATION: DAILY LOGIN POINTS ---
         const lastLoginAt = data.last_login_at;
         const now = new Date();
@@ -99,7 +117,16 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           phone: data.phone
         });
       } else {
-        // Fallback básico caso o perfil ainda não tenha sido criado via trigger
+        // Se ainda não houver perfil, tentar usar os dados pendentes para o usuário inicial
+        const pendingDataStr = sessionStorage.getItem('pending_registration_data');
+        let pendingPhone = undefined;
+        if (pendingDataStr) {
+          try {
+            const pendingData = JSON.parse(pendingDataStr);
+            pendingPhone = pendingData.whatsapp;
+          } catch(e) {}
+        }
+
         setUser({
           id: user_id,
           name: name || 'Usuário',
@@ -110,7 +137,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           menu_cash: 0,
           referral_code: '',
           referrals_count: 0,
-          role: 'user'
+          role: 'user',
+          phone: pendingPhone
         });
       }
     } catch (error: any) {

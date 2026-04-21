@@ -84,7 +84,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           <select
             value={countryCode}
             onChange={handleCountryChange}
-            className="w-full bg-white border-none rounded-2xl p-4 font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-brand-primary outline-none shadow-sm h-full"
+            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-brand-primary/20 outline-none h-full"
           >
             {countryCodes.map(c => (
               <option key={c.code} value={c.code}>
@@ -101,7 +101,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         <div className="relative flex-1">
           <input
             type="text"
-            className="w-full bg-white border-none rounded-2xl p-4 font-bold outline-none focus:ring-2 focus:ring-brand-primary shadow-sm"
+            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold outline-none focus:ring-2 focus:ring-brand-primary/20"
             placeholder={placeholder}
             value={phoneNumber}
             onChange={handlePhoneChange}

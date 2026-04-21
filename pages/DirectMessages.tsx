@@ -14,7 +14,7 @@ import { Check, X } from 'lucide-react';
 import { DirectMessage, Profile } from '../types';
 import { SimpleModal } from '../components/SimpleModal';
 
-export const DirectMessages: React.FC = () => {
+export const DirectMessages: React.FC<{ setModalConfig?: (config: any) => void }> = ({ setModalConfig: parentSetModalConfig }) => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,7 +34,8 @@ export const DirectMessages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
+  
+  const [localModalConfig, setLocalModalConfig] = useState<{
     isOpen: boolean;
     title: string;
     message: string;
@@ -47,6 +48,10 @@ export const DirectMessages: React.FC = () => {
     message: '',
     type: 'info'
   });
+
+  // Helper to use either parent or local modal
+  const setModalConfig = parentSetModalConfig || setLocalModalConfig;
+  const modalConfig = parentSetModalConfig ? { isOpen: false } : localModalConfig; // When using parent, local modalConfig is effectively unused by SimpleModal call
   const [archivedChats, setArchivedChats] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -554,15 +559,17 @@ export const DirectMessages: React.FC = () => {
         )}
       </div>
 
-      <SimpleModal 
-        isOpen={modalConfig.isOpen}
-        onClose={() => setModalConfig(prev => ({...prev, isOpen: false, onConfirm: undefined}))}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        type={modalConfig.type}
-        onConfirm={modalConfig.onConfirm}
-        confirmText={modalConfig.confirmText}
-      />
+      {!parentSetModalConfig && (
+        <SimpleModal 
+          isOpen={localModalConfig.isOpen}
+          onClose={() => setLocalModalConfig((prev: any) => ({...prev, isOpen: false, onConfirm: undefined}))}
+          title={localModalConfig.title}
+          message={localModalConfig.message}
+          type={localModalConfig.type}
+          onConfirm={localModalConfig.onConfirm}
+          confirmText={localModalConfig.confirmText}
+        />
+      )}
     </div>
   );
 };

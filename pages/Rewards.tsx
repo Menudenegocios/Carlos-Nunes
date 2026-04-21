@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
 import { 
@@ -8,9 +8,7 @@ import {
   Zap, Crown, ChevronRight,
   CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
-  Ticket, Wand2, Handshake, Plus, Search, ArrowRight, X, RefreshCw, Shield, MessageCircle,
-  Share2, Copy, Save, Trash2, Edit3, Target, Calendar, Video, ExternalLink, AlertCircle,
-  Megaphone, Heart, HandHeart, FileBarChart, Link2, Zap as ZapIcon
+  Megaphone, Heart, HandHeart, FileBarChart, Link2, Zap as ZapIcon, Lock
 } from 'lucide-react';
 import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product, Meeting1x1 } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
@@ -67,6 +65,7 @@ const NextMeetingSummary: React.FC<{ user: any, meetings: Meeting1x1[], setActiv
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'feed' | 'chat' | 'rules' | 'match' | 'referrals' | 'meeting'>('feed');
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loadingReferrals, setLoadingReferrals] = useState(true);
@@ -130,6 +129,60 @@ export const Rewards: React.FC = () => {
   };
 
   if (!user) return null;
+
+  const isPreCadastro = (user.plan === 'pre-cadastro' || userProfile?.plan === 'pre-cadastro');
+  const isAdmin = user.role === 'admin' || userProfile?.role === 'admin';
+
+  if (isPreCadastro && !isAdmin) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in duration-700">
+        <div className="relative">
+          <div className="w-32 h-32 bg-brand-primary/10 rounded-[2.5rem] flex items-center justify-center animate-pulse">
+            <Lock className="w-12 h-12 text-brand-primary" />
+          </div>
+          <div className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full shadow-lg">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+        </div>
+        
+        <div className="space-y-4 max-w-lg">
+          <h2 className="text-4xl font-black text-gray-900 uppercase italic tracking-tighter leading-tight">
+            Acesso <span className="text-brand-primary">Restrito</span>
+          </h2>
+          <p className="text-slate-500 font-medium leading-relaxed">
+            O <strong>Menu Match</strong> é um benefício exclusivo para membros ativos da nossa comunidade. 
+            Identificamos que você ainda está em fase de <span className="text-amber-600 font-bold uppercase text-xs">Pré-Cadastro</span>.
+          </p>
+        </div>
+
+        <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-xl w-full max-w-md space-y-6">
+          <div className="flex items-center gap-4 text-left p-4 bg-slate-50 rounded-2xl">
+            <div className="w-10 h-10 bg-brand-primary text-white rounded-xl flex items-center justify-center font-bold">1</div>
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Complete seu perfil profissional</p>
+          </div>
+          <div className="flex items-center gap-4 text-left p-4 bg-slate-50 rounded-2xl">
+            <div className="w-10 h-10 bg-brand-primary text-white rounded-xl flex items-center justify-center font-bold">2</div>
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Escolha um dos nossos planos ativos</p>
+          </div>
+          <div className="flex items-center gap-4 text-left p-4 bg-slate-50 rounded-2xl">
+            <div className="w-10 h-10 bg-brand-primary text-white rounded-xl flex items-center justify-center font-bold">3</div>
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Participe do maior ecossistema de prosperidade</p>
+          </div>
+
+          <button 
+            onClick={() => navigate('/plans')}
+            className="w-full py-5 bg-brand-primary text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-brand-primary/20 hover:scale-[1.02] transition-all active:scale-95"
+          >
+            VER PLANOS E ADERIR
+          </button>
+        </div>
+
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-4 italic">
+          Dúvidas? Entre em contato com nossa governança.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-4 px-4 overflow-x-hidden">
@@ -198,7 +251,7 @@ export const Rewards: React.FC = () => {
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'feed' && <CommunityFeedView user={user} userProfile={userProfile} setModalConfig={setModalConfig} />}
-        {activeTab === 'chat' && <DirectMessages />}
+        {activeTab === 'chat' && <DirectMessages setModalConfig={setModalConfig} />}
         {activeTab === 'rules' && <RulesView user={user} />}
         {activeTab === 'meeting' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

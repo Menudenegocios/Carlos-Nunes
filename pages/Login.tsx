@@ -63,107 +63,167 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex flex-col justify-center py-12 px-6 lg:px-8 bg-brand-surface transition-colors">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex mb-10 transform hover:scale-105 transition-transform">
-           <Logo size="lg" />
+    <div className="min-h-screen flex bg-white font-sans">
+      {/* Left Side: Welcome Content */}
+      <div className="hidden lg:flex lg:w-1/2 bg-brand-surface relative overflow-hidden items-center justify-center p-12">
+        {/* Abstract background elements for premium feel */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-3xl -mr-48 -mt-48 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-3xl -ml-48 -mb-48" />
+        
+        <div className="relative text-center space-y-10 animate-in fade-in slide-in-from-left-8 duration-700">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black text-gray-900 tracking-tighter leading-none italic uppercase">
+              Bem-vindo ao
+            </h1>
+          </div>
+
+          <div className="inline-flex transform hover:scale-105 transition-all duration-500">
+            <Logo size="lg" />
+          </div>
+
+          <div className="space-y-6">
+            <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs">
+              Conectando o Futuro dos Negócios
+            </p>
+            
+            <div className="h-0.5 w-12 bg-brand-primary mx-auto rounded-full" />
+            
+            <p className="text-lg font-black text-gray-900 uppercase italic tracking-tight">
+              Conexão & Networking
+            </p>
+          </div>
+
+          <div className="pt-8 opacity-20">
+            <div className="w-1 h-16 bg-gradient-to-b from-brand-primary to-transparent mx-auto rounded-full" />
+          </div>
         </div>
-        <h2 className="text-center text-4xl font-black text-gray-900 tracking-tighter leading-tight uppercase italic overflow-visible">
-          Bem-vindo ao <br/><span className="text-brand-primary title-fix">Menu de Negócios</span>
-        </h2>
-        <p className="mt-3 text-center text-gray-500 font-bold uppercase tracking-widest text-[10px]">
-          Sua plataforma de negócios.
-        </p>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] sm:rounded-[3rem] sm:px-12 border border-gray-100 transition-all">
-          
+      {/* Right Side: Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 bg-white relative">
+        <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-right-8 duration-700">
+          {/* Mobile Logo Only */}
+          <div className="lg:hidden flex justify-center mb-12">
+            <Logo size="lg" />
+          </div>
 
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-gray-900 italic uppercase tracking-tighter">Entrar na Plataforma</h2>
+            <p className="text-slate-400 font-medium text-sm font-sans">Sua jornada de negócios começa aqui.</p>
+          </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 ml-1">
-                E-mail de Acesso
-              </label>
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
-                  <Mail className="w-5 h-5" />
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">
+                  E-mail
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-slate-400 group-focus-within:text-brand-primary transition-colors">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="exemplo@vps.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-50 border-none pl-12 pr-6 py-4 rounded-2xl placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary font-bold transition-all text-gray-900"
+                  />
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
-                />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 ml-1">
-                Sua Senha
-              </label>
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
-                  <Lock className="w-5 h-5" />
+              <div>
+                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">
+                  Senha
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-slate-400 group-focus-within:text-brand-primary transition-colors">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-50 border-none pl-12 pr-6 py-4 rounded-2xl placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-primary font-bold transition-all text-gray-900"
+                  />
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-14 pr-6 py-5 border border-gray-100 rounded-2xl placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary sm:text-sm font-bold transition-all"
-                />
-              </div>
-              <div className="text-right mt-2">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={isResetting}
-                  className="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline disabled:opacity-50"
-                >
-                  {isResetting ? 'Enviando...' : 'Esqueci minha senha'}
-                </button>
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isResetting}
+                    className="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline disabled:opacity-50"
+                  >
+                    {isResetting ? 'Solicitando...' : 'Esqueceu sua senha?'}
+                  </button>
+                </div>
               </div>
             </div>
 
             {error && (
-              <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
-                <AlertCircle className="w-6 h-6 flex-shrink-0" />
-                <span className="leading-tight">{error}</span>
+              <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 animate-in fade-in zoom-in-95 duration-300">
+                <AlertCircle className="w-5 h-5 text-rose-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs font-black text-rose-600 leading-normal uppercase italic tracking-tight">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 p-5 rounded-2xl font-bold flex gap-4 animate-in fade-in zoom-in duration-300">
-                <Sparkles className="w-6 h-6 flex-shrink-0" />
-                <span className="leading-tight">{success}</span>
+              <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3 animate-in fade-in zoom-in-95 duration-300">
+                <Sparkles className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs font-black text-emerald-600 leading-normal uppercase italic tracking-tight">{success}</p>
               </div>
             )}
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-5 px-4 border border-transparent rounded-2xl shadow-xl text-xs font-black text-white bg-brand-primary hover:opacity-90 transition-all uppercase tracking-widest active:scale-95 disabled:opacity-50"
+                className="w-full h-14 bg-gray-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-gray-900/20 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? 'Acessando...' : 'Entrar no Sistema'}
+                {loading ? 'Processando...' : (
+                  <>Acessar Painel</>
+                )}
+              </button>
+
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest text-slate-400">
+                  <span className="bg-white px-4 italic">Social Login</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                   // Placeholder for Google Login
+                   supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+                }}
+                className="w-full h-14 bg-white border-2 border-slate-100 text-gray-900 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-slate-50 transition-all active:scale-[0.98] flex items-center justify-center gap-3 shadow-sm"
+              >
+                <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale" alt="Google" />
+                Entrar com Google
               </button>
             </div>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-gray-50 text-center">
-             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Ainda não tem conta? 
-                <Link to="/register" className="ml-2 text-brand-primary hover:underline">Cadastrar Agora</Link>
-             </p>
+          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest pt-4">
+            Novo por aqui? 
+            <Link to="/register" className="ml-2 text-brand-primary hover:underline">Solicitar Acesso</Link>
+          </p>
+        </div>
+
+        {/* Floating elements for right side */}
+        <div className="absolute top-0 right-0 p-8 lg:p-12 animate-in fade-in duration-1000 delay-500">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sistema Operante</span>
           </div>
         </div>
       </div>
