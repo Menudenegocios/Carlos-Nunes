@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product, Meeting1x1 } from '../types';
 import { SectionLanding } from '../components/SectionLanding';
+import { DirectMessages } from './DirectMessages';
 import { pointsRules, tiers, rankingRules } from '../config/gamificationConfig';
+import { SimpleModal } from '../components/SimpleModal';
 
 const NextMeetingSummary: React.FC<{ user: any, meetings: Meeting1x1[], setActiveTab: (tab: any) => void }> = ({ user, meetings, setActiveTab }) => {
   const nextMeeting = meetings
@@ -65,17 +67,30 @@ const NextMeetingSummary: React.FC<{ user: any, meetings: Meeting1x1[], setActiv
 export const Rewards: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'feed' | 'rules' | 'match' | 'referrals' | 'meeting'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'chat' | 'rules' | 'match' | 'referrals' | 'meeting'>('feed');
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loadingReferrals, setLoadingReferrals] = useState(true);
   const [copied, setCopied] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [globalMeetings, setGlobalMeetings] = useState<Meeting1x1[]>([]);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+    onConfirm?: () => void;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && ['feed', 'rules', 'match', 'referrals', 'meeting'].includes(tab)) {
+    if (tab && ['feed', 'chat', 'rules', 'match', 'referrals', 'meeting'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [location.search]);
@@ -158,6 +173,7 @@ export const Rewards: React.FC = () => {
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
                   { id: 'feed', label: 'FEED', desc: 'Porta de Entrada', icon: Megaphone },
+                  { id: 'chat', label: 'CHAT', desc: 'Bate-papo Direto', icon: MessageCircle },
                   { id: 'meeting', label: 'REUNIÃO 1X1', desc: 'Networking Direto', icon: Users },
                   { id: 'match', label: 'NEGÓCIOS', desc: 'Oportunidades', icon: Handshake },
                   { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Share2 },
@@ -181,15 +197,16 @@ export const Rewards: React.FC = () => {
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {activeTab === 'feed' && <CommunityFeedView user={user} userProfile={userProfile} />}
+        {activeTab === 'feed' && <CommunityFeedView user={user} userProfile={userProfile} setModalConfig={setModalConfig} />}
+        {activeTab === 'chat' && <DirectMessages />}
         {activeTab === 'rules' && <RulesView user={user} />}
         {activeTab === 'meeting' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <NextMeetingSummary user={user} meetings={globalMeetings} setActiveTab={setActiveTab} />
-            <Meeting1x1View user={user} userProfile={userProfile} />
+            <Meeting1x1View user={user} userProfile={userProfile} setModalConfig={setModalConfig} />
           </div>
         )}
-        {activeTab === 'match' && <B2BMatchView user={user} />}
+        {activeTab === 'match' && <B2BMatchView user={user} setModalConfig={setModalConfig} />}
         {activeTab === 'referrals' && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-gray-100 shadow-xl relative overflow-hidden">
@@ -293,6 +310,16 @@ export const Rewards: React.FC = () => {
              </div>
           </div>
         )}
+
+        <SimpleModal 
+            isOpen={modalConfig.isOpen}
+            onClose={() => setModalConfig((prev: any) => ({...prev, isOpen: false, onConfirm: undefined}))}
+            title={modalConfig.title}
+            message={modalConfig.message}
+            type={modalConfig.type}
+            onConfirm={modalConfig.onConfirm}
+            confirmText={modalConfig.confirmText}
+        />
       </div>
     </div>
   );
@@ -447,7 +474,7 @@ const MenuCashInfo = () => {
     );
 };
 
-const B2BMatchView = ({ user }: { user: User }) => {
+const B2BMatchView = ({ user, setModalConfig }: { user: User, setModalConfig: (config: any) => void }) => {
   const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions'>('offers');
   const [menuCashProducts, setMenuCashProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -478,12 +505,22 @@ const B2BMatchView = ({ user }: { user: User }) => {
 
     const maxMenuCash = (selectedProduct.price * (selectedProduct.menu_cash_percentage || 0)) / 100;
     if (menuCashToUse > maxMenuCash) {
-      alert(`Você só pode usar até ${maxMenuCash.toFixed(2)} em Menu Cash para este produto.`);
+      setModalConfig({
+        isOpen: true,
+        title: 'Limite Excedido',
+        message: `Você só pode usar até R$ ${maxMenuCash.toFixed(2)} em Menu Cash para este produto.`,
+        type: 'info'
+      });
       return;
     }
 
     if (menuCashToUse > (user.menu_cash || 0)) {
-      alert("Saldo de Menu Cash insuficiente.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Saldo Insuficiente',
+        message: 'Você não possui saldo de Menu Cash suficiente para esta operação.',
+        type: 'error'
+      });
       return;
     }
 
@@ -507,7 +544,12 @@ const B2BMatchView = ({ user }: { user: User }) => {
       setActiveSubTab('transactions');
     } catch (err) {
       console.error("Erro ao realizar compra:", err);
-      alert("Erro ao processar compra.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Não foi possível processar sua compra. Tente novamente.',
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -599,7 +641,7 @@ const B2BMatchView = ({ user }: { user: User }) => {
             </div>
          </>
        ) : (
-         <B2BTransactionsView user={user} />
+         <B2BTransactionsView user={user} setModalConfig={setModalConfig} />
        )}
 
         {/* MODAL: COMPRA DE PRODUTO */}
@@ -677,12 +719,12 @@ const B2BMatchView = ({ user }: { user: User }) => {
               </div>
            </div>
         )}
-
+        <div className="h-4"></div>
      </div>
   );
 };
 
-const B2BTransactionsView = ({ user }: { user: User }) => {
+const B2BTransactionsView = ({ user, setModalConfig }: { user: User, setModalConfig: (config: any) => void }) => {
   const [transactions, setTransactions] = useState<B2BTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -726,7 +768,12 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
       setFormData({ seller_name: '', amount: '', description: '' });
     } catch (err) {
       console.error("Erro ao registrar:", err);
-      alert("Erro ao registrar transação.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao registrar transação.',
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -739,7 +786,12 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
       await loadTransactions();
     } catch (err) {
       console.error("Erro ao confirmar:", err);
-      alert("Erro ao confirmar.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao confirmar.',
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -760,7 +812,12 @@ const B2BTransactionsView = ({ user }: { user: User }) => {
       setTransactionToReject(null);
     } catch (err) {
       console.error("Erro ao recusar:", err);
-      alert("Erro ao recusar.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao recusar.',
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -1198,7 +1255,7 @@ const RankingView = ({ user }: { user: User }) => {
   );
 };
 
-const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any }) => {
+const Meeting1x1View = ({ user, userProfile, setModalConfig }: { user: User, userProfile: any, setModalConfig: (config: any) => void }) => {
   const [meetings, setMeetings] = useState<Meeting1x1[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [ranking, setRanking] = useState<any[]>([]);
@@ -1242,7 +1299,12 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.guest_id || !formData.date || !formData.time || !formData.title) {
-      alert("Por favor, preencha os campos obrigatórios.");
+        setModalConfig({
+          isOpen: true,
+          title: 'Atenção',
+          message: 'Por favor, preencha todos os campos obrigatórios.',
+          type: 'info'
+        });
       return;
     }
 
@@ -1276,18 +1338,42 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
       loadData();
     } catch (error) {
       console.error("Error creating meeting:", error);
-      alert("Erro ao agendar reunião.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Não foi possível agendar a reunião. Tente novamente.',
+        type: 'error'
+      });
     }
   };
 
   const handleComplete = async (mId: string) => {
-    if (!window.confirm("Confirmar que a reunião foi realizada? (Isso atribuirá 10 pontos aos participantes)")) return;
-    try {
-      await supabaseService.completeMeeting1x1(mId);
-      loadData();
-    } catch (error) {
-      alert("Erro ao concluir reunião.");
-    }
+    setModalConfig({
+        isOpen: true,
+        title: 'Finalizar Reunião',
+        message: 'Confirmar que a reunião foi realizada? Isso atribuirá 10 pontos aos participantes.',
+        type: 'info',
+        confirmText: 'SIM, FOI REALIZADA',
+        onConfirm: async () => {
+            try {
+                await supabaseService.completeMeeting1x1(mId);
+                loadData();
+                setModalConfig({
+                    isOpen: true,
+                    title: 'Sucesso!',
+                    message: 'Reunião finalizada com sucesso e pontos distribuídos.',
+                    type: 'success'
+                });
+              } catch (error) {
+                setModalConfig({
+                    isOpen: true,
+                    title: 'Erro',
+                    message: 'Ocorreu um erro ao finalizar a reunião. Verifique se você tem permissão.',
+                    type: 'error'
+                });
+              }
+        }
+    });
   };
 
   const shareOnWhatsApp = (meeting: Meeting1x1) => {
@@ -1665,7 +1751,7 @@ const Meeting1x1View = ({ user, userProfile }: { user: User, userProfile: any })
 
 // --- NEW COMMUNITY FEED COMPONENTS ---
 
-const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any }) => {
+const CommunityFeedView = ({ user, userProfile, setModalConfig }: { user: User, userProfile: any, setModalConfig: (config: any) => void }) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1709,7 +1795,12 @@ const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any
       setShowPostModal(false);
       loadData();
     } catch (error) {
-      alert("Erro ao publicar.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao publicar.',
+        type: 'error'
+      });
     }
   };
 
@@ -1728,7 +1819,12 @@ const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any
       setShowOppModal(false);
       loadData();
     } catch (error) {
-      alert("Erro ao publicar oportunidade.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao publicar oportunidade.',
+        type: 'error'
+      });
     }
   };
 
@@ -1764,9 +1860,9 @@ const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any
           {[1, 2, 3].map(i => <div key={i} className="h-48 bg-gray-100 rounded-[2.5rem] animate-pulse"></div>)}
         </div>
       ) : activeSubTab === 'feed' ? (
-        <CommunityFeed posts={posts} user={user} userProfile={userProfile} onRefresh={loadData} />
+        <CommunityFeed posts={posts} user={user} userProfile={userProfile} onRefresh={loadData} setModalConfig={setModalConfig} />
       ) : (
-        <OpportunitiesMural opportunities={opportunities} user={user} userProfile={userProfile} onRefresh={loadData} />
+        <OpportunitiesMural opportunities={opportunities} user={user} userProfile={userProfile} onRefresh={loadData} setModalConfig={setModalConfig} />
       )}
 
       {/* MODAL: NOVA PUBLICAÇÃO */}
@@ -1895,7 +1991,7 @@ const CommunityFeedView = ({ user, userProfile }: { user: User, userProfile: any
   );
 };
 
-const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], user: User, userProfile: any, onRefresh: () => void }) => {
+const CommunityFeed = ({ posts, user, userProfile, onRefresh, setModalConfig }: { posts: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
@@ -1975,19 +2071,36 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
       await supabaseService.updateCommunityPost(postId, newContent.trim());
       onRefresh();
     } catch (error) {
-      alert("Erro ao editar publicação.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao editar publicação.',
+        type: 'error'
+      });
     }
   };
 
   const handleDelete = async (postId: string) => {
-    if (!window.confirm("Deseja realmente excluir esta publicação?")) return;
-    
-    try {
-      await supabaseService.deleteCommunityPost(postId);
-      onRefresh();
-    } catch (error) {
-      alert("Erro ao excluir publicação.");
-    }
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Publicação',
+      message: 'Deseja realmente excluir esta publicação?',
+      type: 'info',
+      confirmText: 'EXCLUIR',
+      onConfirm: async () => {
+        try {
+          await supabaseService.deleteCommunityPost(postId);
+          onRefresh();
+        } catch (error) {
+          setModalConfig({
+            isOpen: true,
+            title: 'Erro',
+            message: 'Erro ao excluir publicação.',
+            type: 'error'
+          });
+        }
+      }
+    });
   };
 
   return (
@@ -2126,7 +2239,7 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh }: { posts: any[], 
   );
 };
 
-const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh }: { opportunities: any[], user: User, userProfile: any, onRefresh: () => void }) => {
+const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh, setModalConfig }: { opportunities: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
   const handleInterest = async (oppId: string, authorPhone: string) => {
     try {
       const realUserId = userProfile?.user_id || user.id;
@@ -2138,10 +2251,20 @@ const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh }: { o
         if (cleanPhone) {
           window.open(`https://wa.me/55${cleanPhone.startsWith('55') ? cleanPhone.substring(2) : cleanPhone}?text=Olá!%20Vi%20sua%20oportunidade%20no%20Menu%20de%20Negócios%20e%20tenho%20interesse.`, '_blank');
         } else {
-          alert('Seu interesse foi registrado, mas o autor não possui um WhatsApp válido cadastrado.');
+          setModalConfig({
+            isOpen: true,
+            title: 'Informação',
+            message: 'Seu interesse foi registrado, mas o autor não possui um WhatsApp válido cadastrado.',
+            type: 'info'
+          });
         }
       } else {
-        alert('Seu interesse foi registrado, mas o autor não possui um número de telefone cadastrado.');
+        setModalConfig({
+          isOpen: true,
+          title: 'Informação',
+          message: 'Seu interesse foi registrado, mas o autor não possui um número de telefone cadastrado.',
+          type: 'info'
+        });
       }
     } catch (error) {
        console.error(error);
@@ -2161,19 +2284,36 @@ const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh }: { o
       await supabaseService.updateOpportunity(oppId, { title: newTitle.trim(), description: newDesc.trim() });
       onRefresh();
     } catch (error) {
-      alert("Erro ao editar oportunidade.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao editar oportunidade.',
+        type: 'error'
+      });
     }
   };
 
   const handleDelete = async (oppId: string) => {
-    if (!window.confirm("Deseja realmente excluir esta oportunidade?")) return;
-    
-    try {
-      await supabaseService.deleteOpportunity(oppId);
-      onRefresh();
-    } catch (error) {
-      alert("Erro ao excluir oportunidade.");
-    }
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Oportunidade',
+      message: 'Deseja realmente excluir esta oportunidade?',
+      type: 'info',
+      confirmText: 'EXCLUIR',
+      onConfirm: async () => {
+        try {
+          await supabaseService.deleteOpportunity(oppId);
+          onRefresh();
+        } catch (error) {
+          setModalConfig({
+            isOpen: true,
+            title: 'Erro',
+            message: 'Erro ao excluir oportunidade.',
+            type: 'error'
+          });
+        }
+      }
+    });
   };
 
   return (

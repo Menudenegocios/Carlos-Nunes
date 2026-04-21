@@ -622,7 +622,8 @@ export const supabaseService = {
             status,
             plan,
             current_period_end
-          )
+          ),
+          referrer:profiles!referrer_id(name, business_name)
         `);
       
       if (error) throw error;
@@ -1622,42 +1623,8 @@ export const supabaseService = {
 
   completeMeeting1x1: async (meeting_id: string): Promise<void> => {
     try {
-      // 1. Get meeting data to award points
-      const { data: meeting, error: fetchError } = await supabase
-        .from('meetings_1x1')
-        .select('*')
-        .eq('id', meeting_id)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      if (meeting.status === 'completed' || meeting.points_awarded) return;
-
-      // 2. Update status
-      const { error: updateError } = await supabase
-        .from('meetings_1x1')
-        .update({ status: 'completed', points_awarded: true })
-        .eq('id', meeting_id);
-      
-      if (updateError) throw updateError;
-
-      // 3. Award points to both participants (10 points each)
-      const participants = [meeting.creator_id, meeting.guest_id];
-      for (const pId of participants) {
-        // Increment profile points
-        const { data: profile } = await supabase.from('profiles').select('points').eq('user_id', pId).single();
-        await supabase.from('profiles')
-          .update({ points: (profile?.points || 0) + 10 })
-          .eq('user_id', pId);
-        
-        // Add to points history
-        await supabase.from('points_history').insert({
-          user_id: pId,
-          action: 'Reunião 1x1 Concluída',
-          points: 10,
-          category: 'engajamento',
-          date: new Date().toISOString()
-        });
-      }
+      const { error } = await supabase.rpc('complete_meeting_1x1', { p_meeting_id: meeting_id });
+      if (error) throw error;
     } catch (error) {
       console.error("Error completing 1x1 meeting:", error);
       throw error;
@@ -2284,6 +2251,7 @@ export const supabaseService = {
     } catch (error) {
       console.error("Error uploading chat image:", error);
       throw error;
+    }
   },
 
   subscribeToNotifications: (user_id: string, callback: (payload: any) => void) => {

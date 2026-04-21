@@ -594,6 +594,11 @@ export const AdminCentral: React.FC = () => {
                                                       <span className="text-[9px] font-black bg-amber-50 text-amber-600 px-2 py-1 rounded-lg uppercase">{profile.points || 0} pts</span>
                                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{profile.city || 'Sem cidade'}</span>
                                                       {profile.email && <span className="text-[10px] font-medium text-slate-400 italic">{profile.email}</span>}
+                                                      {profile.referrer && (
+                                                         <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                                                           Indicado por: {(profile.referrer as any).business_name || (profile.referrer as any).name}
+                                                         </span>
+                                                      )}
                                                     </div>
                                                 </div>
                                             </div>

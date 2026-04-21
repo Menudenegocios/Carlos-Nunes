@@ -86,7 +86,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
    const { user } = useAuth();
-   const [activeTab, setActiveTab] = useState<'home' | 'trilha' | 'treinamentos' | 'biblioteca' | 'connect'>('home');
+   const [activeTab, setActiveTab] = useState<'home' | 'trilha' | 'treinamentos' | 'projetos' | 'connect'>('home');
    const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -124,7 +124,7 @@ export const Academy: React.FC = () => {
                      { id: 'trilha', label: 'TRILHA DO SUCESSO', desc: 'Passo a passo', icon: Map },
                      { id: 'connect', label: 'CONNECT', desc: 'Mentorias ao vivo', icon: Users },
                      { id: 'treinamentos', label: 'TREINAMENTOS', desc: 'Vídeo aulas', icon: Video },
-                     { id: 'biblioteca', label: 'PROMPTS', desc: 'Agentes e Scripts', icon: BookOpen },
+                     { id: 'projetos', label: 'PROJETOS', desc: 'Gestão estratégica', icon: Layers },
                   ].map(tab => (
                      <button
                         key={tab.id}
@@ -205,45 +205,45 @@ export const Academy: React.FC = () => {
                         {
                            number: "1️⃣",
                            title: "Primeiros Passos",
-                           desc: "Inicie sua jornada configurando sua base dentro da plataforma.",
-                           action: "Agendar suporte inicial",
-                           link: "https://wa.me/5551981124252",
+                           desc: "Inicie sua jornada criando seu primeiro projeto estratégico de expansão.",
+                           action: "Criar meu primeiro projeto",
+                           tab: "projetos",
                            icon: Rocket,
                            color: "indigo"
                         },
                         {
                            number: "2️⃣",
                            title: "Desenvolvimento de Negócio",
-                           desc: "Estruture seu negócio e defina seus objetivos.",
-                           action: "Falar com especialista",
-                           link: "https://wa.me/5551981124252",
+                           desc: "Estruture seu modelo de negócio e defina seus objetivos de médio prazo.",
+                           action: "Definir metas do projeto",
+                           tab: "projetos",
                            icon: Target,
                            color: "orange"
                         },
                         {
                            number: "3️⃣",
                            title: "Gestão de Redes Sociais",
-                           desc: "Organize sua presença digital e comece a produzir conteúdo estratégico.",
-                           action: "Receber orientação",
-                           link: "https://wa.me/5551981124252",
+                           desc: "Organize sua presença digital e crie um cronograma de conteúdo.",
+                           action: "Gerenciar cronograma",
+                           tab: "projetos",
                            icon: Smartphone,
                            color: "purple"
                         },
                         {
                            number: "4️⃣",
-                           title: "Vendas",
-                           desc: "Aprenda a organizar seu funil e aumentar suas conversões.",
-                           action: "Falar com consultor de vendas",
-                           link: "https://wa.me/5551981124252",
+                           title: "Organização de Vendas",
+                           desc: "Aprenda a organizar seu funil e coloque-o em prática no seu projeto.",
+                           action: "Configurar funil",
+                           tab: "projetos",
                            icon: TrendingUp,
                            color: "emerald"
                         },
                         {
                            number: "5️⃣",
-                           title: "Plano de Ação",
-                           desc: "Transforme tudo em um plano prático para execução.",
-                           action: "Criar plano com especialista",
-                           link: "https://wa.me/5551981124252",
+                           title: "Plano de Execução",
+                           desc: "Transforme tudo em tarefas práticas e metas semanais.",
+                           action: "Visualizar tarefas",
+                           tab: "projetos",
                            icon: ListChecks,
                            color: "blue"
                         }
@@ -263,14 +263,12 @@ export const Academy: React.FC = () => {
                            </div>
                            
                            <div className="pt-8">
-                              <a 
-                                 href={item.link}
-                                 target="_blank"
-                                 rel="noopener noreferrer"
+                              <button 
+                                 onClick={() => setActiveTab((item as any).tab)}
                                  className={`w-full py-4 bg-gray-50 text-gray-900 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-gray-100 flex items-center justify-center gap-2 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all`}
                               >
-                                 {item.action} <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
+                                 {(item as any).action} <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
                            </div>
                         </div>
                      ))}
@@ -393,50 +391,40 @@ export const Academy: React.FC = () => {
                </div>
             )}
 
-            {activeTab === 'biblioteca' && (
-               <div className="space-y-12 px-4">
-                  <div className="bg-indigo-600 rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl">
+            {activeTab === 'projetos' && (
+               <div className="space-y-12 px-4 animate-fade-in">
+                  <div className="bg-[#0F172A] rounded-[3rem] p-10 md:p-16 text-white relative overflow-hidden shadow-2xl">
                      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                         <div className="space-y-6 max-w-xl">
-                           <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
-                              <Bot className="w-10 h-10 text-brand-primary" />
+                           <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                              <Target className="w-10 h-10 text-brand-primary" />
                            </div>
-                           <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">Consultoria 24h com Especialistas</h2>
-                           <p className="text-indigo-100 text-lg font-medium leading-relaxed">Nossos agentes de IA foram treinados com as melhores estratégias de vendas, marketing e gestão local do mundo. Além disso, acesse nossa biblioteca de prompts de alta conversão.</p>
+                           <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">Gestão de Projetos</h2>
+                           <p className="text-slate-400 text-lg font-medium leading-relaxed">
+                              A base de qualquer negócio de sucesso é a organização. Use nossa ferramenta de gestão para transformar suas ideias em projetos práticos e lucrativos.
+                           </p>
                         </div>
-                        <div className="hidden lg:block relative">
-                           <div className="w-64 h-64 bg-white/5 rounded-full blur-[80px] absolute inset-0"></div>
-                           <Bot className="w-48 h-48 text-white/10 -rotate-12" />
+                        <div className="hidden lg:block">
+                           <Layers className="w-48 h-48 text-white/5 -rotate-12" />
                         </div>
                      </div>
-                     <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                   </div>
 
-                  <div className="space-y-4">
-                     <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tight">Agentes de IA</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {AI_AGENTS.map(agent => (
-                           <div key={agent.id} className="bg-white rounded-[3rem] p-8 border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-6 group hover:shadow-2xl transition-all hover:-translate-y-2">
-                              <div className={`w-20 h-20 rounded-[2rem] ${agent.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                                 <agent.icon className="w-10 h-10" />
-                              </div>
-                              <div>
-                                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">{agent.role}</p>
-                                 <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">{agent.name}</h3>
-                              </div>
-                              <p className="text-xs text-slate-500 font-medium leading-relaxed flex-1">
-                                 {agent.description}
-                              </p>
-                              <a
-                                 href={agent.url}
-                                 target="_blank"
-                                 rel="noopener noreferrer"
-                                 className="w-full py-4 bg-[#0F172A] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95"
-                              >
-                                 ABRIR AGENTE <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                           </div>
-                        ))}
+                  <div className="bg-white rounded-[3rem] border border-gray-100 p-8 shadow-sm">
+                     <div className="flex flex-col items-center text-center space-y-8 py-10">
+                        <div className="w-24 h-24 bg-orange-50 rounded-[2.5rem] flex items-center justify-center text-[#F67C01]">
+                           <Rocket className="w-12 h-12" />
+                        </div>
+                        <div className="space-y-4 max-w-lg">
+                           <h3 className="text-3xl font-black text-gray-900 uppercase italic">Comece seu projeto agora</h3>
+                           <p className="text-slate-500 font-medium">Acesse a gestão completa de projetos para criar seu plano de ação, definir metas e acompanhar seu crescimento passo a passo.</p>
+                        </div>
+                        <button 
+                           onClick={() => navigate('/business-suite?tab=projects')}
+                           className="px-10 py-5 bg-[#F67C01] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
+                        >
+                           IR PARA GESTÃO DE PROJETOS <ChevronRight className="w-5 h-5" />
+                        </button>
                      </div>
                   </div>
                </div>

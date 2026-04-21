@@ -11,14 +11,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Check, X } from 'lucide-react';
+import { DirectMessage, Profile } from '../types';
+import { SimpleModal } from '../components/SimpleModal';
 
 export const DirectMessages: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [selectedChat, setSelectedChat] = useState<{
+    other_id: string;
+    other_name: string;
+    other_avatar?: string;
+  } | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +34,19 @@ export const DirectMessages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+    onConfirm?: () => void;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
   const [archivedChats, setArchivedChats] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,17 +79,29 @@ export const DirectMessages: React.FC = () => {
 
   const deleteThread = async (otherId: string) => {
     if (!user) return;
-    if (!window.confirm("Tem certeza que deseja excluir TODA a conversa? Esta ação é irreversível.")) return;
     
-    try {
-      await supabaseService.deleteConversation(user.id, otherId);
-      setMessages([]);
-      setSelectedChat(null);
-      loadConversations();
-    } catch (error) {
-      console.error("Error deleting conversation:", error);
-      alert("Erro ao excluir conversa.");
-    }
+    setModalConfig({
+      isOpen: true,
+      title: 'Excluir Conversa',
+      message: 'Tem certeza que deseja excluir TODA a conversa? Esta ação é irreversível.',
+      type: 'info',
+      confirmText: 'EXCLUIR TUDO',
+      onConfirm: async () => {
+        try {
+          await supabaseService.deleteConversation(user.id, otherId);
+          setMessages([]);
+          setSelectedChat(null);
+          loadConversations();
+        } catch (error) {
+          setModalConfig({
+            isOpen: true,
+            title: 'Erro',
+            message: 'Não foi possível excluir a conversa.',
+            type: 'error'
+          });
+        }
+      }
+    });
     setIsActionsOpen(false);
   };
 
@@ -88,7 +119,12 @@ export const DirectMessages: React.FC = () => {
       loadMessages(selectedChat.other_id);
     } catch (error) {
       console.error("Error uploading file:", error);
-      alert("Erro ao enviar imagem.");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao enviar imagem.',
+        type: 'error'
+      });
     }
   };
 
@@ -102,12 +138,16 @@ export const DirectMessages: React.FC = () => {
     if (user) {
       loadConversations();
       
-      const sub = supabaseService.subscribeToMessages(user.id, (payload) => {
+      const sub = supabaseService.subscribeToMessages(user.id, (payload: { new: DirectMessage }) => {
         const newMsg = payload.new;
         
         // Se a conversa for a selecionada, adiciona a mensagem
-        if (selectedChat && newMsg.sender_id === selectedChat.other_id) {
-          setMessages(prev => [...prev, newMsg]);
+        if (selectedChat && (newMsg.sender_id === selectedChat.other_id || newMsg.receiver_id === selectedChat.other_id)) {
+          setMessages(prev => {
+            // Evitar duplicados se o loadMessages for disparado ao mesmo tempo
+            if (prev.some(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
         }
         
         // Independente de ser a selecionada, atualiza a lista de conversas
@@ -199,7 +239,12 @@ export const DirectMessages: React.FC = () => {
       loadMessages(selectedChat.other_id);
       loadConversations(); // Update sidebar
     } catch (error) {
-      alert("Erro ao enviar mensagem");
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro no Chat',
+        message: 'Não foi possível enviar sua mensagem. Tente novamente.',
+        type: 'error'
+      });
     }
   };
 
@@ -508,6 +553,16 @@ export const DirectMessages: React.FC = () => {
           </div>
         )}
       </div>
+
+      <SimpleModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({...prev, isOpen: false, onConfirm: undefined}))}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+        confirmText={modalConfig.confirmText}
+      />
     </div>
   );
 };

@@ -88,11 +88,12 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       icon: Trophy, 
       to: '/rewards',
       subItems: [
-        { label: 'Pontos', to: '/rewards?tab=missions' },
-        { label: 'Menu Cash', to: '/rewards?tab=match' },
+        { label: 'Feed', to: '/rewards?tab=feed' },
+        ...(!isPreRegistration || isAdmin ? [{ label: 'Chat', to: '/rewards?tab=chat' }] : []),
+        { label: 'Reunião 1x1', to: '/rewards?tab=match' },
+        { label: 'Pontos & Ranking', to: '/rewards' },
         { label: 'Níveis', to: '/rewards?tab=acceleration' },
-        { label: 'Indicações', to: '/rewards?tab=referrals' },
-        { label: 'Ranking', to: '/rewards?tab=ranking' }
+        { label: 'Indicações', to: '/rewards?tab=referrals' }
       ]
     },
     { 
@@ -119,13 +120,6 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
     { 
-      label: 'Mensagens', 
-      icon: MessageSquare, 
-      to: '/messages', 
-      locked: isPreRegistration && !isAdmin, 
-      minPlan: 'basic'
-    },
-    { 
       label: 'Planos de Adesão', 
       icon: CreditCard, 
       to: '/plans', 
@@ -137,6 +131,17 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
   ];
+
+  // Auto-expande o menu se uma sub-página estiver ativa
+  React.useEffect(() => {
+    menuItems.forEach(item => {
+      if (item.subItems && item.subItems.some(sub => isActive(sub.to))) {
+        if (!expandedItems.includes(item.label)) {
+          setExpandedItems(prev => [...prev, item.label]);
+        }
+      }
+    });
+  }, [location.pathname]);
 
   const toggleSubItems = (e: React.MouseEvent, item: any) => {
     e.preventDefault();
