@@ -8,7 +8,9 @@ import {
   Zap, Crown, ChevronRight,
   CheckCircle, ListTodo, Medal, Home as HomeIcon,
   Award, Rocket, Users, ArrowUp, Sparkles, ShoppingBag, Clock,
-  Megaphone, Heart, HandHeart, FileBarChart, Link2, Zap as ZapIcon, Lock
+  Megaphone, Heart, HandHeart, FileBarChart, Link2, Zap as ZapIcon, Lock,
+  MessageCircle, Calendar, AlertCircle, Handshake, Share2, Copy, RefreshCw, 
+  ArrowRight, Search, X, Plus, Video
 } from 'lucide-react';
 import { Prize, PointsTransaction, User, B2BOffer, B2BTransaction, Product, Meeting1x1 } from '../types';
 import { SectionLanding } from '../components/SectionLanding';

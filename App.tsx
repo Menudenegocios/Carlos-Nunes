@@ -1,7 +1,7 @@
 
 // Test comment
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { isSupabaseConfigured } from './services/supabaseClient';
@@ -63,8 +63,8 @@ const AppRoutes = () => {
       <Route element={<Layout children={<Events />} />} path="/eventos" />
       <Route element={<Layout children={<Plans />} />} path="/plans" />
       <Route element={<Layout children={<Plans />} />} path="/planos" />
-      <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacy" />
-      <Route element={<Layout children={<TermsOfUse />} />} path="/terms" />
+      <Route element={<Layout children={<PrivacyPolicy />} />} path="/privacidade" />
+      <Route element={<Layout children={<TermsOfUse />} />} path="/termos" />
 
       {/* Dashboard Routes - Wrapped in ProtectedRoute and DashboardLayout */}
       <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />

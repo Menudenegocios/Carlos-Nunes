@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ShieldCheck, Lock, Eye, FileText, ChevronLeft } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, FileText, ChevronLeft, Zap, X, Home as HomeIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const PrivacyPolicy: React.FC = () => {
@@ -26,11 +26,17 @@ export const PrivacyPolicy: React.FC = () => {
 
       <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-gray-100 shadow-xl space-y-12 text-gray-700 leading-relaxed font-medium">
         <section className="space-y-6">
+          <p>
+            Bem-vindo ao Menu de Negócios. A sua privacidade e a segurança dos seus dados são prioridades fundamentais para nós. Esta Política de Privacidade descreve como coletamos, usamos, armazenamos e protegemos as suas informações ao utilizar nossa plataforma, incluindo o uso de métodos de login social (Google Login).
+          </p>
+        </section>
+
+        <section className="space-y-6">
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
-            <Lock className="text-indigo-600" /> 1. Introdução
+            <Lock className="text-indigo-600" /> 1. Identificação do Controlador
           </h2>
           <p>
-            O Menu de Negócios valoriza a privacidade dos seus usuários. Esta política descreve como coletamos, usamos e protegemos suas informações pessoais quando você utiliza nossa plataforma de conexão local inteligente.
+            Este site e plataforma são operados por Menu de Negócios, sob responsabilidade da empresa inscrita no CNPJ nº 34.718.659/0001-08, com sede no Rio Grande do Sul, Brasil.
           </p>
         </section>
 
@@ -38,49 +44,74 @@ export const PrivacyPolicy: React.FC = () => {
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
             <Eye className="text-indigo-600" /> 2. Informações que Coletamos
           </h2>
-          <ul className="list-disc pl-6 space-y-3">
-            <li><strong>Dados de Registro:</strong> Nome, e-mail, senha e dados do negócio para criação do perfil.</li>
-            <li><strong>Perfil Digital:</strong> Informações que você opta por tornar públicas, como nome fantasia, bio, telefone e links sociais.</li>
-            <li><strong>Uso da Plataforma:</strong> Registros de atividades como postagens na comunidade e resgate de cupons para fins de pontuação no Clube ADS.</li>
+          <p>Para oferecer as ferramentas de gestão, vitrine digital e marketplace, coletamos os seguintes dados:</p>
+          <ul className="list-disc pl-6 space-y-4">
+            <li><strong>Dados de Autenticação (Google OAuth):</strong> Ao utilizar sua conta Google para acessar o Menu de Negócios, recebemos seu nome, endereço de e-mail, idioma de preferência e foto de perfil. Esses dados são utilizados exclusivamente para autenticação e criação de perfil.</li>
+            <li><strong>Dados de Perfil Profissional:</strong> Informações sobre seu negócio, CNPJ/CPF, descrição de serviços e contatos comerciais inseridos voluntariamente por você.</li>
+            <li><strong>Dados de Uso:</strong> Informações sobre como você interage com a plataforma (CRM e Marketplace) para fins de melhoria de performance.</li>
+            <li><strong>Dados Financeiros e de Gestão:</strong> Ao utilizar as funcionalidades de ERP e Gestão Financeira, a plataforma processa informações inseridas por você, como registros de vendas, fluxo de caixa, contas a pagar/receber e dados de faturamento. Esses dados são tratados como estritamente confidenciais.</li>
           </ul>
         </section>
 
         <section className="space-y-6">
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
-            <FileText className="text-indigo-600" /> 3. Uso das Informações
+            <FileText className="text-indigo-600" /> 3. Finalidade do Tratamento de Dados
           </h2>
-          <p>
-            Utilizamos seus dados para:
-          </p>
+          <p>Utilizamos os dados coletados para:</p>
           <ul className="list-disc pl-6 space-y-3">
-            <li>Manter e otimizar sua vitrine digital e perfil profissional.</li>
-            <li>Facilitar a conexão direta entre você e seus clientes via canais externos (como WhatsApp).</li>
-            <li>Gerenciar o sistema de recompensas e autoridade do Clube ADS.</li>
-            <li>Enviar notificações importantes sobre sua conta ou novos recursos.</li>
+            <li><strong>Autenticação:</strong> Permitir o acesso seguro via Google Login.</li>
+            <li><strong>Operação da Plataforma:</strong> Viabilizar o uso do CRM e a exibição da sua Vitrine Digital.</li>
+            <li><strong>Comunicação:</strong> Enviar notificações sobre atualizações do sistema e suporte técnico.</li>
+            <li><strong>Gestão de Negócios:</strong> Os dados financeiros são processados exclusivamente para gerar os relatórios, gráficos e automações dentro do seu painel de controle, auxiliando na sua tomada de decisão.</li>
+            <li><strong>Privacidade de Dados de Terceiros:</strong> O Menu de Negócios atua apenas como operador dos dados de clientes que você cadastrar no seu CRM ou Financeiro. Nós não acessamos, utilizamos ou compartilhamos as informações dos seus clientes finais para fins próprios.</li>
           </ul>
         </section>
 
         <section className="space-y-6">
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
-            <ShieldCheck className="text-indigo-600" /> 4. Proteção e Compartilhamento
+            <ShieldCheck className="text-indigo-600" /> 4. Compartilhamento de Dados
           </h2>
           <p>
-            Não vendemos seus dados para terceiros. Suas informações comerciais são expostas apenas conforme configurado por você na Vitrine Digital para atrair clientes. Utilizamos protocolos de segurança modernos para proteger suas informações de acesso não autorizado.
+            O Menu de Negócios não vende ou aluga seus dados pessoais para terceiros. O compartilhamento ocorre apenas com parceiros tecnológicos necessários para a operação (como hospedagem) ou quando você decide exibir seus dados publicamente na sua Vitrine Digital para atrair clientes.
           </p>
         </section>
 
         <section className="space-y-6">
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
-            <ChevronLeft className="text-indigo-600 rotate-180" /> 5. Seus Direitos
+            <Zap className="text-indigo-600" /> 5. Google API – Uso de Dados
           </h2>
           <p>
-            Você tem o direito de acessar, corrigir ou excluir seus dados a qualquer momento através do seu Painel de Controle ou entrando em contato com nosso suporte.
+            O uso de informações recebidas das APIs do Google pelo Menu de Negócios obedece à <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">Política de Dados do Usuário dos Serviços de API do Google</a>. Não utilizamos dados obtidos via Google para servir anúncios ou fornecer informações a corretores de dados.
+          </p>
+        </section>
+
+        <section className="space-y-6">
+          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
+            <X className="text-indigo-600" /> 6. Seus Direitos e Exclusão de Dados
+          </h2>
+          <p>
+            Em conformidade com a LGPD, você possui o direito de acessar, corrigir ou excluir seus dados a qualquer momento.
+          </p>
+          <p>
+            Para solicitar a exclusão definitiva da sua conta e de todos os dados associados, envie um e-mail para: <a href="mailto:nunesempreendedor@gmail.com" className="text-indigo-600 font-bold">nunesempreendedor@gmail.com</a>.
+          </p>
+          <p className="bg-amber-50 p-4 rounded-xl border border-amber-100 text-amber-800 text-sm">
+            A exclusão será processada em até 7 dias úteis.
+          </p>
+        </section>
+
+        <section className="space-y-6">
+          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3">
+            <HomeIcon className="text-indigo-600" /> 7. Contato
+          </h2>
+          <p>
+            Para qualquer dúvida sobre esta política, entre em contato através do e-mail de suporte: <a href="mailto:nunesempreendedor@gmail.com" className="text-indigo-600 font-bold">nunesempreendedor@gmail.com</a>.
           </p>
         </section>
 
         <div className="pt-12 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-gray-400 font-bold uppercase">Última atualização: 22 de Outubro de 2024</p>
-          <button className="bg-gray-50 text-gray-900 px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-100 hover:bg-gray-100 transition-all">Imprimir PDF</button>
+          <p className="text-sm text-gray-400 font-bold uppercase">Última atualização: 22 de abril de 2026</p>
+          <button onClick={() => window.print()} className="bg-gray-50 text-gray-900 px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-100 hover:bg-gray-100 transition-all">Imprimir Página</button>
         </div>
       </div>
     </div>

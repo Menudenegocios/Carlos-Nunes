@@ -18,6 +18,7 @@ export const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [wantPlatform, setWantPlatform] = useState(true);
   const [wantLocalPlus, setWantLocalPlus] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [referrerName, setReferrerName] = useState<string | null>(null);
 
@@ -59,6 +60,12 @@ export const Register: React.FC = () => {
     try {
       if (password.length < 6) {
         setError('A senha deve ter pelo menos 6 caracteres.');
+        setLoading(false);
+        return;
+      }
+
+      if (!acceptedTerms) {
+        setError('Você precisa aceitar os Termos de Uso e a Política de Privacidade.');
         setLoading(false);
         return;
       }
@@ -149,6 +156,11 @@ export const Register: React.FC = () => {
   };
 
   const handleGoogleRegister = async () => {
+    if (!acceptedTerms) {
+      setError('Você precisa aceitar os Termos de Uso e a Política de Privacidade.');
+      return;
+    }
+
     if (!whatsapp) {
       setError('Por favor, preencha o seu WhatsApp antes de continuar com o Google.');
       return;
@@ -345,6 +357,19 @@ export const Register: React.FC = () => {
                      <p className="text-[8px] font-bold text-slate-400 leading-none mt-1">Vendas Local+</p>
                    </button>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-3 px-1 py-2">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="w-5 h-5 rounded-lg border-2 border-slate-100 text-brand-primary focus:ring-brand-primary/20 transition-all cursor-pointer"
+                />
+                <label htmlFor="terms" className="text-[10px] font-black text-slate-400 cursor-pointer leading-tight uppercase tracking-widest">
+                  Li e concordo com os <Link to="/termos" className="text-brand-primary underline">Termos de Uso</Link> e <Link to="/privacidade" className="text-brand-primary underline">Política de Privacidade</Link>
+                </label>
               </div>
 
               {error && <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold rounded-r-xl">{error}</div>}

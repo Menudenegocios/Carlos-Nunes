@@ -425,8 +425,8 @@ const MiniCalendar = ({ tasks = [] }: { tasks?: any[] }) => {
           {new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(today)}
        </p>
        <div className="grid grid-cols-7 gap-1 text-center">
-          {days.map(d => (
-            <div key={d} className="text-[9px] font-black text-slate-300 py-2">{d}</div>
+          {days.map((d, idx) => (
+            <div key={`${d}-${idx}`} className="text-[9px] font-black text-slate-300 py-2">{d}</div>
           ))}
           {calendarDays.map((d, i) => {
             const hasTask = d ? hasTaskOnDay(d) : false;

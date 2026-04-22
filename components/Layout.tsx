@@ -131,8 +131,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </p>
             </div>
             <div className="flex gap-8 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-              <Link to="/privacy" className="hover:text-brand-primary transition-colors">Privacidade</Link>
-              <Link to="/terms" className="hover:text-brand-primary transition-colors">Termos</Link>
+              <Link to="/privacidade" className="hover:text-brand-primary transition-colors">Privacidade</Link>
+              <Link to="/termos" className="hover:text-brand-primary transition-colors">Termos</Link>
             </div>
           </div>
         </div>
