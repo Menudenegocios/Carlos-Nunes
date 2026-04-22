@@ -67,41 +67,13 @@ export const Home: React.FC = () => {
               <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
             </div>
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-              A Plataforma <span className="text-brand-primary italic">Menu de negócios</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
+              A Plataforma <br /> <span className="text-brand-primary italic">Menu de negócios</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
             </h1>
             <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Abandone as planilhas e dezenas de aplicativos. Tenha sua vitrine digital, CRM, agenda, controle financeiro e networking B2B em um único ecossistema.
             </p>
 
-            {/* Smart Search Bar */}
-            <div className="max-w-4xl mx-auto pt-8">
-              <div className="bg-white p-3 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col md:flex-row gap-2 ring-8 ring-brand-primary/5">
-                <div className="flex-1 relative flex items-center px-6">
-                  <Search className="w-6 h-6 text-brand-primary absolute left-8" />
-                  <input
-                    type="text"
-                    placeholder="O que você precisa hoje? (Ex: Pizzaria, Mentor...)"
-                    className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
-                    value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  />
-                </div>
-                <div className="w-px h-10 bg-gray-100 hidden md:block self-center"></div>
-                <div className="flex-1 relative flex items-center px-6">
-                  <MapPin className="w-6 h-6 text-indigo-600 absolute left-8" />
-                  <input
-                    type="text"
-                    placeholder="Sua Cidade ou Região"
-                    className="w-full bg-transparent border-none py-5 pl-12 font-bold text-lg text-brand-dark focus:ring-0 placeholder:text-gray-400 outline-none"
-                    value={filters.city}
-                    onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                  />
-                </div>
-                <button className="bg-brand-dark text-white px-12 py-5 rounded-[2.5rem] font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl active:scale-95">
-                  EXPLORAR
-                </button>
-              </div>
-            </div>
+            {/* Smart Search Bar Removido */}
 
           </div>
         </div>

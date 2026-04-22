@@ -19,7 +19,7 @@ type TabType = 'inicio' | 'projects' | 'tasks' | 'canva' | 'swot' | 'smart';
 
 export const ProjectManagement: React.FC = () => {
   const { user } = useAuth();
-  const user_id = user?.id || 'user-123'; 
+  const user_id = user?.id; 
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [profile, setProfile] = useState<any>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -40,6 +40,7 @@ export const ProjectManagement: React.FC = () => {
   }, [user_id]);
 
   const loadInitialData = async () => {
+    if (!user_id) return;
     setIsLoading(true);
     try {
       const [projs, tsks, prof] = await Promise.all([
@@ -135,6 +136,12 @@ export const ProjectManagement: React.FC = () => {
     { id: 'canva', label: 'Business Canva', icon: PieChart },
   ];
 
+
+  if (!user_id) return (
+    <div className="flex items-center justify-center h-64">
+      <RefreshCw className="w-8 h-8 text-brand-primary animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in">
@@ -268,7 +275,7 @@ export const ProjectManagement: React.FC = () => {
               transition={{ duration: 0.2 }}
             >
               {activeTab === 'inicio' && <DashboardView user_id={user_id} projects={projects} tasks={tasks} />}
-              {activeTab === 'projects' && <ProjectsView projects={projects} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
+              {activeTab === 'projects' && <ProjectsView projects={projects} tasks={tasks} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
               {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} initialTasks={tasks} profile={profile} onTasksUpdate={loadInitialData} />}
               {activeTab === 'canva' && <BusinessCanvaView user_id={user_id} />}
             </motion.div>
@@ -456,7 +463,7 @@ const MiniCalendar = ({ tasks = [] }: { tasks?: any[] }) => {
 
 
 
-const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], deleteProject: (id: string) => void, onEdit: (project: any) => void }) => {
+const ProjectsView = ({ projects, tasks, deleteProject, onEdit }: { projects: any[], tasks: any[], deleteProject: (id: string) => void, onEdit: (project: any) => void }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -491,10 +498,35 @@ const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], de
                   }`} />
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{p.status}</span>
                </div>
-               <span className="text-[10px] font-black text-slate-300 uppercase italic tracking-tighter">
-                  {p.support_tool !== 'Outros' ? p.support_tool : ''}
-               </span>
+               <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-1.5">
+                   <ListTodo className="w-3 h-3 text-slate-300" />
+                   <span className="text-[9px] font-black text-slate-400">
+                     {tasks.filter(t => t.project_id === p.id).length}
+                   </span>
+                 </div>
+                 <span className="text-[10px] font-black text-slate-300 uppercase italic tracking-tighter">
+                    {p.support_tool !== 'Outros' ? p.support_tool : ''}
+                 </span>
+               </div>
             </div>
+
+            {/* Quick Task List for this project */}
+            {tasks.filter(t => t.project_id === p.id).length > 0 && (
+              <div className="mt-6 space-y-2">
+                {tasks.filter(t => t.project_id === p.id).slice(0, 3).map(task => (
+                  <div key={task.id} className="flex items-center gap-2 px-3 py-2 bg-gray-50/50 rounded-xl border border-gray-100/50">
+                    <div className={`w-1 h-3 rounded-full ${task.status === 'Concluído' ? 'bg-emerald-400' : 'bg-brand-primary/40'}`} />
+                    <span className="text-[9px] font-bold text-slate-600 truncate">{task.title}</span>
+                  </div>
+                ))}
+                {tasks.filter(t => t.project_id === p.id).length > 3 && (
+                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest pl-1">
+                    + {tasks.filter(t => t.project_id === p.id).length - 3} outras tarefas
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )) : (
           <div className="col-span-full text-center py-24 opacity-30">
@@ -507,7 +539,7 @@ const ProjectsView = ({ projects, deleteProject, onEdit }: { projects: any[], de
   );
 };
 
-const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }: { user_id: string, projects: any[], initialTasks: any[], profile: any, onTasksUpdate: () => void }) => {
+const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }: { user_id: string, projects: any[], initialTasks: any[], profile: any, onTasksUpdate: () => Promise<void> }) => {
   const [tasks, setTasks] = useState<any[]>(initialTasks);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
@@ -544,7 +576,7 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
       } else {
         await supabaseService.addTask({ user_id, ...dataToSave, type: 'other' });
       }
-      onTasksUpdate();
+      await onTasksUpdate();
       setIsModalOpen(false);
       setEditingTask(null);
     } catch(e) { console.error(e) }

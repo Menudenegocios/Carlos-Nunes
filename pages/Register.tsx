@@ -189,10 +189,13 @@ export const Register: React.FC = () => {
         want_local_plus: wantLocalPlus
       }));
 
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectUrl = isLocal ? window.location.origin : 'https://menudenegocios.com';
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectUrl
         }
       });
 

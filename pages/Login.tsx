@@ -201,9 +201,14 @@ export const Login: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                   // Placeholder for Google Login
-                   supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+                onClick={async () => {
+                   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                   const redirectUrl = isLocal ? window.location.origin : 'https://menudenegocios.com';
+                   
+                   await supabase.auth.signInWithOAuth({ 
+                     provider: 'google', 
+                     options: { redirectTo: redirectUrl } 
+                   });
                 }}
                 className="w-full h-14 bg-white border-2 border-slate-100 text-gray-900 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-slate-50 transition-all active:scale-[0.98] flex items-center justify-center gap-3 shadow-sm"
               >
