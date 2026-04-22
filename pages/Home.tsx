@@ -6,7 +6,7 @@ import {
   ArrowRight, Globe, Settings, TrendingUp,
   CheckCircle, Star, ArrowUpRight, BookOpen,
   Search, MapPin, Store, Users, Calendar, Briefcase, Award,
-  HelpCircle, ChevronDown
+  HelpCircle, ChevronDown, ShieldCheck, FileText
 } from 'lucide-react';
 
 import { AIChatAgent } from '../components/AIChatAgent';
@@ -67,7 +67,7 @@ export const Home: React.FC = () => {
               <Star className="w-4 h-4 text-brand-primary fill-current" /> O Ecossistema Definitivo
             </div>
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9]">
-              A Plataforma <span className="text-brand-primary italic">Menu de Negócios</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
+              A Plataforma <span className="text-brand-primary italic">Menu de negócios</span> <br className="hidden md:block" /> para conectar, gerenciar e escalar o seu negócio.
             </h1>
             <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Abandone as planilhas e dezenas de aplicativos. Tenha sua vitrine digital, CRM, agenda, controle financeiro e networking B2B em um único ecossistema.
@@ -354,6 +354,29 @@ export const Home: React.FC = () => {
           <div className="pt-8">
             <Link to="/register" className="inline-flex items-center gap-3 bg-brand-primary text-white px-12 py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-2xl">
               Criar Minha Conta <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SEÇÃO DE VERIFICAÇÃO GOOGLE (BRANDING & PURPOSE) */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
+          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Sobre o Aplicativo Menu de negócios</h2>
+          <div className="space-y-4 text-slate-600 font-medium leading-relaxed max-w-3xl mx-auto">
+            <p>
+              O <strong>Menu de negócios</strong> é uma plataforma completa de gestão e vitrine para empreendedores. Nossa finalidade é fornecer ferramentas integradas de CRM, controle financeiro (ERP), agendamento e visibilidade digital, permitindo que pequenos e médios negócios organizem suas operações e se conectem com novos clientes e parceiros B2B de forma eficiente.
+            </p>
+            <p className="text-sm">
+              Ao utilizar nosso aplicativo através do login social, coletamos apenas as informações necessárias para autenticação e criação do seu perfil profissional, garantindo total transparência e segurança conforme nossa política.
+            </p>
+          </div>
+          <div className="pt-6 border-t border-gray-50 flex flex-col md:flex-row items-center justify-center gap-8">
+            <Link to="/privacidade" className="flex items-center gap-2 text-brand-primary font-black uppercase tracking-widest text-xs hover:underline">
+              <ShieldCheck className="w-4 h-4" /> Política de Privacidade
+            </Link>
+            <Link to="/termos" className="flex items-center gap-2 text-slate-400 font-black uppercase tracking-widest text-xs hover:underline">
+              <FileText className="w-4 h-4" /> Termos de Uso
             </Link>
           </div>
         </div>
