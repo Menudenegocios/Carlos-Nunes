@@ -425,11 +425,11 @@ export const BioBuilder: React.FC = () => {
 
         <div className="bg-white/5 rounded-[2.5rem] p-1.5 mt-10 flex gap-1 overflow-x-auto scrollbar-hide border border-white/5">
           {[
-            { id: 'home', label: 'INÍCIO', desc: 'Painel geral', icon: HomeIcon },
-            { id: 'content', label: 'CONTEÚDO', desc: 'Links e bio', icon: AlignLeft },
-            { id: 'social_proof', label: 'PROVA SOCIAL', desc: 'Depoimentos', icon: Star },
-            { id: 'design', label: 'DESIGN', desc: 'Temas e cores', icon: PaletteIcon },
-            { id: 'share', label: 'ATIVAR', desc: 'Sincronizar', icon: Share2 },
+            { id: 'home', label: 'Início', desc: 'Painel geral', icon: HomeIcon },
+            { id: 'content', label: 'Conteúdo', desc: 'Links e bio', icon: AlignLeft },
+            { id: 'social_proof', label: 'Prova social', desc: 'Depoimentos', icon: Star },
+            { id: 'design', label: 'Design', desc: 'Temas e cores', icon: PaletteIcon },
+            { id: 'share', label: 'Ativar', desc: 'Sincronizar', icon: Share2 },
           ].map(tab => (
             <button 
               key={tab.id}
@@ -438,7 +438,7 @@ export const BioBuilder: React.FC = () => {
             >
               <tab.icon className={`w-4 h-4 ${activeEditorTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
               <div className="text-left">
-                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1 italic">{tab.label}</p>
+                <p className="font-black text-[10px] tracking-widest leading-none mb-1 italic">{tab.label}</p>
                 <p className={`text-[8px] font-medium opacity-50 ${activeEditorTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</p>
               </div>
             </button>

@@ -12,7 +12,7 @@ export const AboutUs: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <Sparkles className="w-3 h-3" /> Propósito & Tecnologia
         </div>
-         <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-tight max-w-4xl mx-auto uppercase italic overflow-visible">
+         <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter leading-tight max-w-4xl mx-auto italic overflow-visible">
           Menu de Negócios <br className="hidden md:block"/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] title-fix">Plataforma All-in-One.</span>
          </h1>
         <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
@@ -94,7 +94,7 @@ export const AboutUs: React.FC = () => {
               <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-4xl font-black tracking-tight leading-none italic uppercase">Muito mais que um software. Um Ecossistema.</h2>
+              <h2 className="text-4xl font-black tracking-tight leading-none italic">Muito mais que um software. Um Ecossistema.</h2>
               <p className="text-indigo-100 text-lg font-medium leading-relaxed">
                 O Menu de Negócios não é apenas uma caixa de ferramentas. É uma comunidade ativa onde a colaboração gera expansão.
               </p>

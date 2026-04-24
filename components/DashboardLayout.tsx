@@ -59,7 +59,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     }] : []),
     { 
-      label: 'Minha Vitrine', 
+      label: 'Minha vitrine', 
       icon: Globe, 
       to: '/catalog', 
       locked: isPreRegistration && !isAdmin, 
@@ -69,7 +69,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
         { label: 'Produtos', to: '/catalog?tab=products' },
         { label: 'Blog', to: '/catalog?tab=blog' },
         { label: 'Configurações', to: '/catalog?tab=landing' },
-        { label: 'Ver Minha Vitrine', to: `/store/${user.id}` }
+        { label: 'Ver minha vitrine', to: `/store/${user.id}` }
       ]
     },
     { 
@@ -104,30 +104,30 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       minPlan: 'pre-cadastro',
       subItems: [
         { label: 'Marketplace', to: '/local-plus?tab=home' },
-        { label: 'Menu do Dia', to: '/local-plus?tab=flash' },
+        { label: 'Menu do dia', to: '/local-plus?tab=flash' },
         { label: 'Categorias', to: '/local-plus?tab=categories' }
       ]
     },
     { 
-      label: 'Gestão de Projetos', 
+      label: 'Gestão de projetos', 
       icon: LayoutGrid, 
       to: '/project-management', 
       locked: isPreRegistration && !isAdmin, 
       minPlan: 'basic',
       subItems: [
-        { label: 'Meus Projetos', to: '/project-management' },
+        { label: 'Meus projetos', to: '/project-management' },
         { label: 'Quadro Kanban', to: '/project-management' }
       ]
     },
     { 
-      label: 'Planos de Adesão', 
+      label: 'Planos de adesão', 
       icon: CreditCard, 
       to: '/plans', 
       locked: false, 
       minPlan: 'pre-cadastro',
       subItems: [
-        { label: 'Trocar Plano', to: '/plans' },
-        { label: 'Minhas Faturas', to: '/plans' }
+        { label: 'Trocar plano', to: '/plans' },
+        { label: 'Minhas faturas', to: '/plans' }
       ]
     },
   ];
@@ -251,7 +251,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                     <item.icon className={`w-5 h-5 transition-transform duration-300 relative z-10 ${isActive(item.to) ? 'text-white scale-110' : 'text-slate-400 group-hover:text-indigo-600 group-hover:scale-110'}`} />
                     {isExpanded && (
                       <div className="flex items-center justify-between flex-1 overflow-hidden relative z-10">
-                        <span className={`animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black tracking-widest uppercase italic ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>
+                        <span className={`animate-in fade-in slide-in-from-left-2 duration-300 whitespace-nowrap text-[11px] font-black italic ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>
                           {item.label}
                         </span>
                         {item.subItems && (
@@ -275,7 +275,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                           <Link
                             key={sub.label}
                             to={sub.to}
-                            className={`block py-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isActive(sub.to) ? 'text-indigo-600' : 'text-slate-400 hover:text-brand-dark'}`}
+                            className={`block py-2 text-[10px] font-bold transition-colors ${isActive(sub.to) ? 'text-indigo-600' : 'text-slate-400 hover:text-brand-dark'}`}
                           >
                             {sub.label}
                           </Link>
@@ -294,7 +294,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                 className={`flex items-center gap-4 py-4 rounded-2xl font-black text-[10px] tracking-widest bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 w-full group shadow-sm border border-rose-100/50 ${!isExpanded ? 'justify-center p-3.5 mx-auto w-12 h-12' : 'px-5'}`}
               >
                 <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
-                {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">SAIR DA CONTA</span>}
+                {isExpanded && <span className="animate-in fade-in slide-in-from-left-1 duration-300">Sair da conta</span>}
               </button>
             </div>
           </div>
@@ -411,7 +411,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                         </>
                       )}
                       <item.icon className={`w-5 h-5 relative z-10 transition-transform duration-300 ${isActive(item.to) ? 'scale-110' : 'group-hover:scale-110 group-hover:text-indigo-600'}`} />
-                      <span className={`text-xs font-black tracking-widest uppercase italic relative z-10 transition-colors ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>{item.label}</span>
+                      <span className={`text-xs font-black italic relative z-10 transition-colors ${isActive(item.to) ? 'text-white' : 'text-slate-600 group-hover:text-indigo-600'}`}>{item.label}</span>
                     </Link>
                  ))}
               </div>
@@ -421,7 +421,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                    className="flex items-center gap-4 w-full p-4 rounded-2xl bg-rose-50/50 text-rose-600 hover:bg-rose-500 hover:text-white shadow-sm border border-rose-100/50 transition-all duration-300 group"
                  >
                    <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
-                   <span className="text-xs font-black tracking-widest uppercase italic">Sair da Conta</span>
+                   <span className="text-xs font-black italic">Sair da conta</span>
                  </button>
               </div>
            </aside>
@@ -468,13 +468,13 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                   onClick={() => setIsUpgradeModalOpen(false)}
                   className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
                 >
-                  VER PLANOS DISPONÍVEIS <ArrowRight className="w-4 h-4" />
+                  Ver planos disponíveis <ArrowRight className="w-4 h-4" />
                 </Link>
                 <button 
                   onClick={() => setIsUpgradeModalOpen(false)}
                   className="w-full bg-slate-50 text-slate-400 font-black py-5 rounded-2xl uppercase tracking-widest text-xs hover:bg-slate-100 transition-all"
                 >
-                  VOLTAR AO PAINEL
+                  Voltar ao painel
                 </button>
               </div>
             </div>

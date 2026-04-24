@@ -122,11 +122,11 @@ export const Academy: React.FC = () => {
 
                <div className="flex p-1.5 mt-12 bg-gray-50 backdrop-blur-md rounded-[2.2rem] border border-gray-100 w-fit overflow-x-auto scrollbar-hide gap-1">
                   {[
-                     { id: 'home', label: 'INÍCIO', desc: 'Bem-vindo', icon: HomeIcon },
-                     { id: 'trilha', label: 'TRILHA DO SUCESSO', desc: 'Passo a passo', icon: Map },
-                     { id: 'connect', label: 'CONNECT', desc: 'Mentorias ao vivo', icon: Users },
-                     { id: 'treinamentos', label: 'TREINAMENTOS', desc: 'Vídeo aulas', icon: Video },
-                     { id: 'projetos', label: 'PROJETOS', desc: 'Gestão estratégica', icon: Layers },
+                     { id: 'home', label: 'Início', desc: 'Bem-vindo', icon: HomeIcon },
+                     { id: 'trilha', label: 'Trilha do sucesso', desc: 'Passo a passo', icon: Map },
+                     { id: 'connect', label: 'Connect', desc: 'Mentorias ao vivo', icon: Users },
+                     { id: 'treinamentos', label: 'Treinamentos', desc: 'Vídeo aulas', icon: Video },
+                     { id: 'projetos', label: 'Projetos', desc: 'Gestão estratégica', icon: Layers },
                   ].map(tab => (
                      <button
                         key={tab.id}
@@ -135,7 +135,7 @@ export const Academy: React.FC = () => {
                      >
                         <div className="flex items-center gap-2 mb-0.5">
                            <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
-                           <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
+                           <span className="font-black text-[10px] tracking-widest italic">{tab.label}</span>
                         </div>
                         <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : 'text-gray-900'}`}>{tab.desc}</span>
                      </button>

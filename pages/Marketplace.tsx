@@ -180,7 +180,7 @@ export const Marketplace: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-widest">
            <ShoppingBag className="w-3 h-3" /> Ecossistema Local
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight max-w-4xl mx-auto uppercase overflow-visible">
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight max-w-4xl mx-auto overflow-visible">
           O Shopping de <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic font-black title-fix">Oportunidades.</span>
         </h1>
         
@@ -188,7 +188,7 @@ export const Marketplace: React.FC = () => {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
             <input 
                type="text" 
-               placeholder="O que você busca no O Shopping de Oportunidades?" 
+               placeholder="O que você busca no Shopping de Oportunidades?" 
                className="w-full pl-16 pr-6 py-5 bg-white border border-gray-100 rounded-[2.5rem] font-bold text-gray-900 focus:ring-4 focus:ring-indigo-50 outline-none shadow-xl transition-all"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
@@ -331,7 +331,7 @@ export const Marketplace: React.FC = () => {
                                     <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-lg bg-white flex items-center justify-center">
                                         <Store className="w-4 h-4 text-indigo-600" />
                                     </div>
-                                    <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg uppercase">O Shopping de Oportunidades</span>
+                                    <span className="text-[9px] font-black text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-lg">Shopping de Oportunidades</span>
                                 </div>
                             </div>
                             <div className="p-8 flex-1 flex flex-col">
@@ -403,7 +403,7 @@ export const Marketplace: React.FC = () => {
                     </div>
                     <div>
                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ecossistema Local</p>
-                       <h4 className="font-black text-gray-900 text-lg uppercase tracking-tight">O Shopping de Oportunidades</h4>
+                       <h4 className="font-black text-gray-900 text-lg tracking-tight">Shopping de Oportunidades</h4>
                     </div>
                  </div>
 

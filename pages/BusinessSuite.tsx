@@ -77,9 +77,9 @@ export const BusinessSuite: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                { id: 'home', label: 'INÍCIO', desc: 'Boas-vindas', icon: HomeIcon },
-                { id: 'crm', label: 'CRM & VENDAS', desc: 'Gestão de leads', icon: Briefcase },
-                { id: 'finance', label: 'FINANCEIRO', desc: 'Financeiro', icon: DollarSign },
+                { id: 'home', label: 'Início', desc: 'Boas-vindas', icon: HomeIcon },
+                { id: 'crm', label: 'CRM & Vendas', desc: 'Gestão de leads', icon: Briefcase },
+                { id: 'finance', label: 'Financeiro', desc: 'Financeiro', icon: DollarSign },
                 // { id: 'menuzap_pro', label: 'MENUZAP', desc: 'Agentes de IA', icon: Zap }
               ].map((tab) => (
                 <button 
@@ -89,7 +89,7 @@ export const BusinessSuite: React.FC = () => {
                 >
                   <div className="flex items-center gap-2 mb-0.5">
                     <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
-                    <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
+                    <span className="font-black text-[10px] tracking-widest italic">{tab.label}</span>
                   </div>
                   <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</span>
                 </button>
@@ -489,8 +489,8 @@ const CRMView = ({ user_id }: { user_id: string }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex p-1.5 bg-white rounded-[2rem] border border-gray-100 w-fit gap-1 overflow-x-auto scrollbar-hide max-w-full">
-          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>CRM (Pipeline)</button>
-          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Clientes</button>
+          <button onClick={() => setActiveSubTab('pipeline')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'pipeline' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>CRM (Pipeline)</button>
+          <button onClick={() => setActiveSubTab('clients')} className={`px-8 py-3 rounded-[1.4rem] font-black text-[10px] tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'clients' ? 'bg-[#F67C01] text-white shadow-lg' : 'text-slate-400 hover:bg-gray-100'}`}>Clientes</button>
       </div>
 
       {activeSubTab === 'pipeline' && (

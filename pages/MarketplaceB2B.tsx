@@ -98,7 +98,7 @@ export const MarketplaceB2B: React.FC = () => {
                  <Handshake className="h-10 w-10 text-brand-primary" />
               </div>
               <div>
-                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2 italic uppercase">
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-2 italic">
                     Marketplace <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA]">B2B</span>
                  </h1>
                  <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em]">PARCERIAS E ACORDOS ENTRE EMPRESÁRIOS LOCAIS.</p>
@@ -121,9 +121,9 @@ export const MarketplaceB2B: React.FC = () => {
 
           <div className="flex p-1.5 mt-12 bg-white/5 backdrop-blur-md rounded-[2.2rem] border border-white/10 w-fit overflow-x-auto scrollbar-hide gap-1">
               {[
-                  { id: 'home', label: 'INÍCIO', desc: 'Como funciona', icon: HomeIcon },
-                  { id: 'browse', label: 'MATCH', desc: 'Ver acordos', icon: Zap },
-                  { id: 'my-deals', label: 'MINHAS OPOR.', desc: 'Suas parcerias', icon: ShieldCheck }
+                  { id: 'home', label: 'Início', desc: 'Como funciona', icon: HomeIcon },
+                  { id: 'browse', label: 'Match', desc: 'Ver acordos', icon: Zap },
+                  { id: 'my-deals', label: 'Minhas opor.', desc: 'Suas parcerias', icon: ShieldCheck }
               ].map(tab => (
                   <button 
                     key={tab.id}
@@ -132,7 +132,7 @@ export const MarketplaceB2B: React.FC = () => {
                   >
                       <div className="flex items-center gap-2 mb-0.5">
                         <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.id ? 'text-white' : 'text-brand-primary'}`} />
-                        <span className="font-black text-[10px] tracking-widest uppercase italic">{tab.label}</span>
+                        <span className="font-black text-[10px] tracking-widest italic">{tab.label}</span>
                       </div>
                       <span className={`text-[8px] font-medium opacity-60 ${activeTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</span>
                   </button>

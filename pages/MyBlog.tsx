@@ -255,8 +255,8 @@ export const MyBlog: React.FC = () => {
 
         <div className="bg-white/5 rounded-[2.5rem] p-1.5 mt-10 flex gap-1 overflow-x-auto scrollbar-hide border border-white/5 w-fit">
           {[
-            { id: 'home', label: 'INÍCIO', desc: 'Destaques', icon: HomeIcon },
-            { id: 'manage', label: 'GESTÃO', desc: isAdmin ? 'Todos Artigos' : 'Seus artigos', icon: FileText },
+            { id: 'home', label: 'Início', desc: 'Destaques', icon: HomeIcon },
+            { id: 'manage', label: 'Gestão', desc: isAdmin ? 'Todos Artigos' : 'Seus artigos', icon: FileText },
           ].map(tab => (
             <button 
               key={tab.id}
@@ -265,7 +265,7 @@ export const MyBlog: React.FC = () => {
             >
               <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-white' : 'text-[#F67C01]'}`} />
               <div className="text-left">
-                <p className="font-black text-[10px] uppercase tracking-widest leading-none mb-1 italic">{tab.label}</p>
+                <p className="font-black text-[10px] tracking-widest leading-none mb-1 italic">{tab.label}</p>
                 <p className={`text-[8px] font-medium opacity-50 ${activeSubTab === tab.id ? 'text-white' : ''}`}>{tab.desc}</p>
               </div>
             </button>

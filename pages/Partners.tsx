@@ -30,7 +30,7 @@ export const Partners: React.FC = () => {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest">
           <Handshake className="w-3 h-3" /> Ecossistema de Crescimento
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight max-w-4xl mx-auto uppercase overflow-visible">
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight max-w-4xl mx-auto overflow-visible">
           Ninguém cresce <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] via-[#F67C01] to-[#9333EA] italic title-fix">sozinho.</span>
         </h1>
         <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
