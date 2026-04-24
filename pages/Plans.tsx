@@ -142,7 +142,7 @@ export const Plans: React.FC = () => {
           color="text-indigo-500"
           btnText="FAZER PARTE"
           subtitle="Acesso essencial ao ecossistema para começar a gerar conexões e visibilidade."
-          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Link na Bio Personalizado', 'Captura de Leads', 'Marketplace B2B (Comprar)', 'Gestão de Projetos', 'Menu Academy', 'BÔNUS: Reunião Semanal Online - Connect', 'BÔNUS: 50 Pontos Menucast']}
+          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Link na Bio Personalizado', 'Captura de Leads', 'Marketplace B2B (Comprar)', 'Gestão de Projetos', 'Menu', 'BÔNUS: Reunião Semanal Online - Connect', 'BÔNUS: 50 Pontos Menu Cash']}
         />
         <PlanCard
           type="PRO"
@@ -157,7 +157,7 @@ export const Plans: React.FC = () => {
           recommended={true}
           extraInfo="BÔNUS: SELO FUNDADOR"
           subtitle="Tudo do básico com ferramentas avançadas de gestão e vendas para escalar."
-          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Catálogo e Loja Virtual Completa', 'Blog & SEO', 'Portfólio de Vídeos Instagram', 'CRM e Gestão de Vendas Profissional', 'Controle Financeiro', 'Gestão de Projetos', 'Marketplace B2B (Comprar & Vender)', 'Menu Academy PRO', 'BÔNUS: Vendas B2B na Plataforma', 'BÔNUS: 100 Pontos Menucast']}
+          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Catálogo e Loja Virtual Completa', 'Blog & SEO', 'Portfólio de Vídeos Instagram', 'CRM e Gestão de Vendas Profissional', 'Controle Financeiro', 'Gestão de Projetos', 'Marketplace B2B (Comprar & Vender)', 'Menu PRO', 'BÔNUS: Vendas B2B na Plataforma', 'BÔNUS: 100 Pontos Menu Cash']}
         />
         <PlanCard
           type="FULL"
@@ -171,7 +171,7 @@ export const Plans: React.FC = () => {
           btnText="ASSUMIR LIDERANÇA"
           extraInfo="VAGAS LIMITADAS"
           subtitle="Para quem busca o topo. Mentoria direta e posicionamento de autoridade máxima."
-          features={['Mesmos Recursos do Plano PRO', 'BÔNUS: 6 Eventos de Networking', 'BÔNUS: Participação no Menucast', 'BÔNUS: Teaser + Fotos Profissionais', 'BÔNUS: 1 Vídeo de Vendas', 'BÔNUS: 200 Pontos Menucast']}
+          features={['Mesmos Recursos do Plano PRO', 'BÔNUS: 6 Eventos de Networking', 'BÔNUS: Participação no Menu Cash', 'BÔNUS: Teaser + Fotos Profissionais', 'BÔNUS: 1 Vídeo de Vendas', 'BÔNUS: 200 Pontos Menu Cash']}
         />
       </div>
 

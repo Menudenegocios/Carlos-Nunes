@@ -205,22 +205,22 @@ export const Dashboard: React.FC = () => {
                 <LayoutDashboard className="h-10 w-10 text-indigo-600 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
               </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic uppercase text-gray-900 overflow-visible">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-2 italic text-gray-900 overflow-visible">
                   Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 title-fix">{user.name.split(' ')[0]}!</span>
                 </h1>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.2em]">Sua economia colaborativa em tempo real. <br />ID: {userProfile?.display_id || '...'}</p>
+                <p className="text-slate-500 text-sm font-bold tracking-[0.2em]">Sua economia colaborativa em tempo real. <br />ID: {userProfile?.display_id || '...'}</p>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <button onClick={() => setShowNews(true)} className="hidden md:flex items-center gap-2 px-6 py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition-all active:scale-95 shadow-sm">
-                <Bell className="w-4 h-4" /> NOVIDADES <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[8px]">{CURRENT_VERSION}</span>
+              <button onClick={() => setShowNews(true)} className="hidden md:flex items-center gap-2 px-6 py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl font-black text-[10px] tracking-widest hover:bg-indigo-100 transition-all active:scale-95 shadow-sm">
+                <Bell className="w-4 h-4" /> Novidades <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[8px]">{CURRENT_VERSION}</span>
               </button>
-              <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
-                <Plus className="w-4 h-4" /> NOVO ITEM
+              <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
+                <Plus className="w-4 h-4" /> Novo item
               </Link>
-              <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-md text-gray-900 border border-gray-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/80 transition-all active:scale-95 shadow-sm">
-                <Eye className="w-4 h-4" /> VER VITRINE
+              <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-md text-gray-900 border border-gray-200 rounded-2xl font-black text-[10px] tracking-widest hover:bg-white/80 transition-all active:scale-95 shadow-sm">
+                <Eye className="w-4 h-4" /> Ver vitrine
               </Link>
             </div>
           </div>
@@ -244,8 +244,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="px-4 py-2 bg-emerald-50/80 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-200/50 backdrop-blur-sm">
-                {getCashbackPercent()} Cashback Ativo
+              <div className="px-4 py-2 bg-emerald-50/80 text-emerald-700 rounded-xl text-[10px] font-black tracking-widest border border-emerald-200/50 backdrop-blur-sm">
+                {getCashbackPercent()} Cashback ativo
               </div>
               <p className="text-xs text-slate-500 font-medium italic">Plano {planNames[user.plan]}</p>
             </div>
@@ -267,8 +267,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="px-4 py-2 bg-orange-50/80 text-brand-primary rounded-xl text-[10px] font-black uppercase tracking-widest border border-orange-200/50 backdrop-blur-sm">
-                12º no Ranking Mensal
+              <div className="px-4 py-2 bg-orange-50/80 text-brand-primary rounded-xl text-[10px] font-black tracking-widest border border-orange-200/50 backdrop-blur-sm">
+                12º no Ranking mensal
               </div>
               <p className="text-xs text-slate-500 font-medium italic">Top 5 ganha destaque</p>
             </div>
@@ -287,9 +287,9 @@ export const Dashboard: React.FC = () => {
                 <Rocket className="w-10 h-10 drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]" />
               </div>
               <div>
-                <h3 className="text-3xl font-black text-gray-900 uppercase italic tracking-tighter leading-none">SEU NÍVEL: {(user.level || 'Nível Base').toUpperCase()}</h3>
+                <h3 className="text-3xl font-black text-gray-900 italic tracking-tighter leading-none">Seu nível: {(user.level || 'Nível Base')}</h3>
                 {nextTierData && (
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">
+                  <p className="text-[10px] font-black text-slate-500 tracking-widest mt-2 bg-slate-100 px-3 py-1 rounded-full w-fit">
                     Objetivo: {nextTierData.nextLevel}
                   </p>
                 )}
@@ -340,10 +340,10 @@ export const Dashboard: React.FC = () => {
         <div className="lg:col-span-7 space-y-10">
           <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden">
             <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 italic">
-                <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> RANKING
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3 italic">
+                <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> Ranking
               </h3>
-              <Link to="/rewards" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-2">VER RANKING COMPLETO <ChevronRight className="w-4 h-4" /></Link>
+              <Link to="/rewards" className="text-[10px] font-black text-indigo-600 tracking-widest hover:underline flex items-center gap-2">Ver ranking completo <ChevronRight className="w-4 h-4" /></Link>
             </div>
 
             <div className="space-y-4">
@@ -380,10 +380,10 @@ export const Dashboard: React.FC = () => {
                 <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">Ganhe até +{pointsRules.indicacaoPro} pontos por cada indicação.</p>
                 <button
                   onClick={copyReferral}
-                  className="w-full py-4 bg-gray-900 text-white border border-transparent rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg"
+                  className="w-full py-4 bg-gray-900 text-white border border-transparent rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg"
                 >
                   {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  {copied ? 'COPIADO!' : 'COPIAR LINK'}
+                  {copied ? 'Copiado!' : 'Copiar link'}
                 </button>
               </div>
             </div>
@@ -414,8 +414,8 @@ export const Dashboard: React.FC = () => {
         <div className="lg:col-span-5 space-y-10">
           <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors duration-500">
             <div className="relative z-10">
-              <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-3 mb-6">
-                <Lock className="text-indigo-600" /> IDENTIDADE & ACESSO
+              <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3 mb-6">
+                <Lock className="text-indigo-600" /> Identidade & Acesso
               </h3>
               <form onSubmit={handleUpdateAuth} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -460,8 +460,8 @@ export const Dashboard: React.FC = () => {
                   />
                 </div>
                 {authMessage && <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest px-1">{authMessage}</p>}
-                <button type="submit" disabled={isSavingAuth} className="w-full bg-gray-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-lg">
-                  {isSavingAuth ? 'SALVANDO...' : <><Save className="w-4 h-4" /> ATUALIZAR ACESSO</>}
+                <button type="submit" disabled={isSavingAuth} className="w-full bg-gray-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-lg">
+                  {isSavingAuth ? 'Salvando...' : <><Save className="w-4 h-4" /> Atualizar acesso</>}
                 </button>
               </form>
             </div>
@@ -481,7 +481,7 @@ export const Dashboard: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
               <PartyPopper className="w-12 h-12 text-yellow-300 mx-auto mb-3" />
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">NOVIDADES</h3>
+              <h3 className="text-2xl font-black text-white italic tracking-tighter">Novidades</h3>
               <p className="inline-block px-3 py-1 bg-white/20 rounded-full text-[9px] font-bold text-indigo-100 uppercase mt-1">Versão {CURRENT_VERSION}</p>
             </div>
 

@@ -16,8 +16,6 @@ export const Register: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [wantPlatform, setWantPlatform] = useState(true);
-  const [wantLocalPlus, setWantLocalPlus] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [referrerName, setReferrerName] = useState<string | null>(null);
@@ -108,10 +106,7 @@ export const Register: React.FC = () => {
           data: {
             name: name,
             phone: whatsapp,
-            referrer_id: finalReferrerUuid,
-            want_platform: wantPlatform,
-            want_local_plus: wantLocalPlus,
-            has_local_plus: wantLocalPlus
+            referrer_id: finalReferrerUuid
           }
         }
       });
@@ -184,9 +179,7 @@ export const Register: React.FC = () => {
       // Salvar metadados para processar após o redirecionamento
       sessionStorage.setItem('pending_registration_data', JSON.stringify({
         whatsapp,
-        referrer_id: finalReferrerUuid,
-        want_platform: wantPlatform,
-        want_local_plus: wantLocalPlus
+        referrer_id: finalReferrerUuid
       }));
 
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -238,7 +231,7 @@ export const Register: React.FC = () => {
 
       {/* Right Side: Register Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16 bg-white overflow-y-auto">
-        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
+        <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
           {/* Mobile Logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <Logo size="md" />
@@ -260,7 +253,7 @@ export const Register: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Google Signup Button - Always prominent as requested */}
             <button
               onClick={handleGoogleRegister}
@@ -283,7 +276,7 @@ export const Register: React.FC = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
                 <input
@@ -291,18 +284,31 @@ export const Register: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
                   placeholder="Seu nome"
                 />
               </div>
 
-              <div className="space-y-1">
-                <PhoneInput
-                  label="WhatsApp (Obrigatório)"
-                  value={whatsapp}
-                  onChange={setWhatsapp}
-                  placeholder="DDD + Número"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <PhoneInput
+                    label="WhatsApp (Obrigatório)"
+                    value={whatsapp}
+                    onChange={setWhatsapp}
+                    placeholder="DDD + Número"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">ID de Indicação</label>
+                  <input
+                    type="text"
+                    value={referralId}
+                    onChange={(e) => setReferralId(e.target.value)}
+                    className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                    placeholder="Ex: 1024"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -312,7 +318,7 @@ export const Register: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
                   placeholder="email@exemplo.com"
                 />
               </div>
@@ -324,45 +330,12 @@ export const Register: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
                   placeholder="••••••••"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">ID de Indicação (Opcional)</label>
-                <input
-                  type="text"
-                  value={referralId}
-                  onChange={(e) => setReferralId(e.target.value)}
-                  className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
-                  placeholder="Ex: 1024"
-                />
-              </div>
-
-              <div className="pt-2">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">O que você deseja no Menu?</p>
-                <div className="grid grid-cols-2 gap-3">
-                   <button
-                     type="button"
-                     onClick={() => setWantPlatform(!wantPlatform)}
-                     className={`p-4 rounded-2xl text-left border-2 transition-all ${wantPlatform ? 'border-brand-primary bg-brand-primary/5' : 'border-gray-50 bg-gray-50'}`}
-                   >
-                     <p className={`text-[10px] font-black uppercase tracking-tight ${wantPlatform ? 'text-brand-primary' : 'text-slate-400'}`}>Plataforma</p>
-                     <p className="text-[8px] font-bold text-slate-400 leading-none mt-1">Gestão & Vitrine</p>
-                   </button>
-                   <button
-                     type="button"
-                     onClick={() => setWantLocalPlus(!wantLocalPlus)}
-                     className={`p-4 rounded-2xl text-left border-2 transition-all ${wantLocalPlus ? 'border-brand-primary bg-brand-primary/5' : 'border-gray-50 bg-gray-50'}`}
-                   >
-                     <p className={`text-[10px] font-black uppercase tracking-tight ${wantLocalPlus ? 'text-brand-primary' : 'text-slate-400'}`}>Marketplace</p>
-                     <p className="text-[8px] font-bold text-slate-400 leading-none mt-1">Vendas Local+</p>
-                   </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 px-1 py-2">
+              <div className="flex items-center gap-3 px-1 py-1">
                 <input 
                   type="checkbox" 
                   id="terms" 
@@ -371,7 +344,7 @@ export const Register: React.FC = () => {
                   className="w-5 h-5 rounded-lg border-2 border-slate-100 text-brand-primary focus:ring-brand-primary/20 transition-all cursor-pointer"
                 />
                 <label htmlFor="terms" className="text-[10px] font-black text-slate-400 cursor-pointer leading-tight uppercase tracking-widest">
-                  Li e concordo com os <Link to="/termos" className="text-brand-primary underline">Termos de Uso</Link> e <Link to="/privacidade" className="text-brand-primary underline">Política de Privacidade</Link>
+                  Li e concordo com os <Link to="/termos" className="text-brand-primary underline">Termos</Link> e <Link to="/privacidade" className="text-brand-primary underline">Privacidade</Link>
                 </label>
               </div>
 
@@ -381,7 +354,7 @@ export const Register: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-5 bg-brand-primary text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-brand-primary/20 hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
+                className="w-full py-4.5 bg-brand-primary text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-brand-primary/20 hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50"
               >
                 {loading ? 'Processando...' : 'Criar minha conta'}
               </button>
