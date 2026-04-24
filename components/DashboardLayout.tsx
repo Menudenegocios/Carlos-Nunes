@@ -112,8 +112,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       label: 'Gestão de Projetos', 
       icon: LayoutGrid, 
       to: '/project-management', 
-      locked: (isPreRegistration || user.plan === 'basic') && !isAdmin, 
-      minPlan: 'pro',
+      locked: isPreRegistration && !isAdmin, 
+      minPlan: 'basic',
       subItems: [
         { label: 'Meus Projetos', to: '/project-management' },
         { label: 'Quadro Kanban', to: '/project-management' }

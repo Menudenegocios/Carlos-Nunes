@@ -339,7 +339,7 @@ export const MyBlog: React.FC = () => {
                     <div className="flex gap-3 mt-6 md:mt-0">
                        <button onClick={() => handleOpenModal(post)} className="p-4 bg-white rounded-2xl text-indigo-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Edit2 className="w-5 h-5" /></button>
                        <button onClick={() => handleDeletePost(post.id)} className="p-4 bg-white rounded-2xl text-rose-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Trash2 className="w-5 h-5" /></button>
-                       <a href="/#/blog" target="_blank" className="p-4 bg-white rounded-2xl text-emerald-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Send className="w-5 h-5" /></a>
+                       <a href="/blog" target="_blank" className="p-4 bg-white rounded-2xl text-emerald-400 border border-gray-100 shadow-sm hover:scale-110 transition-transform"><Send className="w-5 h-5" /></a>
                     </div>
                   </div>
                 ))}

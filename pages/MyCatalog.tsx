@@ -171,7 +171,7 @@ export const MyCatalog: React.FC = () => {
   };
 
   const isAdmin = user?.role === 'admin';
-  const hasAccess = isAdmin || (user?.plan !== 'basic');
+  const hasAccess = isAdmin || (user?.plan !== 'pre-cadastro');
 
   useEffect(() => { if (user && hasAccess) loadData(); }, [user, hasAccess, activeSubTab]);
 
@@ -476,7 +476,7 @@ export const MyCatalog: React.FC = () => {
           
           <div className="flex gap-3">
             <a 
-              href={profile?.slug ? `#/${profile.slug}` : `#/store/${user?.id}`}
+              href={profile?.slug ? `/${profile.slug}` : `/store/${user?.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-white/5 text-white border border-white/10 px-8 py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all flex items-center gap-3"

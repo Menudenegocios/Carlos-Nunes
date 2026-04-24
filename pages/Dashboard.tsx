@@ -87,7 +87,8 @@ export const Dashboard: React.FC = () => {
   const copyReferral = () => {
     const refCode = userProfile?.display_id?.toString() || user?.referral_code;
     if (refCode) {
-      navigator.clipboard.writeText(`https://menudenegocios.com/#/register?ref=${refCode}`);
+      const baseUrl = window.location.origin;
+      navigator.clipboard.writeText(`${baseUrl}/register?ref=${refCode}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

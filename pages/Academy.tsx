@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 import {
@@ -86,6 +87,7 @@ const AI_AGENTS: AIAgent[] = [
 
 export const Academy: React.FC = () => {
    const { user } = useAuth();
+   const navigate = useNavigate();
    const [activeTab, setActiveTab] = useState<'home' | 'trilha' | 'treinamentos' | 'projetos' | 'connect'>('home');
    const [trainingCategory, setTrainingCategory] = useState<string>('Todos');
    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -420,7 +422,7 @@ export const Academy: React.FC = () => {
                            <p className="text-slate-500 font-medium">Acesse a gestão completa de projetos para criar seu plano de ação, definir metas e acompanhar seu crescimento passo a passo.</p>
                         </div>
                         <button 
-                           onClick={() => navigate('/business-suite?tab=projects')}
+                           onClick={() => navigate('/project-management')}
                            className="px-10 py-5 bg-[#F67C01] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center gap-3"
                         >
                            IR PARA GESTÃO DE PROJETOS <ChevronRight className="w-5 h-5" />

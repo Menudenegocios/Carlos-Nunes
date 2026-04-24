@@ -123,7 +123,8 @@ export const Rewards: React.FC = () => {
   const copyReferralLink = () => {
     const refCode = userProfile?.display_id?.toString() || user?.referral_code;
     if (refCode) {
-      const url = `https://menudenegocios.com/#/register?ref=${refCode}`;
+      const baseUrl = window.location.origin;
+      const url = `${baseUrl}/register?ref=${refCode}`;
       navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -275,7 +276,7 @@ export const Rewards: React.FC = () => {
                          <div className="flex items-center gap-3">
                             <div className="bg-slate-50 px-4 py-2 rounded-xl border border-dashed border-slate-200 text-xs font-mono text-slate-500 flex items-center gap-3">
                                 <span className="text-[10px] font-black uppercase text-slate-400">Seu Link:</span>
-                                <span>https://menudenegocios.com/#/register?ref={userProfile?.display_id || '---'}</span>
+                                <span>{`${window.location.origin}/register?ref=${userProfile?.display_id || '---'}`}</span>
                             </div>
                             <button 
                                 onClick={copyReferralLink}

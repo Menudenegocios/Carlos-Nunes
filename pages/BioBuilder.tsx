@@ -195,7 +195,7 @@ export const BioBuilder: React.FC = () => {
 
   const copyBioLink = () => {
     const identifier = profile.slug || user?.id;
-    const url = `${window.location.origin}/#/bio/${identifier}`;
+    const url = `${window.location.origin}/bio/${identifier}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -858,7 +858,7 @@ export const BioBuilder: React.FC = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
                           <button onClick={() => setShowSuccess(false)} className="flex-1 py-5 bg-gray-100 text-slate-600 rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-all">VOLTAR AO EDITOR</button>
-                          <a href={`${window.location.origin}/#/bio/${profile.slug || user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
+                          <a href={`${window.location.origin}/bio/${profile.slug || user?.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.8rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">VER AO VIVO <ExternalLink className="w-4 h-4" /></a>
                       </div>
                   </div>
               </div>

@@ -142,7 +142,7 @@ export const Plans: React.FC = () => {
           color="text-indigo-500"
           btnText="FAZER PARTE"
           subtitle="Acesso essencial ao ecossistema para começar a gerar conexões e visibilidade."
-          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Link na Bio Personalizado', 'Captura de Leads', 'Marketplace B2B (Comprar)', 'Menu Academy', 'BÔNUS: Reunião Semanal Online - Connect', 'BÔNUS: 50 Pontos Menucast']}
+          features={['Vitrine Digital Personalizada', 'Agendamento Inteligente', 'Link na Bio Personalizado', 'Captura de Leads', 'Marketplace B2B (Comprar)', 'Gestão de Projetos', 'Menu Academy', 'BÔNUS: Reunião Semanal Online - Connect', 'BÔNUS: 50 Pontos Menucast']}
         />
         <PlanCard
           type="PRO"
