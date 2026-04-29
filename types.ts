@@ -805,3 +805,23 @@ export interface DirectMessage {
   receiver_name?: string;
   receiver_avatar?: string;
 }
+
+export interface ContentItem {
+  id: string;
+  user_id: string;
+  title: string;
+  post_date: string;
+  post_time?: string;
+  platform?: string;
+  format: string;
+  content_link?: string;
+  notes?: string;
+  responsible_id?: string;
+  status: 'Ideia' | 'Produção' | 'Revisão' | 'Postado' | string;
+  hook?: string;
+  design_guidelines?: string;
+  script?: string;
+  caption?: string;
+  created_at: string;
+  updated_at?: string;
+}

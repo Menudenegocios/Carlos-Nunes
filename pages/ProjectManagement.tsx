@@ -9,7 +9,7 @@ import {
   Lightbulb, Shield, HelpCircle,
   Briefcase, PieChart, Layers, RefreshCw,
   Handshake, Globe, Coins, Columns, UserPlus, Smartphone, X, Sparkles, TrendingDown,
-  ArrowUpRight
+  ArrowUpRight, Tag, Check, CheckSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseService } from '../services/supabaseService';
@@ -32,6 +32,7 @@ export const ProjectManagement: React.FC = () => {
   const [editingProject, setEditingProject] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
@@ -43,14 +44,16 @@ export const ProjectManagement: React.FC = () => {
     if (!user_id) return;
     setIsLoading(true);
     try {
-      const [projs, tsks, prof] = await Promise.all([
+      const [projs, tsks, prof, allProfs] = await Promise.all([
         supabaseService.getProjects(user_id),
         supabaseService.getTasks(user_id),
-        supabaseService.getProfileByUserId(user_id)
+        supabaseService.getProfileByUserId(user_id),
+        supabaseService.getAllProfiles()
       ]);
       setProjects(projs);
       setTasks(tsks);
       setProfile(prof);
+      setProfiles(allProfs);
     } catch (error) {
       console.error(error);
     } finally {
@@ -276,7 +279,7 @@ export const ProjectManagement: React.FC = () => {
             >
               {activeTab === 'inicio' && <DashboardView user_id={user_id} projects={projects} tasks={tasks} />}
               {activeTab === 'projects' && <ProjectsView projects={projects} tasks={tasks} deleteProject={deleteProject} onEdit={openEditProjectModal} />}
-              {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} initialTasks={tasks} profile={profile} onTasksUpdate={loadInitialData} />}
+              {activeTab === 'tasks' && <KanbanView user_id={user_id} projects={projects} initialTasks={tasks} profile={profile} profiles={profiles} onTasksUpdate={loadInitialData} />}
               {activeTab === 'canva' && <BusinessCanvaView user_id={user_id} />}
             </motion.div>
           </AnimatePresence>
@@ -539,23 +542,218 @@ const ProjectsView = ({ projects, tasks, deleteProject, onEdit }: { projects: an
   );
 };
 
-const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }: { user_id: string, projects: any[], initialTasks: any[], profile: any, onTasksUpdate: () => Promise<void> }) => {
+const LABEL_COLORS = [
+  'bg-emerald-300 text-emerald-900', 'bg-yellow-300 text-yellow-900', 'bg-orange-300 text-orange-900', 'bg-rose-300 text-rose-900', 'bg-purple-300 text-purple-900',
+  'bg-emerald-500 text-white', 'bg-yellow-500 text-white', 'bg-orange-500 text-white', 'bg-rose-500 text-white', 'bg-purple-500 text-white',
+  'bg-emerald-700 text-white', 'bg-yellow-700 text-white', 'bg-orange-700 text-white', 'bg-rose-700 text-white', 'bg-purple-700 text-white',
+  'bg-blue-300 text-blue-900', 'bg-sky-300 text-sky-900', 'bg-lime-300 text-lime-900', 'bg-pink-300 text-pink-900', 'bg-slate-300 text-slate-900',
+  'bg-blue-500 text-white', 'bg-sky-500 text-white', 'bg-lime-500 text-white', 'bg-pink-500 text-white', 'bg-slate-500 text-white',
+  'bg-blue-700 text-white', 'bg-sky-700 text-white', 'bg-lime-700 text-white', 'bg-pink-700 text-white', 'bg-slate-700 text-white',
+];
+
+const TaskLabelsPopover = ({ 
+  isOpen, onClose, 
+  taskLabels, 
+  onTaskLabelsChange,
+  globalLabels,
+  onGlobalLabelsChange
+}: { 
+  isOpen: boolean; onClose: () => void; 
+  taskLabels: string[]; 
+  onTaskLabelsChange: (labels: string[]) => void;
+  globalLabels: any[];
+  onGlobalLabelsChange: (labels: any[]) => void;
+}) => {
+  const [search, setSearch] = useState('');
+  const [editingLabel, setEditingLabel] = useState<any>(null); // Se null = modo lista, se object = modo edição/criação
+
+  if (!isOpen) return null;
+
+  const handleSaveLabel = () => {
+    if (!editingLabel.title.trim()) return;
+    
+    let updatedGlobalLabels = [...globalLabels];
+    
+    if (editingLabel.isNew) {
+      const newLabel = {
+        id: 'lbl_' + Date.now().toString(),
+        title: editingLabel.title,
+        color: editingLabel.color || LABEL_COLORS[0]
+      };
+      updatedGlobalLabels.push(newLabel);
+      onTaskLabelsChange([...taskLabels, newLabel.id]);
+    } else {
+      updatedGlobalLabels = updatedGlobalLabels.map(l => 
+        l.id === editingLabel.id ? { ...l, title: editingLabel.title, color: editingLabel.color } : l
+      );
+    }
+    
+    onGlobalLabelsChange(updatedGlobalLabels);
+    setEditingLabel(null);
+  };
+
+  const handleDeleteLabel = () => {
+    if (editingLabel.isNew) return;
+    const updatedGlobalLabels = globalLabels.filter(l => l.id !== editingLabel.id);
+    onGlobalLabelsChange(updatedGlobalLabels);
+    onTaskLabelsChange(taskLabels.filter(id => id !== editingLabel.id));
+    setEditingLabel(null);
+  };
+
+  const toggleTaskLabel = (id: string) => {
+    if (taskLabels.includes(id)) {
+      onTaskLabelsChange(taskLabels.filter(lId => lId !== id));
+    } else {
+      onTaskLabelsChange([...taskLabels, id]);
+    }
+  };
+
+  const filteredLabels = globalLabels.filter(l => l.title.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="absolute top-10 left-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[300] overflow-hidden">
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        {editingLabel ? (
+          <button onClick={() => setEditingLabel(null)} className="p-1 hover:bg-gray-100 rounded-lg"><ChevronRight className="w-4 h-4 rotate-180 text-gray-500"/></button>
+        ) : <div className="w-6" />}
+        <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest text-center">
+          {editingLabel ? (editingLabel.isNew ? 'Criar etiqueta' : 'Editar etiqueta') : 'Etiquetas'}
+        </h4>
+        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-4 h-4 text-gray-500"/></button>
+      </div>
+
+      {!editingLabel ? (
+        <div className="p-4 space-y-4">
+          <input 
+            type="text" 
+            placeholder="Buscar etiquetas..." 
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-brand-primary"
+          />
+          <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+             <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Sparkles className="w-3 h-3"/> Etiquetas</h5>
+             {filteredLabels.map(label => (
+               <div key={label.id} className="flex items-center gap-2 group">
+                 <button onClick={() => toggleTaskLabel(label.id)} className="w-6 h-6 shrink-0 flex items-center justify-center rounded border border-gray-300 hover:border-brand-primary transition-colors">
+                    {taskLabels.includes(label.id) && <Check className="w-4 h-4 text-brand-primary" />}
+                 </button>
+                 <button 
+                   onClick={() => toggleTaskLabel(label.id)}
+                   className={`flex-1 text-left px-3 py-1.5 rounded-lg text-[11px] font-bold truncate transition-transform hover:opacity-90 ${label.color}`}
+                 >
+                   {label.title}
+                 </button>
+                 <button onClick={() => setEditingLabel(label)} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+                   <Edit3 className="w-3.5 h-3.5" />
+                 </button>
+               </div>
+             ))}
+          </div>
+          <button 
+            onClick={() => setEditingLabel({ isNew: true, title: search, color: LABEL_COLORS[0] })}
+            className="w-full py-2.5 bg-gray-50 text-slate-600 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-colors"
+          >
+            Criar uma nova etiqueta
+          </button>
+        </div>
+      ) : (
+        <div className="p-4 space-y-4">
+          <div className="bg-gray-50 p-6 rounded-xl flex items-center justify-center border border-gray-100">
+            <span className={`px-4 py-1.5 rounded-lg text-xs font-bold ${editingLabel.color}`}>{editingLabel.title || 'Título da etiqueta'}</span>
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Título</label>
+             <input 
+               type="text" 
+               value={editingLabel.title}
+               onChange={e => setEditingLabel({...editingLabel, title: e.target.value})}
+               className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-brand-primary"
+             />
+          </div>
+
+          <div className="space-y-2">
+             <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Selecionar uma cor</label>
+             <div className="grid grid-cols-5 gap-2">
+               {LABEL_COLORS.map((color, idx) => {
+                 const isSelected = editingLabel.color === color;
+                 // Pega a classe de background (bg-...)
+                 const bgClass = color.split(' ')[0];
+                 return (
+                   <button 
+                     key={idx}
+                     onClick={() => setEditingLabel({...editingLabel, color})}
+                     className={`w-full aspect-video rounded-md flex items-center justify-center transition-all ${bgClass} ${isSelected ? 'ring-2 ring-brand-primary ring-offset-2' : 'hover:opacity-80'}`}
+                   >
+                     {isSelected && <Check className="w-4 h-4 text-white drop-shadow-md" />}
+                   </button>
+                 )
+               })}
+             </div>
+             <button onClick={() => setEditingLabel({...editingLabel, color: 'bg-slate-100 text-slate-700 border border-slate-200'})} className="w-full py-2 bg-white text-slate-600 border border-gray-200 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 mt-2 flex items-center justify-center gap-2">
+               <X className="w-3.5 h-3.5"/> Remover cor
+             </button>
+          </div>
+
+          <div className="pt-2 flex gap-2">
+             <button onClick={handleSaveLabel} className="flex-1 py-2 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-opacity">
+               Salvar
+             </button>
+             {!editingLabel.isNew && (
+                <button onClick={handleDeleteLabel} className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-opacity">
+                  Excluir
+                </button>
+             )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const KanbanView = ({ user_id, projects, initialTasks, profile, profiles, onTasksUpdate }: { user_id: string, projects: any[], initialTasks: any[], profile: any, profiles: any[], onTasksUpdate: () => Promise<void> }) => {
   const [tasks, setTasks] = useState<any[]>(initialTasks);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
   const [filters, setFilters] = useState({ search: '', responsible: '', priority: '', project_id: '', today: false });
+  const [visibleModules, setVisibleModules] = useState<string[]>([]);
   const [formData, setFormData] = useState<any>({ 
     title: '', description: '', status: 'A Fazer', project_id: '', 
-    assignee_name: '', priority: 'Média', due_date: '', checklist: [], external_link: '' 
+    assignee_name: '', assignee_id: '', priority: 'Média', due_date: '', checklist: [], checklist_title: 'Checklist', external_link: '', labels: [] 
   });
+  const [isLabelsOpen, setIsLabelsOpen] = useState(false);
+  const [isAddChecklistOpen, setIsAddChecklistOpen] = useState(false);
+  const [checklistToDelete, setChecklistToDelete] = useState<number | null>(null);
+  const [newChecklistTitle, setNewChecklistTitle] = useState('Checklist');
+  const [copiedChecklistId, setCopiedChecklistId] = useState('');
 
-  // Load custom stages from profile if they exist
+  // Get all unique user checklists
+  const allUserChecklists = React.useMemo(() => {
+     const list: {id: string, title: string, items: any[], taskTitle: string}[] = [];
+     tasks.forEach(t => {
+        if (t.checklist && t.checklist.length > 0) {
+           if (t.checklist[0].items !== undefined) {
+              t.checklist.forEach((c: any) => list.push({ ...c, taskTitle: t.title }));
+           } else {
+              list.push({ id: t.id + '_old', title: t.checklist_title || 'Checklist', items: t.checklist, taskTitle: t.title });
+           }
+        }
+     });
+     return list;
+  }, [tasks]);
+
+  // Load custom stages and labels from profile if they exist
   const defaultStages = ['A Fazer', 'Em Progresso', 'Concluído'];
   const [columns, setColumns] = useState<string[]>(profile?.store_config?.project_stages || defaultStages);
+  const [globalLabels, setGlobalLabels] = useState<any[]>(profile?.store_config?.task_labels || []);
 
   React.useEffect(() => {
     if (profile?.store_config?.project_stages) {
        setColumns(profile.store_config.project_stages);
+    }
+    if (profile?.store_config?.task_labels) {
+       setGlobalLabels(profile.store_config.task_labels);
     }
   }, [profile]);
 
@@ -563,12 +761,18 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
     setTasks(initialTasks);
   }, [initialTasks]);
 
+  const updateGlobalLabels = async (newLabels: any[]) => {
+     setGlobalLabels(newLabels);
+     await supabaseService.updateProfile(user_id, { store_config: { ...profile.store_config, task_labels: newLabels } });
+  };
+
   const handleSave = async () => {
     if (!formData.title) return;
     try {
       const dataToSave = { 
         ...formData, 
-        project_id: formData.project_id === '' ? null : formData.project_id 
+        project_id: formData.project_id === '' ? null : formData.project_id,
+        assignee_id: formData.assignee_id === '' ? null : formData.assignee_id
       };
 
       if (editingTask) {
@@ -586,25 +790,65 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
     setEditingTask(null);
     setFormData({ 
       title: '', description: '', status: status || columns[0], project_id: '', 
-      assignee_name: '', priority: 'Média', due_date: '', checklist: [], external_link: '' 
+      assignee_name: profile ? (profile.name || profile.business_name || '') : '', 
+      assignee_id: user_id || null, 
+      priority: 'Média', due_date: '', checklist: [], external_link: '', labels: []
     });
+    setVisibleModules([]);
     setIsModalOpen(true);
   };
 
   const openEdit = (task: any) => {
      setEditingTask(task);
+     let migratedChecklist: any[] = [];
+     if (task.checklist && task.checklist.length > 0) {
+         if (task.checklist[0].items !== undefined) {
+             migratedChecklist = task.checklist;
+         } else {
+             migratedChecklist = [{ id: crypto.randomUUID(), title: task.checklist_title || 'Checklist', items: task.checklist }];
+         }
+     }
+
      setFormData({ 
         title: task.title, 
         description: task.description || '', 
         status: task.status, 
         project_id: task.project_id || '',
         assignee_name: task.assignee_name || '',
+        assignee_id: task.assignee_id || '',
         priority: task.priority || 'Média',
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
-        checklist: task.checklist || [],
-        external_link: task.external_link || ''
+        checklist: migratedChecklist,
+        external_link: task.external_link || '',
+        labels: task.labels || []
      });
+
+     const modules = [];
+     if (task.checklist && task.checklist.length > 0) modules.push('checklist');
+     if (task.due_date) modules.push('dates');
+     if (task.assignee_name || task.assignee_id) modules.push('members');
+     if (task.priority && task.priority !== 'Média') modules.push('priority');
+     if (task.project_id) modules.push('project');
+     if (task.external_link) modules.push('documents');
+     if (task.labels && task.labels.length > 0) modules.push('labels');
+     setVisibleModules(modules);
+
      setIsModalOpen(true);
+  };
+
+  const toggleModule = (mod: string) => {
+     if (!visibleModules.includes(mod)) setVisibleModules([...visibleModules, mod]);
+  };
+
+  const removeModule = (mod: string) => {
+     setVisibleModules(visibleModules.filter(m => m !== mod));
+     if (mod === 'checklist') setFormData({...formData, checklist: []});
+     if (mod === 'dates') setFormData({...formData, due_date: ''});
+     if (mod === 'members') setFormData({...formData, assignee_name: '', assignee_id: null});
+     if (mod === 'project') setFormData({...formData, project_id: ''});
+     if (mod === 'documents') setFormData({...formData, external_link: ''});
+     if (mod === 'priority') setFormData({...formData, priority: 'Média'});
+     if (mod === 'labels') setFormData({...formData, labels: []});
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -767,6 +1011,19 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
                     </div>
 
                     <div className="space-y-3">
+                        {task.labels && task.labels.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {task.labels.map((lId: string) => {
+                               const lbl = globalLabels.find(g => g.id === lId);
+                               if (!lbl) return null;
+                               return (
+                                 <span key={lbl.id} className={`px-2 py-0.5 rounded text-[8px] font-bold ${lbl.color} max-w-[120px] truncate`}>
+                                   {lbl.title}
+                                 </span>
+                               )
+                            })}
+                          </div>
+                        )}
                        {task.description && <p className="text-[10px] text-slate-500 line-clamp-2 font-medium leading-relaxed italic opacity-80">"{task.description}"</p>}
                        
                        <div className="flex flex-wrap gap-2">
@@ -791,14 +1048,18 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
                           {task.assignee_name && <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{task.assignee_name}</span>}
                        </div>
                        
-                       {task.checklist?.length > 0 && (
-                          <div className="flex items-center gap-1.5">
-                             <ListTodo className="w-3 h-3 text-brand-primary" />
-                             <span className="text-[8px] font-black text-brand-primary">
-                                {task.checklist.filter((i:any) => i.done).length}/{task.checklist.length}
-                             </span>
-                          </div>
-                       )}
+                       {task.checklist && task.checklist.length > 0 && (
+                           <div className="flex items-center gap-1.5">
+                              <ListTodo className="w-3 h-3 text-brand-primary" />
+                              <span className="text-[8px] font-black text-brand-primary">
+                                 {(() => {
+                                    const totalItems = task.checklist.reduce((acc: number, c: any) => acc + (c.items ? c.items.length : 1), 0);
+                                    const doneItems = task.checklist.reduce((acc: number, c: any) => acc + (c.items ? c.items.filter((i:any) => i.done).length : (c.done ? 1 : 0)), 0);
+                                    return `${doneItems}/${totalItems}`;
+                                 })()}
+                              </span>
+                           </div>
+                        )}
                     </div>
                   </div>
                ))}
@@ -811,139 +1072,417 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
          ))}
        </div>
 
-        {/* Task Detail/Edit Modal */}
+        {/* Task Detail/Edit Modal (Trello Style) */}
         <AnimatePresence>
           {isModalOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  className="bg-white rounded-[3rem] w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden border border-white/5 flex flex-col md:flex-row"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  className="bg-[#f4f5f7] rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden border border-white/5 flex flex-col"
                >
-                  {/* Left Column: Form */}
-                  <div className="flex-1 p-10 overflow-y-auto custom-scrollbar border-r border-gray-50">
-                     <div className="flex justify-between items-center mb-8">
-                        <span className="px-5 py-1.5 bg-brand-primary/5 text-brand-primary text-[10px] font-black uppercase tracking-widest rounded-full">Detalhes da Tarefa</span>
-                        <div className="flex gap-2">
-                           <button onClick={handleSave} className="bg-brand-primary text-white p-3 rounded-2xl shadow-xl hover:scale-110 active:scale-90 transition-all"><Save className="w-5 h-5" /></button>
-                           <button onClick={() => setIsModalOpen(false)} className="bg-gray-50 text-slate-400 p-3 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-5 h-5" /></button>
+                  {/* Sticky Top Header */}
+                  <div className="bg-white px-8 py-6 flex justify-between items-center border-b border-gray-100 shadow-sm z-30">
+                     <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                           <LayoutGrid className="w-4 h-4" />
                         </div>
+                        <h3 className="text-sm font-black text-gray-900 uppercase italic">Cartão de Tarefa</h3>
                      </div>
-
-                     <div className="space-y-6">
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Título da Tarefa</label>
-                           <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full text-2xl font-black text-gray-900 border-none bg-gray-50 p-6 rounded-3xl focus:ring-4 focus:ring-brand-primary/5 transition-all" placeholder="Nome da tarefa..." />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                           <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Responsável</label>
-                              <div className="relative">
-                                 <Users className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                 <input type="text" value={formData.assignee_name} onChange={e => setFormData({...formData, assignee_name: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 font-bold text-xs" placeholder="Nome do executor" />
-                              </div>
-                           </div>
-                           <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Prioridade</label>
-                              <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-black text-[10px] uppercase tracking-widest">
-                                 <option>Baixa</option>
-                                 <option>Média</option>
-                                 <option>Alta</option>
-                                 <option>Crítica</option>
-                              </select>
-                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                           <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Prazo Limite</label>
-                              <div className="relative">
-                                 <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                 <input type="date" value={formData.due_date} onChange={e => setFormData({...formData, due_date: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 font-bold text-xs" />
-                              </div>
-                           </div>
-                           <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Projeto Relacionado</label>
-                              <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 font-bold text-[10px] uppercase tracking-widest">
-                                 <option value="">Nenhum Projeto</option>
-                                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                              </select>
-                           </div>
-                        </div>
-
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Detalhes e Notas</label>
-                           <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-50 border-none rounded-3xl p-6 text-sm font-medium resize-none min-h-[120px]" placeholder="Instruções e observações..." />
-                        </div>
-
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block px-1">Link Externo (Drive / Documentos)</label>
-                           <div className="relative">
-                              <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                              <input type="url" value={formData.external_link} onChange={e => setFormData({...formData, external_link: e.target.value})} className="w-full bg-indigo-50/30 border-none rounded-2xl py-4 pl-12 font-bold text-xs text-indigo-600 placeholder:text-indigo-200" placeholder="https://drive.google.com/..." />
-                           </div>
-                           {formData.external_link && (
-                              <a href={formData.external_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-3 text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] hover:underline px-1">
-                                 Acessar Documento <ArrowUpRight className="w-3 h-3" />
-                              </a>
-                           )}
-                        </div>
-
-                        {/* Integrated Checklist */}
-                        <div className="pt-6 border-t border-gray-100">
-                           <div className="flex justify-between items-center mb-6">
-                              <h4 className="text-[10px] font-black uppercase italic tracking-widest text-gray-900 flex gap-2 items-center"><ListTodo className="w-4 h-4 text-brand-primary" /> Checklist da Tarefa</h4>
-                              <button onClick={() => {
-                                 const item = prompt('Nome do item:');
-                                 if (item) setFormData({...formData, checklist: [...(formData.checklist || []), { text: item, done: false }]});
-                              }} className="text-[10px] font-black text-brand-primary uppercase tracking-widest underline decoration-2 underline-offset-4">Adicionar Item</button>
-                           </div>
-                           <div className="space-y-3">
-                              {formData.checklist?.map((item:any, idx:number) => (
-                                 <div key={idx} className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-transparent hover:border-brand-primary/10 transition-all">
-                                    <input 
-                                       type="checkbox" 
-                                       checked={item.done} 
-                                       onChange={() => {
-                                          const newList = [...formData.checklist];
-                                          newList[idx].done = !newList[idx].done;
-                                          setFormData({...formData, checklist: newList});
-                                       }}
-                                       className="w-5 h-5 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
-                                    />
-                                    <span className={`text-xs font-bold flex-1 ${item.done ? 'text-slate-300 line-through' : 'text-gray-700'}`}>{item.text}</span>
-                                    <button onClick={() => {
-                                       const newList = formData.checklist.filter((_:any, i:number) => i !== idx);
-                                       setFormData({...formData, checklist: newList});
-                                    }} className="text-rose-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
-                                 </div>
-                              ))}
-                           </div>
-                        </div>
-
-                        {editingTask && (
-                           <div className="pt-10 flex justify-between">
-                              <button onClick={async () => { if(confirm('Excluir esta tarefa definitivamente?')) { await supabaseService.deleteTask(editingTask.id); onTasksUpdate(); setIsModalOpen(false); } }} className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 px-6 py-3 rounded-xl transition-all"><Trash2 className="w-4 h-4" /> Deletar Tarefa</button>
-                           </div>
-                        )}
+                     <div className="flex items-center gap-2">
+                        <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95">
+                           <Save className="w-3.5 h-3.5" /> Salvar
+                        </button>
+                        <button onClick={() => setIsModalOpen(false)} className="p-2.5 bg-gray-100 text-slate-400 rounded-xl hover:bg-gray-200 transition-colors">
+                           <X className="w-5 h-5" />
+                        </button>
                      </div>
                   </div>
 
-                  {/* Right Column: FUP History */}
-                  <div className="w-full md:w-80 bg-gray-50/50 p-10 overflow-y-auto custom-scrollbar">
-                     <div className="flex items-center gap-2 mb-8">
-                        <RefreshCw className="w-4 h-4 text-brand-primary" />
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fluxo de Follow-up</h4>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-12">
+                     {/* Title & Context */}
+                     <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                           <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-1">
+                              <Smartphone className="w-5 h-5 text-slate-400" />
+                           </div>
+                           <div className="flex-1">
+                              <input 
+                                 type="text" 
+                                 value={formData.title} 
+                                 onChange={e => setFormData({...formData, title: e.target.value})} 
+                                 className="w-full text-4xl font-black text-gray-900 border-none outline-none focus:ring-0 p-0 bg-transparent placeholder:text-gray-300" 
+                                 placeholder="Título da Tarefa..." 
+                              />
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 px-1">
+                                 No quadro <span className="text-brand-primary underline underline-offset-4">{formData.status}</span>
+                              </p>
+                              {formData.labels && formData.labels.length > 0 && (
+                                 <div className="flex flex-wrap gap-2 mt-3 px-1">
+                                   {formData.labels.map((labelId: string) => {
+                                      const label = globalLabels.find(l => l.id === labelId);
+                                      if (!label) return null;
+                                      return (
+                                        <span key={label.id} className={`px-3 py-1 rounded-lg text-[10px] font-bold ${label.color}`}>
+                                          {label.title}
+                                        </span>
+                                      );
+                                   })}
+                                   <div className="relative">
+                                     <button onClick={() => setIsLabelsOpen(!isLabelsOpen)} className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors">
+                                       <Plus className="w-3.5 h-3.5" />
+                                     </button>
+                                     <TaskLabelsPopover 
+                                       isOpen={isLabelsOpen} 
+                                       onClose={() => setIsLabelsOpen(false)} 
+                                       taskLabels={formData.labels || []}
+                                       onTaskLabelsChange={(labels) => setFormData({...formData, labels})}
+                                       globalLabels={globalLabels}
+                                       onGlobalLabelsChange={updateGlobalLabels}
+                                     />
+                                   </div>
+                                 </div>
+                               )}
+                           </div>
+                        </div>
+
+                        {/* Module Add Buttons (Trello Style) */}
+                        <div className="flex flex-wrap gap-2 px-1">
+                           <div className="relative">
+                               <button onClick={() => setIsLabelsOpen(!isLabelsOpen)} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><Tag className="w-3 h-3 text-slate-400" /> Etiquetas</button>
+                               {(!formData.labels || formData.labels.length === 0) && (
+                                 <TaskLabelsPopover 
+                                   isOpen={isLabelsOpen} 
+                                   onClose={() => setIsLabelsOpen(false)} 
+                                   taskLabels={formData.labels || []}
+                                   onTaskLabelsChange={(labels) => setFormData({...formData, labels})}
+                                   globalLabels={globalLabels}
+                                   onGlobalLabelsChange={updateGlobalLabels}
+                                 />
+                               )}
+                            </div>
+                           {!visibleModules.includes('members') && <button onClick={() => toggleModule('members')} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><Users className="w-3 h-3 text-slate-400" /> Membros</button>}
+                           {!visibleModules.includes('dates') && <button onClick={() => toggleModule('dates')} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><CalendarIcon className="w-3 h-3 text-slate-400" /> Datas</button>}
+                               <div className="relative">
+                                 <button onClick={() => setIsAddChecklistOpen(!isAddChecklistOpen)} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><CheckSquare className="w-3 h-3 text-slate-400" /> Checklist</button>
+                                 
+                                 {isAddChecklistOpen && (
+                                    <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                                       <div className="p-3 border-b border-gray-100 flex justify-between items-center relative">
+                                          <h4 className="text-[11px] font-bold text-gray-700 w-full text-center">Adicionar Checklist</h4>
+                                          <button onClick={() => setIsAddChecklistOpen(false)} className="absolute right-3 p-1 text-gray-400 hover:bg-gray-100 rounded-md">
+                                             <X className="w-3.5 h-3.5" />
+                                          </button>
+                                       </div>
+                                       <div className="p-4 space-y-4">
+                                          <div>
+                                             <label className="block text-[10px] font-black text-gray-600 mb-1.5">Título</label>
+                                             <input 
+                                                type="text" 
+                                                value={newChecklistTitle}
+                                                onChange={(e) => setNewChecklistTitle(e.target.value)}
+                                                autoFocus
+                                                className="w-full border-2 border-brand-primary/60 focus:border-brand-primary rounded-lg py-1.5 px-3 text-sm font-semibold text-gray-800 outline-none transition-colors"
+                                             />
+                                          </div>
+                                          <div>
+                                             <label className="block text-[10px] font-black text-gray-600 mb-1.5">Copiar Itens de...</label>
+                                             <select 
+                                                value={copiedChecklistId}
+                                                onChange={(e) => setCopiedChecklistId(e.target.value)}
+                                                disabled={allUserChecklists.length === 0}
+                                                className={`w-full bg-white border border-gray-200 rounded-lg py-2 px-3 text-[11px] font-medium text-gray-700 outline-none focus:border-brand-primary ${allUserChecklists.length === 0 ? 'bg-gray-50 cursor-not-allowed text-gray-400' : ''}`}
+                                             >
+                                                <option value="">(nenhum)</option>
+                                                {allUserChecklists.map(c => (
+                                                   <option key={c.id} value={c.id}>{c.title} (de {c.taskTitle})</option>
+                                                ))}
+                                             </select>
+                                          </div>
+                                          <button 
+                                             onClick={() => {
+                                                const sourceChecklist = allUserChecklists.find(c => c.id === copiedChecklistId);
+                                                const itemsToCopy = sourceChecklist ? sourceChecklist.items.map((i: any) => ({...i, done: false})) : [];
+                                                
+                                                const newChecklist = {
+                                                   id: crypto.randomUUID(),
+                                                   title: newChecklistTitle,
+                                                   items: itemsToCopy
+                                                };
+                                                
+                                                setFormData({ ...formData, checklist: [...(formData.checklist || []), newChecklist] });
+                                                if (!visibleModules.includes('checklist')) toggleModule('checklist');
+                                                setIsAddChecklistOpen(false);
+                                                setNewChecklistTitle('Checklist');
+                                                setCopiedChecklistId('');
+                                             }}
+                                             className="px-5 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-lg text-[11px] font-bold shadow-sm active:scale-95 transition-all w-full"
+                                          >
+                                             Adicionar
+                                          </button>
+                                       </div>
+                                    </div>
+                                 )}
+                               </div>
+                            {/* !visibleModules.includes('checklist') -> It's fine to show the button always to add multiple checklists */}
+                           {!visibleModules.includes('project') && <button onClick={() => toggleModule('project')} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><Briefcase className="w-3 h-3 text-slate-400" /> Projeto</button>}
+                           {!visibleModules.includes('priority') && <button onClick={() => toggleModule('priority')} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><AlertCircle className="w-3 h-3 text-slate-400" /> Prioridade</button>}
+                           {!visibleModules.includes('documents') && <button onClick={() => toggleModule('documents')} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all"><Globe className="w-3 h-3 text-slate-400" /> Anexo</button>}
+                        </div>
+
+                        {/* Visible Action Modules */}
+                        {visibleModules.some(m => ['members', 'dates', 'priority', 'project'].includes(m)) && (
+                           <div className="flex flex-wrap gap-4 px-1 pt-4">
+                              {visibleModules.includes('members') && (
+                                 <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1 flex items-center gap-2 group">
+                                       Membros <button onClick={() => removeModule('members')} className="opacity-0 group-hover:opacity-100 text-rose-400"><X className="w-2.5 h-2.5"/></button>
+                                    </label>
+                                    <div className="relative">
+                                       <input 
+                                         list="platform-users"
+                                         type="text" 
+                                         value={formData.assignee_name} 
+                                         onChange={e => {
+                                            const val = e.target.value;
+                                            const matchedProfile = profiles.find(p => (p.name || p.business_name) === val);
+                                            setFormData({ ...formData, assignee_name: val, assignee_id: matchedProfile ? matchedProfile.user_id : null });
+                                         }} 
+                                         className="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 font-bold text-[10px] uppercase tracking-widest focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none"
+                                         placeholder="+ Atribuir"
+                                       />
+                                       <datalist id="platform-users">
+                                          {profiles.map(p => <option key={p.user_id} value={p.name || p.business_name} />)}
+                                       </datalist>
+                                    </div>
+                                 </div>
+                              )}
+
+                              {visibleModules.includes('dates') && (
+                                 <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1 flex items-center gap-2 group">
+                                       Datas <button onClick={() => removeModule('dates')} className="opacity-0 group-hover:opacity-100 text-rose-400"><X className="w-2.5 h-2.5"/></button>
+                                    </label>
+                                    <input type="date" value={formData.due_date} onChange={e => setFormData({...formData, due_date: e.target.value})} className="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 font-bold text-[10px] uppercase tracking-widest focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none" />
+                                 </div>
+                              )}
+
+                              {visibleModules.includes('priority') && (
+                                 <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1 flex items-center gap-2 group">
+                                       Prioridade <button onClick={() => removeModule('priority')} className="opacity-0 group-hover:opacity-100 text-rose-400"><X className="w-2.5 h-2.5"/></button>
+                                    </label>
+                                    <select value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})} className="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 font-black text-[10px] uppercase tracking-widest outline-none focus:ring-2 focus:ring-brand-primary/20">
+                                       <option>Baixa</option>
+                                       <option>Média</option>
+                                       <option>Alta</option>
+                                       <option>Crítica</option>
+                                    </select>
+                                 </div>
+                              )}
+
+                              {visibleModules.includes('project') && (
+                                 <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1 flex items-center gap-2 group">
+                                       Projeto <button onClick={() => removeModule('project')} className="opacity-0 group-hover:opacity-100 text-rose-400"><X className="w-2.5 h-2.5"/></button>
+                                    </label>
+                                    <select value={formData.project_id} onChange={e => setFormData({...formData, project_id: e.target.value})} className="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl py-2 px-4 font-bold text-[10px] uppercase tracking-widest outline-none focus:ring-2 focus:ring-brand-primary/20">
+                                       <option value="">Nenhum</option>
+                                       {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    </select>
+                                 </div>
+                              )}
+                           </div>
+                        )}
                      </div>
 
-                     {editingTask ? (
-                        <TaskFollowUps taskId={editingTask.id} userId={user_id} />
-                     ) : (
-                        <div className="text-center py-20 opacity-30">
-                           <Clock className="w-12 h-12 mx-auto mb-4" />
-                           <p className="text-[9px] font-black uppercase tracking-widest">Salve a tarefa primeiro para registrar follow-ups.</p>
+                     {/* Description */}
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                           <Edit3 className="w-5 h-5 text-slate-400" />
+                           <h4 className="text-sm font-black text-gray-900 uppercase italic">Descrição</h4>
+                        </div>
+                        <div className="pl-8">
+                           <textarea 
+                              value={formData.description} 
+                              onChange={e => setFormData({...formData, description: e.target.value})} 
+                              className="w-full bg-white border border-gray-100 rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-brand-primary/10 transition-all min-h-[120px] leading-relaxed shadow-sm" 
+                              placeholder="Adicione uma descrição mais detalhada..." 
+                           />
+                        </div>
+                     </div>
+
+                     {/* External Links */}
+                     {visibleModules.includes('documents') && (
+                        <div className="space-y-4">
+                           <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                 <Globe className="w-5 h-5 text-slate-400" />
+                                 <h4 className="text-sm font-black text-gray-900 uppercase italic">Documentos</h4>
+                              </div>
+                              <button onClick={() => removeModule('documents')} className="px-3 py-1.5 bg-white text-rose-400 border border-gray-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all shadow-sm">
+                                 Remover
+                              </button>
+                           </div>
+                           <div className="pl-8 flex gap-2">
+                              <input type="url" value={formData.external_link} onChange={e => setFormData({...formData, external_link: e.target.value})} className="flex-1 bg-white border border-gray-100 rounded-xl py-3 px-4 font-bold text-xs text-indigo-600 shadow-sm" placeholder="Link de documento (Drive, etc)..." />
+                              {formData.external_link && (
+                                 <a href={formData.external_link} target="_blank" rel="noopener noreferrer" className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors">
+                                    <ArrowUpRight className="w-5 h-5" />
+                                 </a>
+                              )}
+                           </div>
+                        </div>
+                     )}
+
+                     {/* Checklists */}
+                     {visibleModules.includes('checklist') && formData.checklist?.map((checklist: any, cIdx: number) => (
+                        <div key={checklist.id} className="space-y-4 mb-8">
+                           <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                 <CheckCircle2 className="w-5 h-5 text-slate-400" />
+                                 <h4 className="text-sm font-black text-gray-900 uppercase italic">{checklist.title}</h4>
+                              </div>
+                              <div className="relative">
+                                 <button onClick={() => setChecklistToDelete(cIdx)} className="px-4 py-2 bg-white text-slate-600 border border-gray-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                                    Excluir
+                                 </button>
+                                 
+                                 {checklistToDelete === cIdx && (
+                                    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                                       <div className="p-3 border-b border-gray-100 flex justify-between items-center relative">
+                                          <h4 className="text-[11px] font-bold text-gray-700 w-full text-center">Excluir {checklist.title}?</h4>
+                                          <button onClick={() => setChecklistToDelete(null)} className="absolute right-3 p-1 text-gray-400 hover:bg-gray-100 rounded-md">
+                                             <X className="w-3.5 h-3.5" />
+                                          </button>
+                                       </div>
+                                       <div className="p-4 space-y-4">
+                                          <p className="text-[11px] font-medium text-gray-500 leading-relaxed">
+                                            A exclusão de um checklist é permanente e não há como desfazer. Todos os itens concluídos e pendentes serão perdidos.
+                                          </p>
+                                          <button 
+                                             onClick={() => {
+                                                const newChecklists = formData.checklist.filter((_:any, i:number) => i !== cIdx);
+                                                setFormData({...formData, checklist: newChecklists});
+                                                if (newChecklists.length === 0) removeModule('checklist');
+                                                setChecklistToDelete(null);
+                                             }}
+                                             className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[11px] font-bold shadow-sm active:scale-95 transition-all"
+                                          >
+                                             Excluir Checklist
+                                          </button>
+                                       </div>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+
+                        {checklist.items && checklist.items.length > 0 && (
+                           <div className="pl-8 flex items-center gap-3">
+                              <span className="text-[10px] font-black text-slate-500 w-8">
+                                 {checklist.items.length === 0 ? 0 : Math.round((checklist.items.filter((i:any) => i.done).length / checklist.items.length) * 100)}%
+                              </span>
+                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                 <div 
+                                    className="h-full bg-brand-primary transition-all duration-300" 
+                                    style={{ width: `${checklist.items.length === 0 ? 0 : (checklist.items.filter((i:any) => i.done).length / checklist.items.length) * 100}%` }}
+                                 />
+                              </div>
+                           </div>
+                        )}
+                        
+                        <div className="pl-8 space-y-2 pt-2">
+                           {checklist.items?.map((item:any, idx:number) => (
+                              <div key={idx} className="flex items-start gap-3 group/item">
+                                 <input 
+                                    type="checkbox" 
+                                    checked={item.done} 
+                                    onChange={() => {
+                                       const newChecklists = [...formData.checklist];
+                                       newChecklists[cIdx].items[idx].done = !newChecklists[cIdx].items[idx].done;
+                                       setFormData({...formData, checklist: newChecklists});
+                                    }}
+                                    className="w-4 h-4 mt-1.5 rounded border-gray-300 text-brand-primary focus:ring-brand-primary transition-all cursor-pointer"
+                                 />
+                                 <div className="flex-1">
+                                    <input 
+                                       type="text"
+                                       value={item.text}
+                                       onChange={(e) => {
+                                          const newChecklists = [...formData.checklist];
+                                          newChecklists[cIdx].items[idx].text = e.target.value;
+                                          setFormData({...formData, checklist: newChecklists});
+                                       }}
+                                       className={`w-full bg-transparent border-none p-1 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-primary/20 rounded-lg transition-all ${item.done ? 'text-slate-400 line-through' : 'text-gray-700'}`}
+                                    />
+                                 </div>
+                                 <button onClick={() => {
+                                    const newChecklists = [...formData.checklist];
+                                    newChecklists[cIdx].items = newChecklists[cIdx].items.filter((_:any, i:number) => i !== idx);
+                                    setFormData({...formData, checklist: newChecklists});
+                                 }} className="text-rose-300 hover:text-rose-500 opacity-0 group-hover/item:opacity-100 transition-all p-1.5">
+                                    <Trash2 className="w-4 h-4" />
+                                 </button>
+                              </div>
+                           ))}
+
+                           {/* Add Item Form */}
+                           <div className="pt-4">
+                              <form onSubmit={(e) => {
+                                 e.preventDefault();
+                                 const form = e.target as HTMLFormElement;
+                                 const input = form.elements.namedItem('newItem') as HTMLInputElement;
+                                 if (input.value.trim()) {
+                                    const newChecklists = [...formData.checklist];
+                                    newChecklists[cIdx].items.push({ text: input.value.trim(), done: false });
+                                    setFormData({...formData, checklist: newChecklists});
+                                    input.value = '';
+                                 }
+                              }} className="flex flex-col gap-2">
+                                 <input 
+                                    name="newItem"
+                                    type="text" 
+                                    placeholder="Adicionar um item..." 
+                                    className="w-full bg-white border border-brand-primary/40 rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-brand-primary transition-all outline-none placeholder:text-slate-400 shadow-sm"
+                                 />
+                                 <div className="flex gap-2">
+                                    <button type="submit" className="px-4 py-2 bg-brand-primary text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-primary/90 transition-all shadow-sm">
+                                       Adicionar
+                                    </button>
+                                 </div>
+                              </form>
+                           </div>
+                        </div>
+                     </div>
+                     ))}
+
+                     {/* Follow-up & Activity (Now below checklist) */}
+                     <div className="space-y-6 pt-12 border-t border-gray-200">
+                        <div className="flex items-center gap-3">
+                           <Clock className="w-5 h-5 text-slate-400" />
+                           <h4 className="text-sm font-black text-gray-900 uppercase italic">Follow-up & Histórico</h4>
+                        </div>
+                        <div className="pl-8">
+                           {editingTask ? (
+                              <TaskFollowUps taskId={editingTask.id} userId={user_id} />
+                           ) : (
+                              <div className="py-10 bg-white border border-dashed border-gray-200 rounded-3xl text-center">
+                                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Salve para iniciar o histórico.</p>
+                              </div>
+                           )}
+                        </div>
+                     </div>
+
+                     {/* Danger Zone */}
+                     {editingTask && (
+                        <div className="pt-20 flex justify-center">
+                           <button 
+                              onClick={async () => { if(confirm('Excluir este cartão permanentemente?')) { await supabaseService.deleteTask(editingTask.id); onTasksUpdate(); setIsModalOpen(false); } }} 
+                              className="text-[9px] font-black text-rose-300 hover:text-rose-500 uppercase tracking-[0.2em] transition-all"
+                           >
+                              Excluir este cartão
+                           </button>
                         </div>
                      )}
                   </div>
@@ -959,8 +1498,6 @@ const KanbanView = ({ user_id, projects, initialTasks, profile, onTasksUpdate }:
 const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) => {
   const [followUps, setFollowUps] = useState<any[]>([]);
   const [newContent, setNewContent] = useState('');
-  const [checklistItems, setChecklistItems] = useState<{ text: string; done: boolean }[]>([]);
-  const [newCheckItem, setNewCheckItem] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -978,19 +1515,18 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
   };
 
   const handleAdd = async () => {
-    if (!newContent.trim() && checklistItems.length === 0) return;
+    if (!newContent.trim()) return;
     setIsLoading(true);
     try {
       await supabaseService.addFollowUp({
         user_id: userId,
         entity_id: taskId,
         entity_type: 'task',
-        content: newContent || (checklistItems.length > 0 ? "Checklist de follow-up" : ""),
-        checklist: checklistItems,
+        content: newContent,
+        checklist: null,
         due_date: dueDate || null
       });
       setNewContent('');
-      setChecklistItems([]);
       setDueDate('');
       loadFollowUps();
     } catch (e) {
@@ -998,59 +1534,6 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const toggleCheckItem = async (fu: any, itemIdx: number) => {
-    const updatedChecklist = [...(fu.checklist || [])];
-    updatedChecklist[itemIdx].done = !updatedChecklist[itemIdx].done;
-    
-    // Optimistic update
-    setFollowUps(followUps.map(f => f.id === fu.id ? { ...f, checklist: updatedChecklist } : f));
-    
-    try {
-      await supabaseService.updateFollowUp(fu.id, { checklist: updatedChecklist });
-    } catch(e) {
-      console.error(e);
-      loadFollowUps(); // Reset if error
-    }
-  };
-
-  const removeCheckItemFromFu = async (fu: any, itemIdx: number) => {
-    const updatedChecklist = [...(fu.checklist || [])];
-    updatedChecklist.splice(itemIdx, 1);
-    
-    setFollowUps(followUps.map(f => f.id === fu.id ? { ...f, checklist: updatedChecklist } : f));
-    
-    try {
-      await supabaseService.updateFollowUp(fu.id, { checklist: updatedChecklist });
-    } catch(e) {
-      console.error(e);
-      loadFollowUps();
-    }
-  };
-
-  const addCheckItemToFu = async (fu: any, text: string) => {
-    if (!text.trim()) return;
-    const updatedChecklist = [...(fu.checklist || []), { text, done: false }];
-    
-    setFollowUps(followUps.map(f => f.id === fu.id ? { ...f, checklist: updatedChecklist } : f));
-    
-    try {
-      await supabaseService.updateFollowUp(fu.id, { checklist: updatedChecklist });
-    } catch(e) {
-      console.error(e);
-      loadFollowUps();
-    }
-  };
-
-  const addChecklistItem = () => {
-    if (!newCheckItem.trim()) return;
-    setChecklistItems([...checklistItems, { text: newCheckItem, done: false }]);
-    setNewCheckItem('');
-  };
-
-  const removePendingCheckItem = (idx: number) => {
-    setChecklistItems(checklistItems.filter((_, i) => i !== idx));
   };
 
   return (
@@ -1063,167 +1546,64 @@ const TaskFollowUps = ({ taskId, userId }: { taskId: string, userId: string }) =
       </div>
 
       <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 space-y-4">
-        <input 
-          type="text" 
+        <textarea 
           value={newContent}
           onChange={e => setNewContent(e.target.value)}
           placeholder="O que foi feito ou precisa ser feito? (Ex: Ligar para cliente)"
-          className="w-full bg-white border-none rounded-xl p-4 text-xs font-bold focus:ring-2 focus:ring-brand-primary shadow-sm"
+          className="w-full bg-white border border-gray-200 rounded-2xl py-3 px-4 font-medium text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none resize-none min-h-[80px]"
         />
-        
-        {/* New Checklist items builder */}
-        <div className="space-y-3 pt-2">
-           <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Criar Checklist Inicial (Opcional)</h5>
-           {checklistItems.map((item, idx) => (
-             <div key={idx} className="flex items-center justify-between bg-white/50 p-2.5 rounded-lg border border-gray-100">
-               <span className="text-[10px] font-bold text-slate-600">{item.text}</span>
-               <button onClick={() => removePendingCheckItem(idx)} className="text-rose-400 p-1 hover:text-rose-600"><X className="w-3.5 h-3.5" /></button>
-             </div>
-           ))}
-           <div className="flex gap-2">
-             <input 
-               type="text" 
-               value={newCheckItem}
-               onChange={e => setNewCheckItem(e.target.value)}
-               placeholder="Adicionar item ao checklist..."
-               className="flex-1 bg-white border-none rounded-lg p-3 text-[10px] font-medium focus:ring-2 focus:ring-brand-primary shadow-sm"
-               onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addChecklistItem())}
-             />
-             <button onClick={addChecklistItem} className="px-4 bg-brand-primary text-white font-black text-[10px] uppercase tracking-widest rounded-lg shadow-sm hover:bg-orange-600 transition-colors">
-               Adicionar
-             </button>
-           </div>
-        </div>
-
-        <button 
-          onClick={handleAdd}
-          disabled={isLoading}
-          className="w-full py-4 mt-2 bg-slate-900 border border-slate-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2"
-        >
-          {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Registrar Follow-up
-        </button>
-
-
-        <div className="pt-2">
-           <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Prazo/Data Limite (Opcional)</label>
+        <div className="flex gap-2 items-center">
            <input 
              type="date" 
              value={dueDate}
              onChange={e => setDueDate(e.target.value)}
-             className="w-full bg-white border-none rounded-xl p-4 text-xs font-medium focus:ring-2 focus:ring-brand-primary shadow-sm"
+             className="bg-white border border-gray-200 rounded-xl py-2 px-4 text-xs font-bold text-slate-500 focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none" 
            />
+           <button 
+             onClick={handleAdd}
+             disabled={isLoading || !newContent.trim()}
+             className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50"
+           >
+             {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Registrar'}
+           </button>
         </div>
       </div>
 
-      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-        {followUps.length > 0 ? followUps.map((fu) => {
-          const totalItems = fu.checklist?.length || 0;
-          const doneItems = fu.checklist?.filter((i: any) => i.done).length || 0;
-          const progress = totalItems > 0 ? (doneItems / totalItems) * 100 : 0;
-
-          return (
-            <div key={fu.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-col gap-4 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-primary opacity-20 group-hover:opacity-100 transition-opacity"></div>
-              
-               <div className="flex justify-between items-start">
-                 <div className="space-y-1">
-                    <p className="text-[11px] text-gray-900 font-extrabold leading-relaxed bg-brand-primary/5 inline-block px-3 py-1.5 rounded-lg border border-brand-primary/10">{fu.content || 'Acompanhamento'}</p>
-                    {fu.due_date && (
-                       <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-1 rounded-md inline-block">
-                          Prazo: {new Date(fu.due_date).toLocaleDateString('pt-BR')}
-                       </div>
-                    )}
-                 </div>
-                 <div className="flex flex-col items-end gap-2">
-                    <span className="text-[9px] font-bold text-slate-400 border border-gray-100 bg-gray-50 px-2 py-1 rounded-md uppercase whitespace-nowrap">
-                        {new Date(fu.created_at).toLocaleDateString('pt-BR')}
-                    </span>
-                    <button onClick={async () => {
-                        if(confirm('Excluir este painel inteiro?')) {
-                            // Quick deletion action for the whole follow-up
-                            await supabaseService.deleteFollowUp(fu.id);
-                            loadFollowUps();
-                        }
-                    }} className="text-rose-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-600">
-                        <Trash2 className="w-3 h-3" />
-                    </button>
-                 </div>
-              </div>
-
-              {totalItems > 0 && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex justify-between items-center px-1">
-                    <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase">Progresso do Checklist</span>
-                    <span className="text-[9px] font-black text-brand-primary italic">{doneItems}/{totalItems} ({progress.toFixed(0)}%)</span>
-                  </div>
-                  <div className="h-2 bg-gray-50 rounded-full overflow-hidden border border-gray-100">
-                    <motion.div 
-                      className="h-full bg-brand-primary"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  
-                  <div className="space-y-1.5 mt-3">
-                    {fu.checklist.map((item: any, idx: number) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-brand-primary/10 group/item">
-                        <input 
-                          type="checkbox" 
-                          checked={item.done} 
-                          onChange={() => toggleCheckItem(fu, idx)}
-                          className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary cursor-pointer"
-                        />
-                        <span className={`text-[11px] font-bold flex-1 ${item.done ? 'text-slate-400 line-through' : 'text-gray-700'}`}>
-                          {item.text}
-                        </span>
-                        <button onClick={() => removeCheckItemFromFu(fu, idx)} className="text-rose-400 p-1.5 opacity-0 group-hover/item:opacity-100 hover:text-rose-600 transition-all hover:bg-rose-50 rounded-lg">
-                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Inline Add Item to Existing Checklist */}
-                  <div className="pt-2 px-1">
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="+ Adicionar item rápido..."
-                        className="flex-1 bg-transparent border-b border-gray-200 focus:border-brand-primary py-2 px-1 text-[10px] font-medium outline-none transition-colors"
-                        onKeyPress={e => {
-                           if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addCheckItemToFu(fu, e.currentTarget.value);
-                              e.currentTarget.value = '';
-                           }
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-              {totalItems === 0 && (
-                <div className="pt-2">
-                   {/* Allows creating a checklist in a Follow Up that didn't have one initially */}
-                   <input 
-                        type="text" 
-                        placeholder="+ Transformar em checklist..."
-                        className="w-full bg-gray-50 border border-gray-100 rounded-lg p-3 text-[10px] font-medium outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
-                        onKeyPress={e => {
-                           if (e.key === 'Enter') {
-                              e.preventDefault();
-                              addCheckItemToFu(fu, e.currentTarget.value);
-                              e.currentTarget.value = '';
-                           }
-                        }}
-                    />
-                </div>
-              )}
+      <div className="space-y-4 relative before:content-[''] before:absolute before:left-6 before:top-4 before:bottom-4 before:w-px before:bg-gradient-to-b before:from-gray-200 before:to-transparent">
+        {followUps.length > 0 ? followUps.map((fu) => (
+          <div key={fu.id} className="relative pl-14">
+            <div className="absolute left-4 top-1 w-4 h-4 rounded-full bg-white border-4 border-brand-primary/20 flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-primary"></div>
             </div>
-          );
-        }) : (
-          <p className="text-center text-[10px] text-slate-300 font-black uppercase py-4">Nenhum follow-up registrado.</p>
+            
+            <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group flex flex-col gap-3">
+              <div className="flex justify-between items-start">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  {new Date(fu.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <div className="flex items-center gap-2">
+                  {fu.due_date && (
+                    <span className="text-[9px] font-bold bg-orange-50 text-brand-primary px-3 py-1 rounded-lg uppercase tracking-widest flex items-center gap-1.5">
+                      <CalendarIcon className="w-3 h-3" />
+                      Prazo: {new Date(fu.due_date).toLocaleDateString('pt-BR')}
+                    </span>
+                  )}
+                  <button onClick={async () => {
+                      if(confirm('Excluir este follow-up?')) {
+                          await supabaseService.deleteFollowUp(fu.id);
+                          loadFollowUps();
+                      }
+                  }} className="text-rose-400 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-600 hover:bg-rose-50 rounded-lg">
+                      <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-wrap">{fu.content}</p>
+            </div>
+          </div>
+        )) : (
+          <p className="pl-14 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] pt-4">Nenhum registro encontrado.</p>
         )}
       </div>
     </div>

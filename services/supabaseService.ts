@@ -2285,6 +2285,66 @@ export const supabaseService = {
       )
       .subscribe();
   },
+
+  // --- CONTENT MANAGEMENT ---
+  getContentItems: async (user_id: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('content_management')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting content items:", error);
+      return [];
+    }
+  },
+
+  addContentItem: async (item: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('content_management')
+        .insert(item)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error adding content item:", error);
+      throw error;
+    }
+  },
+
+  updateContentItem: async (id: string, item: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('content_management')
+        .update(item)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error updating content item:", error);
+      throw error;
+    }
+  },
+
+  deleteContentItem: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('content_management')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error deleting content item:", error);
+      throw error;
+    }
+  }
 };
 
 

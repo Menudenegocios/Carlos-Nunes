@@ -108,6 +108,17 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       ]
     },
     { 
+      label: 'Gestão de Conteúdo', 
+      icon: BookOpen, 
+      to: '/content-management', 
+      locked: isPreRegistration && !isAdmin, 
+      minPlan: 'basic',
+      subItems: [
+        { label: 'Visão Geral', to: '/content-management' },
+        { label: 'Calendário', to: '/content-management' }
+      ]
+    },
+    { 
       label: 'Menu Club', 
       icon: Sparkles, 
       to: '/local-plus', 
