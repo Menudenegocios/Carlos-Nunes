@@ -114,7 +114,8 @@ export const AuthProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
           display_id: data.display_id,
           role: data.role as User['role'] || 'user',
           has_founder_badge: data.has_founder_badge || false,
-          phone: data.phone
+          phone: data.phone,
+          photo_url: data.logo_url
         });
       } else {
         // Se ainda não houver perfil, tentar usar os dados pendentes para o usuário inicial

@@ -72,7 +72,23 @@ serve(async (req) => {
           return new Response(JSON.stringify({ received: true, error: 'No userId' }), { status: 200, headers: corsHeaders })
         }
 
-        // 1. Buscar Perfil e Referenciador
+        // 1. Registrar o pagamento na tabela financeira
+        const paymentRecord = {
+          user_id: userId,
+          asaas_payment_id: payment.id,
+          asaas_customer_id: payment.customer,
+          amount: payment.value,
+          billing_type: payment.billingType,
+          status: payment.status,
+          description: payment.description || 'Assinatura Vencer Hub',
+          paid_at: payment.confirmedDate || new Date().toISOString(),
+          created_at: new Date().toISOString()
+        }
+
+        const { error: payErr } = await supabase.from('payments').upsert(paymentRecord, { onConflict: 'asaas_payment_id' })
+        if (payErr) console.error('[Webhook] Erro ao salvar payment:', JSON.stringify(payErr))
+
+        // 2. Buscar Perfil e Referenciador
         const { data: profile } = await supabase.from('profiles').select('id, user_id, referrer_id, points').eq('user_id', userId).single()
         
         if (profile) {

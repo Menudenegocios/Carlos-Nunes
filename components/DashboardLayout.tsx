@@ -356,8 +356,12 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
                   </div>
                  <div className="flex items-center gap-2">
                    <NotificationCenter />
-                   <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform">
-                     {user.name.charAt(0)}
+                   <Link to="/profile" className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm font-black border border-brand-secondary/10 hover:scale-105 transition-transform overflow-hidden">
+                     {user.photo_url ? (
+                       <img src={user.photo_url} alt={user.name} className="w-full h-full object-cover" />
+                     ) : (
+                       user.name.charAt(0)
+                     )}
                    </Link>
                    <button 
                      onClick={logout}
