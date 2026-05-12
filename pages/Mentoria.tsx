@@ -40,8 +40,8 @@ export const Mentoria = () => {
             <Lock className="w-6 h-6" />
           </div>
           <div className="text-left">
-            <h4 className="font-black text-gray-900 text-sm uppercase tracking-tight">Exclusividade do Plano Full</h4>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Esta será uma função liberada apenas para usuários do plano Full.</p>
+            <h4 className="font-black text-gray-900 text-sm uppercase tracking-tight">Exclusividade do Plano Equipes</h4>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Esta será uma função liberada apenas para usuários do plano Equipes.</p>
           </div>
         </div>
 

@@ -104,7 +104,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <ul className="space-y-4 text-sm font-bold text-slate-600">
                 <li><Link to="/quem-somos" className="hover:text-brand-primary transition-colors">Quem Somos</Link></li>
                 <li><Link to="/partners" className="hover:text-brand-primary transition-colors">Nossos Parceiros</Link></li>
-                <li><Link to="/plans" className="hover:text-brand-primary transition-colors">Planos Pro</Link></li>
+                <li><Link to={user ? "/plans" : "/register"} className="hover:text-brand-primary transition-colors">Planos Pro</Link></li>
               </ul>
             </div>
 
@@ -114,7 +114,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 CADASTRAR NEGÓCIO
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to="/plans" className="group flex items-center justify-between border-2 border-brand-dark text-brand-dark p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-dark hover:text-white">
+              <Link to={user ? "/plans" : "/register"} className="group flex items-center justify-between border-2 border-brand-dark text-brand-dark p-4 rounded-2xl font-black text-sm transition-all hover:bg-brand-dark hover:text-white">
                 PLANOS DE ADESÃO
                 <CreditCard className="w-4 h-4" />
               </Link>

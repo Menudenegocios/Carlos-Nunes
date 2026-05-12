@@ -2,16 +2,30 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabaseService } from '../services/supabaseService';
+import { paymentService } from '../services/paymentService';
 import { Profile as ProfileType } from '../types';
 import { 
-  Shield, Award, Crown, Camera, Save, RefreshCw, User as UserIcon, CreditCard, Clock, Phone
+  Shield, Award, Crown, Camera, Save, User as UserIcon, Phone, CreditCard, Clock, RefreshCw,
+  AlertCircle, CheckCircle, Info
 } from 'lucide-react';
+import { SimpleModal } from '../components/SimpleModal';
 import { PhoneInput } from '../components/PhoneInput';
 
 export const Profile: React.FC = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Partial<ProfileType>>({});
   const [loading, setLoading] = useState(true);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
   const [saving, setSaving] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -50,6 +64,8 @@ export const Profile: React.FC = () => {
         logo_url: finalLogoUrl,
         slug: profile.slug || null,
         business_name: profile.business_name || null,
+        cpf_cnpj: profile.cpf_cnpj || null,
+        address: profile.address || null,
         phone: profile.phone || null,
         bio: profile.bio || null,
         category: profile.category || null,
@@ -58,10 +74,20 @@ export const Profile: React.FC = () => {
       
       setProfile(prev => ({ ...prev, logo_url: finalLogoUrl }));
       setSelectedFile(null);
-      alert('Perfil atualizado com sucesso!');
+      setModalConfig({
+        isOpen: true,
+        title: 'Sucesso!',
+        message: 'Perfil atualizado com sucesso!',
+        type: 'success'
+      });
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Erro ao salvar perfil. Verifique os dados e tente novamente.');
+      setModalConfig({
+        isOpen: true,
+        title: 'Erro',
+        message: 'Erro ao salvar perfil. Verifique os dados e tente novamente.',
+        type: 'error'
+      });
     } finally { setSaving(false); }
   };
 
@@ -162,6 +188,10 @@ export const Profile: React.FC = () => {
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Nome de Exibição / Empresa</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.business_name || ''} onChange={e => setProfile({...profile, business_name: e.target.value})} />
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">CPF ou CNPJ</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.cpf_cnpj || ''} onChange={e => setProfile({...profile, cpf_cnpj: e.target.value})} placeholder="Para emissão de NF" />
+                  </div>
                   <PhoneInput
                     label="Telefone WhatsApp"
                     value={profile.phone || ''}
@@ -169,12 +199,16 @@ export const Profile: React.FC = () => {
                     className="md:col-span-1"
                   />
                   <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Endereço Completo</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.address || ''} onChange={e => setProfile({...profile, address: e.target.value})} placeholder="Rua, Número, Bairro, CEP" />
+                  </div>
+                  <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Categoria</label>
                     <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.category || ''} onChange={e => setProfile({...profile, category: e.target.value})} placeholder="Ex: Tecnologia, Vendas..." />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade</label>
-                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.city || ''} onChange={e => setProfile({...profile, city: e.target.value})} placeholder="Sua cidade" />
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Cidade e UF</label>
+                    <input type="text" className="w-full bg-gray-50 border-none rounded-2xl p-5 font-bold focus:ring-4 focus:ring-emerald-500/10 transition-all" value={profile.city || ''} onChange={e => setProfile({...profile, city: e.target.value})} placeholder="Sua cidade e Estado" />
                   </div>
                </div>
                <div>
@@ -207,12 +241,12 @@ export const Profile: React.FC = () => {
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Plano Atual</p>
                          <div className="flex items-center justify-between">
                             <span className="text-lg font-black text-gray-900 uppercase italic tracking-tight">
-                               {((profile as any).subscriptions?.[0]?.plan || profile.plan || 'PRÉ-CADASTRO').toUpperCase()}
+                               {((profile as any).subscriptions?.[0]?.plan || (profile as any).membership_plan || profile.plan || 'PRÉ-CADASTRO').toUpperCase()}
                             </span>
                             <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                               (profile as any).subscriptions?.[0]?.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                               ((profile as any).subscriptions?.[0]?.status === 'active' || (profile as any).membership_status === 'active') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                             }`}>
-                               {(profile as any).subscriptions?.[0]?.status === 'active' ? 'Ativo' : 'Pendente/Inativo'}
+                               {((profile as any).subscriptions?.[0]?.status === 'active' || (profile as any).membership_status === 'active') ? 'Ativo' : 'Pendente/Inativo'}
                             </span>
                          </div>
                       </div>
@@ -222,8 +256,8 @@ export const Profile: React.FC = () => {
                          <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-slate-300" />
                             <span className="text-lg font-black text-gray-900">
-                               {(profile as any).subscriptions?.[0]?.current_period_end 
-                                  ? new Date((profile as any).subscriptions[0].current_period_end).toLocaleDateString('pt-BR') 
+                               {((profile as any).subscriptions?.[0]?.current_period_end || (profile as any).membership_expires_at)
+                                  ? new Date((profile as any).subscriptions?.[0]?.current_period_end || (profile as any).membership_expires_at).toLocaleDateString('pt-BR')
                                   : '---'}
                             </span>
                          </div>
@@ -237,16 +271,18 @@ export const Profile: React.FC = () => {
                       >
                          RENOVAR OU ALTERAR PLANO
                       </button>
-                      <button 
-                        className="px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 bg-white border border-gray-100 hover:bg-gray-50 transition-all"
-                      >
-                         HISTÓRICO DE COBRANÇAS
-                      </button>
                     </div>
                 </div>
              </div>
           </div>
-       </div>
+      </div>
+      <SimpleModal 
+          isOpen={modalConfig.isOpen}
+          onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          type={modalConfig.type}
+        />
     </div>
   );
 };

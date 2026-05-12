@@ -1121,9 +1121,9 @@ const LevelsView = ({ user }: { user: User }) => {
 
 const MissionsView = () => {
   const missions = [
-    { title: 'Indicação Plano Start', desc: 'Traga um novo membro no plano Start.', pts: pointsRules.indicacaoBasico, icon: Users },
+    { title: 'Indicação Plano Starter', desc: 'Traga um novo membro no plano Starter.', pts: pointsRules.indicacaoBasico, icon: Users },
     { title: 'Indicação Plano PRO', desc: 'Traga um novo membro no plano PRO.', pts: pointsRules.indicacaoPro, icon: Crown },
-    { title: 'Indicação Plano FULL', desc: 'Traga um novo membro no plano FULL.', pts: (pointsRules as any).indicacaoFull, icon: Rocket },
+    { title: 'Indicação Plano Equipes', desc: 'Traga um novo membro no plano Equipes.', pts: (pointsRules as any).indicacaoFull, icon: Rocket },
     { title: 'Compras no Menu Store', desc: 'A cada R$ 1,00 em compras = 1 ponto.', pts: `${pointsRules.compraMenuStore}:1`, icon: ShoppingBag },
     { title: 'Login Diário', desc: 'Acesse a plataforma diariamente.', pts: pointsRules.loginDiario, icon: Clock },
     { title: 'Pontos extras', desc: 'Participação em eventos, campanhas e outros.', pts: pointsRules.pontosExtras, icon: Sparkles }

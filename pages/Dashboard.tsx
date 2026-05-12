@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabaseService } from '../services/supabaseService';
@@ -19,6 +19,7 @@ import { supabase } from '../services/supabaseClient';
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [activity, setActivity] = useState<PointsTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +71,12 @@ export const Dashboard: React.FC = () => {
       if (profile) {
         setBusinessName(profile.business_name || '');
         setCpfCnpj(profile.cpf_cnpj || '');
+        
+        // Redirect to profile if record is incomplete (First login)
+        if (!profile.business_name || !profile.phone) {
+          navigate('/profile');
+          return;
+        }
       }
       setRanking(rankingData || []);
       setActivity(history && history.length > 0 ? history.slice(0, 4) : [

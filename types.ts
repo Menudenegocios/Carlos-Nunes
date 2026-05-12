@@ -276,6 +276,10 @@ export interface Profile {
   has_founder_badge?: boolean;
   asaas_customer_id?: string;
   cpf_cnpj?: string;
+  membership_plan?: string;
+  membership_status?: string;
+  membership_expires_at?: string;
+  payment_status?: string;
 }
 
 export interface Subscription {

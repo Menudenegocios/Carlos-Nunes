@@ -792,6 +792,41 @@ export const supabaseService = {
     }
   },
 
+  // --- PAYMENTS ---
+  getAllPayments: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          profiles:user_id (business_name, name, email)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting all payments:", error);
+      return [];
+    }
+  },
+
+  getPaymentsByUser: async (userId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Error getting user payments:", error);
+      return [];
+    }
+  },
+
   updateProfile: async (user_id: string, profile: Partial<any>): Promise<void> => {
     try {
       const { error } = await supabase

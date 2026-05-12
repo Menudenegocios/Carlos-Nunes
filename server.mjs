@@ -17,7 +17,10 @@ const app = express();
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY;
 const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/api/v3';
 
-const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL, 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+);
 
 // Helper para chamadas Asaas
 async function asaasFetch(endpoint, method = 'GET', body = null) {
@@ -170,15 +173,15 @@ app.post('/api/asaas/create-subscription', async (req, res) => {
 
     if (!profile?.asaas_customer_id) throw new Error("Cliente não cadastrado no Asaas");
 
-    // Mapeamento de valores por plano
+    // Mapeamento de valores por plano (em Reais, ex: 59.00)
     const planValues = {
-      'basic': cycle === 'YEARLY' ? 2490 : 249, // Exemplo
-      'pro': cycle === 'YEARLY' ? 5990 : 599,
-      'full': cycle === 'YEARLY' ? 14970 : 1497
+      'start': cycle === 'YEARLY' || cycle === 'SEMIANNUAL' ? 249 : 59,
+      'pro': cycle === 'YEARLY' || cycle === 'SEMIANNUAL' ? 997 : 197,
+      'full': cycle === 'YEARLY' || cycle === 'SEMIANNUAL' ? 1997 : 397
     };
     
-    // Corrigido para valores da campanha se existirem (basico mensal = 249)
-    const value = planValues[planId] || 249;
+    // Corrigido para valores da campanha se existirem
+    const value = planValues[planId] || 59;
 
     const subscription = await asaasFetch('/subscriptions', 'POST', {
       customer: profile.asaas_customer_id,

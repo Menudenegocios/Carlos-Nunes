@@ -9,19 +9,6 @@ type MediaType = 'Todos' | 'Eventos' | 'MenuCast' | 'Ferramentas' | 'Treinamento
 
 const MOCK_MEDIA = [
   {
-    id: 'mn-conexoes-2024',
-    title: "Menu de Negócios – Conexões & Negócios",
-    date: "18 Março, 2024",
-    time: "19:00",
-    location: "Bourbon Teresópolis",
-    category: "Eventos",
-    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800",
-    price: "Inscrição via Sympla",
-    attendees: 120,
-    link: "https://www.sympla.com.br/evento/menu-de-negocios/3287623",
-    description: "Prepare-se para uma experiência transformadora que vai muito além do networking tradicional. Um evento criado para empreendedores que querem gerar oportunidades reais, fortalecer parcerias estratégicas e acelerar resultados."
-  },
-  {
     id: 'menucast-ep30',
     title: "MenuCast #30 - 2026 02 05 12 21 56",
     category: "MenuCast",
