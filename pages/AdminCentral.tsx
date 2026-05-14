@@ -564,6 +564,14 @@ export const AdminCentral: React.FC = () => {
                             <input required type="email" disabled={!!editingProfile} className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm opacity-60" value={memberForm.email} />
                         </div>
                         <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CPF / CNPJ</label>
+                            <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.cpf_cnpj} onChange={e => setMemberForm({...memberForm, cpf_cnpj: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Telefone</label>
+                            <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.phone} onChange={e => setMemberForm({...memberForm, phone: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plano</label>
                             <select className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.plan} onChange={e => setMemberForm({...memberForm, plan: e.target.value as any})}>
                                 <option value="pre-cadastro">Pré-Cadastro</option>
@@ -582,6 +590,36 @@ export const AdminCentral: React.FC = () => {
                                 <option value="diamante">Diamante</option>
                             </select>
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pontos</label>
+                            <input type="number" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Menu Cash (M$)</label>
+                            <input type="number" step="0.01" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.menu_cash} onChange={e => setMemberForm({...memberForm, menu_cash: Number(e.target.value)})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
+                            <select className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.role} onChange={e => setMemberForm({...memberForm, role: e.target.value as any})}>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display ID</label>
+                            <input type="number" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.display_id || ''} onChange={e => setMemberForm({...memberForm, display_id: e.target.value ? Number(e.target.value) : undefined})} />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                        <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="checkbox" className="w-5 h-5 rounded text-indigo-600" checked={memberForm.has_founder_badge} onChange={e => setMemberForm({...memberForm, has_founder_badge: e.target.checked})} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Selo Fundador</span>
+                        </label>
+                        <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="checkbox" className="w-5 h-5 rounded text-emerald-600" checked={memberForm.has_local_plus} onChange={e => setMemberForm({...memberForm, has_local_plus: e.target.checked})} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Acesso Local Plus</span>
+                        </label>
                     </div>
                     <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-[11px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
                         {loading ? 'SALVANDO...' : <><Save className="w-5 h-5" /> SALVAR DADOS</>}
