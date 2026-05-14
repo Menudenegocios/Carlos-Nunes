@@ -14,6 +14,7 @@ import {
 import { PhoneInput } from '../components/PhoneInput';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { ImageCropper } from '../components/ImageCropper';
 
 export const AdminCentral: React.FC = () => {
   const { user, impersonateUser } = useAuth();
@@ -36,6 +37,7 @@ export const AdminCentral: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any | null>(null);
+  const [partnerLogoBlob, setPartnerLogoBlob] = useState<Blob | null>(null);
 
   const [memberForm, setMemberForm] = useState({
     business_name: '', email: '', password: '', plan: 'pre-cadastro' as any,
@@ -189,6 +191,7 @@ export const AdminCentral: React.FC = () => {
       setEditingPartner(null);
       setPartnerForm({ title: '', subtitle: '', logo_url: '', whatsapp: '', link: '' });
     }
+    setPartnerLogoBlob(null);
     setIsPartnerModalOpen(true);
   };
 
@@ -196,9 +199,22 @@ export const AdminCentral: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (editingPartner) await supabase.from('partners').update(partnerForm).eq('id', editingPartner.id);
-      else await supabase.from('partners').insert([partnerForm]);
+      let finalLogoUrl = partnerForm.logo_url;
+      
+      if (partnerLogoBlob) {
+        const fileName = `partner_${Date.now()}.png`;
+        const path = `partners/${fileName}`;
+        const file = new File([partnerLogoBlob], fileName, { type: 'image/png' });
+        finalLogoUrl = await supabaseService.uploadImage(file, path);
+      }
+
+      const dataToSave = { ...partnerForm, logo_url: finalLogoUrl };
+
+      if (editingPartner) await supabase.from('partners').update(dataToSave).eq('id', editingPartner.id);
+      else await supabase.from('partners').insert([dataToSave]);
+      
       setIsPartnerModalOpen(false);
+      setPartnerLogoBlob(null);
       fetchData();
       showAlert("Sucesso", "Parceiro salvo!", "success");
     } catch (err: any) { showAlert("Erro", err.message, "danger"); }
@@ -682,8 +698,22 @@ export const AdminCentral: React.FC = () => {
                         <input required type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.subtitle} onChange={e => setPartnerForm({...partnerForm, subtitle: e.target.value})} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Logo</label>
-                        <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.logo_url} onChange={e => setPartnerForm({...partnerForm, logo_url: e.target.value})} />
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logo do Parceiro</label>
+                        <div className="flex items-center gap-4">
+                            {partnerForm.logo_url && (
+                                <div className="w-16 h-16 rounded-2xl border-2 border-slate-100 overflow-hidden flex-shrink-0 bg-white shadow-sm">
+                                    <img src={partnerForm.logo_url} className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <ImageCropper 
+                                onCrop={(blob) => {
+                                    setPartnerLogoBlob(blob);
+                                    setPartnerForm({...partnerForm, logo_url: URL.createObjectURL(blob)});
+                                }}
+                                triggerLabel={partnerForm.logo_url ? "Alterar Logo" : "Subir Logo"}
+                                className="flex-1"
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">WhatsApp (Ex: 5511999999999)</label>
