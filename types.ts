@@ -17,6 +17,7 @@ export interface User {
   email: string;
   plan: 'pre-cadastro' | 'basic' | 'pro' | 'full';
   has_local_plus?: boolean;
+  has_menu_club?: boolean;
   points: number;
   level: 'Nível Base' | 'Bronze' | 'Prata' | 'Ouro' | 'Diamante';
   menu_cash: number;
@@ -264,6 +265,7 @@ export interface Profile {
   email?: string;
   plan?: string;
   has_local_plus?: boolean;
+  has_menu_club?: boolean;
   points?: number;
   level?: string;
   role?: string;

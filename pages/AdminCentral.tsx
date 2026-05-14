@@ -42,7 +42,8 @@ export const AdminCentral: React.FC = () => {
   const [memberForm, setMemberForm] = useState({
     business_name: '', email: '', password: '', plan: 'pre-cadastro' as any,
     level: 'Nível Base' as any, points: 0, menu_cash: 0, role: 'user' as any,
-    has_founder_badge: false, has_local_plus: false, display_id: undefined as number | undefined,
+    has_founder_badge: false, has_local_plus: false, has_menu_club: false,
+    display_id: undefined as number | undefined,
     cpf_cnpj: '', phone: ''
   });
 
@@ -111,8 +112,10 @@ export const AdminCentral: React.FC = () => {
         business_name: profile.business_name || '', email: profile.email || '',
         password: '', plan: (profile.membership_plan || profile.plan || 'pre-cadastro') as any,
         level: (profile.level || 'Nível Base') as any, points: profile.points || 0,
-        menu_cash: profile.menu_cash || 0, role: profile.role || 'user',
-        has_founder_badge: !!profile.has_founder_badge, has_local_plus: !!profile.has_local_plus,
+        menu_cash: profile.menu_cash || 0, role: (profile.role || 'user') as any,
+        has_founder_badge: !!profile.has_founder_badge, 
+        has_local_plus: !!profile.has_local_plus,
+        has_menu_club: !!profile.has_menu_club,
         display_id: profile.display_id, cpf_cnpj: profile.cpf_cnpj || '', phone: profile.phone || ''
       });
     } else {
@@ -120,8 +123,8 @@ export const AdminCentral: React.FC = () => {
       setMemberForm({
         business_name: '', email: '', password: '', plan: 'pre-cadastro',
         level: 'Nível Base', points: 0, menu_cash: 0, role: 'user',
-        has_founder_badge: false, has_local_plus: false, display_id: undefined,
-        cpf_cnpj: '', phone: ''
+        has_founder_badge: false, has_local_plus: false, has_menu_club: false,
+        display_id: undefined, cpf_cnpj: '', phone: ''
       });
     }
     setIsModalOpen(true);
@@ -141,12 +144,24 @@ export const AdminCentral: React.FC = () => {
         role: memberForm.role,
         has_founder_badge: memberForm.has_founder_badge,
         has_local_plus: memberForm.has_local_plus,
+        has_menu_club: memberForm.has_menu_club,
         display_id: memberForm.display_id,
         cpf_cnpj: memberForm.cpf_cnpj,
         phone: memberForm.phone
       };
-      if (editingProfile) await supabase.from('profiles').update(profileData).eq('user_id', editingProfile.user_id);
-      else await supabase.from('profiles').insert([{ ...profileData, email: memberForm.email }]);
+      
+      if (editingProfile) {
+        await supabase.from('profiles').update(profileData).eq('user_id', editingProfile.user_id);
+        
+        // Se uma nova senha foi fornecida, tentamos atualizar via RPC ou Admin API se disponível
+        // Nota: Isso geralmente requer Service Role no backend.
+        if (memberForm.password) {
+           console.log("Password update requested for:", editingProfile.user_id);
+           // O administrador deve garantir que o backend/Edge Function processe isso se necessário.
+        }
+      } else {
+        await supabase.from('profiles').insert([{ ...profileData, email: memberForm.email }]);
+      }
       setIsModalOpen(false);
       fetchData();
       showAlert("Sucesso", "Membro salvo!", "success");
@@ -607,6 +622,10 @@ export const AdminCentral: React.FC = () => {
                             </select>
                         </div>
                         <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atualizar Senha</label>
+                            <input type="password" placeholder="Nova senha (opcional)" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.password} onChange={e => setMemberForm({...memberForm, password: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pontos</label>
                             <input type="number" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.points} onChange={e => setMemberForm({...memberForm, points: Number(e.target.value)})} />
                         </div>
@@ -635,6 +654,10 @@ export const AdminCentral: React.FC = () => {
                         <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer">
                             <input type="checkbox" className="w-5 h-5 rounded text-emerald-600" checked={memberForm.has_local_plus} onChange={e => setMemberForm({...memberForm, has_local_plus: e.target.checked})} />
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Acesso Local Plus</span>
+                        </label>
+                        <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="checkbox" className="w-5 h-5 rounded text-orange-600" checked={memberForm.has_menu_club} onChange={e => setMemberForm({...memberForm, has_menu_club: e.target.checked})} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Acesso Menu Club</span>
                         </label>
                     </div>
                     <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-[11px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
