@@ -17,6 +17,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyOffers } from './MyOffers';
 import { OfferCategory } from '../types';
+import { B2BMatchView } from './Rewards';
+import { SimpleModal } from '../components/SimpleModal';
+import { Handshake } from 'lucide-react';
 
 export const LocalPlus: React.FC = () => {
   const { user } = useAuth();
@@ -26,6 +29,12 @@ export const LocalPlus: React.FC = () => {
   const [offers, setOffers] = useState<any[]>([]);
   const [flashDeals, setFlashDeals] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [modalConfig, setModalConfig] = useState<any>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   const categories = [
     { id: OfferCategory.ALIMENTACAO, name: 'Alimentação', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100' },
@@ -142,7 +151,7 @@ export const LocalPlus: React.FC = () => {
       <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl w-fit mx-auto border border-gray-100 shadow-sm sticky top-4 z-50 backdrop-blur-md bg-white/80 overflow-x-auto scrollbar-hide max-w-full">
          {[
            { id: 'home', label: 'Home', icon: Grid },
-           { id: 'flash', label: 'Menu do Dia', icon: Zap },
+           { id: 'match', label: 'Negócios', icon: Handshake },
            { id: 'categories', label: 'Categorias', icon: Filter },
            // Se o usuário já tiver acesso liberado ao Menu Club ou for admin, mostrar a aba de ofertas
            ...(user && (user.has_local_plus || user.role === 'admin') ? [{ id: 'my-offers', label: 'Minhas Ofertas', icon: Tag }] : [])
@@ -213,26 +222,9 @@ export const LocalPlus: React.FC = () => {
             </>
           )}
 
-          {activeTab === 'flash' && (
-             <section className="px-4 space-y-12">
-                <div className="text-center max-w-2xl mx-auto space-y-6 pt-10">
-                   <div className="w-20 h-20 bg-brand-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto ring-8 ring-brand-primary/5">
-                      <Zap className="w-10 h-10 text-brand-primary animate-pulse" />
-                   </div>
-                   <h2 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">Menu do Dia</h2>
-                   <p className="text-lg text-slate-500 font-medium">Toda quarta-feira as empresas locais criam ofertas imbatíveis com duração de apenas algumas horas. Seja rápido!</p>
-                </div>
-                
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                   {flashDeals.map(deal => <OfferCard key={deal.id} offer={deal} flash={true} />)}
-                   {flashDeals.length === 0 && (
-                     <div className="col-span-full py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center">
-                        <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma oferta relâmpago ativa no momento.</p>
-                        <p className="text-slate-400 text-[10px] mt-1">Fique atento para a próxima quarta-feira!</p>
-                     </div>
-                   )}
-                </div>
+          {activeTab === 'match' && user && (
+             <section className="px-4 animate-fade-in">
+                <B2BMatchView user={user} setModalConfig={setModalConfig} />
              </section>
           )}
 
@@ -286,6 +278,16 @@ export const LocalPlus: React.FC = () => {
           )}
         </motion.div>
       </AnimatePresence>
+
+      <SimpleModal 
+          isOpen={modalConfig.isOpen}
+          onClose={() => setModalConfig((prev: any) => ({...prev, isOpen: false, onConfirm: undefined}))}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          type={modalConfig.type}
+          onConfirm={modalConfig.onConfirm}
+          confirmText={modalConfig.confirmText}
+      />
     </div>
   );
 };

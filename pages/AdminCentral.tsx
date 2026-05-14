@@ -194,6 +194,7 @@ export const AdminCentral: React.FC = () => {
 
   const handleSavePartner = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (editingPartner) await supabase.from('partners').update(partnerForm).eq('id', editingPartner.id);
       else await supabase.from('partners').insert([partnerForm]);
@@ -201,6 +202,37 @@ export const AdminCentral: React.FC = () => {
       fetchData();
       showAlert("Sucesso", "Parceiro salvo!", "success");
     } catch (err: any) { showAlert("Erro", err.message, "danger"); }
+    finally { setLoading(false); }
+  };
+
+  const handleDeleteMember = async (userId: string) => {
+    showAlert(
+      "Confirmar Exclusão", 
+      "Tem certeza que deseja remover este membro? Esta ação é irreversível.", 
+      "warning",
+      async () => {
+        try {
+          await supabase.from('profiles').delete().eq('user_id', userId);
+          fetchData();
+          showAlert("Sucesso", "Membro removido!", "success");
+        } catch (err: any) { showAlert("Erro", err.message, "danger"); }
+      }
+    );
+  };
+
+  const handleDeletePartner = async (partnerId: string) => {
+    showAlert(
+      "Confirmar Exclusão", 
+      "Deseja remover este parceiro?", 
+      "warning",
+      async () => {
+        try {
+          await supabase.from('partners').delete().eq('id', partnerId);
+          fetchData();
+          showAlert("Sucesso", "Parceiro removido!", "success");
+        } catch (err: any) { showAlert("Erro", err.message, "danger"); }
+      }
+    );
   };
 
   const planNames: Record<string, string> = {
@@ -269,10 +301,9 @@ export const AdminCentral: React.FC = () => {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    {activeTab !== 'financeiro' && (
+                    {activeTab !== 'financeiro' && activeTab !== 'membros' && (
                       <button 
                         onClick={() => {
-                          if (activeTab === 'membros') handleOpenMemberModal();
                           if (activeTab === 'agenda') handleOpenEventModal();
                           if (activeTab === 'parceiros') handleOpenPartnerModal();
                         }}
@@ -501,12 +532,7 @@ export const AdminCentral: React.FC = () => {
                               </div>
                               <div className="flex gap-2">
                                   <button onClick={() => handleOpenPartnerModal(partner)} className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 transition-all">Editar</button>
-                                  <button onClick={async () => {
-                                    if(confirm('Excluir parceiro?')) {
-                                      await supabase.from('partners').delete().eq('id', partner.id);
-                                      fetchData();
-                                    }
-                                  }} className="p-3 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                                  <button onClick={() => handleDeletePartner(partner.id)} className="p-3 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
                               </div>
                           </div>
                       ))}
@@ -591,6 +617,46 @@ export const AdminCentral: React.FC = () => {
                     </div>
                     <button type="submit" className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-[11px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
                         <Save className="w-5 h-5" /> SALVAR EVENTO
+                    </button>
+                </form>
+             </div>
+          </div>
+      )}
+
+      {/* MODAL PARCEIROS */}
+      {isPartnerModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+             <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-in flex flex-col">
+                <div className="bg-[#0F172A] p-8 text-white flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-black uppercase italic">{editingPartner ? 'Editar Parceiro' : 'Novo Parceiro'}</h3>
+                        <p className="text-[10px] font-black text-indigo-400 tracking-widest uppercase mt-1">Gestão de Parceiros</p>
+                    </div>
+                    <button onClick={() => setIsPartnerModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all"><X className="w-6 h-6" /></button>
+                </div>
+                <form onSubmit={handleSavePartner} className="p-10 space-y-5">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Título do Parceiro</label>
+                        <input required type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.title} onChange={e => setPartnerForm({...partnerForm, title: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtítulo / Descrição</label>
+                        <input required type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.subtitle} onChange={e => setPartnerForm({...partnerForm, subtitle: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL do Logo</label>
+                        <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.logo_url} onChange={e => setPartnerForm({...partnerForm, logo_url: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">WhatsApp (Ex: 5511999999999)</label>
+                        <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.whatsapp} onChange={e => setPartnerForm({...partnerForm, whatsapp: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link Externo</label>
+                        <input type="text" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={partnerForm.link} onChange={e => setPartnerForm({...partnerForm, link: e.target.value})} />
+                    </div>
+                    <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase tracking-widest text-[11px] hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
+                        {loading ? 'SALVANDO...' : <><Save className="w-5 h-5" /> SALVAR PARCEIRO</>}
                     </button>
                 </form>
              </div>

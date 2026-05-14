@@ -88,9 +88,8 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       icon: Trophy, 
       to: '/rewards',
       subItems: [
-        { label: 'Feed', to: '/rewards?tab=feed' },
         ...(!isPreRegistration || isAdmin ? [{ label: 'Chat', to: '/rewards?tab=chat' }] : []),
-        { label: 'Reunião 1x1', to: '/rewards?tab=match' },
+        { label: 'Reunião 1x1', to: '/rewards?tab=meeting' },
         { label: 'Pontos & Ranking', to: '/rewards' },
         { label: 'Níveis', to: '/rewards?tab=acceleration' },
         { label: 'Indicações', to: '/rewards?tab=referrals' }
@@ -126,7 +125,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       minPlan: 'pre-cadastro',
       subItems: [
         { label: 'Marketplace', to: '/local-plus?tab=home' },
-        { label: 'Menu do dia', to: '/local-plus?tab=flash' },
+        { label: 'Negócios', to: '/local-plus?tab=match' },
         { label: 'Categorias', to: '/local-plus?tab=categories' }
       ]
     },

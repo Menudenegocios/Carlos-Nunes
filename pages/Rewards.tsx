@@ -231,7 +231,6 @@ export const Rewards: React.FC = () => {
                   { id: 'feed', label: 'FEED', desc: 'Porta de Entrada', icon: Megaphone },
                   { id: 'chat', label: 'CHAT', desc: 'Bate-papo Direto', icon: MessageCircle },
                   { id: 'meeting', label: 'REUNIÃO 1X1', desc: 'Networking Direto', icon: Users },
-                  { id: 'match', label: 'NEGÓCIOS', desc: 'Oportunidades', icon: Handshake },
                   { id: 'referrals', label: 'INDICAÇÕES', desc: 'Seu time', icon: Share2 },
                   { id: 'rules', label: 'REGRAS', desc: 'Guia do Ecossistema', icon: ListTodo },
               ].map(tab => (
@@ -530,7 +529,7 @@ const MenuCashInfo = () => {
     );
 };
 
-const B2BMatchView = ({ user, setModalConfig }: { user: User, setModalConfig: (config: any) => void }) => {
+export const B2BMatchView = ({ user, setModalConfig }: { user: any, setModalConfig: (config: any) => void }) => {
   const [activeSubTab, setActiveSubTab] = useState<'offers' | 'transactions'>('offers');
   const [menuCashProducts, setMenuCashProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1807,7 +1806,7 @@ const Meeting1x1View = ({ user, userProfile, setModalConfig }: { user: User, use
 
 // --- NEW COMMUNITY FEED COMPONENTS ---
 
-const CommunityFeedView = ({ user, userProfile, setModalConfig }: { user: User, userProfile: any, setModalConfig: (config: any) => void }) => {
+export const CommunityFeedView = ({ user, userProfile, setModalConfig }: { user: User, userProfile: any, setModalConfig: (config: any) => void }) => {
   const [posts, setPosts] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2047,7 +2046,7 @@ const CommunityFeedView = ({ user, userProfile, setModalConfig }: { user: User, 
   );
 };
 
-const CommunityFeed = ({ posts, user, userProfile, onRefresh, setModalConfig }: { posts: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
+export const CommunityFeed = ({ posts, user, userProfile, onRefresh, setModalConfig }: { posts: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
 
@@ -2295,7 +2294,7 @@ const CommunityFeed = ({ posts, user, userProfile, onRefresh, setModalConfig }: 
   );
 };
 
-const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh, setModalConfig }: { opportunities: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
+export const OpportunitiesMural = ({ opportunities, user, userProfile, onRefresh, setModalConfig }: { opportunities: any[], user: User, userProfile: any, onRefresh: () => void, setModalConfig: (config: any) => void }) => {
   const handleInterest = async (oppId: string, authorPhone: string) => {
     try {
       const realUserId = userProfile?.user_id || user.id;

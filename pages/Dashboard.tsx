@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { pointsRules, tiers } from '../config/gamificationConfig';
 import { supabase } from '../services/supabaseClient';
+import { CommunityFeedView } from './Rewards';
+import { SimpleModal } from '../components/SimpleModal';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -31,6 +33,19 @@ export const Dashboard: React.FC = () => {
   const [isSavingAuth, setIsSavingAuth] = useState(false);
   const [authMessage, setAuthMessage] = useState('');
   const [ranking, setRanking] = useState<any[]>([]);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info';
+    onConfirm?: () => void;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   // News Modal State
   const [showNews, setShowNews] = useState(false);
@@ -223,8 +238,8 @@ export const Dashboard: React.FC = () => {
               <button onClick={() => setShowNews(true)} className="hidden md:flex items-center gap-2 px-6 py-4 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl font-black text-[10px] tracking-widest hover:bg-indigo-100 transition-all active:scale-95 shadow-sm">
                 <Bell className="w-4 h-4" /> Novidades <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-full text-[8px]">{CURRENT_VERSION}</span>
               </button>
-              <Link to="/catalog" className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-primary to-orange-500 text-white rounded-2xl font-black text-[10px] tracking-widest hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(246,124,1,0.3)] active:scale-95 border border-orange-400/50">
-                <Plus className="w-4 h-4" /> Novo item
+              <Link to="/admin-central?tab=agenda" className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 border border-indigo-500">
+                <Calendar className="w-4 h-4" /> Agenda
               </Link>
               <Link to={`/store/${user.id}`} className="flex items-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-md text-gray-900 border border-gray-200 rounded-2xl font-black text-[10px] tracking-widest hover:bg-white/80 transition-all active:scale-95 shadow-sm">
                 <Eye className="w-4 h-4" /> Ver vitrine
@@ -342,86 +357,43 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 px-4">
-        {/* Lado Esquerdo: Ranking & Ações */}
-        <div className="lg:col-span-7 space-y-10">
-          <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3 italic">
-                <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> Ranking
-              </h3>
-              <Link to="/rewards" className="text-[10px] font-black text-indigo-600 tracking-widest hover:underline flex items-center gap-2">Ver ranking completo <ChevronRight className="w-4 h-4" /></Link>
-            </div>
-
-            <div className="space-y-4">
-              {ranking.length === 0 ? (
-                <div className="py-10 text-center bg-white/40 rounded-2xl border border-dashed border-gray-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum dado disponível</p>
-                </div>
-              ) : (
-                ranking.map((member, i) => (
-                  <div key={member.user_id || i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
-                    <div className="flex items-center gap-5">
-                      <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{i + 1}</span>
-                      <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-10 h-10 rounded-xl shadow-md object-cover" alt="Avatar" />
-                      <div>
-                        <p className="text-sm font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</p>
-                        <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{member.city || member.level || ''}</p>
-                      </div>
-                    </div>
-                    <span className="font-black text-gray-900 italic text-sm">{member.points || 0} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-200/50 shadow-xl space-y-6 relative overflow-hidden group hover:border-brand-primary/30 transition-colors duration-500">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-orange-100/50 text-brand-primary rounded-xl flex items-center justify-center mb-6 border border-orange-200/50 backdrop-blur-sm shadow-inner">
-                  <UserPlus className="w-6 h-6 drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" />
-                </div>
-                <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Indicar Amigos</h4>
-                <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">Ganhe até +{pointsRules.indicacaoPro} pontos por cada indicação.</p>
-                <button
-                  onClick={copyReferral}
-                  className="w-full py-4 bg-gray-900 text-white border border-transparent rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg"
-                >
-                  {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  {copied ? 'Copiado!' : 'Copiar link'}
-                </button>
+      {/* Link Bônus Menu Club (Plano Full) */}
+      {user.plan === 'full' && (
+        <div className="mx-4 bg-gradient-to-r from-indigo-600 via-brand-primary to-purple-600 p-1 rounded-[2.5rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
+          <Link to="/local-plus" className="flex flex-col md:flex-row items-center justify-between gap-6 bg-gray-900 rounded-[2.4rem] p-8 md:px-12 hover:bg-gray-900/90 transition-all group">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-8 h-8 text-brand-primary" />
+              </div>
+              <div>
+                <h4 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter">Link Bônus Menu Club</h4>
+                <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mt-1">Acesso exclusivo ao Clube de Vantagens e Conteúdos Premium</p>
               </div>
             </div>
-
-            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[2.5rem] p-8 text-white space-y-6 shadow-xl relative overflow-hidden group border border-indigo-500/30">
-              <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center mb-6 border border-white/20 shadow-inner">
-                  <Sparkles className="w-6 h-6 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                </div>
-                <h4 className="text-xl font-black uppercase italic tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 title-fix">Meta do Mês</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-indigo-200">
-                    <span>Progresso Rede</span>
-                    <span>75%</span>
-                  </div>
-                  <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-primary rounded-full shadow-[0_0_10px_rgba(246,124,1,0.5)]" style={{ width: '75%' }}></div>
-                  </div>
-                </div>
-                <p className="text-[10px] text-indigo-100/60 font-medium leading-relaxed mt-4">Alcance coletivo ativa bônus de <span className="text-white font-black">+2% cashback</span>.</p>
-              </div>
+            <div className="flex items-center gap-3 bg-white/10 px-6 py-3 rounded-xl border border-white/20 text-white font-black text-[10px] uppercase tracking-widest group-hover:translate-x-2 transition-all">
+              Acessar agora <ChevronRight className="w-4 h-4" />
             </div>
-          </div>
+          </Link>
         </div>
+      )}
 
-        {/* Lado Direito: Acesso */}
-        <div className="lg:col-span-5 space-y-10">
-          <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-colors duration-500">
+      {/* Feed da Comunidade */}
+      <div className="px-4">
+        <div className="flex items-center gap-4 mb-8">
+           <div className="h-px flex-1 bg-gray-200"></div>
+           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Feed da Comunidade</h3>
+           <div className="h-px flex-1 bg-gray-200"></div>
+        </div>
+        <CommunityFeedView user={user} userProfile={userProfile} setModalConfig={setModalConfig} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 px-4">
+        {/* Lado Esquerdo: Gestão */}
+        <div className="lg:col-span-7 space-y-10">
+          {/* Identidade & Acesso */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden group hover:border-indigo-500/30 transition-colors duration-500">
             <div className="relative z-10">
-              <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3 mb-6">
+              <h3 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-3 mb-6 uppercase italic">
                 <Lock className="text-indigo-600" /> Identidade & Acesso
               </h3>
               <form onSubmit={handleUpdateAuth} className="space-y-4">
@@ -473,6 +445,59 @@ export const Dashboard: React.FC = () => {
               </form>
             </div>
           </div>
+
+          {/* Ranking */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] p-10 border border-gray-200/50 shadow-xl relative overflow-hidden">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3 italic">
+                <Trophy className="text-[#F67C01] drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" /> Ranking
+              </h3>
+              <Link to="/rewards" className="text-[10px] font-black text-indigo-600 tracking-widest hover:underline flex items-center gap-2">Ver ranking completo <ChevronRight className="w-4 h-4" /></Link>
+            </div>
+
+            <div className="space-y-4">
+              {ranking.length === 0 ? (
+                <div className="py-10 text-center bg-white/40 rounded-2xl border border-dashed border-gray-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum dado disponível</p>
+                </div>
+              ) : (
+                ranking.map((member, i) => (
+                  <div key={member.user_id || i} className="flex items-center justify-between p-5 bg-white/40 rounded-2xl border border-gray-100 hover:scale-[1.01] transition-all">
+                    <div className="flex items-center gap-5">
+                      <span className={`font-black text-xl italic ${i === 0 ? 'text-yellow-500' : 'text-slate-300'} w-6`}>#{i + 1}</span>
+                      <img src={member.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.business_name || member.name || 'U'}`} className="w-10 h-10 rounded-xl shadow-md object-cover" alt="Avatar" />
+                      <div>
+                        <p className="text-sm font-black text-gray-900 leading-none">{member.business_name || member.name || 'Membro'}</p>
+                        <p className="text-[10px] font-black text-[#F67C01] uppercase mt-1 tracking-widest">{member.city || member.level || ''}</p>
+                      </div>
+                    </div>
+                    <span className="font-black text-gray-900 italic text-sm">{member.points || 0} <span className="text-[8px] text-slate-400 not-italic">PTS</span></span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Lado Direito: Indicações */}
+        <div className="lg:col-span-5 space-y-10">
+          <div className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-8 border border-gray-200/50 shadow-xl space-y-6 relative overflow-hidden group hover:border-brand-primary/30 transition-colors duration-500 h-fit">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-orange-100/50 text-brand-primary rounded-xl flex items-center justify-center mb-6 border border-orange-200/50 backdrop-blur-sm shadow-inner">
+                <UserPlus className="w-6 h-6 drop-shadow-[0_0_8px_rgba(246,124,1,0.5)]" />
+              </div>
+              <h4 className="text-xl font-black text-gray-900 uppercase italic tracking-tight">Indicar Amigos</h4>
+              <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6">Ganhe até +{pointsRules.indicacaoPro} pontos por cada indicação.</p>
+              <button
+                onClick={copyReferral}
+                className="w-full py-4 bg-gray-900 text-white border border-transparent rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg"
+              >
+                {copied ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copiado!' : 'Copiar link'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -521,6 +546,15 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
+      <SimpleModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig((prev: any) => ({...prev, isOpen: false, onConfirm: undefined}))}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onConfirm={modalConfig.onConfirm}
+        confirmText={modalConfig.confirmText}
+      />
     </div>
   );
 };
