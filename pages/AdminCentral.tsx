@@ -44,7 +44,7 @@ export const AdminCentral: React.FC = () => {
     level: 'Nível Base' as any, points: 0, menu_cash: 0, role: 'user' as any,
     has_founder_badge: false, has_local_plus: false, has_menu_club: false,
     display_id: undefined as number | undefined,
-    cpf_cnpj: '', phone: ''
+    cpf_cnpj: '', phone: '', membership_status: 'inactive'
   });
 
   const [eventForm, setEventForm] = useState({
@@ -116,7 +116,8 @@ export const AdminCentral: React.FC = () => {
         has_founder_badge: !!profile.has_founder_badge, 
         has_local_plus: !!profile.has_local_plus,
         has_menu_club: !!profile.has_menu_club,
-        display_id: profile.display_id, cpf_cnpj: profile.cpf_cnpj || '', phone: profile.phone || ''
+        display_id: profile.display_id, cpf_cnpj: profile.cpf_cnpj || '', phone: profile.phone || '',
+        membership_status: profile.membership_status || 'inactive'
       });
     } else {
       setEditingProfile(null);
@@ -124,7 +125,7 @@ export const AdminCentral: React.FC = () => {
         business_name: '', email: '', password: '', plan: 'pre-cadastro',
         level: 'Nível Base', points: 0, menu_cash: 0, role: 'user',
         has_founder_badge: false, has_local_plus: false, has_menu_club: false,
-        display_id: undefined, cpf_cnpj: '', phone: ''
+        display_id: undefined, cpf_cnpj: '', phone: '', membership_status: 'inactive'
       });
     }
     setIsModalOpen(true);
@@ -136,6 +137,7 @@ export const AdminCentral: React.FC = () => {
     try {
       const profileData = {
         business_name: memberForm.business_name,
+        email: memberForm.email,
         plan: memberForm.plan,
         membership_plan: memberForm.plan,
         level: memberForm.level,
@@ -147,17 +149,25 @@ export const AdminCentral: React.FC = () => {
         has_menu_club: memberForm.has_menu_club,
         display_id: memberForm.display_id,
         cpf_cnpj: memberForm.cpf_cnpj,
-        phone: memberForm.phone
+        phone: memberForm.phone,
+        membership_status: memberForm.membership_status
       };
       
       if (editingProfile) {
         await supabase.from('profiles').update(profileData).eq('user_id', editingProfile.user_id);
         
-        // Se uma nova senha foi fornecida, tentamos atualizar via RPC ou Admin API se disponível
-        // Nota: Isso geralmente requer Service Role no backend.
-        if (memberForm.password) {
-           console.log("Password update requested for:", editingProfile.user_id);
-           // O administrador deve garantir que o backend/Edge Function processe isso se necessário.
+        // Se uma nova senha ou e-mail foi fornecido, chamamos a Edge Function
+        if (memberForm.password || memberForm.email !== editingProfile.email) {
+           const { error: authErr } = await supabase.functions.invoke('admin-user-update', {
+             body: { 
+               userId: editingProfile.user_id, 
+               password: memberForm.password || undefined,
+               email: memberForm.email !== editingProfile.email ? memberForm.email : undefined
+             }
+           });
+           
+           if (authErr) throw new Error(`Erro ao atualizar dados de autenticação: ${authErr.message}`);
+           console.log("Dados de autenticação atualizados com sucesso para:", editingProfile.user_id);
         }
       } else {
         await supabase.from('profiles').insert([{ ...profileData, email: memberForm.email }]);
@@ -634,6 +644,15 @@ export const AdminCentral: React.FC = () => {
                             <input type="number" step="0.01" className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.menu_cash} onChange={e => setMemberForm({...memberForm, menu_cash: Number(e.target.value)})} />
                         </div>
                         <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status da Assinatura</label>
+                            <select className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.membership_status} onChange={e => setMemberForm({...memberForm, membership_status: e.target.value as any})}>
+                                <option value="active">Ativo</option>
+                                <option value="inactive">Inativo</option>
+                                <option value="pending">Pendente</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</label>
                             <select className="w-full bg-slate-50 border-none rounded-xl p-4 font-bold text-sm" value={memberForm.role} onChange={e => setMemberForm({...memberForm, role: e.target.value as any})}>
                                 <option value="user">User</option>
@@ -762,6 +781,7 @@ export const AdminCentral: React.FC = () => {
         message={modalConfig.message}
         type={modalConfig.type}
         confirmText={modalConfig.onConfirm ? "Sim, Continuar" : "Entendi"}
+        cancelText={modalConfig.onConfirm ? "Cancelar" : "OK"}
       />
     </div>
   );
